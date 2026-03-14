@@ -34,12 +34,19 @@ require_once 'includes/header.php';
   <div style="background:linear-gradient(135deg,#3F82E3,#2563C4);border-radius:20px;padding:1.6rem;margin-bottom:1.2rem;position:relative;overflow:hidden;">
     <div style="position:absolute;inset:0;background-image:radial-gradient(circle at 80% 20%,rgba(255,255,255,0.15) 0%,transparent 50%),radial-gradient(circle at 20% 80%,rgba(255,255,255,0.08) 0%,transparent 40%);pointer-events:none;"></div>
     <div style="position:absolute;right:-30px;top:-30px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,0.07);pointer-events:none;"></div>
+    <?php
+      $firstName  = explode(' ', $p['full_name']);
+      $firstName  = $firstName[0];
+    ?>
     <h2 style="font-size:1.5rem;color:#fff;margin-bottom:0.3rem;position:relative;z-index:1;">
-      Welcome back,<br/><?= htmlspecialchars(explode(' ', $p['full_name'])[0]) ?>.
+      Welcome back,<br/><?= htmlspecialchars($firstName) ?>.
     </h2>
     <p style="color:rgba(255,255,255,0.75);font-size:0.85rem;position:relative;z-index:1;margin-bottom:1.2rem;">
-      <?php if ($doc): ?>
-        Your health is being looked after by Dr. <?= htmlspecialchars(end(explode(' ', $doc['full_name']))) ?>.
+      <?php if ($doc):
+        $docParts   = explode(' ', $doc['full_name']);
+        $docLastName = end($docParts);
+      ?>
+        Your health is being looked after by Dr. <?= htmlspecialchars($docLastName) ?>.
       <?php else: ?>
         No doctor assigned yet. Contact your admin.
       <?php endif; ?>

@@ -400,7 +400,13 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     <li><a href="#features">Features</a></li>
     <li><a href="#how">How It Works</a></li>
     <li><a href="#services">Services</a></li>
-    <li><a href="auth/login.php" class="nav-login">Log In</a></li>
+    <li style="position:relative;display:flex;align-items:center;">
+      <div style="display:flex;gap:0.5rem;align-items:center;">
+        <a href="auth/login.php" class="nav-login" style="margin:0;">Patient Log In</a>
+        <div style="width:1px;height:20px;background:rgba(36,68,65,0.2);"></div>
+        <a href="doctor/login.php" class="nav-login" style="margin:0;">Doctor Log In</a>
+      </div>
+    </li>
     <li><a href="auth/register.php" class="nav-cta">Register</a></li>
   </ul>
 </nav>
