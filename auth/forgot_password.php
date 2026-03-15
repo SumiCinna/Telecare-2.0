@@ -66,57 +66,88 @@ require_once '../database/config.php';
 
   emailjs.init(EMAILJS_PUBLIC_KEY);
 
+  let isSending = false; // guard against double clicks
+
   function sendReset() {
+    if (isSending) return; // block spam
+
     const email = document.getElementById('emailInput').value.trim();
     const btn   = document.getElementById('sendBtn');
     const msg   = document.getElementById('statusMsg');
 
     if (!email) {
-      msg.innerHTML = '<div class="alert-error">Please enter your email address.</div>';
+      msg.innerHTML = '<div class="alert-error">⚠️ Please enter your email address.</div>';
       return;
     }
 
-    btn.disabled = true;
+    // Basic email format check
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      msg.innerHTML = '<div class="alert-error">⚠️ Please enter a valid email address.</div>';
+      return;
+    }
+
+    // Lock button immediately
+    isSending = true;
+    btn.disabled  = true;
     btn.innerHTML = '<div class="spinner"></div> Sending...';
     msg.innerHTML = '';
 
     fetch('send_reset.php', {
-      method: 'POST',
+      method:  'POST',
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: 'email=' + encodeURIComponent(email)
+      body:    'email=' + encodeURIComponent(email)
     })
     .then(r => r.json())
     .then(data => {
       if (!data.success) {
-        // Cooldown or other server error
-        const isCooldown = data.message && data.message.includes('wait');
-        msg.innerHTML = `<div class="${isCooldown ? 'alert-warn' : 'alert-error'}">⏳ ${data.message}</div>`;
-        btn.disabled  = false;
-        btn.innerHTML = 'Send Reset Link';
+        const isCooldown   = data.message && data.message.includes('wait');
+        const isNotFound   = data.message && data.message.includes('not found');
+        let   alertClass   = isCooldown ? 'alert-warn' : 'alert-error';
+        let   icon         = isCooldown ? '⏳' : '✗';
+        msg.innerHTML = `<div class="${alertClass}">${icon} ${data.message}</div>`;
+        // Re-enable after short delay so they can fix their input
+        setTimeout(() => { btn.disabled = false; btn.innerHTML = 'Send Reset Link'; isSending = false; }, 2000);
         return Promise.reject('handled');
       }
 
-      // Only send email if account was found (has name/link)
+      // Send email via EmailJS
       if (data.name && data.link) {
         return emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_RESET_TEMPLATE, {
-          to_email:    data.email,
+          to_email:     data.email,
           patient_name: data.name,
-          reset_link:  data.link,
+          reset_link:   data.link,
         });
       }
     })
     .then(() => {
-      // Always show success (don't reveal if email exists)
-      msg.innerHTML = '<div class="alert-success">✓ If that email is registered, a reset link has been sent. Check your inbox!</div>';
-      btn.disabled  = false;
-      btn.innerHTML = 'Send Reset Link';
+      msg.innerHTML = '<div class="alert-success">✓ Reset link sent! Check your inbox — it expires in 1 hour.</div>';
+      // Start 3-minute frontend cooldown
+      startCooldown(btn);
     })
     .catch(err => {
       if (err === 'handled') return;
       msg.innerHTML = '<div class="alert-error">✗ ' + (err.message || 'Something went wrong. Try again.') + '</div>';
       btn.disabled  = false;
       btn.innerHTML = 'Send Reset Link';
+      isSending     = false;
     });
+  }
+
+  function startCooldown(btn) {
+    let secs = 180; // 3 minutes
+    btn.disabled = true;
+    const t = setInterval(() => {
+      secs--;
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      btn.innerHTML = `Resend in ${m}:${String(s).padStart(2,'0')}`;
+      if (secs <= 0) {
+        clearInterval(t);
+        btn.disabled  = false;
+        btn.innerHTML = 'Send Reset Link';
+        isSending     = false;
+      }
+    }, 1000);
   }
 
   // Allow Enter key

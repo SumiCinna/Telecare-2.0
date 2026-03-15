@@ -14,16 +14,31 @@ if (empty($email)) {
     exit;
 }
 
-$stmt = $conn->prepare("SELECT id, full_name FROM patients WHERE email = ? AND is_verified = 1");
+$stmt = $conn->prepare("SELECT id, full_name, reset_expires FROM patients WHERE email = ? AND is_verified = 1");
 $stmt->bind_param("s", $email);
 $stmt->execute();
 $result  = $stmt->get_result();
 $patient = $result->fetch_assoc();
 
-// Always return success to prevent email enumeration
+// Return explicit error if email not registered
 if (!$patient) {
-    echo json_encode(['success' => true]); // silent — don't reveal if email exists
+    echo json_encode(['success' => false, 'message' => 'No registered account found with that email address.']);
     exit;
+}
+
+// ── 3-minute cooldown check ──
+if (!empty($patient['reset_expires'])) {
+    $stmt2 = $conn->prepare("SELECT TIMESTAMPDIFF(SECOND, NOW(), reset_expires) as secs_left, TIMESTAMPDIFF(SECOND, NOW() - INTERVAL 1 HOUR + INTERVAL 3 MINUTE, reset_expires) as too_soon FROM patients WHERE id = ?");
+    $stmt2->bind_param("i", $patient['id']);
+    $stmt2->execute();
+    $timing = $stmt2->get_result()->fetch_assoc();
+    // Token was created less than 3 minutes ago if secs_left > 57 minutes
+    if ($timing['secs_left'] > 3420) { // 3600 - 180 = 3420 seconds
+        $wait = $timing['secs_left'] - 3420;
+        $mins = ceil($wait / 60);
+        echo json_encode(['success' => false, 'message' => "Please wait {$mins} minute(s) before requesting another reset link."]);
+        exit;
+    }
 }
 
 // Generate token — let MySQL handle the timestamp to avoid timezone mismatch
