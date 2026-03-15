@@ -83,7 +83,7 @@ require_once 'includes/header.php';
     <div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;">Dr. <?= htmlspecialchars($doc['full_name']) ?></div>
     <div style="font-size:0.83rem;color:var(--muted);margin-top:0.2rem;"><?= htmlspecialchars($doc['specialty'] ?? 'General Practitioner') ?></div>
     <div style="margin-top:0.6rem;display:flex;justify-content:center;gap:0.5rem;flex-wrap:wrap;">
-      <span class="badge badge-blue"><?= ucfirst($doc['access_level']) ?></span>
+
       <?php if ($doc['is_verified']): ?><span class="badge badge-green">✓ Verified</span><?php endif; ?>
       <span class="badge <?= $doc['is_available']?'badge-green':'badge-gray' ?>"><?= $doc['is_available']?'Available':'Unavailable' ?></span>
     </div>

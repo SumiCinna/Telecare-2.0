@@ -26,14 +26,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $insurance_provider     = trim($_POST['insurance_provider'] ?? '');
     $insurance_policy_no    = trim($_POST['insurance_policy_no'] ?? '');
     $preferred_language     = trim($_POST['preferred_language'] ?? 'English');
+    $other_language         = trim($_POST['other_language'] ?? '');
 
     if (empty($full_name)||empty($email)||empty($password)||empty($date_of_birth)||empty($gender)||empty($phone_number)) {
         $error = 'Please fill in all required fields.';
-    } elseif ($password !== $confirm_password) {
-        $error = 'Passwords do not match.';
+    } elseif (strlen($full_name) > 50) {
+        $error = 'Full name must not exceed 50 characters.';
+    } elseif (preg_match('/\d/', $full_name)) {
+        $error = 'Full name cannot contain numbers.';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL) || !preg_match('/@[\w\.-]+\.\w+$/', $email)) {
+        $error = 'Please enter a valid email address (e.g., user@example.com).';
+    } elseif (strlen($email) > 100) {
+        $error = 'Email address must not exceed 100 characters.';
+    } elseif (!preg_match('/^\d{11}$/', $phone_number)) {
+        $error = 'Phone number must be exactly 11 digits.';
+    } elseif (!empty($emergency_relationship) && strlen($emergency_relationship) > 20) {
+        $error = 'Emergency relationship must not exceed 20 characters.';
+    } elseif (!empty($emergency_relationship) && preg_match('/\d/', $emergency_relationship)) {
+        $error = 'Emergency relationship cannot contain numbers.';
+    } elseif (!empty($emergency_number) && !preg_match('/^\d{11}$/', $emergency_number)) {
+        $error = 'Emergency number must be exactly 11 digits.';
     } elseif (strlen($password) < 8) {
         $error = 'Password must be at least 8 characters.';
+    } elseif (strlen($password) > 50) {
+        $error = 'Password must not exceed 50 characters.';
+    } elseif ($password !== $confirm_password) {
+        $error = 'Passwords do not match.';
+    } elseif (strlen($confirm_password) > 50) {
+        $error = 'Confirm password must not exceed 50 characters.';
+    } elseif (!empty($security_answer) && strlen($security_answer) > 50) {
+        $error = 'Security answer must not exceed 50 characters.';
+    } elseif (strlen($home_address) > 100) {
+        $error = 'Home address must not exceed 100 characters.';
+    } elseif (strlen($city) > 50) {
+        $error = 'City must not exceed 50 characters.';
+    } elseif (strlen($insurance_provider) > 20) {
+        $error = 'Insurance provider must not exceed 20 characters.';
+    } elseif (strlen($insurance_policy_no) > 20) {
+        $error = 'Policy number must not exceed 20 characters.';
+    } elseif ($preferred_language === 'Other' && empty($other_language)) {
+        $error = 'Please specify your language.';
+    } elseif ($preferred_language === 'Other' && strlen($other_language) > 20) {
+        $error = 'Language name must not exceed 20 characters.';
     } else {
+        $final_language = ($preferred_language === 'Other') ? $other_language : $preferred_language;
+        
         $stmt = $conn->prepare("SELECT id FROM patients WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
@@ -71,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $emergency_name,$emergency_relationship,$emergency_number,
                 $hashed,$security_question,$hashed_answer,
                 $home_address,$city,$country_region,
-                $insurance_provider,$insurance_policy_no,$preferred_language,
+                $insurance_provider,$insurance_policy_no,$final_language,
                 $token,$expires_at
             );
             if ($insert->execute()) {
@@ -258,7 +295,7 @@ const EMAILJS_PUBLIC_KEY  = 'm-AvAiAdUDsgBbz6D';
           <p style="color:#6b8a87;font-size:.9rem;margin-bottom:1.8rem">Tell us about yourself.</p>
           <div style="margin-bottom:1rem">
             <label class="field-label">Full Name <span class="req">*</span></label>
-            <input type="text" name="full_name" class="field-input" placeholder="e.g. Juan Dela Cruz" value="<?= htmlspecialchars($_POST['full_name']??'') ?>"/>
+            <input type="text" name="full_name" class="field-input" placeholder="e.g. Juan Dela Cruz" maxlength="50" value="<?= htmlspecialchars($_POST['full_name']??'') ?>" onInput="this.value=this.value.replace(/[0-9]/g,'')"/>
           </div>
           <div class="grid-2">
             <div>
@@ -276,11 +313,11 @@ const EMAILJS_PUBLIC_KEY  = 'm-AvAiAdUDsgBbz6D';
           <div class="grid-2" style="margin-top:1rem">
             <div>
               <label class="field-label">Email Address <span class="req">*</span></label>
-              <input type="email" name="email" class="field-input" placeholder="you@email.com" value="<?= htmlspecialchars($_POST['email']??'') ?>"/>
+              <input type="email" name="email" class="field-input" placeholder="you@email.com" maxlength="100" value="<?= htmlspecialchars($_POST['email']??'') ?>"/>
             </div>
             <div>
               <label class="field-label">Phone Number <span class="req">*</span></label>
-              <input type="tel" name="phone_number" class="field-input" placeholder="09XXXXXXXXX" value="<?= htmlspecialchars($_POST['phone_number']??'') ?>"/>
+              <input type="tel" name="phone_number" class="field-input" placeholder="09XXXXXXXXX" maxlength="11" inputmode="numeric" value="<?= htmlspecialchars($_POST['phone_number']??'') ?>" onInput="this.value=this.value.replace(/[^0-9]/g,'')"/>
             </div>
           </div>
           <div style="margin-top:1rem">
@@ -290,16 +327,16 @@ const EMAILJS_PUBLIC_KEY  = 'm-AvAiAdUDsgBbz6D';
           <div class="section-divider">Emergency Contact <span class="optional-tag" style="text-transform:none">(optional)</span></div>
           <div style="margin-bottom:1rem">
             <label class="field-label">Contact Name</label>
-            <input type="text" name="emergency_name" class="field-input" placeholder="Full name" value="<?= htmlspecialchars($_POST['emergency_name']??'') ?>"/>
+            <input type="text" name="emergency_name" class="field-input" placeholder="Full name" maxlength="50" value="<?= htmlspecialchars($_POST['emergency_name']??'') ?>" onInput="this.value=this.value.replace(/[0-9]/g,'')"/>
           </div>
           <div class="grid-2">
             <div>
               <label class="field-label">Relationship</label>
-              <input type="text" name="emergency_relationship" class="field-input" placeholder="e.g. Mother" value="<?= htmlspecialchars($_POST['emergency_relationship']??'') ?>"/>
+              <input type="text" name="emergency_relationship" class="field-input" placeholder="e.g. Mother" maxlength="20" value="<?= htmlspecialchars($_POST['emergency_relationship']??'') ?>" onInput="this.value=this.value.replace(/[0-9]/g,'')"/>
             </div>
             <div>
               <label class="field-label">Contact Number</label>
-              <input type="tel" name="emergency_number" class="field-input" placeholder="09XXXXXXXXX" value="<?= htmlspecialchars($_POST['emergency_number']??'') ?>"/>
+              <input type="tel" name="emergency_number" class="field-input" placeholder="09XXXXXXXXX" maxlength="11" inputmode="numeric" value="<?= htmlspecialchars($_POST['emergency_number']??'') ?>" onInput="this.value=this.value.replace(/[^0-9]/g,'')"/>
             </div>
           </div>
           <div style="margin-top:2rem"><button type="button" class="btn-next" onclick="goStep(2)">Continue to Security →</button></div>
@@ -312,7 +349,7 @@ const EMAILJS_PUBLIC_KEY  = 'm-AvAiAdUDsgBbz6D';
           <div style="margin-bottom:1rem">
             <label class="field-label">Password <span class="req">*</span></label>
             <div class="pw-wrap">
-              <input type="password" name="password" id="pw" class="field-input" placeholder="At least 8 characters" style="padding-right:2.8rem"/>
+              <input type="password" name="password" id="pw" class="field-input" placeholder="At least 8 characters" maxlength="50" style="padding-right:2.8rem"/>
               <button type="button" class="pw-toggle" onclick="togglePw('pw','e1s','e1h')">
                 <svg id="e1s" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                 <svg id="e1h" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95M6.938 6.938A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-1.395 2.63M6.938 6.938L3 3m3.938 3.938l10.124 10.124M17.062 17.062L21 21"/></svg>
@@ -323,7 +360,7 @@ const EMAILJS_PUBLIC_KEY  = 'm-AvAiAdUDsgBbz6D';
           <div style="margin-bottom:1rem">
             <label class="field-label">Confirm Password <span class="req">*</span></label>
             <div class="pw-wrap">
-              <input type="password" name="confirm_password" id="pw2" class="field-input" placeholder="Repeat password" style="padding-right:2.8rem"/>
+              <input type="password" name="confirm_password" id="pw2" class="field-input" placeholder="Repeat password" maxlength="50" style="padding-right:2.8rem"/>
               <button type="button" class="pw-toggle" onclick="togglePw('pw2','e2s','e2h')">
                 <svg id="e2s" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                 <svg id="e2h" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95M6.938 6.938A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-1.395 2.63M6.938 6.938L3 3m3.938 3.938l10.124 10.124M17.062 17.062L21 21"/></svg>
@@ -344,7 +381,7 @@ const EMAILJS_PUBLIC_KEY  = 'm-AvAiAdUDsgBbz6D';
           </div>
           <div style="margin-bottom:1rem">
             <label class="field-label">Your Answer</label>
-            <input type="text" name="security_answer" class="field-input" placeholder="Your answer (case-insensitive)"/>
+            <input type="text" name="security_answer" class="field-input" placeholder="Your answer (case-insensitive)" maxlength="50"/>
           </div>
           <div style="margin-top:2rem">
             <button type="button" class="btn-back" onclick="goStep(1)">← Back</button>
@@ -358,12 +395,12 @@ const EMAILJS_PUBLIC_KEY  = 'm-AvAiAdUDsgBbz6D';
           <p style="color:#6b8a87;font-size:.9rem;margin-bottom:1.8rem">Help us match you with available doctors in your area.</p>
           <div style="margin-bottom:1rem">
             <label class="field-label">Home Address <span class="optional-tag">(optional)</span></label>
-            <input type="text" name="home_address" class="field-input" placeholder="Street, Barangay" value="<?= htmlspecialchars($_POST['home_address']??'') ?>"/>
+            <input type="text" name="home_address" class="field-input" placeholder="Street, Barangay" maxlength="100" value="<?= htmlspecialchars($_POST['home_address']??'') ?>"/>
           </div>
           <div class="grid-2">
             <div>
               <label class="field-label">City / Municipality</label>
-              <input type="text" name="city" class="field-input" placeholder="e.g. Quezon City" value="<?= htmlspecialchars($_POST['city']??'') ?>"/>
+              <input type="text" name="city" class="field-input" placeholder="e.g. Quezon City" maxlength="50" value="<?= htmlspecialchars($_POST['city']??'') ?>"/>
             </div>
             <div>
               <label class="field-label">Country / Region</label>
@@ -377,18 +414,22 @@ const EMAILJS_PUBLIC_KEY  = 'm-AvAiAdUDsgBbz6D';
           <div class="grid-2">
             <div>
               <label class="field-label">Insurance Provider</label>
-              <input type="text" name="insurance_provider" class="field-input" placeholder="e.g. PhilHealth" value="<?= htmlspecialchars($_POST['insurance_provider']??'') ?>"/>
+              <input type="text" name="insurance_provider" class="field-input" placeholder="e.g. PhilHealth" maxlength="20" value="<?= htmlspecialchars($_POST['insurance_provider']??'') ?>"/>
             </div>
             <div>
               <label class="field-label">Policy Number</label>
-              <input type="text" name="insurance_policy_no" class="field-input" placeholder="Policy no." value="<?= htmlspecialchars($_POST['insurance_policy_no']??'') ?>"/>
+              <input type="text" name="insurance_policy_no" class="field-input" placeholder="Policy no." maxlength="20" value="<?= htmlspecialchars($_POST['insurance_policy_no']??'') ?>"/>
             </div>
           </div>
           <div style="margin-top:1rem">
             <label class="field-label">Preferred Language</label>
-            <select name="preferred_language" class="field-input">
+            <select name="preferred_language" class="field-input" onchange="toggleOtherLanguage()">
               <?php foreach(['English','Filipino','Cebuano','Ilocano','Other'] as $lang): ?><option value="<?= $lang ?>" <?= (($_POST['preferred_language']??'English')===$lang)?'selected':'' ?>><?= $lang ?></option><?php endforeach ?>
             </select>
+          </div>
+          <div id="other-language-div" style="margin-top:1rem;display:none">
+            <label class="field-label">Specify Language</label>
+            <input type="text" name="other_language" class="field-input" placeholder="e.g. Spanish" maxlength="20" value="<?= htmlspecialchars($_POST['other_language']??'') ?>"/>
           </div>
           <div style="margin-top:2rem">
             <button type="button" class="btn-back" onclick="goStep(2)">← Back</button>
@@ -432,12 +473,24 @@ const EMAILJS_PUBLIC_KEY  = 'm-AvAiAdUDsgBbz6D';
     if(f.type==='password'){f.type='text';document.getElementById(s).style.display='none';document.getElementById(h).style.display='block';}
     else{f.type='password';document.getElementById(s).style.display='block';document.getElementById(h).style.display='none';}
   }
+  function toggleOtherLanguage(){
+    const sel=document.querySelector('[name="preferred_language"]');
+    const div=document.getElementById('other-language-div');
+    if(sel.value==='Other'){div.style.display='block';document.querySelector('[name="other_language"]').focus();}
+    else{div.style.display='none';}
+  }
   const dob=document.getElementById('dob');
   if(dob){const m=new Date();m.setFullYear(m.getFullYear()-15);dob.max=m.toISOString().split('T')[0];}
   const pw=document.getElementById('pw');
   if(pw){pw.addEventListener('input',function(){const v=this.value,b=document.getElementById('pw-bar');let s=0;if(v.length>=8)s++;if(/[A-Z]/.test(v))s++;if(/[0-9]/.test(v))s++;if(/[^A-Za-z0-9]/.test(v))s++;b.style.width=['0%','30%','55%','80%','100%'][s];b.style.background=['','#e55','#f90','#3F82E3','#244441'][s];});}
   const pw2=document.getElementById('pw2');
   if(pw2){pw2.addEventListener('input',function(){const m=document.getElementById('pw-match');if(this.value===document.getElementById('pw').value){m.textContent='✓ Passwords match';m.style.color='var(--green)';}else{m.textContent='✗ Passwords do not match';m.style.color='var(--red)';}});}
+  // Initialize language selector on page load
+  window.addEventListener('load',function(){
+    if(document.querySelector('[name="preferred_language"]').value==='Other'){
+      document.getElementById('other-language-div').style.display='block';
+    }
+  });
 </script>
 </body>
 </html>

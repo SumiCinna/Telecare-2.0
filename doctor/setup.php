@@ -27,10 +27,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
     $phone    = trim($_POST['phone_number'] ?? '');
     $consent  = isset($_POST['consent']) ? 1 : 0;
 
+    // Validation checks
     if (strlen($password) < 8) {
         $error = 'Password must be at least 8 characters.';
+    } elseif (strlen($password) > 50) {
+        $error = 'Password must not exceed 50 characters.';
     } elseif ($password !== $confirm) {
         $error = 'Passwords do not match.';
+    } elseif (strlen($confirm) > 50) {
+        $error = 'Confirm password must not exceed 50 characters.';
+    } elseif (!empty($phone) && !preg_match('/^\d{11}$/', $phone)) {
+        $error = 'Phone number must be exactly 11 digits.';
+    } elseif (strlen($clinic) > 100) {
+        $error = 'Clinic name must not exceed 100 characters.';
+    } elseif ($fee > 99999) {
+        $error = 'Consultation fee must not exceed 99999.';
+    } elseif (strlen($langs) > 50) {
+        $error = 'Languages spoken must not exceed 50 characters.';
+    } elseif (strlen($bio) > 100) {
+        $error = 'Bio must not exceed 100 characters.';
     } elseif (!$consent) {
         $error = 'You must agree to the telehealth consent agreement.';
     } else {
@@ -136,6 +151,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
     .btn-add-row{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.8rem;color:var(--blue);font-weight:600;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
     .btn-remove-row{background:rgba(195,54,67,0.1);color:var(--red);border:none;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
     .consent-box{background:rgba(36,68,65,0.05);border:1px solid rgba(36,68,65,0.1);border-radius:14px;padding:1rem 1.2rem;margin:1rem 0;font-size:0.82rem;color:#6b8a87;line-height:1.65}
+    input[type="number"]::-webkit-outer-spin-button,input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+    input[type="number"]{-moz-appearance:textfield;}
     @media(max-width:768px){.left-panel{display:none}}
   </style>
 </head>
@@ -197,7 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
       <div class="form-field">
         <label class="field-label">Password *</label>
         <div class="pw-wrap">
-          <input type="password" name="password" id="pw" class="field-input" placeholder="At least 8 characters" required style="padding-right:2.8rem;"/>
+          <input type="password" name="password" id="pw" class="field-input" placeholder="At least 8 characters" maxlength="50" required style="padding-right:2.8rem;"/>
           <button type="button" class="pw-toggle" onclick="togglePw('pw','e1s','e1h')">
             <svg id="e1s" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
             <svg id="e1h" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95M6.938 6.938A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-1.395 2.63M6.938 6.938L3 3m3.938 3.938l10.124 10.124M17.062 17.062L21 21"/></svg>
@@ -207,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
       <div class="form-field">
         <label class="field-label">Confirm Password *</label>
         <div class="pw-wrap">
-          <input type="password" name="confirm_password" id="pw2" class="field-input" placeholder="Repeat password" required style="padding-right:2.8rem;"/>
+          <input type="password" name="confirm_password" id="pw2" class="field-input" placeholder="Repeat password" maxlength="50" required style="padding-right:2.8rem;"/>
           <button type="button" class="pw-toggle" onclick="togglePw('pw2','e2s','e2h')">
             <svg id="e2s" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
             <svg id="e2h" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95M6.938 6.938A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-1.395 2.63M6.938 6.938L3 3m3.938 3.938l10.124 10.124M17.062 17.062L21 21"/></svg>
@@ -218,17 +235,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
 
       <div class="section-label">Profile Info</div>
       <div class="form-row">
-        <div class="form-field"><label class="field-label">Phone Number</label><input type="tel" name="phone_number" class="field-input" placeholder="09XXXXXXXXX"/></div>
-        <div class="form-field"><label class="field-label">Clinic / Hospital</label><input type="text" name="clinic_name" class="field-input" placeholder="Clinic name"/></div>
+        <div class="form-field"><label class="field-label">Phone Number <span style="font-weight:400;font-size:0.65rem;">(11 digits)</span></label><input type="tel" name="phone_number" class="field-input" placeholder="09XXXXXXXXX" maxlength="11" inputmode="numeric" onInput="this.value=this.value.replace(/[^0-9]/g,'')"/></div>
+        <div class="form-field"><label class="field-label">Clinic / Hospital</label><input type="text" name="clinic_name" class="field-input" placeholder="Clinic name" maxlength="100"/></div>
       </div>
       <div class="form-row">
-        <div class="form-field"><label class="field-label">Consultation Fee (₱)</label><input type="number" name="consultation_fee" class="field-input" placeholder="e.g. 500" min="0" step="0.01"/></div>
-        <div class="form-field"><label class="field-label">Languages Spoken</label><input type="text" name="languages_spoken" class="field-input" placeholder="e.g. English, Filipino"/></div>
+        <div class="form-field"><label class="field-label">Consultation Fee <span style="font-weight:400;font-size:0.65rem;">(₱)</span></label><input type="number" name="consultation_fee" class="field-input" placeholder="e.g. 500" min="0" max="99999" step="0.01" onInput="this.value=this.value.slice(0,5)"/></div>
+        <div class="form-field"><label class="field-label">Languages Spoken</label><input type="text" name="languages_spoken" class="field-input" placeholder="e.g. English, Filipino" maxlength="50"/></div>
       </div>
       <div class="form-field"><label class="field-label">Profile Photo <span style="font-weight:400;text-transform:none;font-size:0.7rem;">(optional)</span></label><input type="file" name="profile_photo" class="field-input" accept="image/*" style="padding:0.5rem;"/></div>
-      <div class="form-field"><label class="field-label">Bio / About</label><textarea name="bio" class="field-input" placeholder="Brief professional background..."></textarea></div>
+      <div class="form-field"><label class="field-label">Bio / About</label><textarea name="bio" class="field-input" placeholder="Brief professional background..." maxlength="100"></textarea></div>
 
       <div class="section-label">Availability &amp; Schedule</div>
+      <p style="font-size:0.82rem;color:#6b8a87;margin-bottom:1rem;">Select your availability per day. Times are fixed to 1-hour intervals.</p>
       <div id="schedule-rows">
         <div class="schedule-row">
           <select name="day[]" class="field-input">
@@ -237,8 +255,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
             <option value="<?= $d ?>"><?= $d ?></option>
             <?php endforeach; ?>
           </select>
-          <input type="time" name="start_time[]" class="field-input"/>
-          <input type="time" name="end_time[]"   class="field-input"/>
+          <select name="start_time[]" class="field-input">
+            <option value="">Start Time</option>
+            <?php 
+              for ($h = 0; $h < 24; $h++) {
+                $time = sprintf('%02d:00', $h);
+                $display = date('h:00 A', strtotime($time));
+                echo "<option value=\"$time\">$display</option>";
+              }
+            ?>
+          </select>
+          <select name="end_time[]" class="field-input">
+            <option value="">End Time</option>
+            <?php 
+              for ($h = 0; $h < 24; $h++) {
+                $time = sprintf('%02d:00', $h);
+                $display = date('h:00 A', strtotime($time));
+                echo "<option value=\"$time\">$display</option>";
+              }
+            ?>
+          </select>
           <div></div>
         </div>
       </div>
@@ -265,8 +301,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
 <script>
   function togglePw(fid,sid,hid){const f=document.getElementById(fid),s=document.getElementById(sid),h=document.getElementById(hid);if(f.type==='password'){f.type='text';s.style.display='none';h.style.display='block';}else{f.type='password';s.style.display='block';h.style.display='none';}}
   document.getElementById('pw2')?.addEventListener('input',function(){const m=document.getElementById('pw-match');if(this.value===document.getElementById('pw').value){m.textContent='✓ Passwords match';m.style.color='var(--green)';}else{m.textContent='✗ Does not match';m.style.color='var(--red)';}});
+  
+  // Time slot generation (1-hour gaps)
+  function generateTimeSlots() {
+    const slots = [];
+    for (let h = 0; h < 24; h++) {
+      const time = String(h).padStart(2, '0') + ':00';
+      const display = new Date(`2000-01-01 ${time}`).toLocaleString('en-US', {hour:'numeric', minute:'2-digit', hour12:true});
+      slots.push({time, display});
+    }
+    return slots;
+  }
+  const timeSlots = generateTimeSlots();
+  
   const days=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-  function addScheduleRow(){const wrap=document.getElementById('schedule-rows');const row=document.createElement('div');row.className='schedule-row';row.innerHTML=`<select name="day[]" class="field-input"><option value="">Day</option>${days.map(d=>`<option value="${d}">${d}</option>`).join('')}</select><input type="time" name="start_time[]" class="field-input"/><input type="time" name="end_time[]" class="field-input"/><button type="button" class="btn-remove-row" onclick="this.parentElement.remove()">✕</button>`;wrap.appendChild(row);}
+  function addScheduleRow(){
+    const wrap=document.getElementById('schedule-rows');
+    const row=document.createElement('div');
+    row.className='schedule-row';
+    row.innerHTML=`
+      <select name="day[]" class="field-input">
+        <option value="">Day</option>
+        ${days.map(d=>`<option value="${d}">${d}</option>`).join('')}
+      </select>
+      <select name="start_time[]" class="field-input">
+        <option value="">Start Time</option>
+        ${timeSlots.map(s=>`<option value="${s.time}">${s.display}</option>`).join('')}
+      </select>
+      <select name="end_time[]" class="field-input">
+        <option value="">End Time</option>
+        ${timeSlots.map(s=>`<option value="${s.time}">${s.display}</option>`).join('')}
+      </select>
+      <button type="button" class="btn-remove-row" onclick="this.parentElement.remove()">✕</button>
+    `;
+    wrap.appendChild(row);
+  }
 </script>
 </body>
 </html>

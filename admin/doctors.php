@@ -13,15 +13,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_doctor'])) {
     $em   = trim($_POST['email'] ?? '');
     $spec = trim($_POST['specialty'] ?? '');
     $sub  = trim($_POST['subspecialty'] ?? '');
-    $acc  = $_POST['access_level'] ?? 'junior';
     if ($fn && $em) {
         $token   = bin2hex(random_bytes(32));
         $expires = date('Y-m-d H:i:s', strtotime('+7 days'));
-        $stmt = $conn->prepare("INSERT INTO doctors (full_name, email, specialty, subspecialty, access_level, invite_token, invite_expires, status) VALUES (?,?,?,?,?,?,?,'pending')");
-        $stmt->bind_param("sssssss", $fn, $em, $spec, $sub, $acc, $token, $expires);
+        $stmt = $conn->prepare("INSERT INTO doctors (full_name, email, specialty, subspecialty, invite_token, invite_expires, status) VALUES (?,?,?,?,?,?,'pending')");
+        $stmt->bind_param("ssssss", $fn, $em, $spec, $sub, $token, $expires);
         $stmt->execute();
-        $_SESSION['toast']       = "Doctor account created! Invite link generated.";
-        $_SESSION['invite_link'] = '../doctor/setup.php?token=' . $token;
+        $_SESSION['toast']        = "Doctor account created! Invite link generated.";
+        $_SESSION['invite_link']  = 'http://' . $_SERVER['HTTP_HOST'] . '/doctor/setup.php?token=' . $token;
+        $_SESSION['invite_email'] = $em;
+        $_SESSION['invite_name']  = $fn;
     }
     header('Location: doctors.php'); exit;
 }
@@ -54,9 +55,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_doctor'])) {
     header('Location: doctors.php'); exit;
 }
 
-$toast       = $_SESSION['toast'] ?? null;
-$invite_link = $_SESSION['invite_link'] ?? null;
-unset($_SESSION['toast'], $_SESSION['invite_link']);
+$toast        = $_SESSION['toast'] ?? null;
+$invite_link  = $_SESSION['invite_link'] ?? null;
+$invite_email = $_SESSION['invite_email'] ?? null;
+$invite_name  = $_SESSION['invite_name'] ?? null;
+unset($_SESSION['toast'], $_SESSION['invite_link'], $_SESSION['invite_email'], $_SESSION['invite_name']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -65,6 +68,7 @@ unset($_SESSION['toast'], $_SESSION['invite_link']);
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Doctors — TELE-CARE</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF}
@@ -87,8 +91,6 @@ unset($_SESSION['toast'], $_SESSION['invite_link']);
     .main{flex:1;overflow-y:auto}
     .topbar{background:var(--white);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(36,68,65,0.07);position:sticky;top:0;z-index:50}
     .page-content{padding:2rem}
-    .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
-    .section-header h2{font-size:1.3rem}
     .btn-primary{display:inline-flex;align-items:center;gap:0.4rem;background:var(--red);color:#fff;padding:0.6rem 1.3rem;border-radius:50px;font-size:0.85rem;font-weight:600;border:none;cursor:pointer;transition:all 0.25s;font-family:'DM Sans',sans-serif;box-shadow:0 4px 14px rgba(195,54,67,0.25);text-decoration:none}
     .btn-primary:hover{background:#a82d38;transform:translateY(-1px)}
     .btn-sm{padding:0.4rem 0.9rem;border-radius:50px;font-size:0.78rem;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;text-decoration:none;display:inline-block}
@@ -124,6 +126,8 @@ unset($_SESSION['toast'], $_SESSION['invite_link']);
     .toast{position:fixed;bottom:2rem;right:2rem;z-index:300;background:var(--green);color:#fff;padding:0.9rem 1.5rem;border-radius:14px;font-size:0.88rem;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:slideIn 0.4s ease,fadeOut 0.4s 3s ease forwards}
     .table-wrap{background:var(--white);border-radius:16px;overflow:hidden;border:1px solid rgba(36,68,65,0.07);box-shadow:0 2px 10px rgba(0,0,0,0.04)}
     .empty-row{text-align:center;padding:3rem;color:#9ab0ae;font-size:0.88rem}
+    .spinner-inline{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px}
+    @keyframes spin{to{transform:rotate(360deg)}}
     @keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
     @keyframes fadeOut{from{opacity:1}to{opacity:0;pointer-events:none}}
     @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -177,12 +181,37 @@ unset($_SESSION['toast'], $_SESSION['invite_link']);
 
   <div class="page-content">
 
+    <!-- Initialize EmailJS globally -->
+    <script>
+      const EMAILJS_PUBLIC_KEY       = 'm-AvAiAdUDsgBbz6D';
+      const EMAILJS_SERVICE_ID       = 'service_vr6ygvx';
+      const EMAILJS_INVITE_TEMPLATE  = 'template_hv6nkmj';
+      emailjs.init(EMAILJS_PUBLIC_KEY);
+    </script>
+
     <?php if ($invite_link): ?>
     <div class="invite-box">
-      <p>📧 Share this invite link with the doctor (expires in 7 days):</p>
+      <p>📧 Invite email sent to <strong><?= htmlspecialchars($invite_email) ?></strong> — link also shown below:</p>
       <code id="inviteCode"><?= htmlspecialchars($invite_link) ?></code>
       <button onclick="copyInvite()" style="margin-top:0.5rem;font-size:0.75rem;color:var(--blue);background:none;border:none;cursor:pointer;font-weight:600;">Copy link</button>
     </div>
+
+    <!-- Auto-fire invite email -->
+    <script>
+      const doctorEmail = <?= json_encode($invite_email) ?>;
+      const doctorName  = <?= json_encode($invite_name) ?>;
+      const inviteURL   = <?= json_encode($invite_link) ?>;
+
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_INVITE_TEMPLATE, {
+        to_email:    doctorEmail,
+        doctor_name: doctorName,
+        invite_link: inviteURL,
+      }).then(() => {
+        console.log('Doctor invite email sent to ' + doctorEmail);
+      }).catch(err => {
+        console.error('EmailJS invite error:', err);
+      });
+    </script>
     <?php endif; ?>
 
     <div class="doctor-grid">
@@ -204,7 +233,6 @@ unset($_SESSION['toast'], $_SESSION['invite_link']);
       </div>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
         <span class="badge badge-blue">👥 <?= $d['patient_count'] ?> patients</span>
-        <span class="badge <?= $d['access_level']==='consultant'?'badge-green':($d['access_level']==='senior'?'badge-blue':'badge-gray') ?>"><?= ucfirst($d['access_level']) ?></span>
         <?php if ($d['is_verified']): ?><span class="badge badge-green">✓ Verified</span><?php endif; ?>
         <?php if (!$d['setup_complete']): ?><span class="badge badge-orange">Setup pending</span><?php endif; ?>
       </div>
@@ -214,7 +242,7 @@ unset($_SESSION['toast'], $_SESSION['invite_link']);
         <button class="btn-sm btn-blue" onclick="openVerifyModal(<?= $d['id'] ?>, '<?= htmlspecialchars($d['full_name']) ?>')">Verify</button>
         <?php endif; ?>
         <?php if (!$d['setup_complete'] && $d['invite_token']): ?>
-        <button class="btn-sm btn-green" onclick="copyToken('<?= htmlspecialchars($d['invite_token']) ?>')">Copy Invite</button>
+        <button class="btn-sm btn-green" onclick="resendInvite('<?= htmlspecialchars($d['invite_token']) ?>','<?= htmlspecialchars($d['email']) ?>','<?= htmlspecialchars($d['full_name']) ?>')" id="resend-<?= $d['id'] ?>">Resend Invite</button>
         <?php endif; ?>
       </div>
     </div>
@@ -230,7 +258,7 @@ unset($_SESSION['toast'], $_SESSION['invite_link']);
 <div class="modal-overlay" id="modal-create-doctor">
   <div class="modal">
     <h3>Add Doctor — Phase 1</h3>
-    <p style="font-size:0.82rem;color:#9ab0ae;margin-bottom:1.2rem;">Fill in the doctor's details. An invite link will be generated for them to complete their profile.</p>
+    <p style="font-size:0.82rem;color:#9ab0ae;margin-bottom:1.2rem;">Fill in the doctor's details. An invite link will be generated and emailed to them automatically.</p>
     <form method="POST">
       <div class="form-field"><label class="field-label">Full Name *</label><input type="text" name="full_name" class="field-input" placeholder="e.g. Maria Santos" required/></div>
       <div class="form-field"><label class="field-label">Email Address *</label><input type="email" name="email" class="field-input" placeholder="doctor@email.com" required/></div>
@@ -238,15 +266,7 @@ unset($_SESSION['toast'], $_SESSION['invite_link']);
         <div class="form-field"><label class="field-label">Specialty</label><input type="text" name="specialty" class="field-input" placeholder="e.g. Cardiology"/></div>
         <div class="form-field"><label class="field-label">Subspecialty</label><input type="text" name="subspecialty" class="field-input" placeholder="Optional"/></div>
       </div>
-      <div class="form-field">
-        <label class="field-label">Access Level</label>
-        <select name="access_level" class="field-input">
-          <option value="junior">Junior — Limited to assigned patients</option>
-          <option value="senior">Senior — Full patient access</option>
-          <option value="consultant">Consultant — Oversight + all records</option>
-        </select>
-      </div>
-      <button type="submit" name="create_doctor" class="btn-submit">Create &amp; Generate Invite</button>
+      <button type="submit" name="create_doctor" class="btn-submit">Create &amp; Send Invite Email</button>
       <button type="button" class="btn-cancel" onclick="closeModal('modal-create-doctor')">Cancel</button>
     </form>
   </div>
@@ -273,13 +293,43 @@ unset($_SESSION['toast'], $_SESSION['invite_link']);
 </div>
 
 <script>
+  // ── Modal helpers ──
   function openModal(id)  { document.getElementById(id).classList.add('open'); }
   function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-  document.querySelectorAll('.modal-overlay').forEach(m => { m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }); });
-  function openVerifyModal(id, name) { document.getElementById('verify-doctor-id').value=id; document.getElementById('verify-doctor-name').value='Dr. '+name; openModal('modal-verify-doctor'); }
-  function copyInvite() { const c=document.getElementById('inviteCode')?.textContent; if(c){navigator.clipboard.writeText(c);alert('Invite link copied!');} }
-  function copyToken(token) { navigator.clipboard.writeText(window.location.origin+'/Telecare 2.0/doctor/setup.php?token='+token).then(()=>alert('Invite link copied!')); }
-  setTimeout(() => { const t=document.querySelector('.toast'); if(t) t.remove(); }, 3500);
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+  });
+  function openVerifyModal(id, name) {
+    document.getElementById('verify-doctor-id').value = id;
+    document.getElementById('verify-doctor-name').value = 'Dr. ' + name;
+    openModal('modal-verify-doctor');
+  }
+
+  // ── Copy invite link ──
+  function copyInvite() {
+    const c = document.getElementById('inviteCode')?.textContent;
+    if (c) { navigator.clipboard.writeText(c); alert('Invite link copied!'); }
+  }
+
+  // ── Resend invite email for existing doctor ──
+  function resendInvite(token, email, name) {
+    const btn = document.querySelector(`[onclick*="'${token}'"]`);
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-inline"></span>Sending...'; }
+
+    const link = window.location.origin + '/doctor/setup.php?token=' + token;
+
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_INVITE_TEMPLATE, {
+      to_email:    email,
+      doctor_name: name,
+      invite_link: link,
+    }).then(() => {
+      if (btn) { btn.disabled = false; btn.innerHTML = '✓ Sent!'; setTimeout(() => btn.innerHTML = 'Resend Invite', 2000); }
+    }).catch(() => {
+      if (btn) { btn.disabled = false; btn.innerHTML = 'Resend Invite'; alert('Failed to send. Check EmailJS keys.'); }
+    });
+  }
+
+  setTimeout(() => { const t = document.querySelector('.toast'); if (t) t.remove(); }, 3500);
 </script>
 </body>
 </html>
