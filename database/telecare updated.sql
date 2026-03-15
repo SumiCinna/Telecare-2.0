@@ -148,7 +148,7 @@ CREATE TABLE `doctors` (
   UNIQUE KEY `email` (`email`),
   KEY `verified_by` (`verified_by`),
   CONSTRAINT `doctors_ibfk_1` FOREIGN KEY (`verified_by`) REFERENCES `admins` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -157,7 +157,7 @@ CREATE TABLE `doctors` (
 
 LOCK TABLES `doctors` WRITE;
 /*!40000 ALTER TABLE `doctors` DISABLE KEYS */;
-INSERT INTO `doctors` VALUES (4,'Ma. Aberlee Lacanaria','General','','EXCELLCARE MEDICAL SYSTEM INC.','almondtofu25@gmail.com','$2y$10$KFzfCMLW/6YVdUWjiYG8b.g0yyUP6ZAW24jy1H7DrbopyR.btv15a','09999999999','uploads/profiles/doc_69b50c372d091.jfif','General doctor at EXCELLCARE MEDICAL SYSTEM INC.',500.00,'Filipino',0.0,'senior','active',1,'','',NULL,NULL,1,1,'2026-03-14 00:39:41',1,NULL,'2026-03-21 07:46:05',1,'2026-03-14 06:46:05','2026-03-14 07:39:41');
+INSERT INTO `doctors` VALUES (4,'Ma. Aberlee Lacanaria','General','','EXCELLCARE MEDICAL SYSTEM INC.','almondtofu25@gmail.com','$2y$10$KFzfCMLW/6YVdUWjiYG8b.g0yyUP6ZAW24jy1H7DrbopyR.btv15a','09999999999','uploads/profiles/doc_69b50c372d091.jfif','General doctor at EXCELLCARE MEDICAL SYSTEM INC.',500.00,'Filipino',0.0,'senior','active',1,'','',NULL,NULL,1,1,'2026-03-14 00:39:41',1,NULL,'2026-03-21 07:46:05',1,'2026-03-14 06:46:05','2026-03-14 07:39:41'),(5,'Ian Matthew Payawal','General','Cardiology',NULL,'dizoah3@gmail.com',NULL,NULL,NULL,NULL,0.00,NULL,0.0,'junior','pending',0,NULL,NULL,NULL,NULL,0,0,NULL,NULL,'54511810564a9ba13c1cbfadeeed8369071477e2ec8df7e947618bce8917d78c','2026-03-22 11:33:12',0,'2026-03-15 10:33:12','2026-03-15 10:33:12');
 /*!40000 ALTER TABLE `doctors` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -284,6 +284,8 @@ CREATE TABLE `patients` (
   `is_verified` tinyint(1) NOT NULL DEFAULT '0',
   `verification_token` varchar(64) DEFAULT NULL,
   `token_expires_at` datetime DEFAULT NULL,
+  `reset_token` varchar(64) DEFAULT NULL,
+  `reset_expires` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -295,7 +297,7 @@ CREATE TABLE `patients` (
 
 LOCK TABLES `patients` WRITE;
 /*!40000 ALTER TABLE `patients` DISABLE KEYS */;
-INSERT INTO `patients` VALUES (1,'John Noel Oraño','2004-12-10','Male','johnnoelorano@gmail.com','09923139504','uploads/profiles/patient_69ad35693609a.png','','','','$2y$10$.0dGQe0M5MZ7CbYzHVxr3.MOuseWn8XxI5LIEyy2VAuwE06n.tgPq','',NULL,'NPC KANAN MAKISIG STREET BARANGAY 171','CALOOCAN CITY','Philippines','','','English','2026-03-08 06:11:37','2026-03-08 08:38:01',0,NULL,NULL),(5,'Cid Kagenou','2011-03-01','Male','cidkag1210@gmail.com','09123456789','uploads/profiles/patient_69b66c6f61c19.png','','','','$2y$10$X.uZM7Zu/WPogMFGiCEIjOIDyRQYm.7vchIVgaamtNEZgdaQPjByO','',NULL,'Hillcrest Village Gate 1','Caloocan City','Philippines','','','English','2026-03-15 08:00:28','2026-03-15 08:23:44',1,NULL,NULL);
+INSERT INTO `patients` VALUES (1,'John Noel Oraño','2004-12-10','Male','johnnoelorano@gmail.com','09923139504','uploads/profiles/patient_69ad35693609a.png','','','','$2y$10$wQnaZBDlwvLZ4x71lZFcweFP0.3rbD5BSR91Tj88UUCGs3DDk/wma','',NULL,'NPC KANAN MAKISIG STREET BARANGAY 171','CALOOCAN CITY','Philippines','','','English','2026-03-08 06:11:37','2026-03-15 13:16:39',1,NULL,NULL,NULL,NULL),(5,'Cid Kagenou','2011-03-01','Male','cidkag1210@gmail.com','09123456789','uploads/profiles/patient_69b66c6f61c19.png','','','','$2y$10$X.uZM7Zu/WPogMFGiCEIjOIDyRQYm.7vchIVgaamtNEZgdaQPjByO','',NULL,'Hillcrest Village Gate 1','Caloocan City','Philippines','','','English','2026-03-15 08:00:28','2026-03-15 08:23:44',1,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `patients` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -353,4 +355,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-03-15 17:50:42
+-- Dump completed on 2026-03-15 22:45:27
