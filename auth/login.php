@@ -143,9 +143,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script>
       // ── Same keys as your register.php ──
-      const EMAILJS_PUBLIC_KEY  = 'm-AvAiAdUDsgBbz6D';
-        const EMAILJS_SERVICE_ID  = 'service_vr6ygvx';
-        const EMAILJS_TEMPLATE_ID = 'template_zhnltnl';
+      const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';
+      const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';
+      const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
       const unverifiedEmail     = <?= json_encode($_POST['email'] ?? '') ?>;
 
       emailjs.init(EMAILJS_PUBLIC_KEY);
@@ -216,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
       </div>
       <div style="text-align:right;margin-top:0.5rem;">
-        <a href="#" style="font-size:0.82rem;color:var(--blue);text-decoration:none;font-weight:500;">Forgot password?</a>
+        <a href="forgot_password.php" style="font-size:0.82rem;color:var(--blue);text-decoration:none;font-weight:500;">Forgot password?</a>
       </div>
       <button type="submit" class="btn-login">Log In</button>
     </form>
