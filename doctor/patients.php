@@ -6,7 +6,9 @@ $search = trim($_GET['q'] ?? '');
 $sql = "
     SELECT p.*,
         (SELECT COUNT(*) FROM appointments WHERE patient_id=p.id AND doctor_id=$doctor_id) AS total_visits,
-        (SELECT appointment_date FROM appointments WHERE patient_id=p.id AND doctor_id=$doctor_id ORDER BY appointment_date DESC LIMIT 1) AS last_visit
+        (SELECT appointment_date FROM appointments WHERE patient_id=p.id AND doctor_id=$doctor_id ORDER BY appointment_date DESC LIMIT 1) AS last_visit,
+        (SELECT COUNT(*) FROM lab_results WHERE patient_id=p.id AND doc_type='lab_result') AS lab_count,
+        (SELECT COUNT(*) FROM lab_results WHERE patient_id=p.id AND doc_type='prescription') AS rx_count
     FROM patients p
     JOIN patient_doctors pd ON pd.patient_id=p.id
     WHERE pd.doctor_id=$doctor_id
@@ -40,7 +42,7 @@ require_once 'includes/header.php';
     <div style="padding:0.9rem 1.2rem;border-bottom:1px solid rgba(36,68,65,0.06);display:flex;align-items:center;gap:0.9rem;">
       <div class="pat-avatar">
         <?php if (!empty($pt['profile_photo'])): ?>
-          <img src="../../<?= htmlspecialchars($pt['profile_photo']) ?>"/>
+          <img src="../<?= htmlspecialchars($pt['profile_photo']) ?>"/>
         <?php else: ?>
           <?= strtoupper(substr($pt['full_name'], 0, 2)) ?>
         <?php endif; ?>
@@ -52,10 +54,23 @@ require_once 'includes/header.php';
           <?= $pt['total_visits'] ?> visit<?= $pt['total_visits'] != 1 ? 's' : '' ?>
           <?php if ($pt['last_visit']): ?> · Last: <?= date('M d', strtotime($pt['last_visit'])) ?><?php endif; ?>
         </div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:0.3rem;display:flex;gap:0.6rem;">
+          <?php if ($pt['lab_count'] > 0): ?>
+            <span style="background:rgba(63,130,227,0.1);color:var(--blue);padding:0.2rem 0.5rem;border-radius:4px;font-weight:600;">
+              🧪 <?= $pt['lab_count'] ?> Lab<?= $pt['lab_count'] != 1 ? 's' : '' ?>
+            </span>
+          <?php endif; ?>
+          <?php if ($pt['rx_count'] > 0): ?>
+            <span style="background:rgba(244,132,95,0.1);color:#f4845f;padding:0.2rem 0.5rem;border-radius:4px;font-weight:600;">
+              💊 <?= $pt['rx_count'] ?> Rx
+            </span>
+          <?php endif; ?>
+        </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:0.4rem;align-items:flex-end;">
         <a href="chat.php?patient_id=<?= $pt['id'] ?>" style="background:var(--green);color:#fff;border-radius:10px;padding:0.35rem 0.8rem;font-size:0.73rem;font-weight:600;text-decoration:none;">Message</a>
         <a href="appointments.php?patient_id=<?= $pt['id'] ?>" style="background:rgba(63,130,227,0.1);color:var(--blue);border-radius:10px;padding:0.35rem 0.8rem;font-size:0.73rem;font-weight:600;text-decoration:none;">Visits</a>
+        <a href="patient-records.php?patient_id=<?= $pt['id'] ?>" style="background:rgba(244,132,95,0.1);color:#f4845f;border-radius:10px;padding:0.35rem 0.8rem;font-size:0.73rem;font-weight:600;text-decoration:none;">Records</a>
       </div>
     </div>
     <?php endwhile; ?>

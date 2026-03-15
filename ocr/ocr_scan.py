@@ -18,11 +18,10 @@ def preprocess_image(pil_image):
     """Clean up image for better OCR accuracy — handles colored text like red warnings"""
     img = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
 
-    # Boost colored text (red, blue) before grayscale conversion
-    # Red text goes light in grayscale — darken it first by boosting red channel contrast
+    
     lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
     l, a, b = cv2.split(lab)
-    # Boost a-channel (red/green axis) so red text stands out more
+    
     a = cv2.add(a, 30)
     lab = cv2.merge([l, a, b])
     img = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)

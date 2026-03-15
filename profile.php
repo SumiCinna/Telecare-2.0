@@ -1,6 +1,36 @@
 <?php
 require_once 'includes/auth.php';
 
+// ── Handle password change ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
+    $current = $_POST['current_password'] ?? '';
+    $new     = $_POST['new_password'] ?? '';
+    $confirm = $_POST['confirm_password'] ?? '';
+    $password_error = '';
+
+    if (!password_verify($current, $p['password'])) {
+        $password_error = 'Current password is incorrect.';
+    } elseif (strlen($new) < 8) {
+        $password_error = 'Password must be at least 8 characters.';
+    } elseif (!preg_match('/[A-Z]/', $new)) {
+        $password_error = 'Password must contain at least 1 uppercase letter.';
+    } elseif (!preg_match('/[a-z]/', $new)) {
+        $password_error = 'Password must contain at least 1 lowercase letter.';
+    } elseif (!preg_match('/[0-9]/', $new)) {
+        $password_error = 'Password must contain at least 1 number.';
+    } elseif ($new !== $confirm) {
+        $password_error = 'New passwords do not match.';
+    } else {
+        $hashed = password_hash($new, PASSWORD_BCRYPT);
+        $stmt   = $conn->prepare("UPDATE patients SET password = ? WHERE id = ?");
+        $stmt->bind_param("si", $hashed, $patient_id);
+        $stmt->execute();
+        $stmt->close();
+        header('Location: profile.php?pwd_saved=1');
+        exit;
+    }
+}
+
 // ── Handle photo-only upload ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['photo_only'])) {
     if (!empty($_FILES['profile_photo']['name']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
@@ -27,10 +57,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['photo_only'])) {
 
 // ── Handle profile update ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
-    // Only columns that actually exist in the patients table
+    // Only editable columns (city, country, address are now view-only)
     $fields = [
-        'phone_number','home_address','city','country_region',
-        'insurance_provider','insurance_policy_no',
+        'phone_number','insurance_provider','insurance_policy_no',
         'emergency_name','emergency_relationship','emergency_number'
     ];
 
@@ -42,22 +71,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
         $sets[]  = "$f = ?";
         $vals[]  = trim($_POST[$f] ?? '');
         $types  .= 's';
-    }
-
-    // Handle profile photo upload
-    if (!empty($_FILES['profile_photo']['name']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
-        $dir     = 'uploads/profiles/';
-        if (!is_dir($dir)) mkdir($dir, 0755, true);
-        $ext     = strtolower(pathinfo($_FILES['profile_photo']['name'], PATHINFO_EXTENSION));
-        $allowed = ['jpg','jpeg','png','gif','webp'];
-        if (in_array($ext, $allowed)) {
-            $fname = uniqid('patient_') . '.' . $ext;
-            if (move_uploaded_file($_FILES['profile_photo']['tmp_name'], $dir . $fname)) {
-                $sets[]  = "profile_photo = ?";
-                $vals[]  = $dir . $fname;
-                $types  .= 's';
-            }
-        }
     }
 
     $vals[]  = $patient_id;
@@ -117,12 +130,37 @@ require_once 'includes/header.php';
     text-decoration:none; transition:background 0.2s;
   }
   .logout-btn:hover { background:rgba(195,54,67,0.14); }
+
+  .pw-toggle {
+    position:absolute; right:12px; top:50%; transform:translateY(-50%);
+    background:none; border:none; cursor:pointer; color:#9ab0ae;
+    padding:0.5rem; display:flex; align-items:center; justify-content:center;
+  }
+  .pw-toggle:hover { color:var(--green); }
+
+  .alert-error {
+    background:rgba(195,54,67,0.08); border:1px solid rgba(195,54,67,0.2);
+    color:var(--red); border-radius:12px; padding:0.75rem 1rem;
+    font-size:0.86rem; margin-bottom:1rem;
+  }
+
+  .alert-success {
+    background:rgba(36,68,65,0.08); border:1px solid rgba(36,68,65,0.2);
+    color:var(--green); border-radius:12px; padding:0.75rem 1rem;
+    font-size:0.86rem; margin-bottom:1rem;
+  }
 </style>
 
 <div class="page">
 
   <?php if (isset($_GET['saved'])): ?>
   <div class="alert-success">✓ Profile updated successfully.</div>
+  <?php endif; ?>
+  <?php if (isset($_GET['pwd_saved'])): ?>
+  <div class="alert-success">✓ Password changed successfully.</div>
+  <?php endif; ?>
+  <?php if (isset($password_error) && $password_error): ?>
+  <div class="alert-error"><?= htmlspecialchars($password_error) ?></div>
   <?php endif; ?>
 
   <!-- Profile Header -->
@@ -168,17 +206,17 @@ require_once 'includes/header.php';
         <input type="tel" name="phone_number" class="field-input" value="<?= htmlspecialchars($p['phone_number'] ?? '') ?>"/>
       </div>
       <div>
-        <label class="field-label">Home Address</label>
-        <input type="text" name="home_address" class="field-input" value="<?= htmlspecialchars($p['home_address'] ?? '') ?>"/>
+        <label class="field-label">Home Address (View Only)</label>
+        <input type="text" class="field-input" value="<?= htmlspecialchars($p['home_address'] ?? 'Not set') ?>" readonly style="background:rgba(36,68,65,0.04);cursor:not-allowed;"/>
       </div>
       <div class="grid-2">
         <div>
-          <label class="field-label">City</label>
-          <input type="text" name="city" class="field-input" value="<?= htmlspecialchars($p['city'] ?? '') ?>"/>
+          <label class="field-label">City (View Only)</label>
+          <input type="text" class="field-input" value="<?= htmlspecialchars($p['city'] ?? 'Not set') ?>" readonly style="background:rgba(36,68,65,0.04);cursor:not-allowed;"/>
         </div>
         <div>
-          <label class="field-label">Country</label>
-          <input type="text" name="country_region" class="field-input" value="<?= htmlspecialchars($p['country_region'] ?? '') ?>"/>
+          <label class="field-label">Country (View Only)</label>
+          <input type="text" class="field-input" value="<?= htmlspecialchars($p['country_region'] ?? 'Not set') ?>" readonly style="background:rgba(36,68,65,0.04);cursor:not-allowed;"/>
         </div>
       </div>
     </div>
@@ -218,6 +256,58 @@ require_once 'includes/header.php';
     <button type="submit" class="btn-save">Save Changes</button>
   </form>
 
+  <!-- Change Password Section -->
+  <div class="section-label">Security</div>
+  <form method="POST" class="card" style="display:flex;flex-direction:column;gap:0.9rem;">
+    <input type="hidden" name="change_password"/>
+    <div>
+      <label class="field-label">Current Password</label>
+      <div style="position:relative;">
+        <input type="password" name="current_password" id="pwd_current" class="field-input" required placeholder="Enter your current password"/>
+        <button type="button" class="pw-toggle" onclick="togglePw('pwd_current')">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <label class="field-label">New Password</label>
+      <div style="position:relative;">
+        <input type="password" name="new_password" id="pwd_new" class="field-input" required placeholder="Min 8 chars: 1 uppercase, 1 lowercase, 1 number" oninput="validatePassword(this)"/>
+        <button type="button" class="pw-toggle" onclick="togglePw('pwd_new')">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+        </button>
+      </div>
+      <div style="margin-top:0.5rem;font-size:0.75rem;color:var(--muted);">
+        <div id="check_len" style="color:var(--muted);">✗ At least 8 characters</div>
+        <div id="check_upper" style="color:var(--muted);">✗ 1 uppercase letter (A-Z)</div>
+        <div id="check_lower" style="color:var(--muted);">✗ 1 lowercase letter (a-z)</div>
+        <div id="check_number" style="color:var(--muted);">✗ 1 number (0-9)</div>
+      </div>
+    </div>
+
+    <div>
+      <label class="field-label">Confirm New Password</label>
+      <div style="position:relative;">
+        <input type="password" name="confirm_password" id="pwd_confirm" class="field-input" required placeholder="Re-enter your new password"/>
+        <button type="button" class="pw-toggle" onclick="togglePw('pwd_confirm')">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-save">Change Password</button>
+  </form>
+
   <a href="auth/logout.php" class="logout-btn">
     <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
       <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
@@ -243,6 +333,31 @@ function previewAndSubmit(input) {
   reader.readAsDataURL(input.files[0]);
   // Submit the form to save it
   document.getElementById('photoForm').submit();
+}
+
+function togglePw(fieldId) {
+  const field = document.getElementById(fieldId);
+  field.type = field.type === 'password' ? 'text' : 'password';
+}
+
+function validatePassword(field) {
+  const pwd = field.value;
+  const len = pwd.length >= 8;
+  const upper = /[A-Z]/.test(pwd);
+  const lower = /[a-z]/.test(pwd);
+  const number = /[0-9]/.test(pwd);
+
+  document.getElementById('check_len').style.color = len ? 'var(--green)' : 'var(--muted)';
+  document.getElementById('check_len').textContent = len ? '✓ At least 8 characters' : '✗ At least 8 characters';
+
+  document.getElementById('check_upper').style.color = upper ? 'var(--green)' : 'var(--muted)';
+  document.getElementById('check_upper').textContent = upper ? '✓ 1 uppercase letter (A-Z)' : '✗ 1 uppercase letter (A-Z)';
+
+  document.getElementById('check_lower').style.color = lower ? 'var(--green)' : 'var(--muted)';
+  document.getElementById('check_lower').textContent = lower ? '✓ 1 lowercase letter (a-z)' : '✗ 1 lowercase letter (a-z)';
+
+  document.getElementById('check_number').style.color = number ? 'var(--green)' : 'var(--muted)';
+  document.getElementById('check_number').textContent = number ? '✓ 1 number (0-9)' : '✗ 1 number (0-9)';
 }
 </script>
 
