@@ -60,6 +60,49 @@ $invite_link  = $_SESSION['invite_link'] ?? null;
 $invite_email = $_SESSION['invite_email'] ?? null;
 $invite_name  = $_SESSION['invite_name'] ?? null;
 unset($_SESSION['toast'], $_SESSION['invite_link'], $_SESSION['invite_email'], $_SESSION['invite_name']);
+
+// ── Fetch all doctors with full profile data ──
+$dres = $conn->query("
+    SELECT d.*,
+           (SELECT COUNT(*) FROM patient_doctors WHERE doctor_id=d.id) AS patient_count
+    FROM doctors d
+    ORDER BY d.created_at DESC
+");
+$doctors = [];
+if ($dres) {
+    while ($row = $dres->fetch_assoc()) $doctors[] = $row;
+}
+
+// ── Attach schedules from doctor_schedules table ──
+$dayOrder = ['Monday'=>1,'Tuesday'=>2,'Wednesday'=>3,'Thursday'=>4,'Friday'=>5,'Saturday'=>6,'Sunday'=>7];
+$scheduleMap = [];
+$_sched_debug = '';
+if (count($doctors) > 0) {
+    $ids = implode(',', array_map(fn($d) => (int)$d['id'], $doctors));
+    $sres = $conn->query("SELECT doctor_id, day_of_week, start_time, end_time FROM doctor_schedules WHERE doctor_id IN ($ids)");
+    if ($sres === false) {
+        $_sched_debug = 'QUERY FAILED: ' . $conn->error;
+    } else {
+        $rowCount = 0;
+        while ($srow = $sres->fetch_assoc()) {
+            $rowCount++;
+            $scheduleMap[(int)$srow['doctor_id']][] = [
+                'day_of_week' => $srow['day_of_week'],
+                'start_time'  => $srow['start_time'],
+                'end_time'    => $srow['end_time'],
+            ];
+        }
+        $_sched_debug = "OK — $rowCount schedule row(s) found for IDs: $ids";
+        foreach ($scheduleMap as &$rows) {
+            usort($rows, fn($a,$b) => ($dayOrder[$a['day_of_week']]??9) - ($dayOrder[$b['day_of_week']]??9));
+        }
+        unset($rows);
+    }
+}
+foreach ($doctors as &$doc) {
+    $doc['_schedules'] = $scheduleMap[(int)$doc['id']] ?? [];
+}
+unset($doc);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -97,6 +140,7 @@ unset($_SESSION['toast'], $_SESSION['invite_link'], $_SESSION['invite_email'], $
     .btn-green{background:rgba(36,68,65,0.1);color:var(--green)}.btn-green:hover{background:var(--green);color:#fff}
     .btn-red{background:rgba(195,54,67,0.1);color:var(--red)}.btn-red:hover{background:var(--red);color:#fff}
     .btn-blue{background:rgba(63,130,227,0.1);color:var(--blue)}.btn-blue:hover{background:var(--blue);color:#fff}
+    .btn-teal{background:rgba(36,68,65,0.08);color:var(--green)}.btn-teal:hover{background:var(--green);color:#fff}
     .doctor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.2rem}
     .doctor-card{background:var(--white);border-radius:16px;padding:1.4rem;border:1px solid rgba(36,68,65,0.07);box-shadow:0 2px 10px rgba(0,0,0,0.04);transition:transform 0.2s,box-shadow 0.2s}
     .doctor-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.08)}
@@ -111,6 +155,30 @@ unset($_SESSION['toast'], $_SESSION['invite_link'], $_SESSION['invite_email'], $
     .modal-overlay.open{display:flex}
     .modal{background:var(--white);border-radius:20px;padding:2rem;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;animation:fadeUp 0.3s ease}
     .modal h3{font-size:1.3rem;margin-bottom:1.2rem}
+
+    /* ── View Details Modal ── */
+    .modal-details{max-width:640px}
+    .details-header{display:flex;align-items:center;gap:1.2rem;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid rgba(36,68,65,0.08)}
+    .details-avatar{width:64px;height:64px;border-radius:18px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.4rem;flex-shrink:0}
+    .details-section{margin-bottom:1.4rem}
+    .details-section-title{font-size:0.68rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#9ab0ae;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem}
+    .details-section-title::after{content:'';flex:1;height:1px;background:rgba(36,68,65,0.08)}
+    .details-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem}
+    .detail-item{background:rgba(36,68,65,0.04);border-radius:10px;padding:0.7rem 0.9rem}
+    .detail-item.full{grid-column:1/-1}
+    .detail-item-label{font-size:0.68rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#9ab0ae;margin-bottom:0.2rem}
+    .detail-item-value{font-size:0.88rem;font-weight:500;color:var(--green);word-break:break-word}
+    .detail-item-value.empty{color:#c0cece;font-style:italic}
+    .schedule-table{width:100%;border-collapse:collapse}
+    .schedule-table th{font-size:0.68rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#9ab0ae;padding:0.4rem 0.6rem;text-align:left;border-bottom:1px solid rgba(36,68,65,0.07)}
+    .schedule-table td{font-size:0.83rem;padding:0.5rem 0.6rem;border-bottom:1px solid rgba(36,68,65,0.04);color:var(--green)}
+    .schedule-table tr:last-child td{border-bottom:none}
+    .sched-day{font-weight:600;width:110px}
+    .sched-off{color:#c0cece;font-style:italic}
+    .doc-link{color:var(--blue);text-decoration:none;font-size:0.82rem;font-weight:600;display:inline-flex;align-items:center;gap:0.3rem}
+    .doc-link:hover{text-decoration:underline}
+    .no-data{color:#c0cece;font-style:italic;font-size:0.82rem}
+
     .field-label{display:block;font-size:0.72rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#9ab0ae;margin-bottom:0.4rem}
     .field-input{width:100%;padding:0.72rem 0.9rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--green);outline:none;transition:border-color 0.2s}
     .field-input:focus{border-color:var(--blue)}
@@ -132,6 +200,7 @@ unset($_SESSION['toast'], $_SESSION['invite_link'], $_SESSION['invite_email'], $
     @keyframes fadeOut{from{opacity:1}to{opacity:0;pointer-events:none}}
     @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     @media(max-width:900px){.sidebar{display:none}}
+    @media(max-width:520px){.details-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -180,8 +249,8 @@ unset($_SESSION['toast'], $_SESSION['invite_link'], $_SESSION['invite_email'], $
   </div>
 
   <div class="page-content">
+    <!-- SCHEDULE DEBUG: <?= htmlspecialchars($_sched_debug) ?> -->
 
-    <!-- Initialize EmailJS globally -->
     <script>
       const EMAILJS_PUBLIC_KEY       = 'm-AvAiAdUDsgBbz6D';
       const EMAILJS_SERVICE_ID       = 'service_vr6ygvx';
@@ -195,13 +264,10 @@ unset($_SESSION['toast'], $_SESSION['invite_link'], $_SESSION['invite_email'], $
       <code id="inviteCode"><?= htmlspecialchars($invite_link) ?></code>
       <button onclick="copyInvite()" style="margin-top:0.5rem;font-size:0.75rem;color:var(--blue);background:none;border:none;cursor:pointer;font-weight:600;">Copy link</button>
     </div>
-
-    <!-- Auto-fire invite email -->
     <script>
       const doctorEmail = <?= json_encode($invite_email) ?>;
       const doctorName  = <?= json_encode($invite_name) ?>;
       const inviteURL   = <?= json_encode($invite_link) ?>;
-
       emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_INVITE_TEMPLATE, {
         to_email:    doctorEmail,
         doctor_name: doctorName,
@@ -214,11 +280,9 @@ unset($_SESSION['toast'], $_SESSION['invite_link'], $_SESSION['invite_email'], $
     </script>
     <?php endif; ?>
 
+    <!-- ── Doctor Grid ── -->
     <div class="doctor-grid">
-    <?php
-    $dres = $conn->query("SELECT d.*, (SELECT COUNT(*) FROM patient_doctors WHERE doctor_id=d.id) AS patient_count FROM doctors d ORDER BY d.created_at DESC");
-    if ($dres && $dres->num_rows > 0):
-      while ($d = $dres->fetch_assoc()):
+    <?php if (count($doctors) > 0): foreach ($doctors as $d):
         $initials = strtoupper(substr($d['full_name'],0,1).(strpos($d['full_name'],' ')!==false?substr($d['full_name'],strpos($d['full_name'],' ')+1,1):''));
     ?>
     <div class="doctor-card">
@@ -237,20 +301,153 @@ unset($_SESSION['toast'], $_SESSION['invite_link'], $_SESSION['invite_email'], $
         <?php if (!$d['setup_complete']): ?><span class="badge badge-orange">Setup pending</span><?php endif; ?>
       </div>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+        <!-- View Details button -->
+        <button class="btn-sm btn-teal" onclick="openDetailsModal(<?= $d['id'] ?>)">
+          <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:3px"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          View Details
+        </button>
         <a href="?toggle_doctor=<?= $d['id'] ?>" class="btn-sm <?= $d['status']==='active'?'btn-red':'btn-green' ?>"><?= $d['status']==='active'?'Deactivate':'Activate' ?></a>
         <?php if (!$d['is_verified']): ?>
-        <button class="btn-sm btn-blue" onclick="openVerifyModal(<?= $d['id'] ?>, '<?= htmlspecialchars($d['full_name']) ?>')">Verify</button>
+        <button class="btn-sm btn-blue" onclick="openVerifyModal(<?= $d['id'] ?>, '<?= htmlspecialchars($d['full_name'],ENT_QUOTES) ?>')">Verify</button>
         <?php endif; ?>
         <?php if (!$d['setup_complete'] && $d['invite_token']): ?>
-        <button class="btn-sm btn-green" onclick="resendInvite('<?= htmlspecialchars($d['invite_token']) ?>','<?= htmlspecialchars($d['email']) ?>','<?= htmlspecialchars($d['full_name']) ?>')" id="resend-<?= $d['id'] ?>">Resend Invite</button>
+        <button class="btn-sm btn-green" onclick="resendInvite('<?= htmlspecialchars($d['invite_token'],ENT_QUOTES) ?>','<?= htmlspecialchars($d['email'],ENT_QUOTES) ?>','<?= htmlspecialchars($d['full_name'],ENT_QUOTES) ?>')" id="resend-<?= $d['id'] ?>">Resend Invite</button>
         <?php endif; ?>
       </div>
     </div>
-    <?php endwhile; else: ?>
+    <?php endforeach; else: ?>
     <div style="grid-column:1/-1;" class="table-wrap"><div class="empty-row">No doctors registered yet. Click "Add Doctor" to get started.</div></div>
     <?php endif; ?>
     </div>
 
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODAL: View Doctor Details
+     ══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-view-doctor">
+  <div class="modal modal-details">
+
+    <!-- Header -->
+    <div class="details-header">
+      <div class="details-avatar" id="vd-avatar"></div>
+      <div style="flex:1;">
+        <div style="font-size:1.15rem;font-weight:800;" id="vd-name"></div>
+        <div style="font-size:0.82rem;color:#9ab0ae;margin-top:0.2rem;" id="vd-specialty"></div>
+        <div style="margin-top:0.5rem;display:flex;gap:0.4rem;flex-wrap:wrap;" id="vd-badges"></div>
+      </div>
+      <button onclick="closeModal('modal-view-doctor')" style="background:none;border:none;cursor:pointer;color:#9ab0ae;flex-shrink:0;padding:4px;" title="Close">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Contact Info -->
+    <div class="details-section">
+      <div class="details-section-title">Contact Information</div>
+      <div class="details-grid">
+        <div class="detail-item">
+          <div class="detail-item-label">Email</div>
+          <div class="detail-item-value" id="vd-email"></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">Phone Number</div>
+          <div class="detail-item-value" id="vd-phone"></div>
+        </div>
+        <div class="detail-item full">
+          <div class="detail-item-label">Address / Clinic</div>
+          <div class="detail-item-value" id="vd-address"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Professional Info -->
+    <div class="details-section">
+      <div class="details-section-title">Professional Information</div>
+      <div class="details-grid">
+        <div class="detail-item">
+          <div class="detail-item-label">License Number</div>
+          <div class="detail-item-value" id="vd-license"></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">Issuing Board</div>
+          <div class="detail-item-value" id="vd-board"></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">Years of Experience</div>
+          <div class="detail-item-value" id="vd-experience"></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">Consultation Fee</div>
+          <div class="detail-item-value" id="vd-fee"></div>
+        </div>
+        <div class="detail-item full">
+          <div class="detail-item-label">Bio / About</div>
+          <div class="detail-item-value" id="vd-bio"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule -->
+    <div class="details-section">
+      <div class="details-section-title">Weekly Schedule</div>
+      <div style="background:rgba(36,68,65,0.04);border-radius:12px;overflow:hidden;">
+        <table class="schedule-table">
+          <thead><tr><th>Day</th><th>Start</th><th>End</th><th>Status</th></tr></thead>
+          <tbody id="vd-schedule-body">
+            <tr><td colspan="4" style="padding:1rem;text-align:center;color:#c0cece;font-style:italic;font-size:0.82rem;">No schedule data</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Documents -->
+    <div class="details-section">
+      <div class="details-section-title">Uploaded Documents</div>
+      <div class="details-grid">
+        <div class="detail-item">
+          <div class="detail-item-label">License File</div>
+          <div class="detail-item-value" id="vd-license-file"></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">Board Certificate</div>
+          <div class="detail-item-value" id="vd-cert-file"></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">Profile Photo</div>
+          <div class="detail-item-value" id="vd-photo"></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">Verified At</div>
+          <div class="detail-item-value" id="vd-verified-at"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Info -->
+    <div class="details-section">
+      <div class="details-section-title">Account</div>
+      <div class="details-grid">
+        <div class="detail-item">
+          <div class="detail-item-label">Registered</div>
+          <div class="detail-item-value" id="vd-created"></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">Setup Complete</div>
+          <div class="detail-item-value" id="vd-setup"></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">Availability</div>
+          <div class="detail-item-value" id="vd-available"></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-label">Total Patients</div>
+          <div class="detail-item-value" id="vd-patients"></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-cancel" onclick="closeModal('modal-view-doctor')">Close</button>
   </div>
 </div>
 
@@ -292,44 +489,153 @@ unset($_SESSION['toast'], $_SESSION['invite_link'], $_SESSION['invite_email'], $
   </div>
 </div>
 
+<!-- ── Doctor data for JS ── -->
 <script>
-  // ── Modal helpers ──
-  function openModal(id)  { document.getElementById(id).classList.add('open'); }
-  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-  document.querySelectorAll('.modal-overlay').forEach(m => {
-    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+const DOCTORS_DATA = <?= json_encode(array_values($doctors), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+
+console.log("[TELE-CARE] schedules check", DOCTORS_DATA.map(d => ({id: d.id, name: d.full_name, schedules: d._schedules})));
+
+// ── Modal helpers ──
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+function openVerifyModal(id, name) {
+  document.getElementById('verify-doctor-id').value = id;
+  document.getElementById('verify-doctor-name').value = 'Dr. ' + name;
+  openModal('modal-verify-doctor');
+}
+
+// ── Copy invite link ──
+function copyInvite() {
+  const c = document.getElementById('inviteCode')?.textContent;
+  if (c) { navigator.clipboard.writeText(c); alert('Invite link copied!'); }
+}
+
+// ── Resend invite ──
+function resendInvite(token, email, name) {
+  const btn = document.querySelector(`[onclick*="'${token}'"]`);
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-inline"></span>Sending...'; }
+  const link = window.location.origin + '/doctor/setup.php?token=' + token;
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_INVITE_TEMPLATE, {
+    to_email: email, doctor_name: name, invite_link: link,
+  }).then(() => {
+    if (btn) { btn.disabled = false; btn.innerHTML = '✓ Sent!'; setTimeout(() => btn.innerHTML = 'Resend Invite', 2000); }
+  }).catch(() => {
+    if (btn) { btn.disabled = false; btn.innerHTML = 'Resend Invite'; alert('Failed to send. Check EmailJS keys.'); }
   });
-  function openVerifyModal(id, name) {
-    document.getElementById('verify-doctor-id').value = id;
-    document.getElementById('verify-doctor-name').value = 'Dr. ' + name;
-    openModal('modal-verify-doctor');
-  }
+}
 
-  // ── Copy invite link ──
-  function copyInvite() {
-    const c = document.getElementById('inviteCode')?.textContent;
-    if (c) { navigator.clipboard.writeText(c); alert('Invite link copied!'); }
-  }
+// ── Open View Details Modal ──
+function openDetailsModal(id) {
+  const d = DOCTORS_DATA.find(x => x.id == id);
+  if (!d) return;
 
-  // ── Resend invite email for existing doctor ──
-  function resendInvite(token, email, name) {
-    const btn = document.querySelector(`[onclick*="'${token}'"]`);
-    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-inline"></span>Sending...'; }
+  const initials = d.full_name
+    ? d.full_name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()
+    : '?';
 
-    const link = window.location.origin + '/doctor/setup.php?token=' + token;
+  const val = (v, fallback='—') => (v && String(v).trim() !== '') ? v : fallback;
+  const emptySpan = (v, fallback='Not provided') =>
+    (v && String(v).trim() !== '')
+      ? `<span>${escHtml(v)}</span>`
+      : `<span class="empty">${fallback}</span>`;
 
-    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_INVITE_TEMPLATE, {
-      to_email:    email,
-      doctor_name: name,
-      invite_link: link,
-    }).then(() => {
-      if (btn) { btn.disabled = false; btn.innerHTML = '✓ Sent!'; setTimeout(() => btn.innerHTML = 'Resend Invite', 2000); }
-    }).catch(() => {
-      if (btn) { btn.disabled = false; btn.innerHTML = 'Resend Invite'; alert('Failed to send. Check EmailJS keys.'); }
+  // Header
+  document.getElementById('vd-avatar').textContent  = initials;
+  document.getElementById('vd-name').textContent    = 'Dr. ' + val(d.full_name, 'Unknown');
+  document.getElementById('vd-specialty').textContent =
+    [d.specialty, d.subspecialty].filter(Boolean).join(' · ') || 'Specialty not set';
+
+  // Badges
+  const badgeEl = document.getElementById('vd-badges');
+  let badges = '';
+  const statusCls = d.status==='active'?'badge-green':d.status==='pending'?'badge-orange':'badge-gray';
+  badges += `<span class="badge ${statusCls}">${ucFirst(d.status)}</span>`;
+  if (d.is_verified)     badges += `<span class="badge badge-green">✓ Verified</span>`;
+  if (!d.setup_complete) badges += `<span class="badge badge-orange">Setup pending</span>`;
+  if (d.is_available)    badges += `<span class="badge badge-blue">Available</span>`;
+  badgeEl.innerHTML = badges;
+
+  // Contact
+  document.getElementById('vd-email').innerHTML   = emptySpan(d.email);
+  document.getElementById('vd-phone').innerHTML   = emptySpan(d.phone_number || d.phone);
+  document.getElementById('vd-address').innerHTML = emptySpan(d.clinic_address || d.address);
+
+  // Professional
+  document.getElementById('vd-license').innerHTML    = emptySpan(d.license_number);
+  document.getElementById('vd-board').innerHTML      = emptySpan(d.issuing_board);
+  document.getElementById('vd-experience').innerHTML = d.years_experience
+    ? `<span>${escHtml(d.years_experience)} year(s)</span>`
+    : `<span class="empty">Not provided</span>`;
+  document.getElementById('vd-fee').innerHTML = d.consultation_fee
+    ? `<span>₱ ${parseFloat(d.consultation_fee).toLocaleString()}</span>`
+    : `<span class="empty">Not set</span>`;
+  document.getElementById('vd-bio').innerHTML = emptySpan(d.bio || d.about, 'No bio provided');
+
+  // Schedule — built from doctor_schedules table rows (_schedules array)
+  const schedRows = d._schedules || [];
+
+  let schedHtml = '';
+  if (schedRows.length > 0) {
+    schedRows.forEach(row => {
+      const start = row.start_time || row.start || '';
+      const end   = row.end_time   || row.end   || '';
+      schedHtml += `<tr>
+        <td class="sched-day">${escHtml(row.day_of_week || row.day || '')}</td>
+        <td>${start ? escHtml(fmt12h(start)) : '<span class="sched-off">—</span>'}</td>
+        <td>${end   ? escHtml(fmt12h(end))   : '<span class="sched-off">—</span>'}</td>
+        <td><span class="badge badge-green" style="font-size:0.65rem;">Available</span></td>
+      </tr>`;
     });
   }
+  document.getElementById('vd-schedule-body').innerHTML =
+    schedHtml ||
+    `<tr><td colspan="4" style="padding:1rem;text-align:center;color:#c0cece;font-style:italic;font-size:0.82rem;">No schedule set yet</td></tr>`;
 
-  setTimeout(() => { const t = document.querySelector('.toast'); if (t) t.remove(); }, 3500);
+  // Documents
+  document.getElementById('vd-license-file').innerHTML =
+    d.license_file ? `<a href="/${d.license_file}" target="_blank" class="doc-link">📄 View File</a>` : `<span class="empty">Not uploaded</span>`;
+  document.getElementById('vd-cert-file').innerHTML =
+    d.board_cert_file ? `<a href="/${d.board_cert_file}" target="_blank" class="doc-link">📄 View File</a>` : `<span class="empty">Not uploaded</span>`;
+  document.getElementById('vd-photo').innerHTML =
+    (d.profile_photo || d.photo) ? `<a href="/${d.profile_photo||d.photo}" target="_blank" class="doc-link">🖼 View Photo</a>` : `<span class="empty">Not uploaded</span>`;
+  document.getElementById('vd-verified-at').innerHTML =
+    d.verified_at ? `<span>${fmtDate(d.verified_at)}</span>` : `<span class="empty">Not yet verified</span>`;
+
+  // Account
+  document.getElementById('vd-created').innerHTML   = `<span>${fmtDate(d.created_at)}</span>`;
+  document.getElementById('vd-setup').innerHTML     = d.setup_complete ? `<span style="color:#16a34a;font-weight:700;">✓ Complete</span>` : `<span style="color:#d97706;font-weight:700;">Pending</span>`;
+  document.getElementById('vd-available').innerHTML = d.is_available ? `<span style="color:#16a34a;font-weight:700;">Available</span>` : `<span style="color:#d97706;">Unavailable</span>`;
+  document.getElementById('vd-patients').innerHTML  = `<span>${d.patient_count || 0} patient(s)</span>`;
+
+  openModal('modal-view-doctor');
+}
+
+// ── Helpers ──
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function ucFirst(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+function fmtDate(s) {
+  if (!s) return '—';
+  const d = new Date(s);
+  if (isNaN(d)) return s;
+  return d.toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
+}
+function fmt12h(t) {
+  if (!t) return '';
+  const [h,m] = t.split(':').map(Number);
+  if (isNaN(h)) return t;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hr = h % 12 || 12;
+  return `${hr}:${String(m||0).padStart(2,'0')} ${ampm}`;
+}
+
+setTimeout(() => { const t = document.querySelector('.toast'); if (t) t.remove(); }, 3500);
 </script>
 </body>
 </html>
