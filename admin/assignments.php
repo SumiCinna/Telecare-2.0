@@ -7,23 +7,18 @@ require_once '../database/config.php';
 
 if (!isset($_SESSION['admin_id'])) { header('Location: login.php'); exit; }
 
-if (isset($_GET['unassign'])) {
-    $pid = (int)$_GET['pid'];
-    $did = (int)$_GET['did'];
-    $conn->query("DELETE FROM patient_doctors WHERE patient_id=$pid AND doctor_id=$did");
-    $_SESSION['toast'] = "Patient unassigned.";
-    header('Location: assignments.php'); exit;
-}
-
 $toast = $_SESSION['toast'] ?? null;
 unset($_SESSION['toast']);
+
+// ── Fetch all active doctors ──
+$doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY full_name");
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Assignments — TELE-CARE</title>
+  <title>Appointments by Doctor — TELE-CARE</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
@@ -47,16 +42,41 @@ unset($_SESSION['toast']);
     .main{flex:1;overflow-y:auto}
     .topbar{background:var(--white);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(36,68,65,0.07);position:sticky;top:0;z-index:50}
     .page-content{padding:2rem}
-    .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
-    .section-header h2{font-size:1.3rem}
-    .doc-avatar{width:40px;height:40px;border-radius:14px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;flex-shrink:0}
+
+    /* Doctor card */
+    .doc-card{background:var(--white);border-radius:18px;border:1px solid rgba(36,68,65,0.07);box-shadow:0 2px 10px rgba(0,0,0,0.04);margin-bottom:1.5rem;overflow:hidden}
+    .doc-header{display:flex;align-items:center;gap:1rem;padding:1.2rem 1.5rem;border-bottom:1px solid rgba(36,68,65,0.07);cursor:pointer;user-select:none}
+    .doc-header:hover{background:rgba(36,68,65,0.02)}
+    .doc-avatar{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--blue),#2563C4);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;flex-shrink:0;overflow:hidden}
+    .doc-avatar img{width:100%;height:100%;object-fit:cover}
+    .chevron{margin-left:auto;transition:transform 0.25s;color:#9ab0ae}
+    .doc-card.open .chevron{transform:rotate(180deg)}
+
+    /* Tabs */
+    .appt-body{display:none;padding:0 1.5rem 1.2rem}
+    .doc-card.open .appt-body{display:block}
+    .tabs{display:flex;gap:0;border-bottom:1px solid rgba(36,68,65,0.08);margin-bottom:1rem;margin-top:1rem}
+    .tab-btn{padding:0.55rem 1.1rem;font-size:0.8rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border:none;background:none;cursor:pointer;color:#9ab0ae;font-family:'DM Sans',sans-serif;border-bottom:2px solid transparent;transition:all 0.2s;margin-bottom:-1px}
+    .tab-btn.active{color:var(--green);border-bottom-color:var(--green)}
+    .tab-btn:hover:not(.active){color:var(--green)}
+    .tab-panel{display:none}.tab-panel.active{display:block}
+
+    /* Appointment rows */
+    .appt-row{display:flex;align-items:center;gap:1rem;padding:0.75rem 0;border-bottom:1px solid rgba(36,68,65,0.05)}
+    .appt-row:last-child{border-bottom:none}
+    .appt-date{min-width:80px;text-align:center;background:rgba(36,68,65,0.05);border-radius:10px;padding:0.4rem 0.5rem}
+    .appt-date .day{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;line-height:1;color:var(--green)}
+    .appt-date .mon{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ab0ae;margin-top:0.1rem}
+    .empty-appt{padding:1.5rem 0;text-align:center;color:#9ab0ae;font-size:0.85rem}
+
     .badge{display:inline-block;padding:0.22rem 0.65rem;border-radius:50px;font-size:0.7rem;font-weight:700;letter-spacing:0.04em}
+    .badge-green{background:rgba(34,197,94,0.1);color:#16a34a}
+    .badge-orange{background:rgba(245,158,11,0.1);color:#d97706}
+    .badge-red{background:rgba(195,54,67,0.1);color:var(--red)}
     .badge-blue{background:rgba(63,130,227,0.1);color:var(--blue)}
-    .assign-card{background:var(--white);border-radius:16px;padding:1.3rem;border:1px solid rgba(36,68,65,0.07);margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.03)}
-    .patient-chip{display:inline-flex;align-items:center;gap:0.5rem;background:rgba(36,68,65,0.07);border-radius:50px;padding:0.3rem 0.7rem;font-size:0.78rem;font-weight:600;color:var(--green);margin:0.25rem}
-    .table-wrap{background:var(--white);border-radius:16px;overflow:hidden;border:1px solid rgba(36,68,65,0.07);box-shadow:0 2px 10px rgba(0,0,0,0.04)}
+    .badge-gray{background:rgba(0,0,0,0.06);color:#888}
+
     .toast{position:fixed;bottom:2rem;right:2rem;z-index:300;background:var(--green);color:#fff;padding:0.9rem 1.5rem;border-radius:14px;font-size:0.88rem;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:slideIn 0.4s ease,fadeOut 0.4s 3s ease forwards}
-    .empty-row{text-align:center;padding:3rem;color:#9ab0ae;font-size:0.88rem}
     @keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
     @keyframes fadeOut{from{opacity:1}to{opacity:0;pointer-events:none}}
     @media(max-width:900px){.sidebar{display:none}}
@@ -84,7 +104,7 @@ unset($_SESSION['toast']);
     </a>
     <a href="assignments.php" class="nav-link active">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      Assignments
+      Appointments
     </a>
   </nav>
   <div class="sidebar-logout">
@@ -99,47 +119,187 @@ unset($_SESSION['toast']);
   <div class="topbar">
     <div>
       <div style="font-size:0.75rem;color:#9ab0ae;font-weight:600;">Admin Portal</div>
-      <div style="font-size:0.95rem;font-weight:700;">Assignments</div>
+      <div style="font-size:0.95rem;font-weight:700;">Appointments by Doctor</div>
     </div>
-    <span style="font-size:0.82rem;color:#9ab0ae;">Doctor-centric patient roster</span>
+    <span style="font-size:0.82rem;color:#9ab0ae;">Click a doctor to expand their appointments</span>
   </div>
 
   <div class="page-content">
-    <?php
-    $ares = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY full_name");
-    if ($ares && $ares->num_rows > 0):
-      while ($doc = $ares->fetch_assoc()):
-        $pts = $conn->query("SELECT p.id, p.full_name FROM patients p JOIN patient_doctors pd ON pd.patient_id=p.id WHERE pd.doctor_id={$doc['id']}");
-        $cnt = $conn->query("SELECT COUNT(*) c FROM patient_doctors WHERE doctor_id={$doc['id']}")->fetch_assoc()['c'];
+
+    <?php if (!$doctors || $doctors->num_rows === 0): ?>
+      <div style="text-align:center;padding:4rem;color:#9ab0ae;font-size:0.9rem;">No active doctors found.</div>
+    <?php else: while ($doc = $doctors->fetch_assoc()):
+
+      $did = (int)$doc['id'];
+
+      // Upcoming: today or future, Pending or Confirmed
+      $upcoming = $conn->query("
+          SELECT a.*, p.full_name AS patient_name
+          FROM appointments a
+          JOIN patients p ON p.id = a.patient_id
+          WHERE a.doctor_id = $did
+            AND a.status IN ('Pending','Confirmed')
+            AND a.appointment_date >= CURDATE()
+          ORDER BY a.appointment_date ASC, a.appointment_time ASC
+      ");
+
+      // Ongoing / today's confirmed
+      $today = $conn->query("
+          SELECT a.*, p.full_name AS patient_name
+          FROM appointments a
+          JOIN patients p ON p.id = a.patient_id
+          WHERE a.doctor_id = $did
+            AND a.status = 'Confirmed'
+            AND a.appointment_date = CURDATE()
+          ORDER BY a.appointment_time ASC
+      ");
+
+      // Past: completed or cancelled
+      $past = $conn->query("
+          SELECT a.*, p.full_name AS patient_name
+          FROM appointments a
+          JOIN patients p ON p.id = a.patient_id
+          WHERE a.doctor_id = $did
+            AND (a.status IN ('Completed','Cancelled')
+                 OR (a.appointment_date < CURDATE() AND a.status NOT IN ('Pending','Confirmed')))
+          ORDER BY a.appointment_date DESC, a.appointment_time DESC
+          LIMIT 20
+      ");
+
+      $upCnt   = $upcoming ? $upcoming->num_rows : 0;
+      $todayCnt = $today   ? $today->num_rows    : 0;
+      $pastCnt = $past     ? $past->num_rows      : 0;
+      $totalCnt = $upCnt + $pastCnt;
     ?>
-    <div class="assign-card">
-      <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.9rem;">
-        <div class="doc-avatar"><?= strtoupper(substr($doc['full_name'],0,2)) ?></div>
-        <div style="flex:1;">
-          <div style="font-weight:700;">Dr. <?= htmlspecialchars($doc['full_name']) ?></div>
-          <div style="font-size:0.75rem;color:#9ab0ae;"><?= htmlspecialchars($doc['specialty'] ?? '—') ?></div>
+    <div class="doc-card" id="card-<?= $did ?>">
+      <div class="doc-header" onclick="toggleCard(<?= $did ?>)">
+        <div class="doc-avatar">
+          <?php if (!empty($doc['profile_photo'])): ?>
+            <img src="../<?= htmlspecialchars($doc['profile_photo']) ?>"/>
+          <?php else: ?>
+            <?= strtoupper(substr($doc['full_name'], 0, 2)) ?>
+          <?php endif; ?>
         </div>
-        <span class="badge badge-blue"><?= $cnt ?> patient<?= $cnt!=1?'s':'' ?></span>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:0.97rem;">Dr. <?= htmlspecialchars($doc['full_name']) ?></div>
+          <div style="font-size:0.78rem;color:#9ab0ae;"><?= htmlspecialchars($doc['specialty'] ?? '—') ?><?= !empty($doc['subspecialty']) ? ' · ' . htmlspecialchars($doc['subspecialty']) : '' ?></div>
+        </div>
+        <div style="display:flex;gap:0.5rem;align-items:center;margin-right:0.8rem;">
+          <?php if ($todayCnt > 0): ?>
+            <span class="badge badge-green"><?= $todayCnt ?> today</span>
+          <?php endif; ?>
+          <?php if ($upCnt > 0): ?>
+            <span class="badge badge-blue"><?= $upCnt ?> upcoming</span>
+          <?php endif; ?>
+          <span class="badge badge-gray"><?= $totalCnt ?> total</span>
+        </div>
+        <svg class="chevron" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+        </svg>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
-        <?php if ($pts && $pts->num_rows > 0): while ($pp = $pts->fetch_assoc()): ?>
-        <span class="patient-chip">
-          <?= htmlspecialchars($pp['full_name']) ?>
-          <a href="?unassign=1&pid=<?= $pp['id'] ?>&did=<?= $doc['id'] ?>" onclick="return confirm('Remove patient?')" style="color:#9ab0ae;margin-left:0.2rem;text-decoration:none;">✕</a>
-        </span>
-        <?php endwhile; else: ?>
-        <span style="font-size:0.8rem;color:#9ab0ae;">No patients assigned.</span>
-        <?php endif; ?>
-      </div>
-    </div>
-    <?php endwhile; else: ?>
-    <div class="table-wrap"><div class="empty-row">No active doctors yet.</div></div>
-    <?php endif; ?>
+
+      <div class="appt-body">
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab(<?= $did ?>, 'upcoming', this)">Upcoming</button>
+          <button class="tab-btn"        onclick="switchTab(<?= $did ?>, 'today',    this)">Today</button>
+          <button class="tab-btn"        onclick="switchTab(<?= $did ?>, 'past',     this)">Past</button>
+        </div>
+
+        <!-- UPCOMING -->
+        <div class="tab-panel active" id="tab-<?= $did ?>-upcoming">
+          <?php
+          $upcoming->data_seek(0);
+          $has = false;
+          while ($a = $upcoming->fetch_assoc()):
+            $has = true;
+            $d   = new DateTime($a['appointment_date']);
+          ?>
+          <div class="appt-row">
+            <div class="appt-date">
+              <div class="day"><?= $d->format('d') ?></div>
+              <div class="mon"><?= $d->format('M') ?></div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:600;font-size:0.9rem;"><?= htmlspecialchars($a['patient_name']) ?></div>
+              <div style="font-size:0.78rem;color:#9ab0ae;"><?= date('g:i A', strtotime($a['appointment_time'])) ?> · <?= htmlspecialchars($a['type'] ?? 'Consultation') ?></div>
+            </div>
+            <span class="badge <?= $a['status']==='Confirmed' ? 'badge-green' : 'badge-orange' ?>"><?= $a['status'] ?></span>
+          </div>
+          <?php endwhile; ?>
+          <?php if (!$has): ?><div class="empty-appt">No upcoming appointments.</div><?php endif; ?>
+        </div>
+
+        <!-- TODAY -->
+        <div class="tab-panel" id="tab-<?= $did ?>-today">
+          <?php
+          $today->data_seek(0);
+          $has = false;
+          while ($a = $today->fetch_assoc()):
+            $has = true;
+            $d   = new DateTime($a['appointment_date']);
+          ?>
+          <div class="appt-row">
+            <div class="appt-date">
+              <div class="day"><?= $d->format('d') ?></div>
+              <div class="mon"><?= $d->format('M') ?></div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:600;font-size:0.9rem;"><?= htmlspecialchars($a['patient_name']) ?></div>
+              <div style="font-size:0.78rem;color:#9ab0ae;"><?= date('g:i A', strtotime($a['appointment_time'])) ?> · <?= htmlspecialchars($a['type'] ?? 'Consultation') ?></div>
+            </div>
+            <span class="badge badge-green">Confirmed</span>
+          </div>
+          <?php endwhile; ?>
+          <?php if (!$has): ?><div class="empty-appt">No appointments today.</div><?php endif; ?>
+        </div>
+
+        <!-- PAST -->
+        <div class="tab-panel" id="tab-<?= $did ?>-past">
+          <?php
+          $past->data_seek(0);
+          $has = false;
+          while ($a = $past->fetch_assoc()):
+            $has = true;
+            $d   = new DateTime($a['appointment_date']);
+          ?>
+          <div class="appt-row">
+            <div class="appt-date" style="opacity:0.6;">
+              <div class="day"><?= $d->format('d') ?></div>
+              <div class="mon"><?= $d->format('M') ?></div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:600;font-size:0.9rem;"><?= htmlspecialchars($a['patient_name']) ?></div>
+              <div style="font-size:0.78rem;color:#9ab0ae;"><?= date('g:i A', strtotime($a['appointment_time'])) ?> · <?= htmlspecialchars($a['type'] ?? 'Consultation') ?></div>
+            </div>
+            <span class="badge <?= $a['status']==='Completed' ? 'badge-gray' : 'badge-red' ?>"><?= $a['status'] ?></span>
+          </div>
+          <?php endwhile; ?>
+          <?php if (!$has): ?><div class="empty-appt">No past appointments.</div><?php endif; ?>
+        </div>
+
+      </div><!-- /appt-body -->
+    </div><!-- /doc-card -->
+    <?php endwhile; endif; ?>
+
   </div>
 </div>
 
 <script>
-  setTimeout(() => { const t=document.querySelector('.toast'); if(t) t.remove(); }, 3500);
+  function toggleCard(did) {
+    document.getElementById('card-' + did).classList.toggle('open');
+  }
+
+  function switchTab(did, name, btn) {
+    // Deactivate all tabs and panels for this card
+    const card = document.getElementById('card-' + did);
+    card.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    card.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    // Activate selected
+    btn.classList.add('active');
+    document.getElementById('tab-' + did + '-' + name).classList.add('active');
+  }
+
+  setTimeout(() => { const t = document.querySelector('.toast'); if(t) t.remove(); }, 3500);
 </script>
 </body>
 </html>

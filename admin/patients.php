@@ -7,21 +7,13 @@ require_once '../database/config.php';
 
 if (!isset($_SESSION['admin_id'])) { header('Location: login.php'); exit; }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign_patient'])) {
-    $pid = (int)$_POST['patient_id'];
-    $did = (int)$_POST['doctor_id'];
-    $stmt = $conn->prepare("INSERT IGNORE INTO patient_doctors (patient_id, doctor_id) VALUES (?,?)");
-    $stmt->bind_param("ii", $pid, $did);
-    $stmt->execute();
-    $_SESSION['toast'] = "Patient assigned.";
-    header('Location: patients.php'); exit;
-}
-
-if (isset($_GET['unassign'])) {
-    $pid = (int)$_GET['pid'];
-    $did = (int)$_GET['did'];
-    $conn->query("DELETE FROM patient_doctors WHERE patient_id=$pid AND doctor_id=$did");
-    $_SESSION['toast'] = "Patient unassigned.";
+// ── Toggle active status ──
+if (isset($_GET['toggle_active'])) {
+    $pid   = (int)$_GET['pid'];
+    $cur   = (int)$_GET['active'];
+    $new   = $cur ? 0 : 1;
+    $conn->query("UPDATE patients SET is_active=$new WHERE id=$pid");
+    $_SESSION['toast'] = $new ? 'Account activated.' : 'Account deactivated.';
     header('Location: patients.php'); exit;
 }
 
@@ -57,37 +49,23 @@ unset($_SESSION['toast']);
     .main{flex:1;overflow-y:auto}
     .topbar{background:var(--white);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(36,68,65,0.07);position:sticky;top:0;z-index:50}
     .page-content{padding:2rem}
-    .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
-    .section-header h2{font-size:1.3rem}
-    .btn-sm{padding:0.4rem 0.9rem;border-radius:50px;font-size:0.78rem;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;text-decoration:none;display:inline-block}
-    .btn-red{background:rgba(195,54,67,0.1);color:var(--red)}.btn-red:hover{background:var(--red);color:#fff}
-    .btn-blue{background:rgba(63,130,227,0.1);color:var(--blue)}.btn-blue:hover{background:var(--blue);color:#fff}
     .table-wrap{background:var(--white);border-radius:16px;overflow:hidden;border:1px solid rgba(36,68,65,0.07);box-shadow:0 2px 10px rgba(0,0,0,0.04)}
     table{width:100%;border-collapse:collapse}
     th{padding:0.9rem 1.2rem;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9ab0ae;text-align:left;background:rgba(36,68,65,0.03);border-bottom:1px solid rgba(36,68,65,0.07)}
     td{padding:0.9rem 1.2rem;font-size:0.88rem;border-bottom:1px solid rgba(36,68,65,0.05);vertical-align:middle}
     tr:last-child td{border-bottom:none}
     tr:hover td{background:rgba(36,68,65,0.02)}
+    tr.inactive-row td{opacity:0.5}
     .badge{display:inline-block;padding:0.22rem 0.65rem;border-radius:50px;font-size:0.7rem;font-weight:700;letter-spacing:0.04em}
     .badge-green{background:rgba(34,197,94,0.1);color:#16a34a}
-    .badge-orange{background:rgba(245,158,11,0.1);color:#d97706}
-    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:200;padding:1rem;backdrop-filter:blur(4px)}
-    .modal-overlay.open{display:flex}
-    .modal{background:var(--white);border-radius:20px;padding:2rem;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;animation:fadeUp 0.3s ease}
-    .modal h3{font-size:1.3rem;margin-bottom:1.2rem}
-    .field-label{display:block;font-size:0.72rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#9ab0ae;margin-bottom:0.4rem}
-    .field-input{width:100%;padding:0.72rem 0.9rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--green);outline:none;transition:border-color 0.2s}
-    .field-input:focus{border-color:var(--blue)}
-    select.field-input{cursor:pointer}
-    .form-field{margin-bottom:0.9rem}
-    .btn-submit{width:100%;padding:0.85rem;border-radius:50px;background:var(--red);color:#fff;font-weight:700;font-size:0.93rem;border:none;cursor:pointer;margin-top:0.5rem;transition:all 0.25s;font-family:'DM Sans',sans-serif}
-    .btn-submit:hover{background:#a82d38}
-    .btn-cancel{width:100%;padding:0.7rem;border-radius:50px;background:transparent;color:var(--green);font-weight:600;font-size:0.88rem;border:1.5px solid rgba(36,68,65,0.15);cursor:pointer;margin-top:0.5rem;font-family:'DM Sans',sans-serif}
+    .badge-red{background:rgba(195,54,67,0.1);color:var(--red)}
+    .btn-sm{padding:0.38rem 0.85rem;border-radius:50px;font-size:0.76rem;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;text-decoration:none;display:inline-block;white-space:nowrap}
+    .btn-activate{background:rgba(34,197,94,0.1);color:#16a34a}.btn-activate:hover{background:#16a34a;color:#fff}
+    .btn-deactivate{background:rgba(195,54,67,0.1);color:var(--red)}.btn-deactivate:hover{background:var(--red);color:#fff}
     .toast{position:fixed;bottom:2rem;right:2rem;z-index:300;background:var(--green);color:#fff;padding:0.9rem 1.5rem;border-radius:14px;font-size:0.88rem;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:slideIn 0.4s ease,fadeOut 0.4s 3s ease forwards}
     .empty-row{text-align:center;padding:3rem;color:#9ab0ae;font-size:0.88rem}
     @keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
     @keyframes fadeOut{from{opacity:1}to{opacity:0;pointer-events:none}}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     @media(max-width:900px){.sidebar{display:none}}
   </style>
 </head>
@@ -113,7 +91,7 @@ unset($_SESSION['toast']);
     </a>
     <a href="assignments.php" class="nav-link">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      Assignments
+      Appointments
     </a>
   </nav>
   <div class="sidebar-logout">
@@ -136,28 +114,40 @@ unset($_SESSION['toast']);
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Patient</th><th>Contact</th><th>Joined</th><th>Assigned Doctor</th><th>Action</th></tr>
+          <tr><th>Patient</th><th>Contact</th><th>Joined</th><th>Status</th><th>Action</th></tr>
         </thead>
         <tbody>
         <?php
-        $pres = $conn->query("SELECT p.*, d.full_name AS doctor_name, pd.doctor_id FROM patients p LEFT JOIN patient_doctors pd ON pd.patient_id=p.id LEFT JOIN doctors d ON d.id=pd.doctor_id ORDER BY p.created_at DESC");
-        if ($pres && $pres->num_rows > 0): while ($pt = $pres->fetch_assoc()): ?>
-        <tr>
-          <td><div style="font-weight:600;"><?= htmlspecialchars($pt['full_name']) ?></div><div style="font-size:0.75rem;color:#9ab0ae;"><?= htmlspecialchars($pt['email']) ?></div></td>
-          <td style="font-size:0.82rem;color:#9ab0ae;"><?= htmlspecialchars($pt['phone_number']) ?></td>
+        $pres = $conn->query("SELECT * FROM patients ORDER BY created_at DESC");
+        if ($pres && $pres->num_rows > 0): while ($pt = $pres->fetch_assoc()):
+            $isActive = isset($pt['is_active']) ? (int)$pt['is_active'] : 1;
+            $safeName = htmlspecialchars(addslashes($pt['full_name']));
+        ?>
+        <tr class="<?= !$isActive ? 'inactive-row' : '' ?>">
+          <td>
+            <div style="font-weight:600;"><?= htmlspecialchars($pt['full_name']) ?></div>
+            <div style="font-size:0.75rem;color:#9ab0ae;"><?= htmlspecialchars($pt['email']) ?></div>
+          </td>
+          <td style="font-size:0.82rem;color:#9ab0ae;"><?= htmlspecialchars($pt['phone_number'] ?? '—') ?></td>
           <td style="font-size:0.78rem;color:#9ab0ae;"><?= date('M d, Y', strtotime($pt['created_at'])) ?></td>
           <td>
-            <?php if ($pt['doctor_name']): ?>
-              <span class="badge badge-green">Dr. <?= htmlspecialchars($pt['doctor_name']) ?></span>
-            <?php else: ?>
-              <span class="badge badge-orange">Unassigned</span>
-            <?php endif; ?>
+            <span class="badge <?= $isActive ? 'badge-green' : 'badge-red' ?>">
+              <?= $isActive ? 'Active' : 'Deactivated' ?>
+            </span>
           </td>
           <td>
-            <?php if (!$pt['doctor_id']): ?>
-            <button class="btn-sm btn-blue" onclick="openAssignModal(<?= $pt['id'] ?>, '<?= htmlspecialchars($pt['full_name']) ?>')">Assign</button>
+            <?php if ($isActive): ?>
+              <a href="?toggle_active=1&pid=<?= $pt['id'] ?>&active=1"
+                 class="btn-sm btn-deactivate"
+                 onclick="return confirm('Deactivate <?= $safeName ?>\'s account? They will no longer be able to log in.')">
+                Deactivate
+              </a>
             <?php else: ?>
-            <a href="?unassign=1&pid=<?= $pt['id'] ?>&did=<?= $pt['doctor_id'] ?>" class="btn-sm btn-red" onclick="return confirm('Unassign this patient?')">Unassign</a>
+              <a href="?toggle_active=1&pid=<?= $pt['id'] ?>&active=0"
+                 class="btn-sm btn-activate"
+                 onclick="return confirm('Activate <?= $safeName ?>\'s account?')">
+                Activate
+              </a>
             <?php endif; ?>
           </td>
         </tr>
@@ -170,36 +160,8 @@ unset($_SESSION['toast']);
   </div>
 </div>
 
-<!-- MODAL: Assign Patient -->
-<div class="modal-overlay" id="modal-assign-patient">
-  <div class="modal">
-    <h3>Assign Patient to Doctor</h3>
-    <form method="POST">
-      <input type="hidden" name="patient_id" id="assign-patient-id"/>
-      <div class="form-field"><label class="field-label">Patient</label><input type="text" id="assign-patient-name" class="field-input" disabled/></div>
-      <div class="form-field">
-        <label class="field-label">Assign to Doctor *</label>
-        <select name="doctor_id" class="field-input" required>
-          <option value="">Select a doctor</option>
-          <?php
-          $adocs = $conn->query("SELECT id, full_name, specialty FROM doctors WHERE status='active' ORDER BY full_name");
-          if ($adocs): while ($ad = $adocs->fetch_assoc()): ?>
-          <option value="<?= $ad['id'] ?>">Dr. <?= htmlspecialchars($ad['full_name']) ?> — <?= htmlspecialchars($ad['specialty'] ?? 'General') ?></option>
-          <?php endwhile; endif; ?>
-        </select>
-      </div>
-      <button type="submit" name="assign_patient" class="btn-submit">Assign Patient</button>
-      <button type="button" class="btn-cancel" onclick="closeModal('modal-assign-patient')">Cancel</button>
-    </form>
-  </div>
-</div>
-
 <script>
-  function openModal(id)  { document.getElementById(id).classList.add('open'); }
-  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-  document.querySelectorAll('.modal-overlay').forEach(m => { m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }); });
-  function openAssignModal(id, name) { document.getElementById('assign-patient-id').value=id; document.getElementById('assign-patient-name').value=name; openModal('modal-assign-patient'); }
-  setTimeout(() => { const t=document.querySelector('.toast'); if(t) t.remove(); }, 3500);
+  setTimeout(() => { const t = document.querySelector('.toast'); if(t) t.remove(); }, 3500);
 </script>
 </body>
 </html>

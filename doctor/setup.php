@@ -27,8 +27,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
     $phone    = trim($_POST['phone_number'] ?? '');
     $consent  = isset($_POST['consent']) ? 1 : 0;
 
-    // Validation checks
-    if (strlen($password) < 8) {
+    // --- Schedule overlap validation (server-side) ---
+    $schedule_error = '';
+    if (!empty($_POST['day'])) {
+        $slots = [];
+        foreach ($_POST['day'] as $i => $day) {
+            $start = $_POST['start_time'][$i] ?? '';
+            $end   = $_POST['end_time'][$i]   ?? '';
+            if (!$day || !$start || !$end) continue;
+
+            if ($start >= $end) {
+                $schedule_error = "Schedule error: Start time must be before end time for $day.";
+                break;
+            }
+
+            foreach ($slots as $existing) {
+                if ($existing['day'] === $day) {
+                    // Overlap check: two ranges [s1,e1) and [s2,e2) overlap if s1 < e2 AND s2 < e1
+                    if ($start < $existing['end'] && $existing['start'] < $end) {
+                        $schedule_error = "Schedule conflict: $day has overlapping time slots ("
+                            . date('h:i A', strtotime($start)) . "–" . date('h:i A', strtotime($end))
+                            . " conflicts with "
+                            . date('h:i A', strtotime($existing['start'])) . "–" . date('h:i A', strtotime($existing['end']))
+                            . ").";
+                        break 2;
+                    }
+                }
+            }
+
+            $slots[] = ['day' => $day, 'start' => $start, 'end' => $end];
+        }
+    }
+
+    if ($schedule_error) {
+        $error = $schedule_error;
+    } elseif (strlen($password) < 8) {
         $error = 'Password must be at least 8 characters.';
     } elseif (strlen($password) > 50) {
         $error = 'Password must not exceed 50 characters.';
@@ -62,7 +95,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
             }
         }
 
-        // FIX 1: wrap prepare() in a false-check so you see the real DB error
         $stmt = $conn->prepare(
             "UPDATE doctors SET
                 password         = ?,
@@ -81,12 +113,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
         );
 
         if ($stmt === false) {
-            // FIX 2: expose the real MySQL error instead of crashing
             $error = 'Database prepare error: ' . $conn->error;
         } else {
-            // FIX 3: corrected type string — photo_path is 's' not 'i'
-            // old: "ssdsssiii"  (wrong: last 3 as iii but photo_path is string)
-            // new: "ssdssssii"  (s=hashed s=bio d=fee s=langs s=clinic s=phone s=photo i=consent i=id)
             $stmt->bind_param("ssdssssii",
                 $hashed, $bio, $fee, $langs, $clinic, $phone,
                 $photo_path, $consent, $doctor['id']
@@ -148,8 +176,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
     .btn-submit:hover{background:#a82d38;transform:translateY(-2px)}
     .alert-error{background:rgba(195,54,67,0.08);border:1px solid rgba(195,54,67,0.2);color:var(--red);border-radius:12px;padding:0.75rem 1rem;font-size:0.86rem;margin-bottom:1.2rem}
     .schedule-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0.6rem;align-items:center;margin-bottom:0.6rem}
+    .schedule-row.conflict .field-input{border-color:var(--red)!important;background:rgba(195,54,67,0.04)}
     .btn-add-row{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.8rem;color:var(--blue);font-weight:600;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
     .btn-remove-row{background:rgba(195,54,67,0.1);color:var(--red);border:none;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
+    .schedule-conflict-msg{font-size:0.75rem;color:var(--red);margin-top:0.4rem;margin-bottom:0.6rem;display:none}
+    .schedule-conflict-msg.visible{display:block}
     .consent-box{background:rgba(36,68,65,0.05);border:1px solid rgba(36,68,65,0.1);border-radius:14px;padding:1rem 1.2rem;margin:1rem 0;font-size:0.82rem;color:#6b8a87;line-height:1.65}
     input[type="number"]::-webkit-outer-spin-button,input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
     input[type="number"]{-moz-appearance:textfield;}
@@ -188,7 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
       <div style="font-size:3rem;margin-bottom:1rem;">🎉</div>
       <h2 style="font-size:1.8rem;margin-bottom:0.6rem;">You're all set!</h2>
       <p style="color:#6b8a87;font-size:0.95rem;line-height:1.7;margin-bottom:2rem;">Your profile is complete and your account is now active.</p>
-      <a href="../auth/login.php" style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--red);color:#fff;padding:0.9rem 2.5rem;border-radius:50px;font-weight:700;text-decoration:none;box-shadow:0 6px 20px rgba(195,54,67,0.3);">Go to Login →</a>
+      <a href="../doctor/login.php" style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--red);color:#fff;padding:0.9rem 2.5rem;border-radius:50px;font-weight:700;text-decoration:none;box-shadow:0 6px 20px rgba(195,54,67,0.3);">Go to Login →</a>
     </div>
 
     <?php elseif ($error && !$doctor): ?>
@@ -208,7 +239,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
 
     <?php if ($error): ?><div class="alert-error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
 
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data" id="setup-form">
 
       <div class="section-label">Set Your Password</div>
       <div class="form-field">
@@ -217,7 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
           <input type="password" name="password" id="pw" class="field-input" placeholder="At least 8 characters" maxlength="50" required style="padding-right:2.8rem;"/>
           <button type="button" class="pw-toggle" onclick="togglePw('pw','e1s','e1h')">
             <svg id="e1s" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-            <svg id="e1h" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95M6.938 6.938A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-1.395 2.63M6.938 6.938L3 3m3.938 3.938l10.124 10.124M17.062 17.062L21 21"/></svg>
+            <svg id="e1h" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95M6.938 6.938A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-1.405 2.63M6.938 6.938L3 3m3.938 3.938l10.124 10.124M17.062 17.062L21 21"/></svg>
           </button>
         </div>
       </div>
@@ -227,7 +258,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
           <input type="password" name="confirm_password" id="pw2" class="field-input" placeholder="Repeat password" maxlength="50" required style="padding-right:2.8rem;"/>
           <button type="button" class="pw-toggle" onclick="togglePw('pw2','e2s','e2h')">
             <svg id="e2s" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-            <svg id="e2h" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95M6.938 6.938A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-1.395 2.63M6.938 6.938L3 3m3.938 3.938l10.124 10.124M17.062 17.062L21 21"/></svg>
+            <svg id="e2h" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95M6.938 6.938A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-1.405 2.63M6.938 6.938L3 3m3.938 3.938l10.124 10.124M17.062 17.062L21 21"/></svg>
           </button>
         </div>
         <div id="pw-match" style="font-size:0.75rem;margin-top:0.3rem;"></div>
@@ -246,39 +277,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
       <div class="form-field"><label class="field-label">Bio / About</label><textarea name="bio" class="field-input" placeholder="Brief professional background..." maxlength="100"></textarea></div>
 
       <div class="section-label">Availability &amp; Schedule</div>
-      <p style="font-size:0.82rem;color:#6b8a87;margin-bottom:1rem;">Select your availability per day. Times are fixed to 1-hour intervals.</p>
-      <div id="schedule-rows">
-        <div class="schedule-row">
-          <select name="day[]" class="field-input">
-            <option value="">Day</option>
-            <?php foreach (['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] as $d): ?>
-            <option value="<?= $d ?>"><?= $d ?></option>
-            <?php endforeach; ?>
-          </select>
-          <select name="start_time[]" class="field-input">
-            <option value="">Start Time</option>
-            <?php 
-              for ($h = 0; $h < 24; $h++) {
-                $time = sprintf('%02d:00', $h);
-                $display = date('h:00 A', strtotime($time));
-                echo "<option value=\"$time\">$display</option>";
-              }
-            ?>
-          </select>
-          <select name="end_time[]" class="field-input">
-            <option value="">End Time</option>
-            <?php 
-              for ($h = 0; $h < 24; $h++) {
-                $time = sprintf('%02d:00', $h);
-                $display = date('h:00 A', strtotime($time));
-                echo "<option value=\"$time\">$display</option>";
-              }
-            ?>
-          </select>
-          <div></div>
-        </div>
-      </div>
-      <button type="button" class="btn-add-row" onclick="addScheduleRow()">
+      <p style="font-size:0.82rem;color:#6b8a87;margin-bottom:1rem;">
+        Select your availability per day. Times are fixed to 1-hour intervals.
+        You can add multiple slots for the same day as long as they don't overlap.
+      </p>
+      <div id="schedule-rows"></div>
+      <div id="schedule-conflict-msg" class="schedule-conflict-msg"></div>
+      <button type="button" class="btn-add-row" id="btn-add-row" onclick="addScheduleRow()">
         <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
         Add another day
       </button>
@@ -299,43 +304,131 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
 </div>
 
 <script>
-  function togglePw(fid,sid,hid){const f=document.getElementById(fid),s=document.getElementById(sid),h=document.getElementById(hid);if(f.type==='password'){f.type='text';s.style.display='none';h.style.display='block';}else{f.type='password';s.style.display='block';h.style.display='none';}}
-  document.getElementById('pw2')?.addEventListener('input',function(){const m=document.getElementById('pw-match');if(this.value===document.getElementById('pw').value){m.textContent='✓ Passwords match';m.style.color='var(--green)';}else{m.textContent='✗ Does not match';m.style.color='var(--red)';}});
-  
-  // Time slot generation (1-hour gaps)
-  function generateTimeSlots() {
-    const slots = [];
-    for (let h = 0; h < 24; h++) {
-      const time = String(h).padStart(2, '0') + ':00';
-      const display = new Date(`2000-01-01 ${time}`).toLocaleString('en-US', {hour:'numeric', minute:'2-digit', hour12:true});
-      slots.push({time, display});
-    }
-    return slots;
+  // ── Password toggle ────────────────────────────────────────────────────────
+  function togglePw(fid, sid, hid) {
+    const f = document.getElementById(fid),
+          s = document.getElementById(sid),
+          h = document.getElementById(hid);
+    if (f.type === 'password') { f.type = 'text';     s.style.display = 'none';  h.style.display = 'block'; }
+    else                       { f.type = 'password'; s.style.display = 'block'; h.style.display = 'none';  }
   }
-  const timeSlots = generateTimeSlots();
-  
-  const days=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-  function addScheduleRow(){
-    const wrap=document.getElementById('schedule-rows');
-    const row=document.createElement('div');
-    row.className='schedule-row';
-    row.innerHTML=`
+  document.getElementById('pw2')?.addEventListener('input', function () {
+    const m = document.getElementById('pw-match');
+    if (this.value === document.getElementById('pw').value) {
+      m.textContent = '✓ Passwords match'; m.style.color = 'var(--green)';
+    } else {
+      m.textContent = '✗ Does not match';  m.style.color = 'var(--red)';
+    }
+  });
+
+  // ── Time slot helpers ──────────────────────────────────────────────────────
+  const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+  function generateTimeOptions() {
+    let html = '<option value="">Select time</option>';
+    for (let h = 0; h < 24; h++) {
+      const val     = String(h).padStart(2, '0') + ':00';
+      const display = new Date(`2000-01-01T${val}:00`).toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      html += `<option value="${val}">${display}</option>`;
+    }
+    return html;
+  }
+  const TIME_OPTIONS = generateTimeOptions();
+
+  function fmt(t) {
+    return new Date(`2000-01-01T${t}:00`).toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  }
+
+  // ── Core validation ────────────────────────────────────────────────────────
+  // Returns true if schedule is fully valid, false otherwise.
+  // Also applies red highlights and sets the conflict message element.
+  function revalidateSchedule() {
+    const rows  = document.querySelectorAll('#schedule-rows .schedule-row');
+    const msgEl = document.getElementById('schedule-conflict-msg');
+
+    // Reset all highlights
+    rows.forEach(r => r.classList.remove('conflict'));
+    msgEl.textContent = '';
+    msgEl.classList.remove('visible');
+
+    const filled = []; // only rows that are fully filled AND individually valid
+
+    // ── Pass 1: per-row check (end must be after start) ──────────────────────
+    let hasRowError = false;
+    rows.forEach((row, idx) => {
+      const d = row.querySelector('[name="day[]"]').value;
+      const s = row.querySelector('[name="start_time[]"]').value;
+      const e = row.querySelector('[name="end_time[]"]').value;
+
+      if (!d || !s || !e) return; // incomplete row — skip silently
+
+      if (e <= s) {
+        // End time is same as or before start time
+        row.classList.add('conflict');
+        if (!hasRowError) {
+          msgEl.textContent = `⚠ End time must be after start time on ${d} (${fmt(s)} → ${fmt(e)} is invalid).`;
+          msgEl.classList.add('visible');
+          hasRowError = true;
+        }
+        return; // don't add to filled — can't be used in overlap check
+      }
+
+      filled.push({ day: d, start: s, end: e, idx });
+    });
+
+    if (hasRowError) return false;
+
+    // ── Pass 2: overlap check across all valid filled rows ───────────────────
+    for (let i = 0; i < filled.length; i++) {
+      for (let j = i + 1; j < filled.length; j++) {
+        const a = filled[i], b = filled[j];
+        if (a.day === b.day && a.start < b.end && b.start < a.end) {
+          rows[a.idx].classList.add('conflict');
+          rows[b.idx].classList.add('conflict');
+          msgEl.textContent = `⚠ Conflict on ${a.day}: ${fmt(a.start)}–${fmt(a.end)} overlaps with ${fmt(b.start)}–${fmt(b.end)}.`;
+          msgEl.classList.add('visible');
+          return false;
+        }
+      }
+    }
+
+    return true; // all good
+  }
+
+  // ── Add / remove schedule rows ─────────────────────────────────────────────
+  function addScheduleRow() {
+    const wrap = document.getElementById('schedule-rows');
+    const row  = document.createElement('div');
+    row.className = 'schedule-row';
+    row.innerHTML = `
       <select name="day[]" class="field-input">
         <option value="">Day</option>
-        ${days.map(d=>`<option value="${d}">${d}</option>`).join('')}
+        ${DAYS.map(d => `<option value="${d}">${d}</option>`).join('')}
       </select>
-      <select name="start_time[]" class="field-input">
-        <option value="">Start Time</option>
-        ${timeSlots.map(s=>`<option value="${s.time}">${s.display}</option>`).join('')}
-      </select>
-      <select name="end_time[]" class="field-input">
-        <option value="">End Time</option>
-        ${timeSlots.map(s=>`<option value="${s.time}">${s.display}</option>`).join('')}
-      </select>
-      <button type="button" class="btn-remove-row" onclick="this.parentElement.remove()">✕</button>
+      <select name="start_time[]" class="field-input">${TIME_OPTIONS}</select>
+      <select name="end_time[]"   class="field-input">${TIME_OPTIONS}</select>
+      <button type="button" class="btn-remove-row" onclick="removeRow(this)">✕</button>
     `;
+    row.querySelectorAll('select').forEach(sel => sel.addEventListener('change', revalidateSchedule));
     wrap.appendChild(row);
   }
+
+  function removeRow(btn) {
+    btn.closest('.schedule-row').remove();
+    revalidateSchedule();
+  }
+
+  // Init with one empty row
+  addScheduleRow();
+  document.querySelector('#schedule-rows .btn-remove-row').style.visibility = 'hidden';
+
+  // ── Form submit guard ──────────────────────────────────────────────────────
+  document.getElementById('setup-form').addEventListener('submit', function (e) {
+    if (!revalidateSchedule()) {
+      e.preventDefault();
+      document.getElementById('schedule-conflict-msg').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
 </script>
 </body>
 </html>

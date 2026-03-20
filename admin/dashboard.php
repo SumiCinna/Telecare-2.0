@@ -10,8 +10,7 @@ if (!isset($_SESSION['admin_id'])) { header('Location: login.php'); exit; }
 $total_doctors  = $conn->query("SELECT COUNT(*) c FROM doctors")->fetch_assoc()['c'];
 $total_patients = $conn->query("SELECT COUNT(*) c FROM patients")->fetch_assoc()['c'];
 $active_appts   = $conn->query("SELECT COUNT(*) c FROM appointments WHERE status IN ('Pending','Confirmed')")->fetch_assoc()['c'];
-$avg_load_r     = $conn->query("SELECT AVG(cnt) avg FROM (SELECT COUNT(*) cnt FROM patient_doctors GROUP BY doctor_id) t");
-$avg_load       = $avg_load_r ? number_format($avg_load_r->fetch_assoc()['avg'] ?? 0, 1) : '0.0';
+$completed_appts = $conn->query("SELECT COUNT(*) c FROM appointments WHERE status='Completed'")->fetch_assoc()['c'];
 
 $toast = $_SESSION['toast'] ?? null;
 unset($_SESSION['toast']);
@@ -29,7 +28,6 @@ unset($_SESSION['toast']);
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--green);display:flex;min-height:100vh}
     h1,h2,h3{font-family:'Playfair Display',serif}
-    /* SIDEBAR */
     .sidebar{width:230px;min-width:230px;background:var(--green);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
     .sidebar-logo{padding:1.8rem 1.5rem 1.2rem;font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:#fff;border-bottom:1px solid rgba(255,255,255,0.08)}
     .sidebar-logo span{color:var(--red)}
@@ -43,7 +41,6 @@ unset($_SESSION['toast']);
     .sidebar-logout{padding:1rem 1.5rem;border-top:1px solid rgba(255,255,255,0.08)}
     .logout-btn{display:flex;align-items:center;gap:0.6rem;color:rgba(255,255,255,0.45);font-size:0.82rem;text-decoration:none;transition:color 0.2s}
     .logout-btn:hover{color:var(--red)}
-    /* MAIN */
     .main{flex:1;overflow-y:auto}
     .topbar{background:var(--white);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(36,68,65,0.07);position:sticky;top:0;z-index:50}
     .page-content{padding:2rem}
@@ -56,9 +53,6 @@ unset($_SESSION['toast']);
     .section-header h2{font-size:1.3rem}
     .btn-primary{display:inline-flex;align-items:center;gap:0.4rem;background:var(--red);color:#fff;padding:0.6rem 1.3rem;border-radius:50px;font-size:0.85rem;font-weight:600;border:none;cursor:pointer;transition:all 0.25s;font-family:'DM Sans',sans-serif;box-shadow:0 4px 14px rgba(195,54,67,0.25);text-decoration:none}
     .btn-primary:hover{background:#a82d38;transform:translateY(-1px)}
-    .btn-sm{padding:0.4rem 0.9rem;border-radius:50px;font-size:0.78rem;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;text-decoration:none;display:inline-block}
-    .btn-blue{background:rgba(63,130,227,0.1);color:var(--blue)}
-    .btn-blue:hover{background:var(--blue);color:#fff}
     .table-wrap{background:var(--white);border-radius:16px;overflow:hidden;border:1px solid rgba(36,68,65,0.07);box-shadow:0 2px 10px rgba(0,0,0,0.04)}
     table{width:100%;border-collapse:collapse}
     th{padding:0.9rem 1.2rem;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9ab0ae;text-align:left;background:rgba(36,68,65,0.03);border-bottom:1px solid rgba(36,68,65,0.07)}
@@ -98,7 +92,7 @@ unset($_SESSION['toast']);
     </a>
     <a href="assignments.php" class="nav-link">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      Assignments
+      Appointments
     </a>
   </nav>
   <div class="sidebar-logout">
@@ -126,61 +120,30 @@ unset($_SESSION['toast']);
       <div class="stat-card"><div class="label">Total Doctors</div><div class="value"><?= $total_doctors ?></div><div class="sub">Registered</div></div>
       <div class="stat-card"><div class="label">Total Patients</div><div class="value"><?= $total_patients ?></div><div class="sub">Registered</div></div>
       <div class="stat-card"><div class="label">Active Appointments</div><div class="value"><?= $active_appts ?></div><div class="sub">Pending + Confirmed</div></div>
-      <div class="stat-card"><div class="label">Avg Doctor Load</div><div class="value"><?= $avg_load ?></div><div class="sub">Patients per doctor</div></div>
+      <div class="stat-card"><div class="label">Completed</div><div class="value"><?= $completed_appts ?></div><div class="sub">All time</div></div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
-      <div>
-        <div class="section-header">
-          <h2>Doctor Overview</h2>
-          <a href="doctors.php" style="font-size:0.78rem;color:var(--blue);font-weight:600;text-decoration:none;">View all</a>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Doctor</th><th>Specialty</th><th>Status</th></tr></thead>
-            <tbody>
-            <?php
-            $dres = $conn->query("SELECT * FROM doctors ORDER BY created_at DESC LIMIT 5");
-            if ($dres && $dres->num_rows > 0): while ($d = $dres->fetch_assoc()): ?>
-            <tr>
-              <td><span style="font-weight:600;">Dr. <?= htmlspecialchars($d['full_name']) ?></span></td>
-              <td style="color:#9ab0ae;font-size:0.82rem;"><?= htmlspecialchars($d['specialty'] ?? '—') ?></td>
-              <td><span class="badge <?= $d['status']==='active'?'badge-green':($d['status']==='pending'?'badge-orange':'badge-gray') ?>"><?= ucfirst($d['status']) ?></span></td>
-            </tr>
-            <?php endwhile; else: ?>
-            <tr><td colspan="3" class="empty-row">No doctors yet.</td></tr>
-            <?php endif; ?>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div>
-        <div class="section-header">
-          <h2>Unassigned Patients</h2>
-          <a href="patients.php" style="font-size:0.78rem;color:var(--blue);font-weight:600;text-decoration:none;">View all</a>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Patient</th><th>Action</th></tr></thead>
-            <tbody>
-            <?php
-            $ures = $conn->query("SELECT * FROM patients WHERE id NOT IN (SELECT patient_id FROM patient_doctors) LIMIT 5");
-            if ($ures && $ures->num_rows > 0): while ($pt = $ures->fetch_assoc()): ?>
-            <tr>
-              <td>
-                <span style="font-weight:600;"><?= htmlspecialchars($pt['full_name']) ?></span><br/>
-                <span style="font-size:0.75rem;color:#9ab0ae;"><?= htmlspecialchars($pt['email']) ?></span>
-              </td>
-              <td><a href="patients.php" class="btn-sm btn-blue">Assign</a></td>
-            </tr>
-            <?php endwhile; else: ?>
-            <tr><td colspan="2" class="empty-row">All patients are assigned. ✓</td></tr>
-            <?php endif; ?>
-            </tbody>
-          </table>
-        </div>
-      </div>
+    <div class="section-header">
+      <h2>Doctor Overview</h2>
+      <a href="doctors.php" style="font-size:0.78rem;color:var(--blue);font-weight:600;text-decoration:none;">View all</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Doctor</th><th>Specialty</th><th>Status</th></tr></thead>
+        <tbody>
+        <?php
+        $dres = $conn->query("SELECT * FROM doctors ORDER BY created_at DESC LIMIT 10");
+        if ($dres && $dres->num_rows > 0): while ($d = $dres->fetch_assoc()): ?>
+        <tr>
+          <td><span style="font-weight:600;">Dr. <?= htmlspecialchars($d['full_name']) ?></span></td>
+          <td style="color:#9ab0ae;font-size:0.82rem;"><?= htmlspecialchars($d['specialty'] ?? '—') ?></td>
+          <td><span class="badge <?= $d['status']==='active'?'badge-green':($d['status']==='pending'?'badge-orange':'badge-gray') ?>"><?= ucfirst($d['status']) ?></span></td>
+        </tr>
+        <?php endwhile; else: ?>
+        <tr><td colspan="3" class="empty-row">No doctors yet.</td></tr>
+        <?php endif; ?>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>

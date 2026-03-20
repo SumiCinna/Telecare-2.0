@@ -1,4 +1,5 @@
 <?php
+// WALA TO DISPLAY LANG KASI AKALA KO NEED NA FUNCTION BUT STAY KO LANG DITO
 require_once 'includes/auth.php';
 
 // Get the patient to chat with

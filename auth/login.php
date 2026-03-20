@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 require_once '../database/config.php';
@@ -12,8 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($email) || empty($password)) {
         $error = 'Please enter your email and password.';
     } else {
-        // Fetch is_verified alongside other fields
-        $stmt = $conn->prepare("SELECT id, full_name, password, is_verified FROM patients WHERE email = ?");
+        $stmt = $conn->prepare("SELECT id, full_name, password, is_verified, is_active FROM patients WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $stmt->store_result();
@@ -21,14 +19,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->num_rows === 0) {
             $error = 'No account found with that email.';
         } else {
-            $stmt->bind_result($id, $full_name, $hashed, $is_verified);
+            $stmt->bind_result($id, $full_name, $hashed, $is_verified, $is_active);
             $stmt->fetch();
 
             if (!password_verify($password, $hashed)) {
                 $error = 'Incorrect password. Please try again.';
             } elseif (!$is_verified) {
-                // Special flag — handled separately in HTML below
                 $error = 'account_not_verified';
+            } elseif (isset($is_active) && !$is_active) {
+                // Account has been deactivated by admin
+                $error = 'account_deactivated';
             } else {
                 $_SESSION['patient_id']   = $id;
                 $_SESSION['patient_name'] = $full_name;
@@ -90,6 +90,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .spinner-inline { display:inline-block; width:12px; height:12px; border:2px solid rgba(63,130,227,0.3); border-top-color:var(--blue); border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; margin-right:5px; }
     @keyframes spin { to{transform:rotate(360deg)} }
 
+    /* Deactivated banner */
+    .alert-deactivated { background:rgba(195,54,67,0.06); border:1px solid rgba(195,54,67,0.2); border-radius:14px; padding:1rem 1.1rem; margin-bottom:1.2rem; }
+    .alert-deactivated .dv-title { font-weight:700; color:var(--red); font-size:0.92rem; margin-bottom:0.35rem; }
+    .alert-deactivated .dv-sub   { color:#8a4a55; font-size:0.83rem; line-height:1.65; }
+
     .divider { display:flex; align-items:center; gap:0.8rem; margin:1.5rem 0; color:#9ab0ae; font-size:0.8rem; }
     .divider::before,.divider::after { content:''; flex:1; height:1px; background:rgba(36,68,65,0.12); }
     .pw-wrap { position:relative; }
@@ -143,7 +148,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script>
-      // ── Same keys as your register.php ──
       const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';
       const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';
       const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
@@ -157,7 +161,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-inline"></span>Sending...';
 
-        // Ask server to regenerate token and return details
         fetch('resend_verification.php', {
           method: 'POST',
           headers: {'Content-Type':'application/x-www-form-urlencoded'},
@@ -190,6 +193,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
       }
     </script>
+
+    <?php elseif ($error === 'account_deactivated'): ?>
+    <!-- ── DEACTIVATED ACCOUNT BANNER ── -->
+    <div class="alert-deactivated">
+      <div class="dv-title">🚫 Account Deactivated</div>
+      <div class="dv-sub">
+        Your account has been deactivated by an administrator and you are unable to log in at this time.
+        If you believe this is a mistake, please contact your clinic or administrator for assistance.
+      </div>
+    </div>
 
     <?php elseif ($error): ?>
     <div class="alert-error"><?= htmlspecialchars($error) ?></div>

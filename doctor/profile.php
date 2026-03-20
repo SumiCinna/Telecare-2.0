@@ -82,8 +82,10 @@ require_once 'includes/header.php';
     </div>
     <div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;">Dr. <?= htmlspecialchars($doc['full_name']) ?></div>
     <div style="font-size:0.83rem;color:var(--muted);margin-top:0.2rem;"><?= htmlspecialchars($doc['specialty'] ?? 'General Practitioner') ?></div>
+    <?php if (!empty($doc['subspecialty'])): ?>
+    <div style="font-size:0.78rem;color:var(--muted);margin-top:0.1rem;font-style:italic;"><?= htmlspecialchars($doc['subspecialty']) ?></div>
+    <?php endif; ?>
     <div style="margin-top:0.6rem;display:flex;justify-content:center;gap:0.5rem;flex-wrap:wrap;">
-
       <?php if ($doc['is_verified']): ?><span class="badge badge-green">✓ Verified</span><?php endif; ?>
       <span class="badge <?= $doc['is_available']?'badge-green':'badge-gray' ?>"><?= $doc['is_available']?'Available':'Unavailable' ?></span>
     </div>
@@ -108,7 +110,8 @@ require_once 'includes/header.php';
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;">
         <div class="form-field">
           <label class="field-label">Consultation Fee (₱)</label>
-          <input type="number" name="consultation_fee" class="field-input" value="<?= $doc['consultation_fee'] ?? 0 ?>" min="0" step="0.01"/>
+          <input type="number" name="consultation_fee" class="field-input" value="<?= $doc['consultation_fee'] ?? 0 ?>" min="0" step="0.01" style="-moz-appearance:textfield;" onwheel="this.blur()"/>
+          <style>input[name="consultation_fee"]::-webkit-outer-spin-button,input[name="consultation_fee"]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}</style>
         </div>
         <div class="form-field">
           <label class="field-label">Languages</label>
