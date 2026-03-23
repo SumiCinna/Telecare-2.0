@@ -91,7 +91,6 @@ $page_title = 'My Visits — TELE-CARE';
 $active_nav = 'visits';
 require_once 'includes/header.php';
 
-// ── Call window: 15min early → 1hr after scheduled time ──
 function isCallActive(string $date, string $time): bool {
     $appt = strtotime($date . ' ' . $time);
     $now  = time();
@@ -104,7 +103,6 @@ function isCallActive(string $date, string $time): bool {
   .inner-tab{flex:1;padding:0.6rem;border-radius:50px;border:1.5px solid rgba(63,130,227,0.15);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:600;color:var(--muted);transition:all 0.2s;}
   .inner-tab.active{background:var(--blue);color:#fff;border-color:var(--blue);}
 
-  /* Call button */
   .join-call-btn{display:inline-flex;align-items:center;gap:0.45rem;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;padding:0.55rem 1rem;border-radius:50px;font-size:0.78rem;font-weight:700;text-decoration:none;box-shadow:0 4px 14px rgba(22,163,74,0.35);animation:callPulse 2s ease-in-out infinite;}
   @keyframes callPulse{0%,100%{box-shadow:0 4px 14px rgba(22,163,74,0.35)}50%{box-shadow:0 4px 20px rgba(22,163,74,0.6)}}
   .call-soon{font-size:0.72rem;color:#d97706;font-weight:600;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:50px;padding:0.2rem 0.6rem;}
@@ -128,22 +126,63 @@ function isCallActive(string $date, string $time): bool {
   .doc-mini-avatar img{width:100%;height:100%;object-fit:cover;}
   .booking-step{display:none;}.booking-step.active{display:block;}
   .step-label{font-size:0.7rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;}
+
+  /* ── Calendar ── */
   .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;}
-  .cal-nav{background:none;border:none;cursor:pointer;color:var(--green);padding:0.3rem;border-radius:8px;transition:background 0.15s;}
-  .cal-nav:hover{background:rgba(36,68,65,0.07);}
+  .cal-nav{background:none;border:none;cursor:pointer;color:var(--green);padding:0.3rem 0.5rem;border-radius:8px;transition:background 0.15s;font-size:1.1rem;line-height:1;}
+  .cal-nav:hover{background:rgba(36,68,65,0.08);}
+  .cal-nav:disabled{opacity:0.25;cursor:default;}
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
   .cal-day-name{text-align:center;font-size:0.65rem;font-weight:700;color:var(--muted);padding:0.3rem 0;letter-spacing:0.05em;}
-  .cal-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:0.82rem;font-weight:500;cursor:default;color:rgba(36,68,65,0.3);}
-  .cal-cell.available{color:var(--green);background:rgba(36,68,65,0.05);cursor:pointer;font-weight:600;}
+  .cal-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:0.82rem;font-weight:500;cursor:default;transition:background 0.12s,color 0.12s;}
+
+  /* Past — very faint */
+  .cal-cell.past{color:rgba(36,68,65,0.18);}
+
+  /* Blocked — doctor has NO schedule this day of week */
+  .cal-cell.blocked{
+    color:rgba(36,68,65,0.2);
+    cursor:not-allowed;
+    text-decoration:line-through;
+    text-decoration-color:rgba(36,68,65,0.15);
+    background:transparent;
+  }
+
+  /* Available */
+  .cal-cell.available{
+    color:var(--green);
+    background:rgba(36,68,65,0.05);
+    cursor:pointer;
+    font-weight:600;
+  }
   .cal-cell.available:hover{background:rgba(63,130,227,0.1);color:var(--blue);}
-  .cal-cell.selected{background:var(--blue)!important;color:#fff!important;}
-  .cal-cell.today{border:1.5px solid var(--blue);color:var(--blue);}
-  .cal-cell.past{color:rgba(36,68,65,0.15);}
+  .cal-cell.today.available{border:1.5px solid var(--blue);color:var(--blue);}
+  .cal-cell.today.blocked,.cal-cell.today.past{border:1.5px solid rgba(36,68,65,0.12);}
+  .cal-cell.selected{background:var(--blue)!important;color:#fff!important;font-weight:700;}
+
+  /* Schedule legend inside calendar card */
+  .cal-legend{
+    margin-top:0.75rem;
+    padding-top:0.65rem;
+    border-top:1px solid rgba(36,68,65,0.08);
+  }
+  .cal-legend-title{
+    font-size:0.62rem;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:0.3rem;
+  }
+  .cal-legend-row{
+    display:flex;align-items:baseline;gap:0.5rem;font-size:0.72rem;
+    color:#5a7a77;line-height:1.85;
+  }
+  .cal-legend-day{font-weight:700;min-width:2.4rem;color:var(--green);}
+
+  /* Time grid */
   .time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:1rem;}
   .time-slot{padding:0.55rem 0;border-radius:10px;border:1.5px solid rgba(36,68,65,0.1);text-align:center;font-size:0.8rem;font-weight:600;cursor:pointer;color:var(--green);transition:all 0.15s;}
   .time-slot:hover{border-color:var(--blue);color:var(--blue);background:rgba(63,130,227,0.05);}
   .time-slot.selected{background:var(--blue);color:#fff;border-color:var(--blue);}
   .time-slot.booked{background:rgba(0,0,0,0.04);color:rgba(36,68,65,0.25);cursor:not-allowed;border-color:transparent;}
+
   .bk-label{display:block;font-size:0.7rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem;}
   .bk-input{width:100%;padding:0.7rem 0.9rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.88rem;color:var(--green);outline:none;transition:border-color 0.2s;background:#fff;}
   .bk-input:focus{border-color:var(--blue);}
@@ -163,6 +202,10 @@ function isCallActive(string $date, string $time): bool {
   .toast-bar.error{background:#C33643;color:#fff;}
   @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
   @keyframes toastOut{from{opacity:1}to{opacity:0;pointer-events:none}}
+
+  /* Blocked legend chip below calendar */
+  .cal-hint{display:flex;align-items:center;gap:0.4rem;font-size:0.7rem;color:var(--muted);margin-top:0.55rem;}
+  .cal-hint-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
 </style>
 
 <?php if ($toast): ?><div class="toast-bar success">✓ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
@@ -191,11 +234,11 @@ function isCallActive(string $date, string $time): bool {
         while ($a = $visits_upcoming->fetch_assoc()):
           $has      = true;
           $d        = new DateTime($a['appointment_date']);
-          $apptTs = strtotime($a['appointment_date'].' '.$a['appointment_time']);
-          $now    = time();
-          $active = $now >= ($apptTs - 900) && $now <= ($apptTs + 3600);
-          $early  = $active && $now < $apptTs;
-          $soon   = !$active && $now >= ($apptTs - 3600);
+          $apptTs   = strtotime($a['appointment_date'].' '.$a['appointment_time']);
+          $now      = time();
+          $active   = $now >= ($apptTs - 900) && $now <= ($apptTs + 3600);
+          $early    = $active && $now < $apptTs;
+          $soon     = !$active && $now >= ($apptTs - 3600);
       ?>
       <div class="appt-item" style="flex-wrap:wrap;gap:0.6rem;">
         <div class="appt-date-box">
@@ -209,8 +252,6 @@ function isCallActive(string $date, string $time): bool {
           <?php if (!empty($a['notes'])): ?>
           <div style="font-size:0.78rem;color:#9ab0ae;margin-top:0.2rem;">📝 <?= htmlspecialchars($a['notes']) ?></div>
           <?php endif; ?>
-
-          <!-- Video Call Section -->
           <?php if ($a['status'] === 'Confirmed'): ?>
           <div style="margin-top:0.7rem;">
             <?php if ($active): ?>
@@ -274,19 +315,23 @@ function isCallActive(string $date, string $time): bool {
   </div>
 </div>
 
-<!-- BOOKING MODAL (unchanged) -->
+<!-- ══════════════════════════════════════════
+     BOOKING MODAL
+     ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="booking-modal">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
+
+    <!-- Step 1: Choose doctor -->
     <div class="booking-step active" id="step-1">
       <div class="modal-title">Book a Teleconsultation</div>
       <div class="modal-sub">Choose a doctor to schedule your online consultation.</div>
       <input type="text" class="doc-search" id="doc-search-input" placeholder="Search by name or specialty…" oninput="filterDoctors(this.value)"/>
       <div class="doc-select-grid" id="doc-list">
         <?php foreach ($all_doctors as $dr):
-          $initials    = strtoupper(substr($dr['full_name'],0,1).(strpos($dr['full_name'],' ')!==false ? substr($dr['full_name'],strpos($dr['full_name'],' ')+1,1) : ''));
-          $unavailable = !$dr['is_available'] || empty($dr['schedules']);
-          $specialty   = htmlspecialchars($dr['specialty'] ?? '');
+          $initials     = strtoupper(substr($dr['full_name'],0,1).(strpos($dr['full_name'],' ')!==false ? substr($dr['full_name'],strpos($dr['full_name'],' ')+1,1) : ''));
+          $unavailable  = !$dr['is_available'] || empty($dr['schedules']);
+          $specialty    = htmlspecialchars($dr['specialty'] ?? '');
           $subspecialty = !empty($dr['subspecialty']) ? htmlspecialchars($dr['subspecialty']) : '';
         ?>
         <div class="doc-option <?= $unavailable ? 'unavailable' : '' ?>"
@@ -312,32 +357,67 @@ function isCallActive(string $date, string $time): bool {
       </div>
       <button class="btn-book-main" style="background:transparent;color:var(--muted);box-shadow:none;border:1.5px solid rgba(36,68,65,0.12);" onclick="closeBookingModal()">Cancel</button>
     </div>
+
+    <!-- Step 2: Pick a date -->
     <div class="booking-step" id="step-2">
-      <button class="btn-back" onclick="goStep(1)"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>Back</button>
+      <button class="btn-back" onclick="goStep(1)">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>Back
+      </button>
       <div class="modal-title" id="step2-title">Pick a Date</div>
       <div class="modal-sub" id="step2-sub"></div>
-      <div class="step-label">Available Days</div>
-      <div id="avail-days-chips" style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1rem;"></div>
+
+      <!-- Calendar card -->
       <div style="background:rgba(36,68,65,0.03);border-radius:16px;padding:1rem;">
         <div class="cal-header">
-          <button class="cal-nav" onclick="calNav(-1)"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
+          <button class="cal-nav" id="cal-prev" onclick="calNav(-1)">&#8249;</button>
           <div style="font-weight:700;font-size:0.9rem;" id="cal-month-label"></div>
-          <button class="cal-nav" onclick="calNav(1)"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
+          <button class="cal-nav" onclick="calNav(1)">&#8250;</button>
         </div>
         <div class="cal-grid" id="cal-grid"></div>
+
+        <!-- Schedule legend -->
+        <div class="cal-legend" id="cal-legend" style="display:none;">
+          <div class="cal-legend-title">Doctor's Available Hours</div>
+          <div id="cal-legend-body"></div>
+        </div>
       </div>
+
+      <!-- Visual hint row -->
+      <div style="display:flex;gap:1rem;margin-top:0.6rem;flex-wrap:wrap;">
+        <div class="cal-hint">
+          <div class="cal-hint-dot" style="background:rgba(36,68,65,0.07);border:1.5px solid rgba(36,68,65,0.15);"></div>
+          Available
+        </div>
+        <div class="cal-hint">
+          <div class="cal-hint-dot" style="background:transparent;border:1px dashed rgba(36,68,65,0.2);"></div>
+          No schedule
+        </div>
+        <div class="cal-hint">
+          <div class="cal-hint-dot" style="background:var(--blue);"></div>
+          Selected
+        </div>
+      </div>
+
       <button class="btn-book-main" id="btn-to-step3" style="margin-top:1rem;" disabled onclick="goStep(3)">Continue to Time →</button>
     </div>
+
+    <!-- Step 3: Pick a time -->
     <div class="booking-step" id="step-3">
-      <button class="btn-back" onclick="goStep(2)"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>Back</button>
+      <button class="btn-back" onclick="goStep(2)">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>Back
+      </button>
       <div class="modal-title">Pick a Time</div>
       <div class="modal-sub" id="step3-sub"></div>
       <div class="step-label">Available Slots</div>
       <div class="time-grid" id="time-grid"></div>
       <button class="btn-book-main" id="btn-to-step4" disabled onclick="goStep(4)">Continue →</button>
     </div>
+
+    <!-- Step 4: Confirm -->
     <div class="booking-step" id="step-4">
-      <button class="btn-back" onclick="goStep(3)"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>Back</button>
+      <button class="btn-back" onclick="goStep(3)">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>Back
+      </button>
       <div class="modal-title">Confirm Booking</div>
       <div class="modal-sub">Review your teleconsultation request before sending.</div>
       <div class="summary-box" id="booking-summary"></div>
@@ -350,7 +430,10 @@ function isCallActive(string $date, string $time): bool {
           <label class="bk-label">Consultation Type</label>
           <div style="display:flex;align-items:center;gap:0.6rem;padding:0.7rem 0.9rem;background:rgba(63,130,227,0.06);border:1.5px solid rgba(63,130,227,0.2);border-radius:12px;">
             <span style="font-size:1.1rem;">📹</span>
-            <div><div style="font-weight:700;font-size:0.88rem;color:var(--blue);">Teleconsultation</div><div style="font-size:0.72rem;color:var(--muted);margin-top:0.1rem;">Online video / virtual consultation</div></div>
+            <div>
+              <div style="font-weight:700;font-size:0.88rem;color:var(--blue);">Teleconsultation</div>
+              <div style="font-size:0.72rem;color:var(--muted);margin-top:0.1rem;">Online video / virtual consultation</div>
+            </div>
           </div>
         </div>
         <div class="bk-field">
@@ -367,15 +450,43 @@ function isCallActive(string $date, string $time): bool {
 const DOCTORS_JS = <?= json_encode(array_values($all_doctors), JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP) ?>;
 const BOOKED_SLOTS = {};
 <?php foreach ($all_doctors as $dr):
-  $did2  = (int)$dr['id'];
-  $bres  = $conn->query("SELECT appointment_date, appointment_time FROM appointments WHERE doctor_id=$did2 AND status NOT IN ('Cancelled') AND appointment_date >= CURDATE()");
+  $did2   = (int)$dr['id'];
+  $bres   = $conn->query("SELECT appointment_date, appointment_time FROM appointments WHERE doctor_id=$did2 AND status NOT IN ('Cancelled') AND appointment_date >= CURDATE()");
   $booked = [];
   if ($bres) { while ($b = $bres->fetch_assoc()) $booked[] = ['date'=>$b['appointment_date'],'time'=>$b['appointment_time']]; }
 ?>
 BOOKED_SLOTS[<?= $did2 ?>] = <?= json_encode($booked) ?>;
 <?php endforeach; ?>
 
-// ── Tab switch ──
+/* ── helpers ── */
+const DAY_NAMES_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAY_NAMES_LONG  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTH_NAMES     = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const TODAY_STR       = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+
+function fmt12h(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number), ampm = h >= 12 ? 'PM' : 'AM', hr = h % 12 || 12;
+  return hr + ':' + (m||0).toString().padStart(2,'0') + ' ' + ampm;
+}
+function formatDateDisplay(dateStr) {
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-PH', {weekday:'long',month:'long',day:'numeric',year:'numeric'});
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function generateSlots(start, end) {
+  const slots = [];
+  let [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number), endMins = eh*60+em;
+  while (sh*60+sm < endMins) {
+    slots.push(String(sh).padStart(2,'0') + ':' + String(sm).padStart(2,'0'));
+    sm += 30; if (sm >= 60) { sh++; sm -= 60; } if (sh >= 24) break;
+  }
+  return slots;
+}
+
+/* ── Tab switch ── */
 function switchTab(type) {
   document.getElementById('visits-upcoming').style.display = type==='upcoming' ? 'block' : 'none';
   document.getElementById('visits-past').style.display     = type==='past'     ? 'block' : 'none';
@@ -383,115 +494,242 @@ function switchTab(type) {
   document.getElementById('btn-past').classList.toggle('active',     type==='past');
 }
 
+/* ── Doctor search ── */
 function filterDoctors(query) {
-  const q=query.toLowerCase().trim(), opts=document.querySelectorAll('#doc-list .doc-option'); let v=0;
-  opts.forEach(el=>{const s=(!q||el.dataset.name.includes(q)||el.dataset.specialty.includes(q));el.style.display=s?'':'none';if(s)v++;});
-  document.getElementById('doc-no-results').style.display=v===0?'block':'none';
+  const q = query.toLowerCase().trim();
+  const opts = document.querySelectorAll('#doc-list .doc-option');
+  let v = 0;
+  opts.forEach(el => {
+    const show = !q || el.dataset.name.includes(q) || el.dataset.specialty.includes(q);
+    el.style.display = show ? '' : 'none';
+    if (show) v++;
+  });
+  document.getElementById('doc-no-results').style.display = v === 0 ? 'block' : 'none';
 }
-function openBookingModal(){document.getElementById('booking-modal').classList.add('open');document.getElementById('doc-search-input').value='';filterDoctors('');goStep(1);}
-function closeBookingModal(){document.getElementById('booking-modal').classList.remove('open');resetBooking();}
-document.getElementById('booking-modal').addEventListener('click',e=>{if(e.target.id==='booking-modal')closeBookingModal();});
-function resetBooking(){selDoctor=null;selDate=null;selTime=null;}
-let selDoctor=null,selDate=null,selTime=null,calYear,calMonth;
-function goStep(n){document.querySelectorAll('.booking-step').forEach(s=>s.classList.remove('active'));document.getElementById('step-'+n).classList.add('active');if(n===2)renderCalendar();if(n===3)renderTimeSlots();if(n===4)renderSummary();}
-function selectDoctor(id){selDoctor=DOCTORS_JS.find(d=>d.id==id);selDate=null;selTime=null;document.querySelectorAll('.doc-option').forEach(el=>el.classList.remove('selected'));event.currentTarget.classList.add('selected');document.getElementById('step2-title').textContent='Dr. '+selDoctor.full_name;document.getElementById('step2-sub').textContent=(selDoctor.specialty||'')+(selDoctor.consultation_fee?' · ₱'+parseFloat(selDoctor.consultation_fee).toLocaleString():'');const chips=document.getElementById('avail-days-chips');chips.innerHTML=selDoctor.schedules.map(s=>`<span style="background:rgba(63,130,227,0.1);color:var(--blue);border-radius:50px;padding:0.25rem 0.7rem;font-size:0.72rem;font-weight:700;">${s.day_of_week} ${fmt12h(s.start_time)}–${fmt12h(s.end_time)}</span>`).join('');const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();document.getElementById('btn-to-step3').disabled=true;goStep(2);}
-const DAY_NAMES=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
-function calNav(dir){calMonth+=dir;if(calMonth>11){calMonth=0;calYear++;}else if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
-function renderCalendar(){
-  if(!selDoctor)return;
-  document.getElementById('cal-month-label').textContent=MONTH_NAMES[calMonth]+' '+calYear;
-  const grid=document.getElementById('cal-grid'),availDays=selDoctor.schedules.map(s=>s.day_of_week),today=new Date();
-  today.setHours(0,0,0,0);
-  const firstDay=new Date(calYear,calMonth,1).getDay(),daysInMonth=new Date(calYear,calMonth+1,0).getDate();
-  const nowMins=new Date().getHours()*60+new Date().getMinutes();
-  grid.innerHTML=DAY_NAMES.map(d=>`<div class="cal-day-name">${d}</div>`).join('');
-  for(let i=0;i<firstDay;i++)grid.innerHTML+=`<div class="cal-cell"></div>`;
-  for(let day=1;day<=daysInMonth;day++){
-    const d=new Date(calYear,calMonth,day);d.setHours(0,0,0,0);
-    const dayName=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()],
-          dateStr=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(day).padStart(2,'0'),
-          isPast=d<today,isToday=d.getTime()===today.getTime(),isSel=selDate===dateStr;
-    let isAvail=!isPast&&availDays.includes(dayName);
-    // For today: check if at least one slot is still in the future
-    if(isAvail&&isToday){
-      const todayScheds=selDoctor.schedules.filter(s=>s.day_of_week===dayName);
-      const slots=todayScheds.flatMap(s=>generateSlots(s.start_time,s.end_time));
-      isAvail=slots.some(t=>{const[h,m]=t.split(':').map(Number);return h*60+m>nowMins;});
-    }
-    let cls='cal-cell';
-    if(isAvail)cls+=' available';else if(isPast||(isToday&&!isAvail))cls+=' past';
-    if(isSel&&isAvail)cls+=' selected';
-    if(isToday&&!isSel&&isAvail)cls+=' today';
-    const onclick=isAvail?`pickDate('${dateStr}','${dayName}')`:''  ;
-    grid.innerHTML+=`<div class="${cls}" ${onclick?`onclick="${onclick}"`:''}>${day}</div>`;
-  }
-}
-function pickDate(dateStr,dayName){selDate=dateStr;selTime=null;renderCalendar();document.getElementById('btn-to-step3').disabled=false;document.getElementById('step3-sub').textContent=formatDateDisplay(dateStr)+' — choose a time';}
-function renderTimeSlots(){
-  if(!selDoctor||!selDate)return;
-  const dayName=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date(selDate+'T00:00:00').getDay()];
 
-  // ── Get ALL schedules for this day (a doctor can have multiple ranges e.g. 5-8:30 AND 9-11) ──
-  const scheds = selDoctor.schedules.filter(s => s.day_of_week === dayName);
-  const booked = (BOOKED_SLOTS[selDoctor.id]||[]).filter(b=>b.date===selDate).map(b=>b.time.slice(0,5));
-  const grid   = document.getElementById('time-grid');
+/* ── Modal open/close ── */
+function openBookingModal() {
+  document.getElementById('booking-modal').classList.add('open');
+  document.getElementById('doc-search-input').value = '';
+  filterDoctors('');
+  goStep(1);
+}
+function closeBookingModal() {
+  document.getElementById('booking-modal').classList.remove('open');
+  resetBooking();
+}
+document.getElementById('booking-modal').addEventListener('click', e => {
+  if (e.target.id === 'booking-modal') closeBookingModal();
+});
+
+function resetBooking() { selDoctor = null; selDate = null; selTime = null; }
+
+/* ── Booking state ── */
+let selDoctor = null, selDate = null, selTime = null, calYear, calMonth;
+
+function goStep(n) {
+  document.querySelectorAll('.booking-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step-' + n).classList.add('active');
+  if (n === 2) renderCalendar();
+  if (n === 3) renderTimeSlots();
+  if (n === 4) renderSummary();
+}
+
+/* ── Select doctor ── */
+function selectDoctor(id) {
+  selDoctor = DOCTORS_JS.find(d => d.id == id);
+  selDate = null; selTime = null;
+  document.querySelectorAll('.doc-option').forEach(el => el.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+
+  document.getElementById('step2-title').textContent = 'Dr. ' + selDoctor.full_name;
+  document.getElementById('step2-sub').textContent =
+    (selDoctor.specialty || '') +
+    (selDoctor.consultation_fee ? ' · ₱' + parseFloat(selDoctor.consultation_fee).toLocaleString() : '');
+
+  const now = new Date();
+  calYear = now.getFullYear(); calMonth = now.getMonth();
+  document.getElementById('btn-to-step3').disabled = true;
+  goStep(2);
+}
+
+/* ── Calendar navigation ── */
+function calNav(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  else if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+
+/* ── Render calendar with blocked days ── */
+function renderCalendar() {
+  if (!selDoctor) return;
+
+  document.getElementById('cal-month-label').textContent = MONTH_NAMES[calMonth] + ' ' + calYear;
+
+  // Disable prev button if already at current month
+  const now = new Date();
+  const atMin = calYear === now.getFullYear() && calMonth === now.getMonth();
+  document.getElementById('cal-prev').disabled = atMin;
+
+  const grid      = document.getElementById('cal-grid');
+  const availDays = selDoctor.schedules.map(s => s.day_of_week); // e.g. ['Monday','Wednesday']
+  const today     = new Date(); today.setHours(0,0,0,0);
+  const nowMins   = new Date().getHours()*60 + new Date().getMinutes();
+  const firstDay  = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+  // Day name headers
+  grid.innerHTML = DAY_NAMES_SHORT.map(d => `<div class="cal-day-name">${d}</div>`).join('');
+
+  // Empty leading cells
+  for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div class="cal-cell"></div>`;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const d = new Date(calYear, calMonth, day); d.setHours(0,0,0,0);
+    const longDay  = DAY_NAMES_LONG[d.getDay()];
+    const dateStr  = calYear + '-' + String(calMonth+1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+    const isPast   = d < today;
+    const isToday  = d.getTime() === today.getTime();
+    const isInSched = availDays.includes(longDay);
+    const isSel    = selDate === dateStr;
+
+    // For today: check if any slot is still in the future
+    let isAvail = !isPast && isInSched;
+    if (isAvail && isToday) {
+      const todayScheds = selDoctor.schedules.filter(s => s.day_of_week === longDay);
+      const slots = todayScheds.flatMap(s => generateSlots(s.start_time, s.end_time));
+      isAvail = slots.some(t => { const [h, m] = t.split(':').map(Number); return h*60+m > nowMins; });
+    }
+
+    // Build class list
+    let cls = 'cal-cell';
+    let title = '';
+
+    if (isPast) {
+      cls += ' past';
+    } else if (!isInSched) {
+      // Doctor has NO schedule this day of week — visually blocked
+      cls += ' blocked';
+      const avail = availDays.length ? availDays.join(', ') : 'none set';
+      title = `title="No schedule on ${longDay}s. Available: ${avail}"`;
+    } else if (!isAvail) {
+      // Is a scheduled day but all slots have passed (today edge case)
+      cls += ' past';
+    } else {
+      cls += ' available';
+    }
+
+    if (isSel && isAvail) cls += ' selected';
+    if (isToday) cls += ' today';
+
+    const onclick = isAvail && !isSel
+      ? `onclick="pickDate('${dateStr}','${longDay}')"`
+      : (isAvail && isSel ? `onclick="pickDate('${dateStr}','${longDay}')"` : '');
+
+    grid.innerHTML += `<div class="${cls}" ${title} ${onclick}>${day}</div>`;
+  }
+
+  // Build schedule legend
+  renderCalLegend();
+}
+
+function renderCalLegend() {
+  if (!selDoctor || !selDoctor.schedules.length) {
+    document.getElementById('cal-legend').style.display = 'none';
+    return;
+  }
+  const byDay = {};
+  selDoctor.schedules.forEach(s => {
+    if (!byDay[s.day_of_week]) byDay[s.day_of_week] = [];
+    byDay[s.day_of_week].push(fmt12h(s.start_time) + ' – ' + fmt12h(s.end_time));
+  });
+  const html = Object.entries(byDay).map(([day, times]) =>
+    `<div class="cal-legend-row">
+      <span class="cal-legend-day">${day.slice(0,3)}</span>
+      <span>${times.join(' &nbsp;|&nbsp; ')}</span>
+    </div>`
+  ).join('');
+  document.getElementById('cal-legend-body').innerHTML = html;
+  document.getElementById('cal-legend').style.display = 'block';
+}
+
+function pickDate(dateStr, dayName) {
+  selDate = dateStr; selTime = null;
+  renderCalendar();
+  document.getElementById('btn-to-step3').disabled = false;
+  document.getElementById('step3-sub').textContent = formatDateDisplay(dateStr) + ' — choose a time';
+}
+
+/* ── Time slots ── */
+function renderTimeSlots() {
+  if (!selDoctor || !selDate) return;
+  const dayName  = DAY_NAMES_LONG[new Date(selDate + 'T00:00:00').getDay()];
+  const scheds   = selDoctor.schedules.filter(s => s.day_of_week === dayName);
+  const booked   = (BOOKED_SLOTS[selDoctor.id] || []).filter(b => b.date === selDate).map(b => b.time.slice(0,5));
+  const grid     = document.getElementById('time-grid');
   grid.innerHTML = '';
 
-  if(!scheds.length){
-    grid.innerHTML='<div style="grid-column:1/-1;color:var(--muted);font-size:0.82rem;">No schedule for this day.</div>';
+  if (!scheds.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;color:var(--muted);font-size:0.82rem;">No schedule for this day.</div>';
     return;
   }
 
-  // ── Check if selected date is today — filter past slots ──
-  const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
-  const isToday  = selDate === todayStr;
+  const isToday  = selDate === TODAY_STR;
   const nowMins  = isToday ? new Date().getHours()*60 + new Date().getMinutes() : -1;
 
-  // ── Generate slots across ALL schedule ranges for this day ──
-  let allSlots = [];
-  scheds.forEach(sched => {
-    allSlots = allSlots.concat(generateSlots(sched.start_time, sched.end_time));
-  });
+  let allSlots = [...new Set(scheds.flatMap(s => generateSlots(s.start_time, s.end_time)))].sort();
+  let anyAvail = false;
 
-  // Remove duplicates and sort
-  allSlots = [...new Set(allSlots)].sort();
-
-  if(!allSlots.length){
-    grid.innerHTML='<div style="grid-column:1/-1;color:var(--muted);font-size:0.82rem;">No time slots available.</div>';
-    return;
-  }
-
-  let anyAvailable = false;
   allSlots.forEach(t => {
     const [h, m]   = t.split(':').map(Number);
     const slotMins = h*60 + m;
-    const isPast   = isToday && slotMins <= nowMins; // can't book current or past slot
+    const isPast   = isToday && slotMins <= nowMins;
     const isBooked = booked.includes(t);
     const isSel    = selTime === t;
     const disabled = isPast || isBooked;
+    if (!disabled) anyAvail = true;
 
-    if (!disabled) anyAvailable = true;
-
-    const cls = 'time-slot' + (disabled?' booked':'') + (isSel?' selected':'');
+    const cls     = 'time-slot' + (disabled ? ' booked' : '') + (isSel ? ' selected' : '');
     const onclick = disabled ? '' : `pickTime('${t}')`;
     const label   = fmt12h(t) + (isPast ? ' <span style="font-size:0.6rem;opacity:0.6;">past</span>' : '');
-    grid.innerHTML += `<div class="${cls}" ${onclick?`onclick="${onclick}"`:''}>${label}</div>`;
+    grid.innerHTML += `<div class="${cls}" ${onclick ? `onclick="${onclick}"` : ''}>${label}</div>`;
   });
 
-  if (!anyAvailable) {
+  if (!anyAvail) {
     grid.innerHTML = '<div style="grid-column:1/-1;color:var(--muted);font-size:0.82rem;text-align:center;padding:1rem;">No available slots for this date.<br/>All slots are past or fully booked.</div>';
   }
 
   document.getElementById('btn-to-step4').disabled = !selTime;
 }
-function pickTime(t){selTime=t;renderTimeSlots();document.getElementById('btn-to-step4').disabled=false;}
-function generateSlots(start,end){const slots=[];let[sh,sm]=start.split(':').map(Number);const[eh,em]=end.split(':').map(Number),endMins=eh*60+em;while(sh*60+sm<endMins){slots.push(String(sh).padStart(2,'0')+':'+String(sm).padStart(2,'0'));sm+=30;if(sm>=60){sh++;sm-=60;}if(sh>=24)break;}return slots;}
-function renderSummary(){if(!selDoctor||!selDate||!selTime)return;document.getElementById('f-doctor-id').value=selDoctor.id;document.getElementById('f-date').value=selDate;document.getElementById('f-time').value=selTime+':00';const fee=selDoctor.consultation_fee?'₱'+parseFloat(selDoctor.consultation_fee).toLocaleString():'To be confirmed';document.getElementById('booking-summary').innerHTML=`<div class="summary-row"><span class="summary-label">Doctor</span><span class="summary-val">Dr. ${escHtml(selDoctor.full_name)}</span></div><div class="summary-row"><span class="summary-label">Type</span><span class="summary-val" style="color:var(--blue);">📹 Teleconsultation</span></div><div class="summary-row"><span class="summary-label">Date</span><span class="summary-val">${formatDateDisplay(selDate)}</span></div><div class="summary-row"><span class="summary-label">Time</span><span class="summary-val">${fmt12h(selTime)}</span></div><div class="summary-row"><span class="summary-label">Fee</span><span class="summary-val">${fee}</span></div>`;}
-function fmt12h(t){if(!t)return'';const[h,m]=t.split(':').map(Number),ampm=h>=12?'PM':'AM',hr=h%12||12;return hr+':'+(m||0).toString().padStart(2,'0')+' '+ampm;}
-function formatDateDisplay(dateStr){return new Date(dateStr+'T00:00:00').toLocaleDateString('en-PH',{weekday:'long',month:'long',day:'numeric',year:'numeric'});}
-function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-document.querySelectorAll('.toast-bar.success').forEach(t=>setTimeout(()=>t.remove(),3500));
-document.querySelectorAll('.toast-bar.error').forEach(t=>{t.style.cursor='pointer';t.addEventListener('click',()=>t.remove());});
+
+function pickTime(t) {
+  selTime = t;
+  renderTimeSlots();
+  document.getElementById('btn-to-step4').disabled = false;
+}
+
+/* ── Summary ── */
+function renderSummary() {
+  if (!selDoctor || !selDate || !selTime) return;
+  document.getElementById('f-doctor-id').value = selDoctor.id;
+  document.getElementById('f-date').value      = selDate;
+  document.getElementById('f-time').value      = selTime + ':00';
+  const fee = selDoctor.consultation_fee
+    ? '₱' + parseFloat(selDoctor.consultation_fee).toLocaleString()
+    : 'To be confirmed';
+  document.getElementById('booking-summary').innerHTML = `
+    <div class="summary-row"><span class="summary-label">Doctor</span><span class="summary-val">Dr. ${escHtml(selDoctor.full_name)}</span></div>
+    <div class="summary-row"><span class="summary-label">Type</span><span class="summary-val" style="color:var(--blue);">📹 Teleconsultation</span></div>
+    <div class="summary-row"><span class="summary-label">Date</span><span class="summary-val">${formatDateDisplay(selDate)}</span></div>
+    <div class="summary-row"><span class="summary-label">Time</span><span class="summary-val">${fmt12h(selTime)}</span></div>
+    <div class="summary-row"><span class="summary-label">Fee</span><span class="summary-val">${fee}</span></div>
+  `;
+}
+
+/* ── Toast auto-dismiss ── */
+document.querySelectorAll('.toast-bar.success').forEach(t => setTimeout(() => t.remove(), 3500));
+document.querySelectorAll('.toast-bar.error').forEach(t => { t.style.cursor='pointer'; t.addEventListener('click', () => t.remove()); });
 </script>
 
 <?php require_once 'includes/nav.php'; ?>
