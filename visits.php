@@ -249,8 +249,10 @@ function isCallActive(string $date, string $time): bool {
           <div style="font-size:0.78rem;color:#9ab0ae;"><?= htmlspecialchars($a['specialty'] ?? '') ?></div>
           <div style="font-size:0.78rem;color:#9ab0ae;"><?= date('g:i A', strtotime($a['appointment_time'])) ?> · <?= htmlspecialchars($a['type']) ?></div>
           <?php if (!empty($a['notes'])): ?>
-          <div style="font-size:0.78rem;color:#9ab0ae;margin-top:0.2rem;">📝 <?= htmlspecialchars($a['notes']) ?></div>
+          <div style="font-size:0.78rem;color:#9ab0ae;margin-top:0.2rem;">📝 <?= htmlspecialchars($a['notes']) ?>
+        </div>
           <?php endif; ?>
+          
 
           <!-- ── FLOW STATE ACTIONS ── -->
           <div style="margin-top:0.75rem;">
@@ -305,6 +307,11 @@ function isCallActive(string $date, string $time): bool {
                   <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                   Receipt
                 </a>
+                <?php if (!empty($a['summary_pdf_path'])): ?>
+                <a href="download_summary.php?appt_id=<?= $a['id'] ?>" target="_blank" class="receipt-btn">
+                  📋 Summary
+                </a>
+                <?php endif; ?>
               </div>
 
             <?php elseif ($status === 'Completed'): ?>
@@ -368,6 +375,14 @@ function isCallActive(string $date, string $time): bool {
           <div style="font-size:0.78rem;color:#9ab0ae;"><?= date('g:i A', strtotime($a['appointment_time'])) ?> · <?= htmlspecialchars($a['type']) ?></div>
           <?php if ($paid && $a['status'] === 'Completed'): ?>
           <a href="receipt.php?appt_id=<?= $a['id'] ?>" class="receipt-btn" style="margin-top:0.4rem;font-size:0.73rem;padding:0.3rem 0.7rem;">📄 View Receipt</a>
+          <?php endif; ?>
+          <?php if ($a['status'] === 'Completed' && !empty($a['summary_pdf_path'])): ?>
+          <a href="download_summary.php?appt_id=<?= $a['id'] ?>" target="_blank"
+             class="receipt-btn" style="margin-top:0.3rem;font-size:0.73rem;padding:0.3rem 0.7rem;">
+            📋 View Summary
+          </a>
+          <?php elseif ($a['status'] === 'Completed'): ?>
+          <span style="font-size:0.72rem;color:#9ab0ae;font-style:italic;">⏳ Generating…</span>
           <?php endif; ?>
         </div>
         <div style="display:flex;flex-direction:column;gap:0.4rem;align-items:flex-end;">

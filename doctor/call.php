@@ -1,7 +1,7 @@
 <?php
 date_default_timezone_set('Asia/Manila');
 require_once 'includes/auth.php';
-
+// call.php(doctor side)
 $appt_id = (int)($_GET['appt_id'] ?? 0);
 if (!$appt_id) { header('Location: appointments.php'); exit; }
 
@@ -83,7 +83,7 @@ $pat_photo     = $appt['patient_photo'] ?? '';
     .cbtn-end svg{width:22px;height:22px;}
     .start-call-btn{background:var(--gm-blue);color:#fff;border:none;border-radius:24px;padding:0.6rem 1.6rem;font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;margin-top:0.3rem;transition:background .2s,transform .15s;box-shadow:0 2px 10px rgba(26,115,232,0.4);}
     .start-call-btn:hover{background:#1557b0;transform:translateY(-1px);}
-    .start-call-btn:disabled{background:var(--gm-surface);cursor:not-allowed;transform:none;}
+    .start-call-btn:disabled{background:var(--gm-surface);cursor:not-allowed;transform:none;opacity:0.6;}
     .bg-panel{position:absolute;bottom:88px;left:50%;transform:translateX(-50%);background:var(--gm-surface2);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:1.2rem;width:340px;z-index:50;display:none;box-shadow:0 8px 32px rgba(0,0,0,0.6);}
     .bg-panel.open{display:block;}
     .bg-panel-hd{font-size:0.82rem;font-weight:700;margin-bottom:0.9rem;display:flex;justify-content:space-between;align-items:center;}
@@ -128,7 +128,7 @@ $pat_photo     = $appt['patient_photo'] ?? '';
     <span style="font-size:0.76rem;color:var(--gm-muted);"><?= date('g:i A', $appt_ts) ?> · Teleconsultation</span>
   </div>
   <div style="display:flex;align-items:center;gap:0.6rem;">
-    <div class="conn-dot"><div class="dot" id="conn-dot"></div><span id="conn-lbl">Waiting…</span></div>
+    <div class="conn-dot"><div class="dot" id="conn-dot"></div><span id="conn-lbl">Connecting…</span></div>
     <div class="timer-pill" id="timer">--:--</div>
   </div>
 </div>
@@ -139,7 +139,6 @@ $pat_photo     = $appt['patient_photo'] ?? '';
   <div class="remote-tile">
     <video id="remote-video" autoplay playsinline></video>
 
-    <!-- Patient cam-off state -->
     <div class="cam-off-overlay" id="remote-cam-off">
       <div class="co-avatar">
         <?php if ($pat_photo): ?>
@@ -150,7 +149,6 @@ $pat_photo     = $appt['patient_photo'] ?? '';
       <div class="co-sub">Camera off</div>
     </div>
 
-    <!-- Waiting -->
     <div class="waiting-overlay" id="waiting-overlay">
       <div style="position:relative;display:flex;align-items:center;justify-content:center;">
         <div class="pulse-ring"></div>
@@ -164,7 +162,7 @@ $pat_photo     = $appt['patient_photo'] ?? '';
       <div style="font-size:0.78rem;color:var(--gm-muted);" id="waiting-sub">
         <?= time() < $appt_ts ? 'Early access — patient may not be here yet.' : 'Waiting for patient to join…' ?>
       </div>
-      <button class="start-call-btn" id="start-btn" onclick="startCall()">📹 Start Call</button>
+      <button class="start-call-btn" id="start-btn" onclick="manualStart()">📹 Start Call</button>
     </div>
 
     <div class="name-tag"><?= htmlspecialchars($appt['patient_name']) ?></div>
@@ -259,205 +257,490 @@ $pat_photo     = $appt['patient_photo'] ?? '';
 </div>
 
 <script>
-const ROOM_ID=<?= json_encode($room_id) ?>;
-const ROLE='doctor';
-const END_TS=<?= $end_ts ?>;
-const WS_URL=`ws://localhost:8765/ws/${ROOM_ID}/${ROLE}`;
-const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]};
+// ── Constants (PHP-injected) ────────────────────────────────────────────────
+const ROOM_ID  = <?= json_encode($room_id) ?>;
+const ROLE     = 'doctor';
+const APPT_TS  = <?= $appt_ts ?>;
+const END_TS   = <?= $end_ts ?>;
+const APPT_ID  = <?= $appt_id ?>;
+const MY_NAME  = <?= json_encode('Dr. ' . $doc['full_name']) ?>;
+const WS_URL   = `ws://localhost:8765/ws/${ROOM_ID}/${ROLE}`;
+const ICE      = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
 
-let ws,pc,rawStream,segInterval,selfieSegmentation,processedStream;
-let micOn=true,camOn=true,callStarted=false;
-let bgMode='none',bgImg=null;
+// ── State ───────────────────────────────────────────────────────────────────
+let ws, pc, rawStream, segInterval, selfieSegmentation, processedStream;
+let mediaRecorder = null;
+let audioChunks   = [];
+let chatMessages  = [];
+let micOn = true, camOn = true;
+let bgMode = 'none', bgImg = null;
+let chatOpen = false, unreadCount = 0;
+let callStarted = false;      // prevents duplicate offer creation
+let patientPresent = false;   // tracks if patient has joined this session
+let callWasConnected = false;
+let timerEnded = false;
+let wsReconnectDelay = 1500;  // exponential backoff start
+let isDestroyed = false;      // set on endCall to stop reconnect loops
 
-const canvas=document.getElementById('local-canvas');
-const ctx=canvas.getContext('2d');
-canvas.width=640;canvas.height=480;
+const canvas = document.getElementById('local-canvas');
+const ctx    = canvas.getContext('2d');
+canvas.width = 640; canvas.height = 480;
 
-async function init(){
-  try{rawStream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480},audio:true});document.getElementById('local-video-raw').srcObject=rawStream;}
-  catch(e){toast('❌ Camera/mic denied');return;}
-  initSegmentation();connectWS();startTimer();
+// ── Init ────────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    rawStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: true });
+    document.getElementById('local-video-raw').srcObject = rawStream;
+  } catch(e) {
+    toast('❌ Camera/mic access denied'); return;
+  }
+  initSegmentation();
+  connectWS();
+  startTimer();
 }
 
-function initSegmentation(){
-  selfieSegmentation=new SelfieSegmentation({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}`});
-  selfieSegmentation.setOptions({modelSelection:1});
+// ── Segmentation ─────────────────────────────────────────────────────────────
+function initSegmentation() {
+  selfieSegmentation = new SelfieSegmentation({
+    locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}`
+  });
+  selfieSegmentation.setOptions({ modelSelection: 1 });
   selfieSegmentation.onResults(onSegResults);
-  const vid=document.getElementById('local-video-raw');
-  selfieSegmentation.initialize().then(()=>{
-    document.getElementById('seg-loading').style.display='none';
-    processedStream=canvas.captureStream(30);
-    rawStream.getAudioTracks().forEach(t=>processedStream.addTrack(t));
-    // setInterval survives tab switching — Camera/rAF does not
-    segInterval=setInterval(async()=>{
-      if(vid.readyState>=2) await selfieSegmentation.send({image:vid});
-    },33);
+  const vid = document.getElementById('local-video-raw');
+  selfieSegmentation.initialize().then(() => {
+    document.getElementById('seg-loading').style.display = 'none';
+    processedStream = canvas.captureStream(30);
+    rawStream.getAudioTracks().forEach(t => processedStream.addTrack(t));
+    segInterval = setInterval(async () => {
+      if (vid.readyState >= 2) await selfieSegmentation.send({ image: vid });
+    }, 33);
+  }).catch(() => {
+    // Segmentation failed to load — fall back to rawStream silently
+    document.getElementById('seg-loading').style.display = 'none';
   });
 }
 
-document.addEventListener('visibilitychange',()=>{
-  if(!document.hidden&&rawStream) rawStream.getVideoTracks().forEach(t=>{if(camOn)t.enabled=true;});
-});
-
-function onSegResults(results){
-  ctx.save();ctx.clearRect(0,0,640,480);
-  ctx.drawImage(results.segmentationMask,0,0,640,480);
-  ctx.globalCompositeOperation='source-in';
-  ctx.drawImage(results.image,0,0,640,480);
-  ctx.globalCompositeOperation='destination-over';
-  if(bgMode==='none'){ctx.drawImage(results.image,0,0,640,480);}
-  else if(bgMode==='blur'){ctx.filter='blur(18px)';ctx.drawImage(results.image,-30,-30,700,540);ctx.filter='none';}
-  else if(bgImg&&bgImg.complete){ctx.drawImage(bgImg,0,0,640,480);}
+function onSegResults(results) {
+  ctx.save(); ctx.clearRect(0, 0, 640, 480);
+  ctx.drawImage(results.segmentationMask, 0, 0, 640, 480);
+  ctx.globalCompositeOperation = 'source-in';
+  ctx.drawImage(results.image, 0, 0, 640, 480);
+  ctx.globalCompositeOperation = 'destination-over';
+  if (bgMode === 'none')            { ctx.drawImage(results.image, 0, 0, 640, 480); }
+  else if (bgMode === 'blur')       { ctx.filter = 'blur(18px)'; ctx.drawImage(results.image, -30, -30, 700, 540); ctx.filter = 'none'; }
+  else if (bgImg && bgImg.complete) { ctx.drawImage(bgImg, 0, 0, 640, 480); }
   ctx.restore();
 }
 
-function connectWS(){
-  ws=new WebSocket(WS_URL);
-  ws.onopen=()=>setConn(false,'Waiting for patient…');
-  ws.onmessage=async({data})=>{
-    const m=JSON.parse(data);
-    if(m.type==='peer_joined'){
-      setConn(false,'Patient joined!');
-      if(Date.now()/1000 < APPT_TS){
-        document.getElementById('waiting-sub').textContent='✅ Patient is here! Call starts at '+new Date(APPT_TS*1000).toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit',hour12:true});
+// ── WebSocket ────────────────────────────────────────────────────────────────
+function connectWS() {
+  if (isDestroyed) return;
+  ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    wsReconnectDelay = 1500; // reset backoff on success
+    setConn(false, patientPresent ? 'Reconnected…' : 'Waiting for patient…');
+
+    // If patient was already present before WS dropped, re-attempt the call
+    if (patientPresent) {
+      callStarted = false;
+      setTimeout(() => scheduleStartCall(), 1000);
+    }
+  };
+
+  ws.onmessage = async ({ data }) => {
+    let m;
+    try { m = JSON.parse(data); } catch(e) { return; }
+
+    if (m.type === 'peer_joined') {
+      patientPresent = true;
+      callStarted = false;
+      setConn(false, 'Patient joined!');
+      const sub = document.getElementById('waiting-sub');
+      if (Date.now() / 1000 < APPT_TS) {
+        sub.textContent = '✅ Patient is here! Call starts at ' + new Date(APPT_TS * 1000).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', hour12: true });
         toast('Patient is here early — waiting for scheduled time…');
       } else {
-        document.getElementById('waiting-sub').textContent='Patient is ready!';
+        sub.textContent = 'Patient is ready!';
         toast('Patient joined — starting call…');
       }
-      callStarted=false;
-      const tryStart=()=>{if(processedStream||rawStream){startCall();}else{setTimeout(tryStart,300);}};
-      setTimeout(tryStart,500);
+      scheduleStartCall();
     }
-    else if(m.type==='answer'){if(pc){await pc.setRemoteDescription(m.sdp);document.getElementById('waiting-overlay').style.display='none';setConn(true,'Connected');toast('Call connected!');}}
-    else if(m.type==='ice'){if(pc&&m.candidate)try{await pc.addIceCandidate(m.candidate)}catch(e){}}
-    else if(m.type==='peer_left'){document.getElementById('remote-video').srcObject=null;document.getElementById('waiting-overlay').style.display='flex';document.getElementById('waiting-sub').textContent='Patient disconnected.';setConn(false,'Patient left');if(pc){pc.close();pc=null;}callStarted=false;const sb=document.getElementById('start-btn');sb.disabled=false;sb.textContent='📹 Retry Call';toast('Patient left');}
-    else if(m.type==='chat'){addChatMsg(m.text, m.name || m.from || 'Patient', false);}
-    else if(m.type==='cam_toggle'){
-      // Patient toggled their camera
-      const co=document.getElementById('remote-cam-off');
-      if(m.cam_on){co.classList.remove('show');}else{co.classList.add('show');}
+
+    else if (m.type === 'answer') {
+      if (pc && pc.signalingState === 'have-local-offer') {
+        try {
+          await pc.setRemoteDescription(m.sdp);
+          document.getElementById('waiting-overlay').style.display = 'none';
+          setConn(true, 'Connected');
+          toast('Call connected!');
+        } catch(e) {
+          toast('Answer error — retrying…');
+          callStarted = false;
+          setTimeout(scheduleStartCall, 2000);
+        }
+      }
+    }
+
+    else if (m.type === 'ice') {
+      if (pc && m.candidate && pc.remoteDescription) {
+        try { await pc.addIceCandidate(m.candidate); } catch(e) {}
+      }
+    }
+
+    else if (m.type === 'peer_left') {
+      patientPresent = false;
+      document.getElementById('remote-video').srcObject = null;
+      document.getElementById('waiting-overlay').style.display = 'flex';
+      document.getElementById('waiting-sub').textContent = 'Patient disconnected.';
+      setConn(false, 'Patient left');
+      if (pc) { pc.close(); pc = null; }
+      callStarted = false;
+      resetStartBtn();
+      toast('Patient left the call');
+    }
+
+    else if (m.type === 'chat') {
+      addChatMsg(m.text, m.name || m.from || 'Patient', false);
+    }
+
+    else if (m.type === 'cam_toggle') {
+      const co = document.getElementById('remote-cam-off');
+      m.cam_on ? co.classList.remove('show') : co.classList.add('show');
     }
   };
-  ws.onclose=()=>{setConn(false,'Reconnecting…');setTimeout(connectWS,3000);};
+
+  ws.onclose = () => {
+    if (isDestroyed) return;
+    setConn(false, 'Reconnecting…');
+    wsReconnectDelay = Math.min(wsReconnectDelay * 1.5, 10000);
+    setTimeout(connectWS, wsReconnectDelay);
+  };
+
+  ws.onerror = () => { try { ws.close(); } catch(e) {} };
 }
 
-async function startCall(){
-  if(callStarted)return;
-  // Don't start WebRTC before scheduled time — both should just wait
-  if(Date.now()/1000 < APPT_TS){
-    toast('⏳ Waiting for scheduled call time…');
-    // Retry when time arrives
-    const waitForTime=()=>{
-      if(Date.now()/1000>=APPT_TS){startCall();}
-      else{setTimeout(waitForTime,5000);}
-    };
-    setTimeout(waitForTime,5000);
+// ── Start Call Flow ──────────────────────────────────────────────────────────
+
+// Wait for stream ready, then startCall
+function scheduleStartCall() {
+  if (callStarted || isDestroyed) return;
+  if (processedStream || rawStream) {
+    startCall();
+  } else {
+    setTimeout(scheduleStartCall, 300);
+  }
+}
+
+// Manual "Start Call" button — enables doctor to force-start even without peer_joined
+function manualStart() {
+  if (!patientPresent) {
+    toast('⚠️ Waiting for patient to join first…');
     return;
   }
-  callStarted=true;
-  const sb=document.getElementById('start-btn');
-  if(sb){sb.disabled=true;sb.textContent='Connecting…';}
-  if(pc){pc.close();pc=null;}
-  pc=new RTCPeerConnection(ICE);
-  const stream=processedStream||rawStream;
-  stream.getTracks().forEach(t=>pc.addTrack(t,stream));
-  pc.ontrack=e=>{
-    document.getElementById('remote-video').srcObject=e.streams[0];
-    document.getElementById('waiting-overlay').style.display='none';
-    callWasConnected=true;
-    setConn(true,'Connected');toast('Call connected!');
+  callStarted = false; // allow retry
+  scheduleStartCall();
+}
+
+async function startCall() {
+  if (callStarted || isDestroyed) return;
+
+  // Enforce scheduled time
+  if (Date.now() / 1000 < APPT_TS) {
+    toast('⏳ Waiting for scheduled call time…');
+    const waitForTime = () => {
+      if (isDestroyed) return;
+      if (Date.now() / 1000 >= APPT_TS) { startCall(); }
+      else { setTimeout(waitForTime, 5000); }
+    };
+    setTimeout(waitForTime, 5000);
+    return;
+  }
+
+  // Ensure WebSocket is open before attempting offer
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    toast('⏳ Waiting for connection…');
+    setTimeout(() => { if (!callStarted) scheduleStartCall(); }, 2000);
+    return;
+  }
+
+  callStarted = true;
+  const sb = document.getElementById('start-btn');
+  if (sb) { sb.disabled = true; sb.textContent = 'Connecting…'; }
+
+  // Clean up any old peer connection
+  if (pc) { try { pc.close(); } catch(e) {} pc = null; }
+
+  pc = new RTCPeerConnection(ICE);
+  const stream = processedStream || rawStream;
+
+  // Guard: make sure we have a stream with tracks
+  if (!stream || stream.getTracks().length === 0) {
+    toast('❌ No media stream available');
+    callStarted = false;
+    resetStartBtn();
+    return;
+  }
+
+  stream.getTracks().forEach(t => pc.addTrack(t, stream));
+
+  pc.ontrack = e => {
+    document.getElementById('remote-video').srcObject = e.streams[0];
+    document.getElementById('waiting-overlay').style.display = 'none';
+    callWasConnected = true;
+    setConn(true, 'Connected');
+    toast('Call connected!');
+    startRecording();
   };
-  pc.onicecandidate=e=>{if(e.candidate)ws.send(JSON.stringify({type:'ice',candidate:e.candidate}));};
-  pc.onconnectionstatechange=()=>{
-    if(pc.connectionState==='failed'||pc.connectionState==='disconnected'){
-      toast('Connection lost — retrying…');
-      callStarted=false;
-      setTimeout(()=>{if(ws.readyState===WebSocket.OPEN)startCall();},2000);
+
+  pc.onicecandidate = e => {
+    if (e.candidate && ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'ice', candidate: e.candidate }));
     }
   };
-  try{
-    const offer=await pc.createOffer();
+
+  pc.onconnectionstatechange = () => {
+    if (!pc) return;
+    if (pc.connectionState === 'connected') {
+      callWasConnected = true;
+      setConn(true, 'Connected');
+    }
+    if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+      toast('Connection lost — retrying…');
+      callStarted = false;
+      setTimeout(() => {
+        if (!isDestroyed && patientPresent) scheduleStartCall();
+      }, 2000);
+    }
+  };
+
+  try {
+    const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
-    ws.send(JSON.stringify({type:'offer',sdp:offer}));
-    toast('📞 Connecting to patient…');
-  }catch(e){
-    callStarted=false;
-    toast('Failed to create offer — retrying…');
-    setTimeout(startCall,2000);
+
+    // Double-check WS is still open before sending
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      throw new Error('WebSocket closed before offer could be sent');
+    }
+
+    ws.send(JSON.stringify({ type: 'offer', sdp: offer }));
+    toast('📞 Calling patient…');
+  } catch(e) {
+    callStarted = false;
+    if (pc) { try { pc.close(); } catch(_) {} pc = null; }
+    resetStartBtn();
+    toast('Connection failed — will retry when ready…');
+    // Retry after a short delay if patient is still present
+    setTimeout(() => {
+      if (!isDestroyed && patientPresent && !callStarted) scheduleStartCall();
+    }, 3000);
   }
 }
 
-function toggleMic(){micOn=!micOn;rawStream.getAudioTracks().forEach(t=>t.enabled=micOn);document.getElementById('btn-mic').classList.toggle('off',!micOn);document.getElementById('lbl-mic').textContent=micOn?'Mute':'Unmute';toast(micOn?'🎤 Mic on':'🔇 Muted');}
-function toggleCam(){camOn=!camOn;rawStream.getVideoTracks().forEach(t=>t.enabled=camOn);document.getElementById('btn-cam').classList.toggle('off',!camOn);document.getElementById('lbl-cam').textContent=camOn?'Camera':'Cam Off';document.getElementById('local-canvas').style.display=camOn?'block':'none';document.getElementById('self-cam-off').classList.toggle('show',!camOn);if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'cam_toggle',cam_on:camOn}));toast(camOn?'📹 Camera on':'🚫 Camera off');}
-function toggleBg(){document.getElementById('bgpanel').classList.toggle('open');}
-
-function setBg(mode,el){
-  bgMode=mode;document.querySelectorAll('.bgo').forEach(e=>e.classList.remove('on'));el.classList.add('on');document.getElementById('bgpanel').classList.remove('open');
-  bgImg=null;
-  if(mode!=='none'&&mode!=='blur'){bgImg=new Image();bgImg.crossOrigin='anonymous';bgImg.src=mode;}
-  toast(mode==='none'?'Background removed':mode==='blur'?'🌫 Background blurred':'🌄 Virtual background applied');
+function resetStartBtn() {
+  const sb = document.getElementById('start-btn');
+  if (sb) { sb.disabled = false; sb.textContent = '📹 Retry Call'; }
 }
 
-function endCall(auto=false){if(!auto&&!confirm('Leave the call?'))return;clearInterval(segInterval);if(selfieSegmentation)selfieSegmentation.close();if(ws)ws.close();if(pc)pc.close();rawStream?.getTracks().forEach(t=>t.stop());window.location.href='appointments.php';}
-
-const APPT_TS=<?= $appt_ts ?>;
-function autoCompleteAppt(){
-  if(Date.now()/1000<APPT_TS)return;
-  fetch('../auto_complete_appt.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:`appt_id=<?= $appt_id ?>&role=doctor`}).catch(()=>{});
+// ── Controls ─────────────────────────────────────────────────────────────────
+function toggleMic() {
+  micOn = !micOn;
+  rawStream?.getAudioTracks().forEach(t => t.enabled = micOn);
+  document.getElementById('btn-mic').classList.toggle('off', !micOn);
+  document.getElementById('lbl-mic').textContent = micOn ? 'Mute' : 'Unmute';
+  toast(micOn ? '🎤 Mic on' : '🔇 Muted');
 }
 
-let callWasConnected = false;
-let timerEnded = false;
+function toggleCam() {
+  camOn = !camOn;
+  rawStream?.getVideoTracks().forEach(t => t.enabled = camOn);
+  document.getElementById('btn-cam').classList.toggle('off', !camOn);
+  document.getElementById('lbl-cam').textContent = camOn ? 'Camera' : 'Cam Off';
+  document.getElementById('local-canvas').style.display = camOn ? 'block' : 'none';
+  document.getElementById('self-cam-off').classList.toggle('show', !camOn);
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'cam_toggle', cam_on: camOn }));
+  }
+  toast(camOn ? '📹 Camera on' : '🚫 Camera off');
+}
 
-function startTimer(){
-  const el=document.getElementById('timer');
-  el.textContent='60:00';
-  setInterval(()=>{
-    const nowSec=Math.floor(Date.now()/1000);
-    if(nowSec<APPT_TS){
-      const w=APPT_TS-nowSec,m=Math.floor(w/60),s=w%60;
-      el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-      el.style.color='#fbbc04'; return;
+function toggleBg() { document.getElementById('bgpanel').classList.toggle('open'); }
+
+function setBg(mode, el) {
+  bgMode = mode; bgImg = null;
+  document.querySelectorAll('.bgo').forEach(e => e.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('bgpanel').classList.remove('open');
+  if (mode !== 'none' && mode !== 'blur') {
+    bgImg = new Image(); bgImg.crossOrigin = 'anonymous'; bgImg.src = mode;
+  }
+  toast(mode === 'none' ? 'Background removed' : mode === 'blur' ? '🌫 Background blurred' : '🌄 Virtual background applied');
+}
+
+function startRecording() {
+  if (!rawStream) return;
+  try {
+    const audioOnly = new MediaStream(rawStream.getAudioTracks());
+    const options = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+                    ? { mimeType: 'audio/webm;codecs=opus' } : {};
+    mediaRecorder = new MediaRecorder(audioOnly, options);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => {
+      if (e.data && e.data.size > 0) audioChunks.push(e.data);
+    };
+    mediaRecorder.start(5000);
+  } catch(e) { console.warn('Recording failed:', e); }
+}
+
+async function endCall(auto = false) {
+  if (!auto && !confirm('Leave the call?')) return;
+  isDestroyed = true;
+ 
+  // Stop recording and collect final audio chunk
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    await new Promise(resolve => { mediaRecorder.onstop = resolve; mediaRecorder.stop(); });
+  }
+ 
+  // Cleanup
+  clearInterval(segInterval);
+  try { selfieSegmentation?.close(); } catch(e) {}
+  try { ws?.close(); }               catch(e) {}
+  try { pc?.close(); }               catch(e) {}
+  rawStream?.getTracks().forEach(t => t.stop());
+ 
+  // Always submit on every leave — PHP will append, not reset
+  if (audioChunks.length > 0 || chatMessages.length > 0) {
+    const fd = new FormData();
+    fd.append('appt_id', APPT_ID);
+    fd.append('role',    ROLE);
+    if (chatMessages.length > 0) fd.append('chat_log', chatMessages.join('\n'));
+    if (audioChunks.length > 0) {
+      const blob = new Blob(audioChunks, { type: mediaRecorder?.mimeType || 'audio/webm' });
+      fd.append('audio', blob, 'consultation.webm');
     }
-    el.style.color='';
-    const left=END_TS-nowSec;
-    if(left<=0){
-      if(timerEnded)return; timerEnded=true;
-      el.textContent='00:00'; el.classList.add('urgent');
-      autoCompleteAppt(); // mark complete only when session truly ends
-      if(callWasConnected){
+    try { fetch('../process_consultation.php', { method: 'POST', body: fd }); } catch(e) {}
+    await new Promise(r => setTimeout(r, 500));
+  }
+ 
+  window.location.href = 'appointments.php';
+}
+
+// ── Auto Complete ─────────────────────────────────────────────────────────────
+function autoCompleteAppt() {
+  if (Date.now() / 1000 < APPT_TS) return;
+  fetch('../auto_complete_appt.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `appt_id=${APPT_ID}&role=doctor`
+  }).catch(() => {});
+}
+
+// ── Timer ─────────────────────────────────────────────────────────────────────
+function startTimer() {
+  const el = document.getElementById('timer');
+  el.textContent = '60:00';
+  setInterval(() => {
+    if (isDestroyed) return;
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (nowSec < APPT_TS) {
+      const w = APPT_TS - nowSec, m = Math.floor(w / 60), s = w % 60;
+      el.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+      el.style.color = '#fbbc04'; return;
+    }
+    el.style.color = '';
+    const left = END_TS - nowSec;
+    if (left <= 0) {
+      if (timerEnded) return; timerEnded = true;
+      el.textContent = '00:00'; el.classList.add('urgent');
+      autoCompleteAppt();
+      if (callWasConnected) {
         toast('⏰ Consultation ended — leaving in 5 seconds…');
-        setTimeout(()=>endCall(true),5000);
+        setTimeout(() => endCall(true), 5000);
       } else {
         toast('⏰ Session time expired');
-        setTimeout(()=>endCall(true),30000);
+        setTimeout(() => endCall(true), 30000);
       }
       return;
     }
-    const m=Math.floor(left/60),s=left%60;
-    el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-    el.classList.toggle('urgent',left<300);
-  },1000);
+    const m = Math.floor(left / 60), s = left % 60;
+    el.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    el.classList.toggle('urgent', left < 300);
+  }, 1000);
 }
-// ── Chat ──
-const MY_NAME = <?= json_encode('Dr. ' . $doc['full_name']) ?>;
-let chatOpen = false, unreadCount = 0;
 
-function toggleChat(){chatOpen=!chatOpen;document.getElementById('chat-panel').classList.toggle('open',chatOpen);document.getElementById('btn-chat').classList.toggle('off',chatOpen);if(chatOpen){unreadCount=0;updateUnread();setTimeout(()=>document.getElementById('chat-input').focus(),300);scrollChatBottom();}}
+// ── Chat ──────────────────────────────────────────────────────────────────────
+function toggleChat() {
+  chatOpen = !chatOpen;
+  document.getElementById('chat-panel').classList.toggle('open', chatOpen);
+  if (chatOpen) {
+    unreadCount = 0; updateUnread();
+    setTimeout(() => document.getElementById('chat-input').focus(), 300);
+    scrollChatBottom();
+  }
+}
 
-function sendChat(){const inp=document.getElementById('chat-input');const msg=inp.value.trim();if(!msg||!ws||ws.readyState!==WebSocket.OPEN)return;ws.send(JSON.stringify({type:'chat',text:msg,from:MY_NAME}));addChatMsg(msg,MY_NAME,true);inp.value='';inp.style.height='auto';}
+function sendChat() {
+  const inp = document.getElementById('chat-input');
+  const msg = inp.value.trim();
+  if (!msg || !ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ type: 'chat', text: msg, name: MY_NAME }));
+  addChatMsg(msg, MY_NAME, true);
+  inp.value = ''; inp.style.height = 'auto';
+}
 
-function addChatMsg(text,sender,isMine){const empty=document.getElementById('chat-empty');if(empty)empty.remove();const now=new Date().toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit',hour12:true});const row=document.createElement('div');row.className='msg-row '+(isMine?'mine':'theirs');row.innerHTML=`<div class="msg-sender">${isMine?'You':escHtml(sender)}</div><div class="msg-bubble">${escHtml(text)}</div><div class="msg-time">${now}</div>`;document.getElementById('chat-messages').appendChild(row);scrollChatBottom();if(!isMine&&!chatOpen){unreadCount++;updateUnread();toast(`💬 ${sender}: ${text.length>40?text.slice(0,40)+'…':text}`);}}
+function addChatMsg(text, sender, isMine) {
+  const empty = document.getElementById('chat-empty');
+  if (empty) empty.remove();
+  const now = new Date().toLocaleTimeString('en-PH', {
+    hour: 'numeric', minute: '2-digit', hour12: true
+  });
+ 
+  // Always push to chatMessages for submission on leave
+  chatMessages.push(`[${now}] ${isMine ? MY_NAME : sender}: ${text}`);
+ 
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + (isMine ? 'mine' : 'theirs');
+  row.innerHTML = `<div class="msg-sender">${isMine ? 'You' : escHtml(sender)}</div>
+                   <div class="msg-bubble">${escHtml(text)}</div>
+                   <div class="msg-time">${now}</div>`;
+  document.getElementById('chat-messages').appendChild(row);
+  scrollChatBottom();
+  if (!isMine && !chatOpen) {
+    unreadCount++; updateUnread();
+    toast(`💬 ${sender}: ${text.length > 40 ? text.slice(0,40) + '…' : text}`);
+  }
+}
 
-function scrollChatBottom(){const el=document.getElementById('chat-messages');el.scrollTop=el.scrollHeight;}
-function updateUnread(){const b=document.getElementById('chat-unread');if(unreadCount>0){b.textContent=unreadCount>9?'9+':unreadCount;b.style.display='flex';}else{b.style.display='none';}}
-function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
-function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function scrollChatBottom() {
+  const el = document.getElementById('chat-messages');
+  el.scrollTop = el.scrollHeight;
+}
+function updateUnread() {
+  const b = document.getElementById('chat-unread');
+  if (unreadCount > 0) { b.textContent = unreadCount > 9 ? '9+' : unreadCount; b.style.display = 'flex'; }
+  else { b.style.display = 'none'; }
+}
+function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 100) + 'px'; }
 
-function setConn(live,label){document.getElementById('conn-dot').className='dot'+(live?' live':'');document.getElementById('conn-lbl').textContent=label;}
-let tT;function toast(msg){const e=document.getElementById('toast');e.textContent=msg;e.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>e.classList.remove('on'),2800);}
-document.addEventListener('click',e=>{const p=document.getElementById('bgpanel');if(!p.contains(e.target)&&!e.target.closest('[onclick="toggleBg()"]'))p.classList.remove('open');});
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function setConn(live, label) {
+  document.getElementById('conn-dot').className = 'dot' + (live ? ' live' : '');
+  document.getElementById('conn-lbl').textContent = label;
+}
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+let tT;
+function toast(msg) {
+  const e = document.getElementById('toast'); e.textContent = msg; e.classList.add('on');
+  clearTimeout(tT); tT = setTimeout(() => e.classList.remove('on'), 2800);
+}
+
+document.addEventListener('click', e => {
+  const p = document.getElementById('bgpanel');
+  if (!p.contains(e.target) && !e.target.closest('[onclick="toggleBg()"]')) p.classList.remove('open');
+});
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && rawStream) rawStream.getVideoTracks().forEach(t => { if (camOn) t.enabled = true; });
+});
 
 init();
 </script>

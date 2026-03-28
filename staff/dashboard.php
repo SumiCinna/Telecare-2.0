@@ -1,6 +1,7 @@
 <?php
 require_once 'includes/auth.php';
 require_once 'includes/functions.php';
+// staff/dashboard.php
 
 // ── Handle quick approve / reject from dashboard ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['appt_id'])) {
@@ -10,17 +11,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['app
     $map    = ['approve' => 'Confirmed', 'reject' => 'Cancelled'];
 
     if (isset($map[$action])) {
-        $new_status = $map[$action];
-        $conn->query("UPDATE appointments SET status='$new_status' WHERE id=$aid");
-        logAction($conn, $aid, $staff_id, ucfirst($action) . 'd', $notes);
-        $_SESSION['toast'] = "Appointment " . $map[$action] . " successfully.";
+        // Staff can only approve/reject appointments the doctor has already accepted
+        $chk = $conn->prepare("SELECT status FROM appointments WHERE id=?");
+        $chk->bind_param("i", $aid);
+        $chk->execute();
+        $cur = $chk->get_result()->fetch_assoc();
+
+        if (!$cur || $cur['status'] !== 'DoctorApproved') {
+            $_SESSION['toast_error'] = "Cannot act on this appointment — waiting for doctor's acceptance first.";
+        } else {
+            $new_status = $map[$action];
+            $conn->query("UPDATE appointments SET status='$new_status' WHERE id=$aid");
+            logAction($conn, $aid, $staff_id, ucfirst($action) . 'd', $notes);
+            $_SESSION['toast'] = "Appointment " . $new_status . " successfully.";
+        }
     }
     header('Location: dashboard.php');
     exit;
 }
 
-$toast = $_SESSION['toast'] ?? null;
-unset($_SESSION['toast']);
+$toast       = $_SESSION['toast']       ?? null;
+$toast_error = $_SESSION['toast_error'] ?? null;
+unset($_SESSION['toast'], $_SESSION['toast_error']);
 
 $active_page = 'dashboard';
 $today       = date('Y-m-d');
@@ -36,20 +48,22 @@ $today_appts = $conn->query("
     ORDER BY a.appointment_time ASC
 ");
 
+// Only show appointments the doctor has already accepted — staff confirms these
 $pending_appts = $conn->query("
     SELECT a.*, p.full_name AS patient_name,
            d.full_name AS doctor_name
     FROM appointments a
     JOIN patients p ON p.id = a.patient_id
     JOIN doctors  d ON d.id = a.doctor_id
-    WHERE a.status = 'Pending'
+    WHERE a.status = 'DoctorApproved'
     ORDER BY a.appointment_date ASC, a.appointment_time ASC
 ");
 
-$stat_today    = $today_appts   ? $today_appts->num_rows   : 0;
-$stat_pending  = $pending_appts ? $pending_appts->num_rows : 0;
-$stat_patients = $conn->query("SELECT COUNT(*) c FROM patients")->fetch_assoc()['c'];
-$stat_doctors  = $conn->query("SELECT COUNT(*) c FROM doctors WHERE status='active'")->fetch_assoc()['c'];
+$stat_today           = $today_appts   ? $today_appts->num_rows   : 0;
+$stat_doctor_approved = $pending_appts ? $pending_appts->num_rows : 0;
+$stat_patients        = $conn->query("SELECT COUNT(*) c FROM patients")->fetch_assoc()['c'];
+$stat_doctors         = $conn->query("SELECT COUNT(*) c FROM doctors WHERE status='active'")->fetch_assoc()['c'];
+$stat_pending         = (int)$conn->query("SELECT COUNT(*) c FROM appointments WHERE status='Pending'")->fetch_assoc()['c'];
 
 require_once 'includes/header.php';
 ?>
@@ -61,8 +75,8 @@ require_once 'includes/header.php';
     <div class="stat-lbl">Today's Appointments</div>
   </div>
   <div class="stat-card">
-    <div class="stat-num" style="color:#d97706"><?= $stat_pending ?></div>
-    <div class="stat-lbl">Pending Approval</div>
+    <div class="stat-num" style="color:#d97706"><?= $stat_doctor_approved ?></div>
+    <div class="stat-lbl">Awaiting Your Confirmation</div>
   </div>
   <div class="stat-card">
     <div class="stat-num" style="color:var(--green)"><?= $stat_patients ?></div>
@@ -73,6 +87,13 @@ require_once 'includes/header.php';
     <div class="stat-lbl">Active Doctors</div>
   </div>
 </div>
+
+<?php if ($toast): ?>
+<div class="toast-bar success">✓ <?= htmlspecialchars($toast) ?></div>
+<?php endif; ?>
+<?php if ($toast_error): ?>
+<div class="toast-bar error">✕ <?= htmlspecialchars($toast_error) ?></div>
+<?php endif; ?>
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;">
 
@@ -106,13 +127,16 @@ require_once 'includes/header.php';
     <?php endif ?>
   </div>
 
-  <!-- Pending Approvals -->
+  <!-- Doctor-Approved: Awaiting Staff Confirmation -->
   <div class="card">
     <div class="sec-head" style="margin-bottom:.8rem">
-      <h2 style="font-size:1rem">⏳ Pending Approvals</h2>
-      <?php if ($stat_pending > 0): ?>
-        <span class="badge bg-orange"><?= $stat_pending ?></span>
+      <h2 style="font-size:1rem">⚡ Awaiting Your Confirmation</h2>
+      <?php if ($stat_doctor_approved > 0): ?>
+        <span class="badge bg-blue"><?= $stat_doctor_approved ?></span>
       <?php endif ?>
+    </div>
+    <div style="font-size:0.74rem;color:#3b82f6;font-weight:600;margin-bottom:0.75rem;">
+      Doctor has accepted these — confirm to notify the patient to pay.
     </div>
     <?php
     if ($pending_appts && $pending_appts->num_rows > 0):
@@ -129,12 +153,12 @@ require_once 'includes/header.php';
         </div>
       </div>
       <div style="display:flex;gap:.4rem">
-        <button class="btn-green btn-sm" onclick="quickAction(<?= $a['id'] ?>, 'approve')">✓</button>
-        <button class="btn-red   btn-sm" onclick="quickAction(<?= $a['id'] ?>, 'reject')">✕</button>
+        <button class="btn-green btn-sm" style="font-weight:800;" onclick="quickAction(<?= $a['id'] ?>, 'approve')">✓ Confirm</button>
+        <button class="btn-red   btn-sm" onclick="quickAction(<?= $a['id'] ?>, 'reject')">Reject</button>
       </div>
     </div>
     <?php endwhile; else: ?>
-    <div class="empty-row">All caught up! No pending requests.</div>
+    <div class="empty-row">All caught up! No appointments awaiting confirmation.</div>
     <?php endif ?>
   </div>
 

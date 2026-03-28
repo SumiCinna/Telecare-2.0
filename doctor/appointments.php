@@ -275,6 +275,14 @@ require_once 'includes/header.php';
         📄 View Receipt
       </button>
       <?php endif; ?>
+      <?php if (($a['status'] === 'Completed' || $a['status'] === 'Upcoming') && !empty($a['summary_pdf_path'])): ?>
+      <a href="../download_summary.php?appt_id=<?= $a['id'] ?>" target="_blank"
+         class="btn-receipt-sm" style="margin-top:0.3rem;">
+        📋 View Summary
+      </a>
+      <?php elseif ($a['status'] === 'Completed' || $a['status'] === 'Upcoming'): ?>
+      <span style="font-size:0.72rem;color:#9ab0ae;font-style:italic;display:block;margin-top:0.3rem;">⏳ Generating summary…</span>
+      <?php endif; ?>
     </div>
 
     <!-- Action buttons -->

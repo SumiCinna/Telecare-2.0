@@ -22,7 +22,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($map[$action])) {
             $new_status = $map[$action];
 
-            // Staff can only approve/reject appointments the doctor has already accepted
             if ($action === 'approve' || $action === 'reject') {
                 $chk = $conn->prepare("SELECT status FROM appointments WHERE id=?");
                 $chk->bind_param("i", $aid);
@@ -128,10 +127,11 @@ $ca_open  = (int)($_GET['ca_open'] ?? 0);
 $active_tab  = htmlspecialchars($_GET['tab'] ?? 'All');
 $active_page = 'appointments';
 
-// ── Data ──
+// ── Counts ──
 $stat_pending         = (int)$conn->query("SELECT COUNT(*) c FROM appointments WHERE status='Pending'")->fetch_assoc()['c'];
 $stat_doctor_approved = (int)$conn->query("SELECT COUNT(*) c FROM appointments WHERE status='DoctorApproved'")->fetch_assoc()['c'];
 
+// ── Fetch ALL rows (we do pagination in JS) ──
 $all_appts = $conn->query("
     SELECT a.*, p.full_name AS patient_name,
            d.full_name AS doctor_name, d.specialty, d.id AS doctor_id,
@@ -139,10 +139,7 @@ $all_appts = $conn->query("
     FROM appointments a
     JOIN patients p ON p.id = a.patient_id
     JOIN doctors  d ON d.id = a.doctor_id
-    ORDER BY
-        FIELD(a.status,'DoctorApproved','Pending','Confirmed','Completed','Cancelled'),
-        a.appointment_date DESC, a.appointment_time DESC
-    LIMIT 100
+    ORDER BY a.id DESC
 ");
 
 $sched_rows = $conn->query("SELECT doctor_id, day_of_week, start_time, end_time FROM doctor_schedules ORDER BY doctor_id, day_of_week, start_time");
@@ -186,6 +183,19 @@ tr.row-doctor-approved td:first-child{border-left:3px solid #3F82E3;}
 .btn-receipt-sm{background:rgba(34,197,94,0.09);color:#15803d;border:1px solid rgba(34,197,94,0.2);border-radius:6px;padding:0.3rem 0.7rem;font-size:0.73rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;}
 .btn-receipt-sm:hover{background:rgba(34,197,94,0.18);}
 
+/* ── Appt ID badge ── */
+.appt-id-badge{display:inline-block;background:rgba(36,68,65,0.07);color:var(--muted);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:700;font-family:'DM Mono',monospace,sans-serif;letter-spacing:0.03em;}
+
+/* ── Pagination ── */
+.pagination-wrap{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0.2rem 0.2rem;flex-wrap:wrap;gap:0.5rem;}
+.pagination-info{font-size:0.78rem;color:var(--muted);}
+.pagination-btns{display:flex;gap:0.3rem;align-items:center;flex-wrap:wrap;}
+.pg-btn{background:rgba(36,68,65,.07);border:none;border-radius:8px;padding:0.3rem 0.65rem;font-size:0.78rem;font-weight:600;cursor:pointer;color:var(--text);transition:background .15s,color .15s;font-family:'DM Sans',sans-serif;}
+.pg-btn:hover:not(:disabled){background:rgba(36,68,65,.15);}
+.pg-btn.active{background:var(--blue);color:#fff;}
+.pg-btn:disabled{opacity:0.35;cursor:default;}
+.pg-ellipsis{font-size:0.82rem;color:var(--muted);padding:0 0.2rem;}
+
 /* ── Receipt Modal specific styles ── */
 .receipt-modal-header{background:linear-gradient(135deg,#244441,#1a3533);padding:1.4rem 1.4rem 1.2rem;color:#fff;position:relative;}
 .receipt-modal-header::after{content:'';position:absolute;bottom:-10px;left:0;right:0;height:20px;
@@ -200,7 +210,7 @@ tr.row-doctor-approved td:first-child{border-left:3px solid #3F82E3;}
 <div class="sec-head">
   <h2>Appointment Management</h2>
   <div style="display:flex;gap:.6rem">
-    <input class="search-bar" placeholder="Search patient or doctor…" oninput="filterTable('appt-tbody', this.value)"/>
+    <input class="search-bar" id="appt-search" placeholder="Search ID, patient or doctor…" oninput="onSearchInput(this.value)"/>
     <button class="btn-primary" onclick="openModal('modal-create')">+ Create Appointment</button>
   </div>
 </div>
@@ -209,7 +219,16 @@ tr.row-doctor-approved td:first-child{border-left:3px solid #3F82E3;}
 <div class="toast-bar success">✓ <?= htmlspecialchars($toast) ?></div>
 <?php endif; ?>
 <?php if ($toast_error): ?>
-<div class="toast-bar error">✕ <?= htmlspecialchars($toast_error) ?></div>
+<div class="toast-bar error">✕ <?= htmlspecialchars($toast_error) ?>
+<?php if ($a['status'] === 'Completed' && !empty($a['summary_pdf_path'])): ?>
+          <a href="download_summary.php?appt_id=<?= $a['id'] ?>" target="_blank"
+             class="btn-sm" style="background:rgba(36,68,65,0.08);color:#244441;border:1px solid rgba(36,68,65,0.2);text-decoration:none;">
+            📋 Summary
+          </a>
+          <?php elseif ($a['status'] === 'Completed'): ?>
+          <span style="font-size:0.7rem;color:#9ab0ae;font-style:italic;">⏳ Generating…</span>
+          <?php endif; ?>
+</div>
 <?php endif; ?>
 
 <?php if ($stat_doctor_approved > 0): ?>
@@ -251,7 +270,8 @@ tr.row-doctor-approved td:first-child{border-left:3px solid #3F82E3;}
   <table>
     <thead>
       <tr>
-        <th>Patient</th><th>Doctor</th><th>Date & Time</th>
+        <th style="width:70px;">ID</th>
+        <th>Patient</th><th>Doctor</th><th>Date &amp; Time</th>
         <th>Type</th><th>Status</th><th>Payment</th><th>Actions</th>
       </tr>
     </thead>
@@ -274,8 +294,11 @@ tr.row-doctor-approved td:first-child{border-left:3px solid #3F82E3;}
         $fee_val     = floatval($a['consultation_fee'] ?? 0);
     ?>
     <tr data-status="<?= $a['status'] ?>"
-        data-search="<?= strtolower($a['patient_name'] . ' ' . $a['doctor_name']) ?>"
+        data-search="<?= strtolower('#' . $a['id'] . ' ' . $a['patient_name'] . ' ' . $a['doctor_name']) ?>"
         class="<?= $row_class ?>">
+      <td>
+        <span class="appt-id-badge">#<?= $a['id'] ?></span>
+      </td>
       <td><div style="font-weight:600"><?= htmlspecialchars($a['patient_name']) ?></div></td>
       <td>
         Dr. <?= htmlspecialchars($a['doctor_name']) ?><br/>
@@ -336,10 +359,16 @@ tr.row-doctor-approved td:first-child{border-left:3px solid #3F82E3;}
       </td>
     </tr>
     <?php endwhile; else: ?>
-    <tr><td colspan="7" class="empty-row">No appointments found.</td></tr>
+    <tr><td colspan="8" class="empty-row">No appointments found.</td></tr>
     <?php endif ?>
     </tbody>
   </table>
+</div>
+
+<!-- Pagination controls -->
+<div class="pagination-wrap" id="pagination-wrap">
+  <div class="pagination-info" id="pagination-info"></div>
+  <div class="pagination-btns" id="pagination-btns"></div>
 </div>
 
 <!-- Hidden quick-action form -->
@@ -479,6 +508,135 @@ const DAY_NAMES   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday'
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const TODAY_STR   = new Date().toISOString().slice(0, 10);
 
+// ── Pagination State ──────────────────────────────────────────────────────────
+const PER_PAGE  = 10;
+let _activeTab  = '<?= $active_tab ?>';
+let _searchQuery = '';
+let _currentPage = 1;
+
+// All rows from DOM (captured once)
+const _allRows = Array.from(document.querySelectorAll('#appt-tbody tr[data-status]'));
+
+function getVisibleRows() {
+  return _allRows.filter(r => {
+    const matchTab    = _activeTab === 'All' || r.dataset.status === _activeTab;
+    const matchSearch = !_searchQuery || r.dataset.search.includes(_searchQuery.toLowerCase());
+    return matchTab && matchSearch;
+  });
+}
+
+function renderTable() {
+  const visible = getVisibleRows();
+  const totalPages = Math.max(1, Math.ceil(visible.length / PER_PAGE));
+  if (_currentPage > totalPages) _currentPage = totalPages;
+  const start = (_currentPage - 1) * PER_PAGE;
+  const end   = start + PER_PAGE;
+
+  // Show/hide rows
+  _allRows.forEach(r => r.style.display = 'none');
+  visible.forEach((r, i) => {
+    r.style.display = (i >= start && i < end) ? '' : 'none';
+  });
+
+  // Empty state
+  const existingEmpty = document.getElementById('pg-empty-row');
+  if (existingEmpty) existingEmpty.remove();
+  if (visible.length === 0) {
+    const tr = document.createElement('tr');
+    tr.id = 'pg-empty-row';
+    tr.innerHTML = `<td colspan="8" class="empty-row">No appointments found.</td>`;
+    document.getElementById('appt-tbody').appendChild(tr);
+  }
+
+  renderPagination(visible.length, totalPages);
+}
+
+function renderPagination(total, totalPages) {
+  const info = document.getElementById('pagination-info');
+  const btns = document.getElementById('pagination-btns');
+  const start = total === 0 ? 0 : (_currentPage - 1) * PER_PAGE + 1;
+  const end   = Math.min(_currentPage * PER_PAGE, total);
+
+  info.textContent = total === 0
+    ? 'No results'
+    : `Showing ${start}–${end} of ${total} appointment${total !== 1 ? 's' : ''}`;
+
+  btns.innerHTML = '';
+  if (totalPages <= 1) return;
+
+  // Prev button
+  const prev = document.createElement('button');
+  prev.className = 'pg-btn';
+  prev.textContent = '‹ Prev';
+  prev.disabled = _currentPage === 1;
+  prev.onclick = () => goPage(_currentPage - 1);
+  btns.appendChild(prev);
+
+  // Page number buttons with ellipsis
+  const pages = buildPageList(_currentPage, totalPages);
+  pages.forEach(p => {
+    if (p === '…') {
+      const sp = document.createElement('span');
+      sp.className = 'pg-ellipsis';
+      sp.textContent = '…';
+      btns.appendChild(sp);
+    } else {
+      const btn = document.createElement('button');
+      btn.className = 'pg-btn' + (p === _currentPage ? ' active' : '');
+      btn.textContent = p;
+      btn.onclick = () => goPage(p);
+      btns.appendChild(btn);
+    }
+  });
+
+  // Next button
+  const next = document.createElement('button');
+  next.className = 'pg-btn';
+  next.textContent = 'Next ›';
+  next.disabled = _currentPage === totalPages;
+  next.onclick = () => goPage(_currentPage + 1);
+  btns.appendChild(next);
+}
+
+function buildPageList(current, total) {
+  if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
+  const pages = [];
+  pages.push(1);
+  if (current > 3) pages.push('…');
+  for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) {
+    pages.push(p);
+  }
+  if (current < total - 2) pages.push('…');
+  pages.push(total);
+  return pages;
+}
+
+function goPage(p) {
+  _currentPage = p;
+  renderTable();
+  // Scroll table into view smoothly
+  document.querySelector('.tbl-wrap').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Filter & Search ───────────────────────────────────────────────────────────
+function filterStatus(status) {
+  _activeTab   = status;
+  _currentPage = 1;
+  document.querySelectorAll('[id^=filter-]').forEach(b => {
+    const active = b.id === 'filter-' + status;
+    b.style.background = active ? 'var(--blue)' : 'rgba(36,68,65,.07)';
+    b.style.color      = active ? '#fff'        : 'var(--text)';
+  });
+  renderTable();
+}
+
+function onSearchInput(val) {
+  _searchQuery = val.trim();
+  _currentPage = 1;
+  renderTable();
+}
+
+// ── Calendar helpers (unchanged) ──────────────────────────────────────────────
 function fmt12(hhmm) {
   const [h, m] = hhmm.split(':').map(Number);
   return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
@@ -675,8 +833,6 @@ document.getElementById('rs-form').addEventListener('submit', function(e) {
   if(new Date(date+'T'+time)<=new Date()){e.preventDefault();errEl.textContent='Cannot reschedule to a past date or time.';errEl.style.display='block';return;}
 });
 
-let _activeTab = '<?= $active_tab ?>';
-
 function quickAction(id, action) {
   document.getElementById('qf-appt-id').value = id;
   document.getElementById('qf-action').value  = action;
@@ -685,23 +841,7 @@ function quickAction(id, action) {
   document.getElementById('quick-form').submit();
 }
 
-function filterStatus(status) {
-  _activeTab = status;
-  document.querySelectorAll('#appt-tbody tr[data-status]').forEach(r => {
-    r.style.display = (status === 'All' || r.dataset.status === status) ? '' : 'none';
-  });
-  document.querySelectorAll('[id^=filter-]').forEach(b => {
-    const active = b.id === 'filter-' + status;
-    b.style.background = active ? 'var(--blue)' : 'rgba(36,68,65,.07)';
-    b.style.color      = active ? '#fff'        : 'var(--text)';
-  });
-}
-
-filterStatus(_activeTab);
-
-<?php if ($rs_open): ?>openModal('modal-reschedule');<?php endif ?>
-<?php if ($ca_open): ?>openModal('modal-create');<?php endif ?>
-
+// ── Receipt ───────────────────────────────────────────────────────────────────
 function openReceiptModal(apptId, patient, doctor, specialty, apptDate, apptTime, type, amount, receiptNo, paidAt) {
   document.getElementById('rm-receipt-no').textContent = receiptNo;
   const paidDate = paidAt ? new Date(paidAt) : new Date();
@@ -844,6 +984,12 @@ function handleReceiptClick(btn) {
     btn.dataset.type, btn.dataset.fee, btn.dataset.receipt, btn.dataset.paidAt
   );
 }
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+filterStatus(_activeTab);  // sets tab highlight + calls renderTable()
+
+<?php if ($rs_open): ?>openModal('modal-reschedule');<?php endif ?>
+<?php if ($ca_open): ?>openModal('modal-create');<?php endif ?>
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
