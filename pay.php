@@ -368,6 +368,31 @@ $doc_name  = 'Dr. ' . htmlspecialchars($appt['doctor_name']);
     .checkout-step.active { display:block; }
 
     @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* ── Privacy Modal ── */
+    .policy-modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9998; }
+    .policy-modal.visible { display:flex; align-items:center; justify-content:center; }
+    .policy-modal-content { background:var(--white); border-radius:16px; max-width:650px; max-height:85vh; overflow-y:auto; padding:2rem; box-shadow:0 20px 60px rgba(0,0,0,0.3); position:relative; }
+    .policy-modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:1.5px solid var(--border); }
+    .policy-modal-header h2 { font-family:'Plus Jakarta Sans',sans-serif; font-size:1.4rem; font-weight:800; color:var(--text); margin:0; }
+    .policy-modal-close { background:none; border:none; font-size:1.8rem; color:var(--muted); cursor:pointer; padding:0; width:32px; height:32px; display:flex; align-items:center; justify-content:center; transition:color 0.2s; }
+    .policy-modal-close:hover { color:var(--text); }
+    .policy-modal-body { font-size:0.92rem; color:var(--text); line-height:1.7; }
+    .policy-modal-body h3 { font-weight:700; margin-top:1.2rem; margin-bottom:0.6rem; color:var(--text); }
+    .policy-modal-body ul { margin:0.8rem 0 0.8rem 1.5rem; }
+    .policy-modal-body li { margin-bottom:0.5rem; }
+    .policy-modal-body .highlight { background:rgba(13,148,136,0.08); border-left:3px solid var(--teal); padding:1rem; border-radius:6px; margin:1rem 0; }
+    .policy-modal-footer { display:flex; gap:0.8rem; margin-top:2rem; padding-top:1rem; border-top:1.5px solid var(--border); }
+    .policy-modal-footer button { flex:1; padding:0.8rem 1.2rem; border:none; border-radius:50px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:0.88rem; transition:all 0.2s; }
+    .btn-policy-close { background:var(--border); color:var(--muted); }
+    .btn-policy-close:hover { background:#d1d5db; }
+    .btn-policy-agree { background:var(--teal); color:#fff; box-shadow:0 4px 12px rgba(13,148,136,0.3); }
+    .btn-policy-agree:hover { background:var(--teal2); }
+    @media(max-width:600px) {
+      .policy-modal-content { max-width:95vw; padding:1.5rem; }
+      .policy-modal-header h2 { font-size:1.2rem; }
+      .policy-modal-body { font-size:0.88rem; }
+    }
   </style>
 </head>
 <body>
@@ -512,7 +537,7 @@ $doc_name  = 'Dr. ' . htmlspecialchars($appt['doctor_name']);
     </div>
     <div class="privacy-note">
       <input type="checkbox" id="agree-chk"/>
-      <label for="agree-chk">I have read and agreed to TELE-CARE's <a href="/privacy-policy.php" target="_blank">Privacy Policy</a>.</label>
+      <label for="agree-chk">I have read and agreed to TELE-CARE's <a href="#" onclick="openPolicyModal(event)">Privacy Policy</a>.</label>
     </div>
   </div>
 
@@ -528,6 +553,85 @@ $doc_name  = 'Dr. ' . htmlspecialchars($appt['doctor_name']);
   <div class="powered-by">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
     Secured by TELE-CARE · Powered by PayMongo
+  </div>
+</div>
+
+<!-- Privacy Policy Modal -->
+<div class="policy-modal" id="policy-modal">
+  <div class="policy-modal-content">
+    <div class="policy-modal-header">
+      <h2>Privacy Policy</h2>
+      <button class="policy-modal-close" onclick="closePolicyModal()">&times;</button>
+    </div>
+    <div class="policy-modal-body">
+      <h3>Overview</h3>
+      <p>TELE-CARE is a telehealth platform that connects you with licensed doctors for remote consultations. By using our service, you acknowledge this Privacy Policy.</p>
+
+      <h3>Information We Collect</h3>
+      <ul>
+        <li><strong>Account:</strong> Full name, email, phone, date of birth</li>
+        <li><strong>Medical:</strong> Health records, consultation notes, diagnoses</li>
+        <li><strong>Payment:</strong> Billing details only—card details are NOT stored by us</li>
+        <li><strong>Communications:</strong> Chat messages, voice and video recordings during consultations</li>
+      </ul>
+
+      <h3>Voice & Video Recording</h3>
+      <div class="highlight">
+        <strong>You consent to voice and video recording during consultations for:</strong>
+        <ul style="margin-top:0.6rem;">
+          <li>Medical record keeping and continuity of care</li>
+          <li>Quality assurance and compliance verification</li>
+          <li>Patient and provider safety</li>
+          <li>AI Summarization of the teleconsultations</li>
+        </ul>
+      </div>
+      <p style="font-size:0.88rem;margin-top:0.8rem;">Recordings are encrypted and stored securely. Contact support to access your recording.</p>
+
+      <h3>Payment Security</h3>
+      <p><strong>We use PayMongo for all payments.</strong> Your card details are transmitted directly to PayMongo and are NOT stored on TELE-CARE servers. We only store billing name, email, and payment status for records.</p>
+      <p style="font-size:0.88rem;"><em>PayMongo is PCI DSS compliant and handles all sensitive payment data securely.</em></p>
+
+      <h3>How We Use Your Information</h3>
+      <ul>
+        <li>To provide telehealth services and schedule appointments</li>
+        <li>To process payments securely through PayMongo</li>
+        <li>To maintain medical records and consultation history</li>
+        <li>To send appointment reminders and follow-ups</li>
+        <li>To improve platform security and performance</li>
+        <li>To comply with legal requirements</li>
+      </ul>
+
+      <h3>Who Can Access Your Information</h3>
+      <ul>
+        <li><strong>Your Doctor:</strong> Full access to medical records for treatment only</li>
+        <li><strong>Support Team:</strong> Limited access to billing and account info</li>
+        <li><strong>PayMongo:</strong> Billing details for payment processing only</li>
+        <li><strong>Legal:</strong> Disclosure only as required by law</li>
+      </ul>
+      <p style="font-size:0.88rem;margin-top:0.8rem;"><em>Your consultation recordings and medical records are NOT shared with third parties without your consent.</em></p>
+
+      <h3>Data Security</h3>
+      <ul>
+        <li>All data transmitted via TLS/SSL encryption</li>
+        <li>Medical records stored on secure servers with access controls</li>
+        <li>Payment processing delegated to certified PayMongo</li>
+        <li>Consultation sessions require authentication</li>
+      </ul>
+
+      <h3>Your Rights</h3>
+      <ul>
+        <li>Request access to your personal data and medical records</li>
+        <li>Request correction of inaccurate information</li>
+        <li>Request the clinic for deletion of your account at any time</li>
+      </ul>
+
+      <h3>Contact</h3>
+      <p>For questions about this Privacy Policy or your data:<br/><strong>telecareteamsystem@gmail.com</strong></p>
+    </div>
+    <div class="policy-modal-footer">
+      <button class="btn-policy-close" onclick="closePolicyModal()">Close</button>
+      <button class="btn-policy-agree" onclick="agreePolicyModal()">I Agree</button>
+    </div>
   </div>
 </div>
 
@@ -731,6 +835,29 @@ $doc_name  = 'Dr. ' . htmlspecialchars($appt['doctor_name']);
   }
 
   livePreview(); // init preview
+
+  // ── Privacy Policy Modal ──
+  function openPolicyModal(e) {
+    e.preventDefault();
+    document.getElementById('policy-modal').classList.add('visible');
+  }
+
+  function closePolicyModal() {
+    document.getElementById('policy-modal').classList.remove('visible');
+  }
+
+  function agreePolicyModal() {
+    document.getElementById('agree-chk').checked = true;
+    document.getElementById('btn-next').disabled = false;
+    closePolicyModal();
+  }
+
+  // Close modal on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('policy-modal').classList.contains('visible')) {
+      closePolicyModal();
+    }
+  });
 </script>
 </body>
 </html>
