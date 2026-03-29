@@ -1,7 +1,7 @@
 <?php
 date_default_timezone_set('Asia/Manila');
 require_once 'includes/auth.php';
-// call.php(doctor side)
+// call.php (doctor side)
 $appt_id = (int)($_GET['appt_id'] ?? 0);
 if (!$appt_id) { header('Location: appointments.php'); exit; }
 
@@ -118,6 +118,7 @@ $pat_photo     = $appt['patient_photo'] ?? '';
     .chat-send{width:38px;height:38px;border-radius:50%;background:var(--gm-blue);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s,transform .15s;}
     .chat-send:hover{background:#1557b0;transform:scale(1.08);}
     .chat-send svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+    @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
@@ -138,24 +139,18 @@ $pat_photo     = $appt['patient_photo'] ?? '';
   <!-- Patient (remote) tile -->
   <div class="remote-tile">
     <video id="remote-video" autoplay playsinline></video>
-
     <div class="cam-off-overlay" id="remote-cam-off">
       <div class="co-avatar">
-        <?php if ($pat_photo): ?>
-        <img src="../<?= htmlspecialchars($pat_photo) ?>" alt=""/>
-        <?php else: echo $pat_initials; endif; ?>
+        <?php if ($pat_photo): ?><img src="../<?= htmlspecialchars($pat_photo) ?>" alt=""/><?php else: echo $pat_initials; endif; ?>
       </div>
       <div class="co-name"><?= htmlspecialchars($appt['patient_name']) ?></div>
       <div class="co-sub">Camera off</div>
     </div>
-
     <div class="waiting-overlay" id="waiting-overlay">
       <div style="position:relative;display:flex;align-items:center;justify-content:center;">
         <div class="pulse-ring"></div>
         <div class="waiting-avatar">
-          <?php if ($pat_photo): ?>
-          <img src="../<?= htmlspecialchars($pat_photo) ?>" alt=""/>
-          <?php else: echo $pat_initials; endif; ?>
+          <?php if ($pat_photo): ?><img src="../<?= htmlspecialchars($pat_photo) ?>" alt=""/><?php else: echo $pat_initials; endif; ?>
         </div>
       </div>
       <div style="font-size:1rem;font-weight:600;"><?= htmlspecialchars($appt['patient_name']) ?></div>
@@ -164,7 +159,6 @@ $pat_photo     = $appt['patient_photo'] ?? '';
       </div>
       <button class="start-call-btn" id="start-btn" onclick="manualStart()">📹 Start Call</button>
     </div>
-
     <div class="name-tag"><?= htmlspecialchars($appt['patient_name']) ?></div>
   </div>
 
@@ -174,9 +168,7 @@ $pat_photo     = $appt['patient_photo'] ?? '';
     <canvas id="local-canvas"></canvas>
     <div class="self-cam-off" id="self-cam-off">
       <div class="self-cam-off-avatar">
-        <?php if ($doc_photo): ?>
-        <img src="../<?= htmlspecialchars($doc_photo) ?>" alt=""/>
-        <?php else: echo $doc_initials; endif; ?>
+        <?php if ($doc_photo): ?><img src="../<?= htmlspecialchars($doc_photo) ?>" alt=""/><?php else: echo $doc_initials; endif; ?>
       </div>
       <span style="font-size:0.68rem;color:var(--gm-muted);">Dr. <?= htmlspecialchars($doc['full_name']) ?></span>
     </div>
@@ -256,8 +248,17 @@ $pat_photo     = $appt['patient_photo'] ?? '';
   </button>
 </div>
 
+<!-- Loading overlay -->
+<div id="leaving-overlay" style="display:none;position:fixed;inset:0;background:#202124;z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;">
+  <div style="width:60px;height:60px;border:4px solid rgba(255,255,255,0.1);border-top-color:#1a73e8;border-radius:50%;animation:spin 1s linear infinite;"></div>
+  <div style="text-align:center;">
+    <div style="font-size:1.1rem;font-weight:600;margin-bottom:0.5rem;">🤖 AI is summarizing the consultation…</div>
+    <div style="font-size:0.82rem;color:#9aa0a6;">Please wait, this may take a minute.<br/>You'll be redirected automatically.</div>
+  </div>
+</div>
+
 <script>
-// ── Constants (PHP-injected) ────────────────────────────────────────────────
+// ── Constants ────────────────────────────────────────────────────────────────
 const ROOM_ID  = <?= json_encode($room_id) ?>;
 const ROLE     = 'doctor';
 const APPT_TS  = <?= $appt_ts ?>;
@@ -275,12 +276,12 @@ let chatMessages  = [];
 let micOn = true, camOn = true;
 let bgMode = 'none', bgImg = null;
 let chatOpen = false, unreadCount = 0;
-let callStarted = false;      // prevents duplicate offer creation
-let patientPresent = false;   // tracks if patient has joined this session
+let callStarted = false;
+let patientPresent = false;
 let callWasConnected = false;
 let timerEnded = false;
-let wsReconnectDelay = 1500;  // exponential backoff start
-let isDestroyed = false;      // set on endCall to stop reconnect loops
+let wsReconnectDelay = 1500;
+let isDestroyed = false;
 
 const canvas = document.getElementById('local-canvas');
 const ctx    = canvas.getContext('2d');
@@ -315,7 +316,6 @@ function initSegmentation() {
       if (vid.readyState >= 2) await selfieSegmentation.send({ image: vid });
     }, 33);
   }).catch(() => {
-    // Segmentation failed to load — fall back to rawStream silently
     document.getElementById('seg-loading').style.display = 'none';
   });
 }
@@ -338,14 +338,9 @@ function connectWS() {
   ws = new WebSocket(WS_URL);
 
   ws.onopen = () => {
-    wsReconnectDelay = 1500; // reset backoff on success
+    wsReconnectDelay = 1500;
     setConn(false, patientPresent ? 'Reconnected…' : 'Waiting for patient…');
-
-    // If patient was already present before WS dropped, re-attempt the call
-    if (patientPresent) {
-      callStarted = false;
-      setTimeout(() => scheduleStartCall(), 1000);
-    }
+    if (patientPresent) { callStarted = false; setTimeout(() => scheduleStartCall(), 1000); }
   };
 
   ws.onmessage = async ({ data }) => {
@@ -354,8 +349,10 @@ function connectWS() {
 
     if (m.type === 'peer_joined') {
       patientPresent = true;
-      callStarted = false;
+      callStarted = false; // Reset so retry/reconnect works
       setConn(false, 'Patient joined!');
+      // Show waiting overlay if not connected yet
+      document.getElementById('waiting-overlay').style.display = 'flex';
       const sub = document.getElementById('waiting-sub');
       if (Date.now() / 1000 < APPT_TS) {
         sub.textContent = '✅ Patient is here! Call starts at ' + new Date(APPT_TS * 1000).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', hour12: true });
@@ -363,8 +360,11 @@ function connectWS() {
       } else {
         sub.textContent = 'Patient is ready!';
         toast('Patient joined — starting call…');
+        resetStartBtn(); // Show "Start Call" button again instead of "Retry"
       }
-      scheduleStartCall();
+      if (Date.now() / 1000 >= APPT_TS) {
+        scheduleStartCall();
+      }
     }
 
     else if (m.type === 'answer') {
@@ -421,31 +421,20 @@ function connectWS() {
 }
 
 // ── Start Call Flow ──────────────────────────────────────────────────────────
-
-// Wait for stream ready, then startCall
 function scheduleStartCall() {
   if (callStarted || isDestroyed) return;
-  if (processedStream || rawStream) {
-    startCall();
-  } else {
-    setTimeout(scheduleStartCall, 300);
-  }
+  if (processedStream || rawStream) { startCall(); }
+  else { setTimeout(scheduleStartCall, 300); }
 }
 
-// Manual "Start Call" button — enables doctor to force-start even without peer_joined
 function manualStart() {
-  if (!patientPresent) {
-    toast('⚠️ Waiting for patient to join first…');
-    return;
-  }
-  callStarted = false; // allow retry
+  if (!patientPresent) { toast('⚠️ Waiting for patient to join first…'); return; }
+  callStarted = false;
   scheduleStartCall();
 }
 
 async function startCall() {
   if (callStarted || isDestroyed) return;
-
-  // Enforce scheduled time
   if (Date.now() / 1000 < APPT_TS) {
     toast('⏳ Waiting for scheduled call time…');
     const waitForTime = () => {
@@ -456,73 +445,51 @@ async function startCall() {
     setTimeout(waitForTime, 5000);
     return;
   }
-
-  // Ensure WebSocket is open before attempting offer
   if (!ws || ws.readyState !== WebSocket.OPEN) {
     toast('⏳ Waiting for connection…');
     setTimeout(() => { if (!callStarted) scheduleStartCall(); }, 2000);
     return;
   }
-
   callStarted = true;
   const sb = document.getElementById('start-btn');
   if (sb) { sb.disabled = true; sb.textContent = 'Connecting…'; }
-
-  // Clean up any old peer connection
   if (pc) { try { pc.close(); } catch(e) {} pc = null; }
-
   pc = new RTCPeerConnection(ICE);
   const stream = processedStream || rawStream;
-
-  // Guard: make sure we have a stream with tracks
   if (!stream || stream.getTracks().length === 0) {
     toast('❌ No media stream available');
-    callStarted = false;
-    resetStartBtn();
-    return;
+    callStarted = false; resetStartBtn(); return;
   }
-
   stream.getTracks().forEach(t => pc.addTrack(t, stream));
-
   pc.ontrack = e => {
     document.getElementById('remote-video').srcObject = e.streams[0];
     document.getElementById('waiting-overlay').style.display = 'none';
     callWasConnected = true;
     setConn(true, 'Connected');
     toast('Call connected!');
+    // Auto-add system message so we always have content for summary
+    const now = new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    chatMessages.push(`[${now}] System: Call connected`);
     startRecording();
   };
-
   pc.onicecandidate = e => {
     if (e.candidate && ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'ice', candidate: e.candidate }));
     }
   };
-
   pc.onconnectionstatechange = () => {
     if (!pc) return;
-    if (pc.connectionState === 'connected') {
-      callWasConnected = true;
-      setConn(true, 'Connected');
-    }
+    if (pc.connectionState === 'connected') { callWasConnected = true; setConn(true, 'Connected'); }
     if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
       toast('Connection lost — retrying…');
       callStarted = false;
-      setTimeout(() => {
-        if (!isDestroyed && patientPresent) scheduleStartCall();
-      }, 2000);
+      setTimeout(() => { if (!isDestroyed && patientPresent) scheduleStartCall(); }, 2000);
     }
   };
-
   try {
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
-
-    // Double-check WS is still open before sending
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-      throw new Error('WebSocket closed before offer could be sent');
-    }
-
+    if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error('WS closed');
     ws.send(JSON.stringify({ type: 'offer', sdp: offer }));
     toast('📞 Calling patient…');
   } catch(e) {
@@ -530,16 +497,169 @@ async function startCall() {
     if (pc) { try { pc.close(); } catch(_) {} pc = null; }
     resetStartBtn();
     toast('Connection failed — will retry when ready…');
-    // Retry after a short delay if patient is still present
-    setTimeout(() => {
-      if (!isDestroyed && patientPresent && !callStarted) scheduleStartCall();
-    }, 3000);
+    setTimeout(() => { if (!isDestroyed && patientPresent && !callStarted) scheduleStartCall(); }, 3000);
   }
 }
 
 function resetStartBtn() {
   const sb = document.getElementById('start-btn');
   if (sb) { sb.disabled = false; sb.textContent = '📹 Retry Call'; }
+}
+
+function startRecording() {
+  if (!rawStream) return;
+  try {
+    const audioOnly = new MediaStream(rawStream.getAudioTracks());
+    const options = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? { mimeType: 'audio/webm;codecs=opus' } : {};
+    mediaRecorder = new MediaRecorder(audioOnly, options);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.start(5000);
+  } catch(e) { console.warn('Recording failed:', e); }
+}
+
+// ── End Call ─────────────────────────────────────────────────────────────────
+async function endCall(auto = false) {
+  if (!auto && !confirm('Leave the call?')) return;
+  isDestroyed = true;
+  console.log('endCall() started');
+
+  // Stop recording (with 1s timeout so it can't hang)
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    await Promise.race([
+      new Promise(resolve => { mediaRecorder.onstop = resolve; mediaRecorder.stop(); }),
+      new Promise(resolve => setTimeout(resolve, 1000))
+    ]);
+  }
+
+  // Cleanup
+  clearInterval(segInterval);
+  try { selfieSegmentation?.close(); } catch(e) {}
+  try { ws?.close(); }               catch(e) {}
+  try { pc?.close(); }               catch(e) {}
+  rawStream?.getTracks().forEach(t => t.stop());
+
+  // Submit call data (fire and forget — PHP runs in background)
+  if (callWasConnected) {
+    console.log('Call was connected, showing overlay and polling for summary');
+    // Show loading overlay
+    document.getElementById('leaving-overlay').style.display = 'flex';
+
+    // Add system message for call end
+    const now = new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    chatMessages.push(`[${now}] System: Call ended`);
+
+    const fd = new FormData();
+    fd.append('appt_id', APPT_ID);
+    fd.append('role',    ROLE);
+    // Always send chat log (will have at least system messages)
+    fd.append('chat_log', chatMessages.join('\n'));
+    if (audioChunks.length > 0) {
+      const blob = new Blob(audioChunks, { type: mediaRecorder?.mimeType || 'audio/webm' });
+      fd.append('audio', blob, 'consultation.webm');
+    }
+    
+    // Wait for summary to be generated (poll every 2 seconds for max 2 minutes)
+    try {
+      const startTime = Date.now();
+      const maxWait = 120000; // 2 minutes max
+      
+      const checkSummary = async () => {
+        try {
+          console.log('Checking summary status for appt_id=' + APPT_ID);
+          const response = await fetch(`../check_summary.php?appt_id=${APPT_ID}`);
+          const data = await response.json();
+          console.log('Summary check response:', data);
+          
+          if (data.done) {
+            // Summary is ready, redirect
+            console.log('Summary is done! Redirecting...');
+            window.location.href = 'appointments.php';
+          } else if (Date.now() - startTime > maxWait) {
+            // Timeout reached, redirect anyway
+            console.log('Max wait time reached, redirecting anyway');
+            window.location.href = 'appointments.php';
+          } else {
+            // Not done yet, check again in 2 seconds
+            const waitSecs = Math.round((Date.now() - startTime) / 1000);
+            console.log('Summary not ready yet (waited ' + waitSecs + 's), checking again in 2s...');
+            setTimeout(checkSummary, 2000);
+          }
+        } catch(e) {
+          console.error('Error checking summary:', e);
+          // Fallback: try again in 5 seconds
+          setTimeout(checkSummary, 5000);
+        }
+      };
+      
+      // Submit data first, then check summary status
+      console.log('Sending consultation data to process_consultation.php');
+      await fetch('../process_consultation.php', { method: 'POST', body: fd });
+      
+      // Start polling for summary completion
+      console.log('Starting summary polling...');
+      setTimeout(checkSummary, 2000);
+      
+    } catch(e) {
+      console.error('Error:', e);
+      // Fallback: redirect after 5 seconds
+      console.log('Exception caught, redirecting in 5 seconds');
+      setTimeout(() => { window.location.href = 'appointments.php'; }, 5000);
+    }
+  } else {
+    // No call was made, redirect immediately
+    console.log('No call was connected, redirecting immediately');
+    window.location.href = 'appointments.php';
+  }
+}
+
+// ── Auto Complete ─────────────────────────────────────────────────────────────
+function autoCompleteAppt() {
+  if (Date.now() / 1000 < APPT_TS) return;
+  fetch('../auto_complete_appt.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `appt_id=${APPT_ID}&role=doctor`
+  }).catch(() => {});
+}
+
+// ── Timer ─────────────────────────────────────────────────────────────────────
+function startTimer() {
+  const el = document.getElementById('timer');
+  el.textContent = '60:00';
+
+  // Guard: don't auto-end within first 5 seconds of page load
+  let guardActive = true;
+  setTimeout(() => { guardActive = false; }, 5000);
+
+  setInterval(() => {
+    if (isDestroyed) return;
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (nowSec < APPT_TS) {
+      const w = APPT_TS - nowSec, m = Math.floor(w / 60), s = w % 60;
+      el.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+      el.style.color = '#fbbc04'; return;
+    }
+    el.style.color = '';
+    const left = END_TS - nowSec;
+    if (left <= 0) {
+      if (timerEnded || guardActive) return;
+      timerEnded = true;
+      el.textContent = '00:00'; el.classList.add('urgent');
+      autoCompleteAppt();
+      if (callWasConnected) {
+        toast('⏰ Consultation ended — leaving in 5 seconds…');
+        setTimeout(() => endCall(true), 5000);
+      } else {
+        toast('⏰ Session time expired');
+        setTimeout(() => endCall(true), 30000);
+      }
+      return;
+    }
+    const m = Math.floor(left / 60), s = left % 60;
+    el.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    el.classList.toggle('urgent', left < 300);
+  }, 1000);
 }
 
 // ── Controls ─────────────────────────────────────────────────────────────────
@@ -558,9 +678,7 @@ function toggleCam() {
   document.getElementById('lbl-cam').textContent = camOn ? 'Camera' : 'Cam Off';
   document.getElementById('local-canvas').style.display = camOn ? 'block' : 'none';
   document.getElementById('self-cam-off').classList.toggle('show', !camOn);
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'cam_toggle', cam_on: camOn }));
-  }
+  if (ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type: 'cam_toggle', cam_on: camOn })); }
   toast(camOn ? '📹 Camera on' : '🚫 Camera off');
 }
 
@@ -571,101 +689,8 @@ function setBg(mode, el) {
   document.querySelectorAll('.bgo').forEach(e => e.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('bgpanel').classList.remove('open');
-  if (mode !== 'none' && mode !== 'blur') {
-    bgImg = new Image(); bgImg.crossOrigin = 'anonymous'; bgImg.src = mode;
-  }
+  if (mode !== 'none' && mode !== 'blur') { bgImg = new Image(); bgImg.crossOrigin = 'anonymous'; bgImg.src = mode; }
   toast(mode === 'none' ? 'Background removed' : mode === 'blur' ? '🌫 Background blurred' : '🌄 Virtual background applied');
-}
-
-function startRecording() {
-  if (!rawStream) return;
-  try {
-    const audioOnly = new MediaStream(rawStream.getAudioTracks());
-    const options = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-                    ? { mimeType: 'audio/webm;codecs=opus' } : {};
-    mediaRecorder = new MediaRecorder(audioOnly, options);
-    audioChunks = [];
-    mediaRecorder.ondataavailable = e => {
-      if (e.data && e.data.size > 0) audioChunks.push(e.data);
-    };
-    mediaRecorder.start(5000);
-  } catch(e) { console.warn('Recording failed:', e); }
-}
-
-async function endCall(auto = false) {
-  if (!auto && !confirm('Leave the call?')) return;
-  isDestroyed = true;
- 
-  // Stop recording and collect final audio chunk
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    await new Promise(resolve => { mediaRecorder.onstop = resolve; mediaRecorder.stop(); });
-  }
- 
-  // Cleanup
-  clearInterval(segInterval);
-  try { selfieSegmentation?.close(); } catch(e) {}
-  try { ws?.close(); }               catch(e) {}
-  try { pc?.close(); }               catch(e) {}
-  rawStream?.getTracks().forEach(t => t.stop());
- 
-  // Always submit on every leave — PHP will append, not reset
-  if (audioChunks.length > 0 || chatMessages.length > 0) {
-    const fd = new FormData();
-    fd.append('appt_id', APPT_ID);
-    fd.append('role',    ROLE);
-    if (chatMessages.length > 0) fd.append('chat_log', chatMessages.join('\n'));
-    if (audioChunks.length > 0) {
-      const blob = new Blob(audioChunks, { type: mediaRecorder?.mimeType || 'audio/webm' });
-      fd.append('audio', blob, 'consultation.webm');
-    }
-    try { fetch('../process_consultation.php', { method: 'POST', body: fd }); } catch(e) {}
-    await new Promise(r => setTimeout(r, 500));
-  }
- 
-  window.location.href = 'appointments.php';
-}
-
-// ── Auto Complete ─────────────────────────────────────────────────────────────
-function autoCompleteAppt() {
-  if (Date.now() / 1000 < APPT_TS) return;
-  fetch('../auto_complete_appt.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `appt_id=${APPT_ID}&role=doctor`
-  }).catch(() => {});
-}
-
-// ── Timer ─────────────────────────────────────────────────────────────────────
-function startTimer() {
-  const el = document.getElementById('timer');
-  el.textContent = '60:00';
-  setInterval(() => {
-    if (isDestroyed) return;
-    const nowSec = Math.floor(Date.now() / 1000);
-    if (nowSec < APPT_TS) {
-      const w = APPT_TS - nowSec, m = Math.floor(w / 60), s = w % 60;
-      el.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-      el.style.color = '#fbbc04'; return;
-    }
-    el.style.color = '';
-    const left = END_TS - nowSec;
-    if (left <= 0) {
-      if (timerEnded) return; timerEnded = true;
-      el.textContent = '00:00'; el.classList.add('urgent');
-      autoCompleteAppt();
-      if (callWasConnected) {
-        toast('⏰ Consultation ended — leaving in 5 seconds…');
-        setTimeout(() => endCall(true), 5000);
-      } else {
-        toast('⏰ Session time expired');
-        setTimeout(() => endCall(true), 30000);
-      }
-      return;
-    }
-    const m = Math.floor(left / 60), s = left % 60;
-    el.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-    el.classList.toggle('urgent', left < 300);
-  }, 1000);
 }
 
 // ── Chat ──────────────────────────────────────────────────────────────────────
@@ -691,13 +716,8 @@ function sendChat() {
 function addChatMsg(text, sender, isMine) {
   const empty = document.getElementById('chat-empty');
   if (empty) empty.remove();
-  const now = new Date().toLocaleTimeString('en-PH', {
-    hour: 'numeric', minute: '2-digit', hour12: true
-  });
- 
-  // Always push to chatMessages for submission on leave
+  const now = new Date().toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', hour12: true });
   chatMessages.push(`[${now}] ${isMine ? MY_NAME : sender}: ${text}`);
- 
   const row = document.createElement('div');
   row.className = 'msg-row ' + (isMine ? 'mine' : 'theirs');
   row.innerHTML = `<div class="msg-sender">${isMine ? 'You' : escHtml(sender)}</div>
@@ -711,10 +731,7 @@ function addChatMsg(text, sender, isMine) {
   }
 }
 
-function scrollChatBottom() {
-  const el = document.getElementById('chat-messages');
-  el.scrollTop = el.scrollHeight;
-}
+function scrollChatBottom() { const el = document.getElementById('chat-messages'); el.scrollTop = el.scrollHeight; }
 function updateUnread() {
   const b = document.getElementById('chat-unread');
   if (unreadCount > 0) { b.textContent = unreadCount > 9 ? '9+' : unreadCount; b.style.display = 'flex'; }

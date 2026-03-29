@@ -68,7 +68,6 @@ require_once 'includes/header.php';
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:0.4rem;align-items:flex-end;">
-        <a href="chat.php?patient_id=<?= $pt['id'] ?>" style="background:var(--green);color:#fff;border-radius:10px;padding:0.35rem 0.8rem;font-size:0.73rem;font-weight:600;text-decoration:none;">Message</a>
         <a href="appointments.php?patient_id=<?= $pt['id'] ?>" style="background:rgba(63,130,227,0.1);color:var(--blue);border-radius:10px;padding:0.35rem 0.8rem;font-size:0.73rem;font-weight:600;text-decoration:none;">Visits</a>
         <a href="patient-records.php?patient_id=<?= $pt['id'] ?>" style="background:rgba(244,132,95,0.1);color:#f4845f;border-radius:10px;padding:0.35rem 0.8rem;font-size:0.73rem;font-weight:600;text-decoration:none;">Records</a>
       </div>

@@ -36,7 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
                     } else {
                         $stmt->bind_param("iissss", $patient_id, $did, $date, $time, $db_type, $notes);
                         if ($stmt->execute()) {
-                            // NEW FLOW: Pending → Doctor approves → Staff confirms → Patient pays
                             $_SESSION['toast'] = "Appointment requested! Waiting for doctor's acceptance.";
                         } else {
                             $_SESSION['toast_error'] = 'Booking failed: ' . $stmt->error;
@@ -57,20 +56,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
     header('Location: visits.php'); exit;
 }
 
-// ── Fetch visits — UPDATED: show all non-cancelled, including DoctorApproved and Confirmed+Unpaid ──
+// ── Fetch visits ──
 $visits_upcoming = $conn->query("
     SELECT a.*, d.full_name AS doctor_name, d.specialty, d.consultation_fee
     FROM appointments a JOIN doctors d ON d.id = a.doctor_id
     WHERE a.patient_id=$patient_id
       AND a.appointment_date >= CURDATE()
-      AND a.status NOT IN ('Cancelled')
+      AND a.status NOT IN ('Cancelled', 'Completed')
     ORDER BY a.appointment_date ASC
 ");
 $visits_past = $conn->query("
     SELECT a.*, d.full_name AS doctor_name, d.specialty
     FROM appointments a JOIN doctors d ON d.id = a.doctor_id
-    WHERE a.patient_id=$patient_id AND a.appointment_date < CURDATE()
-    ORDER BY a.appointment_date DESC
+    WHERE a.patient_id=$patient_id
+    AND (a.appointment_date < CURDATE() OR a.status = 'Completed')
+    ORDER BY a.appointment_date DESC, a.appointment_time DESC
 ");
 
 // ── Fetch ALL active doctors + their schedules ──
@@ -117,6 +117,15 @@ function isCallActive(string $date, string $time): bool {
   /* ── Receipt button ── */
   .receipt-btn{display:inline-flex;align-items:center;gap:0.4rem;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:#15803d;padding:0.5rem 1rem;border-radius:50px;font-size:0.78rem;font-weight:700;text-decoration:none;transition:all 0.2s;}
   .receipt-btn:hover{background:rgba(34,197,94,0.18);}
+
+  /* ── Summary button ── */
+  .summary-btn{display:inline-flex;align-items:center;gap:0.4rem;background:rgba(63,130,227,0.1);border:1px solid rgba(63,130,227,0.2);color:#2563eb;padding:0.5rem 1rem;border-radius:50px;font-size:0.78rem;font-weight:700;text-decoration:none;transition:all 0.2s;}
+  .summary-btn:hover{background:rgba(63,130,227,0.18);}
+
+  /* ── Summary generating pill ── */
+  .summary-generating{display:inline-flex;align-items:center;gap:0.4rem;background:rgba(245,158,11,0.08);border:1px dashed rgba(245,158,11,0.35);color:#d97706;padding:0.38rem 0.85rem;border-radius:50px;font-size:0.72rem;font-weight:600;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spin-icon{animation:spin 1.4s linear infinite;display:inline-block;}
 
   /* ── Status flow pills ── */
   .flow-pill{display:inline-flex;align-items:center;gap:0.3rem;border-radius:50px;padding:0.22rem 0.65rem;font-size:0.69rem;font-weight:700;border:1px solid;}
@@ -232,12 +241,11 @@ function isCallActive(string $date, string $time): bool {
           $status   = $a['status'];
           $paid     = $a['payment_status'] === 'Paid';
           $fee      = floatval($a['consultation_fee'] ?? 0);
-
-          // Determine flow state
-          // Pending       = waiting for doctor
-          // DoctorApproved= doctor said yes, waiting for staff
-          // Confirmed+Unpaid = staff confirmed, patient must pay
-          // Confirmed+Paid   = fully booked, can join call
+          $hasSummary = !empty($a['summary_pdf_path']);
+          // Only show "generating" if call happened AND there's content (not just empty call window)
+          $hasContent = !empty($a['chat_log']) || !empty($a['consultation_transcript']);
+          $callHappened = $now >= ($apptTs - 900) && $hasContent;
+          $callEnded    = $now >= $apptTs; // Call time has passed (appointment is over)
       ?>
       <div class="appt-item" id="appt-<?= $a['id'] ?>" style="flex-wrap:wrap;gap:0.6rem;align-items:flex-start;">
         <div class="appt-date-box">
@@ -249,23 +257,19 @@ function isCallActive(string $date, string $time): bool {
           <div style="font-size:0.78rem;color:#9ab0ae;"><?= htmlspecialchars($a['specialty'] ?? '') ?></div>
           <div style="font-size:0.78rem;color:#9ab0ae;"><?= date('g:i A', strtotime($a['appointment_time'])) ?> · <?= htmlspecialchars($a['type']) ?></div>
           <?php if (!empty($a['notes'])): ?>
-          <div style="font-size:0.78rem;color:#9ab0ae;margin-top:0.2rem;">📝 <?= htmlspecialchars($a['notes']) ?>
-        </div>
+          <div style="font-size:0.78rem;color:#9ab0ae;margin-top:0.2rem;">📝 <?= htmlspecialchars($a['notes']) ?></div>
           <?php endif; ?>
-          
 
           <!-- ── FLOW STATE ACTIONS ── -->
           <div style="margin-top:0.75rem;">
 
             <?php if ($status === 'Pending'): ?>
-              <!-- Step 1: Waiting for doctor -->
               <span class="flow-pill flow-pending">
                 <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 Awaiting doctor acceptance
               </span>
 
             <?php elseif ($status === 'DoctorApproved'): ?>
-              <!-- Step 2: Doctor approved, staff reviewing -->
               <span class="flow-pill flow-doctor-approved">
                 <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                 Doctor accepted · Staff reviewing
@@ -291,7 +295,7 @@ function isCallActive(string $date, string $time): bool {
               </a>
 
             <?php elseif ($status === 'Confirmed' && $paid): ?>
-              <!-- Step 4: Fully paid — show call + receipt -->
+              <!-- Step 4: Fully paid — show call + receipt + summary -->
               <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;margin-top:0.3rem;">
                 <?php if ($active): ?>
                   <a href="call_patient.php?appt_id=<?= $a['id'] ?>" class="join-call-btn">
@@ -303,14 +307,22 @@ function isCallActive(string $date, string $time): bool {
                 <?php else: ?>
                   <span style="font-size:0.72rem;color:var(--muted);">📹 Video call available 15 min before</span>
                 <?php endif; ?>
+
                 <a href="receipt.php?appt_id=<?= $a['id'] ?>" class="receipt-btn">
                   <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                   Receipt
                 </a>
-                <?php if (!empty($a['summary_pdf_path'])): ?>
-                <a href="download_summary.php?appt_id=<?= $a['id'] ?>" target="_blank" class="receipt-btn">
-                  📋 Summary
-                </a>
+
+                <?php if ($hasSummary): ?>
+                  <!-- Summary exists - show button -->
+                  <a href="download_summary.php?appt_id=<?= $a['id'] ?>" target="_blank" class="summary-btn">
+                    📋 View Summary
+                  </a>
+                <?php elseif ($hasContent && !$hasSummary): ?>
+                  <!-- Has content but summary hasn't been created yet - show generating -->
+                  <span class="summary-generating">
+                    <span class="spin-icon">⏳</span> Generating summary…
+                  </span>
                 <?php endif; ?>
               </div>
 
@@ -319,6 +331,13 @@ function isCallActive(string $date, string $time): bool {
                 <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 View Receipt
               </a>
+              <?php if ($hasSummary): ?>
+              <a href="download_summary.php?appt_id=<?= $a['id'] ?>" target="_blank" class="summary-btn">
+                📋 View Summary
+              </a>
+              <?php elseif ($hasContent): ?>
+              <span class="summary-generating"><span class="spin-icon">⏳</span> Generating summary…</span>
+              <?php endif; ?>
 
             <?php endif; ?>
 
@@ -327,7 +346,6 @@ function isCallActive(string $date, string $time): bool {
         </div>
         <div style="display:flex;flex-direction:column;gap:0.4rem;align-items:flex-end;">
           <?php
-          // Status badge
           $sclass = match($status) {
             'Confirmed'      => 'badge-green',
             'Pending'        => 'badge-orange',
@@ -364,6 +382,7 @@ function isCallActive(string $date, string $time): bool {
           $has = true;
           $d   = new DateTime($a['appointment_date']);
           $paid = $a['payment_status'] === 'Paid';
+          $hasSummary = !empty($a['summary_pdf_path']);
       ?>
       <div class="appt-item">
         <div class="appt-date-box" style="background:rgba(36,68,65,0.04);">
@@ -373,17 +392,16 @@ function isCallActive(string $date, string $time): bool {
         <div style="flex:1;">
           <div style="font-weight:600;font-size:0.92rem;">Dr. <?= htmlspecialchars($a['doctor_name']) ?></div>
           <div style="font-size:0.78rem;color:#9ab0ae;"><?= date('g:i A', strtotime($a['appointment_time'])) ?> · <?= htmlspecialchars($a['type']) ?></div>
-          <?php if ($paid && $a['status'] === 'Completed'): ?>
-          <a href="receipt.php?appt_id=<?= $a['id'] ?>" class="receipt-btn" style="margin-top:0.4rem;font-size:0.73rem;padding:0.3rem 0.7rem;">📄 View Receipt</a>
-          <?php endif; ?>
-          <?php if ($a['status'] === 'Completed' && !empty($a['summary_pdf_path'])): ?>
-          <a href="download_summary.php?appt_id=<?= $a['id'] ?>" target="_blank"
-             class="receipt-btn" style="margin-top:0.3rem;font-size:0.73rem;padding:0.3rem 0.7rem;">
-            📋 View Summary
-          </a>
-          <?php elseif ($a['status'] === 'Completed'): ?>
-          <span style="font-size:0.72rem;color:#9ab0ae;font-style:italic;">⏳ Generating…</span>
-          <?php endif; ?>
+          <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.4rem;align-items:center;">
+            <?php if ($paid && $a['status'] === 'Completed'): ?>
+            <a href="receipt.php?appt_id=<?= $a['id'] ?>" class="receipt-btn" style="font-size:0.73rem;padding:0.3rem 0.7rem;">📄 View Receipt</a>
+            <?php endif; ?>
+            <?php if ($hasSummary): ?>
+            <a href="download_summary.php?appt_id=<?= $a['id'] ?>" target="_blank" class="summary-btn" style="font-size:0.73rem;padding:0.3rem 0.7rem;">📋 View Summary</a>
+            <?php elseif ($a['status'] === 'Completed'): ?>
+            <span class="summary-generating" style="font-size:0.69rem;"><span class="spin-icon">⏳</span> Generating…</span>
+            <?php endif; ?>
+          </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:0.4rem;align-items:flex-end;">
           <span class="badge <?= $a['status']==='Completed'?'badge-green':'badge-red' ?>"><?= $a['status'] ?></span>
@@ -708,10 +726,9 @@ function renderTimeSlots() {
   const grid     = document.getElementById('time-grid');
   grid.innerHTML = '';
   if (!scheds.length) { grid.innerHTML = '<div style="grid-column:1/-1;color:var(--muted);font-size:0.82rem;">No schedule for this day.</div>'; return; }
-  
 
   let allSlots = [...new Set(scheds.flatMap(s => generateSlots(s.start_time, s.end_time)))].sort();
-  
+
   const rawBooked = (BOOKED_SLOTS[selDoctor.id] || []).filter(b => b.date === selDate).map(b => b.time.slice(0,5));
   const APPT_DURATION_MINS = 60;
   const booked = allSlots.filter(slot => {

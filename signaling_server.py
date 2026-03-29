@@ -55,9 +55,19 @@ async def signaling(ws: WebSocket, room_id: str, role: str):
 
     print(f"[{room_id}] {role} connected  (rooms active: {len(rooms)})")
 
-    # Notify this peer if the other is already in the room
+    # Notify both peers: this role is connected (handles reconnects too)
+    # Send to newly connected: other peer is here
     if room[peer_role]:
         await ws.send_text(json.dumps({"type": "peer_joined", "role": peer_role}))
+        # ALSO send to the other peer: this role just joined/rejoined
+        try:
+            await room[peer_role].send_text(json.dumps({"type": "peer_joined", "role": role}))
+        except Exception:
+            pass
+    else:
+        # Other peer not here yet, but this one is connected
+        # When other joins later, they'll get notified
+        pass
 
     try:
         while True:

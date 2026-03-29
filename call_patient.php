@@ -122,6 +122,7 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
     .bgo-lbl{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);font-size:0.54rem;font-weight:600;text-align:center;padding:0.18rem;color:#fff;}
     #toast{position:absolute;top:66px;left:50%;transform:translateX(-50%);background:rgba(60,64,67,0.95);padding:0.5rem 1.2rem;border-radius:8px;font-size:0.82rem;z-index:60;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.4);}
     #toast.on{opacity:1;}
+    @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
@@ -142,7 +143,6 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
   <!-- Remote (Doctor) tile -->
   <div class="remote-tile">
     <video id="remote-video" autoplay playsinline></video>
-
     <div class="cam-off-overlay" id="remote-cam-off">
       <div class="co-avatar">
         <?php if ($doc_photo): ?><img src="../<?= htmlspecialchars($doc_photo) ?>" alt=""/><?php else: echo $doc_initials; endif; ?>
@@ -150,7 +150,6 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
       <div style="font-size:0.95rem;font-weight:600;">Dr. <?= htmlspecialchars($appt['doctor_name']) ?></div>
       <div style="font-size:0.75rem;color:var(--gm-muted);">Camera off</div>
     </div>
-
     <div class="waiting-overlay" id="waiting-overlay">
       <div style="position:relative;display:flex;align-items:center;justify-content:center;">
         <div class="pulse-ring"></div>
@@ -161,7 +160,6 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
       <div style="font-size:1rem;font-weight:600;">Dr. <?= htmlspecialchars($appt['doctor_name']) ?></div>
       <div style="font-size:0.78rem;color:var(--gm-muted);" id="waiting-sub">Waiting for doctor to join…</div>
     </div>
-
     <div class="name-tag">Dr. <?= htmlspecialchars($appt['doctor_name']) ?></div>
   </div>
 
@@ -245,6 +243,15 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
   </button>
 </div>
 
+<!-- Loading overlay -->
+<div id="leaving-overlay" style="display:none;position:fixed;inset:0;background:#202124;z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;">
+  <div style="width:60px;height:60px;border:4px solid rgba(255,255,255,0.1);border-top-color:#1a73e8;border-radius:50%;animation:spin 1s linear infinite;"></div>
+  <div style="text-align:center;">
+    <div style="font-size:1.1rem;font-weight:600;margin-bottom:0.5rem;">🤖 AI is summarizing your consultation…</div>
+    <div style="font-size:0.82rem;color:#9aa0a6;">Please wait, this may take a minute.<br/>You'll be redirected automatically.</div>
+  </div>
+</div>
+
 <script>
 // ── Constants ─────────────────────────────────────────────────────────────────
 const ROOM_ID  = <?= json_encode($room_id) ?>;
@@ -267,7 +274,6 @@ let callWasConnected = false;
 let timerEnded = false;
 let isDestroyed = false;
 let wsReconnectDelay = 1500;
-// Keep a queue of ICE candidates received before remote description is set
 let pendingIceCandidates = [];
 
 const canvas = document.getElementById('local-canvas');
@@ -345,59 +351,41 @@ function connectWS() {
     }
 
     else if (m.type === 'offer') {
-      // Reset any previous peer connection cleanly
       if (pc) { try { pc.close(); } catch(e) {} pc = null; }
       pendingIceCandidates = [];
-
       pc = new RTCPeerConnection(ICE);
       const stream = processedStream || rawStream;
-
       if (stream && stream.getTracks().length > 0) {
         stream.getTracks().forEach(t => pc.addTrack(t, stream));
       }
-
       pc.ontrack = e => {
         document.getElementById('remote-video').srcObject = e.streams[0];
         document.getElementById('waiting-overlay').style.display = 'none';
         setConn(true, 'Connected');
         callWasConnected = true;
         showToast('Call connected!');
+        // Auto-add system message so we always have content for summary
+        const now = new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+        chatMessages.push(`[${now}] System: Call connected`);
         startRecording();
       };
-
       pc.onicecandidate = e => {
         if (e.candidate && ws && ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ type: 'ice', candidate: e.candidate }));
         }
       };
-
       pc.onconnectionstatechange = () => {
         if (!pc) return;
-        if (pc.connectionState === 'connected') {
-          callWasConnected = true;
-          setConn(true, 'Connected');
-        }
-        if (pc.connectionState === 'failed') {
-          showToast('Connection failed — waiting for doctor to retry…');
-          setConn(false, 'Reconnecting…');
-        }
+        if (pc.connectionState === 'connected') { callWasConnected = true; setConn(true, 'Connected'); }
+        if (pc.connectionState === 'failed') { showToast('Connection failed — waiting for doctor to retry…'); setConn(false, 'Reconnecting…'); }
       };
-
       try {
         await pc.setRemoteDescription(m.sdp);
-
-        // Flush any ICE candidates that arrived early
-        for (const c of pendingIceCandidates) {
-          try { await pc.addIceCandidate(c); } catch(e) {}
-        }
+        for (const c of pendingIceCandidates) { try { await pc.addIceCandidate(c); } catch(e) {} }
         pendingIceCandidates = [];
-
         const ans = await pc.createAnswer();
         await pc.setLocalDescription(ans);
-
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: 'answer', sdp: ans }));
-        }
+        if (ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type: 'answer', sdp: ans })); }
       } catch(e) {
         showToast('Answer failed — waiting for retry…');
         if (pc) { try { pc.close(); } catch(_) {} pc = null; }
@@ -406,12 +394,8 @@ function connectWS() {
 
     else if (m.type === 'ice') {
       if (m.candidate) {
-        if (pc && pc.remoteDescription) {
-          try { await pc.addIceCandidate(m.candidate); } catch(e) {}
-        } else {
-          // Queue it until remote description is set
-          pendingIceCandidates.push(m.candidate);
-        }
+        if (pc && pc.remoteDescription) { try { await pc.addIceCandidate(m.candidate); } catch(e) {} }
+        else { pendingIceCandidates.push(m.candidate); }
       }
     }
 
@@ -426,8 +410,7 @@ function connectWS() {
     }
 
     else if (m.type === 'chat') {
-      const senderName = m.name || 'Doctor';
-      addMsg(m.text, senderName, false);
+      addMsg(m.text, m.name || 'Doctor', false);
     }
 
     else if (m.type === 'cam_toggle') {
@@ -450,13 +433,10 @@ function startRecording() {
   if (!rawStream) return;
   try {
     const audioOnly = new MediaStream(rawStream.getAudioTracks());
-    const options = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-                    ? { mimeType: 'audio/webm;codecs=opus' } : {};
+    const options = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? { mimeType: 'audio/webm;codecs=opus' } : {};
     mediaRecorder = new MediaRecorder(audioOnly, options);
     audioChunks = [];
-    mediaRecorder.ondataavailable = e => {
-      if (e.data && e.data.size > 0) audioChunks.push(e.data);
-    };
+    mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) audioChunks.push(e.data); };
     mediaRecorder.start(5000);
   } catch(e) { console.warn('Recording failed:', e); }
 }
@@ -465,34 +445,95 @@ function startRecording() {
 async function endCall(auto = false) {
   if (!auto && !confirm('Leave the call?')) return;
   isDestroyed = true;
- 
-  // Stop recording and collect final audio chunk
+  console.log('endCall() started');
+
+  // Stop recording (with 1s timeout so it can't hang)
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    await new Promise(resolve => { mediaRecorder.onstop = resolve; mediaRecorder.stop(); });
+    await Promise.race([
+      new Promise(resolve => { mediaRecorder.onstop = resolve; mediaRecorder.stop(); }),
+      new Promise(resolve => setTimeout(resolve, 1000))
+    ]);
   }
- 
+
   // Cleanup
   clearInterval(segInterval);
   try { selfieSegmentation?.close(); } catch(e) {}
   try { ws?.close(); }               catch(e) {}
   try { pc?.close(); }               catch(e) {}
   rawStream?.getTracks().forEach(t => t.stop());
- 
-  // Always submit on every leave — PHP will append, not reset
-  if (audioChunks.length > 0 || chatMessages.length > 0) {
+
+  // Submit call data (fire and forget — PHP runs in background)
+  if (callWasConnected) {
+    console.log('Call was connected, showing overlay and polling for summary');
+    // Show loading overlay
+    document.getElementById('leaving-overlay').style.display = 'flex';
+
+    // Add system message for call end
+    const now = new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    chatMessages.push(`[${now}] System: Call ended`);
+
     const fd = new FormData();
     fd.append('appt_id', APPT_ID);
     fd.append('role',    ROLE);
-    if (chatMessages.length > 0) fd.append('chat_log', chatMessages.join('\n'));
+    // Always send chat log (will have at least system messages)
+    fd.append('chat_log', chatMessages.join('\n'));
     if (audioChunks.length > 0) {
       const blob = new Blob(audioChunks, { type: mediaRecorder?.mimeType || 'audio/webm' });
       fd.append('audio', blob, 'consultation.webm');
     }
-    try { fetch('process_consultation.php', { method: 'POST', body: fd }); } catch(e) {}
-    await new Promise(r => setTimeout(r, 500));
+    
+    // Wait for summary to be generated (poll every 2 seconds for max 2 minutes)
+    try {
+      const startTime = Date.now();
+      const maxWait = 120000; // 2 minutes max
+      
+      const checkSummary = async () => {
+        try {
+          console.log('Checking summary status for appt_id=' + APPT_ID);
+          const response = await fetch(`check_summary.php?appt_id=${APPT_ID}`);
+          const data = await response.json();
+          console.log('Summary check response:', data);
+          
+          if (data.done) {
+            // Summary is ready, redirect
+            console.log('Summary is done! Redirecting...');
+            window.location.href = 'visits.php';
+          } else if (Date.now() - startTime > maxWait) {
+            // Timeout reached, redirect anyway
+            console.log('Max wait time reached, redirecting anyway');
+            window.location.href = 'visits.php';
+          } else {
+            // Not done yet, check again in 2 seconds
+            const waitSecs = Math.round((Date.now() - startTime) / 1000);
+            console.log('Summary not ready yet (waited ' + waitSecs + 's), checking again in 2s...');
+            setTimeout(checkSummary, 2000);
+          }
+        } catch(e) {
+          console.error('Error checking summary:', e);
+          // Fallback: try again in 5 seconds
+          setTimeout(checkSummary, 5000);
+        }
+      };
+      
+      // Submit data first, then check summary status
+      console.log('Sending consultation data to process_consultation.php');
+      await fetch('process_consultation.php', { method: 'POST', body: fd });
+      
+      // Start polling for summary completion
+      console.log('Starting summary polling...');
+      setTimeout(checkSummary, 2000);
+      
+    } catch(e) {
+      console.error('Error:', e);
+      // Fallback: redirect after 5 seconds
+      console.log('Exception caught, redirecting in 5 seconds');
+      setTimeout(() => { window.location.href = 'visits.php'; }, 5000);
+    }
+  } else {
+    // No call was made, redirect immediately
+    console.log('No call was connected, redirecting immediately');
+    window.location.href = 'visits.php';
   }
- 
-  window.location.href = 'visits.php';
 }
 
 // ── Auto Complete ─────────────────────────────────────────────────────────────
@@ -521,9 +562,7 @@ function toggleCam() {
   document.getElementById('lbl-cam').textContent = camOn ? 'Camera' : 'Cam Off';
   document.getElementById('local-canvas').style.display = camOn ? 'block' : 'none';
   document.getElementById('self-cam-off').classList.toggle('show', !camOn);
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'cam_toggle', cam_on: camOn }));
-  }
+  if (ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type: 'cam_toggle', cam_on: camOn })); }
   showToast(camOn ? '📹 Camera on' : '🚫 Camera off');
 }
 
@@ -534,9 +573,7 @@ function setBg(mode, el) {
   document.querySelectorAll('.bgo').forEach(e => e.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('bgpanel').classList.remove('open');
-  if (mode !== 'none' && mode !== 'blur') {
-    bgImg = new Image(); bgImg.crossOrigin = 'anonymous'; bgImg.src = mode;
-  }
+  if (mode !== 'none' && mode !== 'blur') { bgImg = new Image(); bgImg.crossOrigin = 'anonymous'; bgImg.src = mode; }
   showToast(mode === 'none' ? 'Background removed' : mode === 'blur' ? '🌫 Background blurred' : '🌄 Background changed');
 }
 
@@ -565,18 +602,11 @@ function sendChat() {
 function addMsg(text, name, isMe) {
   const c = document.getElementById('chat-msgs');
   document.getElementById('chat-empty').style.display = 'none';
-  const now = new Date().toLocaleTimeString('en-PH', {
-    hour: 'numeric', minute: '2-digit', hour12: true
-  });
- 
-  // Always push to chatMessages for submission on leave
+  const now = new Date().toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', hour12: true });
   chatMessages.push(`[${now}] ${name}: ${text}`);
- 
   const d = document.createElement('div');
   d.className = 'msg ' + (isMe ? 'me' : 'them');
-  d.innerHTML = `<div class="msg-name">${esc(name)}</div>
-                 <div class="msg-bubble">${esc(text)}</div>
-                 <div class="msg-time">${now}</div>`;
+  d.innerHTML = `<div class="msg-name">${esc(name)}</div><div class="msg-bubble">${esc(text)}</div><div class="msg-time">${now}</div>`;
   c.appendChild(d);
   c.scrollTop = c.scrollHeight;
   if (!isMe && !chatOpen) {
@@ -592,6 +622,11 @@ function addMsg(text, name, isMe) {
 function startTimer() {
   const el = document.getElementById('timer');
   el.textContent = '60:00';
+
+  // Guard: don't auto-end within first 5 seconds of page load
+  let guardActive = true;
+  setTimeout(() => { guardActive = false; }, 5000);
+
   setInterval(() => {
     if (isDestroyed) return;
     const nowSec = Math.floor(Date.now() / 1000);
@@ -603,7 +638,8 @@ function startTimer() {
     el.style.color = '';
     const left = END_TS - nowSec;
     if (left <= 0) {
-      if (timerEnded) return; timerEnded = true;
+      if (timerEnded || guardActive) return;
+      timerEnded = true;
       el.textContent = '00:00'; el.classList.add('urgent');
       autoComplete();
       if (callWasConnected) {

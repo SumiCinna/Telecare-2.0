@@ -110,6 +110,15 @@ require_once 'includes/header.php';
   .btn-receipt-sm{background:rgba(34,197,94,0.09);color:#15803d;border:1px solid rgba(34,197,94,0.2);border-radius:6px;padding:0.3rem 0.7rem;font-size:0.73rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;margin-top:0.5rem;}
   .btn-receipt-sm:hover{background:rgba(34,197,94,0.18);}
 
+  /* Summary button */
+  .btn-summary-sm{background:rgba(63,130,227,0.09);color:#2563eb;border:1px solid rgba(63,130,227,0.2);border-radius:6px;padding:0.3rem 0.7rem;font-size:0.73rem;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;margin-top:0.5rem;}
+  .btn-summary-sm:hover{background:rgba(63,130,227,0.18);}
+
+  /* Summary generating */
+  .summary-generating-sm{display:inline-flex;align-items:center;gap:0.3rem;background:rgba(245,158,11,0.07);border:1px dashed rgba(245,158,11,0.3);color:#d97706;padding:0.25rem 0.65rem;border-radius:6px;font-size:0.7rem;font-weight:600;margin-top:0.5rem;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spin-icon{animation:spin 1.4s linear infinite;display:inline-block;}
+
   /* Receipt Modal */
   .receipt-modal-header{background:linear-gradient(135deg,#244441,#1a3533);padding:1.4rem 1.4rem 1.2rem;color:#fff;position:relative;}
   .receipt-modal-header::after{content:'';position:absolute;bottom:-10px;left:0;right:0;height:20px;
@@ -120,7 +129,7 @@ require_once 'includes/header.php';
   .receipt-detail-label{color:var(--muted);font-weight:600;flex-shrink:0;}
   .receipt-detail-val{color:var(--green);font-weight:700;text-align:right;max-width:60%;}
 
-  /* Modal overlay (if not already in global CSS) */
+  /* Modal overlay */
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;align-items:center;justify-content:center;padding:1rem;}
   .modal-overlay.active{display:flex;}
 </style>
@@ -134,7 +143,7 @@ require_once 'includes/header.php';
   <!-- Info banner -->
   <div style="background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.18);border-radius:14px;padding:0.7rem 1rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:0.6rem;font-size:0.78rem;color:#15803d;">
     <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-    <span><strong>New flow:</strong> You accept patient requests first → Staff confirms → Patient pays → Appointment appears in your Upcoming schedule.</span>
+    <span><strong>Flow:</strong> You accept patient requests first → Staff confirms → Patient pays → Appointment appears in your Upcoming schedule.</span>
   </div>
 
   <!-- Filter Tabs -->
@@ -179,6 +188,13 @@ require_once 'includes/header.php';
     $active = $now >= ($apptTs - 900) && $now <= ($apptTs + 3600);
     $early  = $active && $now < $apptTs;
     $soon   = $now < ($apptTs - 900) && $now >= ($apptTs - 3600);
+
+    // Summary availability
+    $hasSummary   = !empty($a['summary_pdf_path']);
+    // Only show "generating" if call happened AND there's actual content
+    $hasContent   = !empty($a['chat_log']) || !empty($a['consultation_transcript']);
+    $callHappened = $now >= ($apptTs - 900) && $hasContent;
+    $callEnded    = $now >= $apptTs; // Call time has passed (appointment is over)
 
     // Receipt data
     $receipt_no  = $a['receipt_number'] ?? ('TC-' . strtoupper(substr(md5($a['id']), 0, 8)));
@@ -258,31 +274,39 @@ require_once 'includes/header.php';
       </div>
       <?php endif; ?>
 
-      <!-- Receipt button (paid appointments) — opens modal, no redirect -->
-      <?php if ($paid): ?>
-      <button class="btn-receipt-sm"
-        data-appt-id="<?= $a['id'] ?>"
-        data-patient="<?= htmlspecialchars($a['patient_name'], ENT_QUOTES) ?>"
-        data-doctor="<?= htmlspecialchars($a['doctor_name'], ENT_QUOTES) ?>"
-        data-specialty="<?= htmlspecialchars($a['specialty'] ?? '', ENT_QUOTES) ?>"
-        data-date="<?= $a['appointment_date'] ?>"
-        data-time="<?= substr($a['appointment_time'], 0, 5) ?>"
-        data-type="<?= htmlspecialchars($a['type'] ?? 'Teleconsult', ENT_QUOTES) ?>"
-        data-fee="<?= $fee_val ?>"
-        data-receipt="<?= htmlspecialchars($receipt_no, ENT_QUOTES) ?>"
-        data-paid-at="<?= htmlspecialchars($paid_at_val, ENT_QUOTES) ?>"
-        onclick="handleReceiptClick(this)">
-        📄 View Receipt
-      </button>
-      <?php endif; ?>
-      <?php if (($a['status'] === 'Completed' || $a['status'] === 'Upcoming') && !empty($a['summary_pdf_path'])): ?>
-      <a href="../download_summary.php?appt_id=<?= $a['id'] ?>" target="_blank"
-         class="btn-receipt-sm" style="margin-top:0.3rem;">
-        📋 View Summary
-      </a>
-      <?php elseif ($a['status'] === 'Completed' || $a['status'] === 'Upcoming'): ?>
-      <span style="font-size:0.72rem;color:#9ab0ae;font-style:italic;display:block;margin-top:0.3rem;">⏳ Generating summary…</span>
-      <?php endif; ?>
+      <!-- Buttons row -->
+      <div style="display:flex;flex-wrap:wrap;gap:0.4rem;align-items:center;">
+        <!-- Receipt button (paid appointments) -->
+        <?php if ($paid): ?>
+        <button class="btn-receipt-sm"
+          data-appt-id="<?= $a['id'] ?>"
+          data-patient="<?= htmlspecialchars($a['patient_name'], ENT_QUOTES) ?>"
+          data-doctor="<?= htmlspecialchars($a['doctor_name'], ENT_QUOTES) ?>"
+          data-specialty="<?= htmlspecialchars($a['specialty'] ?? '', ENT_QUOTES) ?>"
+          data-date="<?= $a['appointment_date'] ?>"
+          data-time="<?= substr($a['appointment_time'], 0, 5) ?>"
+          data-type="<?= htmlspecialchars($a['type'] ?? 'Teleconsult', ENT_QUOTES) ?>"
+          data-fee="<?= $fee_val ?>"
+          data-receipt="<?= htmlspecialchars($receipt_no, ENT_QUOTES) ?>"
+          data-paid-at="<?= htmlspecialchars($paid_at_val, ENT_QUOTES) ?>"
+          onclick="handleReceiptClick(this)">
+          📄 View Receipt
+        </button>
+        <?php endif; ?>
+
+        <?php
+        // ── SUMMARY BUTTON ──
+        // Show for: Confirmed (ongoing/upcoming), Completed — any status where call may have occurred.
+        // FIX: was checking 'Upcoming' (not a real status) — now correctly checks 'Confirmed'.
+        if (($status === 'Completed' || $status === 'Confirmed') && $hasSummary): ?>
+        <a href="../download_summary.php?appt_id=<?= $a['id'] ?>" target="_blank" class="btn-summary-sm">
+          📋 View Summary
+        </a>
+        <?php elseif (($status === 'Completed' || $status === 'Confirmed') && $hasContent && !$hasSummary): ?>
+        <span class="summary-generating-sm"><span class="spin-icon">⏳</span> Generating summary…</span>
+        <?php endif; ?>
+      </div>
+
     </div>
 
     <!-- Action buttons -->
@@ -344,7 +368,6 @@ require_once 'includes/header.php';
 <div class="modal-overlay" id="modal-receipt" onclick="if(event.target===this)closeReceiptModal()">
   <div class="modal" style="min-width:550px; max-width:700px;padding:0;overflow-y:auto;border-radius:20px;background:#fff;max-height:90vh;">
 
-    <!-- Gradient header with zigzag tear -->
     <div class="receipt-modal-header">
       <button onclick="closeReceiptModal()"
               style="position:absolute;top:0.9rem;right:0.9rem;background:rgba(255,255,255,0.15);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;z-index:2;line-height:1;">✕</button>
@@ -353,10 +376,7 @@ require_once 'includes/header.php';
       <div style="font-size:0.75rem;opacity:0.75;">Official Consultation Receipt</div>
     </div>
 
-    <!-- Body -->
     <div style="padding:1.8rem 1.4rem 0;margin-top:10px;">
-
-      <!-- Success status -->
       <div style="display:flex;align-items:center;gap:0.6rem;background:rgba(34,197,94,0.08);border:1.5px solid rgba(34,197,94,0.25);border-radius:14px;padding:0.7rem 1rem;margin-bottom:1.1rem;">
         <div style="width:34px;height:34px;background:linear-gradient(135deg,#16a34a,#15803d);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -367,18 +387,14 @@ require_once 'includes/header.php';
         </div>
       </div>
 
-      <!-- Receipt number -->
       <div style="text-align:center;margin-bottom:1rem;">
         <div style="font-size:0.63rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.2rem;">Receipt No.</div>
         <div id="rm-receipt-no" style="font-size:1.1rem;font-weight:800;color:var(--green);letter-spacing:0.05em;font-family:'DM Mono',monospace,sans-serif;"></div>
       </div>
 
       <hr style="border:none;border-top:1.5px dashed rgba(36,68,65,0.12);margin:0.8rem 0;"/>
-
-      <!-- Detail rows injected by JS -->
       <div id="rm-rows"></div>
 
-      <!-- Amount box -->
       <div style="background:rgba(36,68,65,0.04);border-radius:14px;padding:1rem;text-align:center;margin:1rem 0;">
         <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.3rem;">Total Amount Paid</div>
         <div id="rm-amount" style="font-size:2rem;font-weight:800;color:var(--green);"></div>
@@ -390,7 +406,6 @@ require_once 'includes/header.php';
         </div>
       </div>
 
-      <!-- Meta rows -->
       <div style="display:flex;justify-content:space-between;font-size:0.73rem;padding:0.25rem 0;">
         <span style="color:var(--muted);font-weight:600;">Payment via</span>
         <span style="color:var(--green);font-weight:700;">PayMongo (GCash / Card)</span>
@@ -401,10 +416,8 @@ require_once 'includes/header.php';
       </div>
     </div>
 
-    <!-- Dashed divider -->
     <div style="border-top:1.5px dashed rgba(36,68,65,0.12);margin:0 1.4rem;"></div>
 
-    <!-- Footer -->
     <div style="padding:0.9rem 1.4rem 1.4rem;text-align:center;">
       <div style="font-size:0.7rem;color:var(--muted);line-height:1.7;">
         Thank you for choosing TELE-CARE.<br/>
@@ -422,43 +435,29 @@ require_once 'includes/header.php';
 <script>
 setTimeout(()=>{ const t=document.querySelector('.toast-bar'); if(t)t.remove(); }, 3500);
 
-/* ── Receipt Modal ── */
 function handleReceiptClick(btn) {
   openReceiptModal(
-    btn.dataset.apptId,
-    btn.dataset.patient,
-    btn.dataset.doctor,
-    btn.dataset.specialty,
-    btn.dataset.date,
-    btn.dataset.time,
-    btn.dataset.type,
-    btn.dataset.fee,
-    btn.dataset.receipt,
-    btn.dataset.paidAt
+    btn.dataset.apptId, btn.dataset.patient, btn.dataset.doctor,
+    btn.dataset.specialty, btn.dataset.date, btn.dataset.time,
+    btn.dataset.type, btn.dataset.fee, btn.dataset.receipt, btn.dataset.paidAt
   );
 }
 
 function openReceiptModal(apptId, patient, doctor, specialty, apptDate, apptTime, type, amount, receiptNo, paidAt) {
   document.getElementById('rm-receipt-no').textContent = receiptNo;
-
   const paidDate = paidAt ? new Date(paidAt) : new Date();
   document.getElementById('rm-paid-at').textContent = paidDate.toLocaleString('en-PH', {
-    month: 'long', day: 'numeric', year: 'numeric',
-    hour: 'numeric', minute: '2-digit'
+    month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'
   });
-
   document.getElementById('rm-appt-id').textContent = '#' + apptId;
-
   document.getElementById('rm-amount').textContent = '₱' + parseFloat(amount).toLocaleString('en-PH', {
     minimumFractionDigits: 2, maximumFractionDigits: 2
   });
-
   const apptDateFmt = new Date(apptDate + 'T00:00:00').toLocaleDateString('en-PH', {
     month: 'long', day: 'numeric', year: 'numeric'
   });
   const [h, m]  = apptTime.split(':').map(Number);
   const timeFmt = `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
-
   const rows = [
     ['Patient',     patient],
     ['Doctor',      'Dr. ' + doctor],
@@ -472,7 +471,6 @@ function openReceiptModal(apptId, patient, doctor, specialty, apptDate, apptTime
       <span class="receipt-detail-val">${val}</span>
     </div>
   `).join('');
-
   document.getElementById('modal-receipt').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
@@ -529,8 +527,6 @@ function printReceiptDoctor() {
       background:#16a34a; color:#fff; border-radius:50px; padding:.2rem .8rem;
       font-size:.7rem; font-weight:700; margin-top:.4rem; }
     .meta-row { display:flex; justify-content:space-between; font-size:.73rem; padding:.25rem 0; }
-    .meta-label { color:#7a9a97; font-weight:600; }
-    .meta-val   { color:#244441; font-weight:700; }
     .footer { border-top:1.5px dashed rgba(36,68,65,.12); margin:0 1.4rem; }
     .footer-inner { padding:.9rem 1.4rem 1.4rem; text-align:center; }
     .footer-text  { font-size:.7rem; color:#7a9a97; line-height:1.7; }
@@ -576,12 +572,12 @@ function printReceiptDoctor() {
       </div>
     </div>
     <div class="meta-row">
-      <span class="meta-label">Payment via</span>
-      <span class="meta-val">PayMongo (GCash / Card)</span>
+      <span style="color:#7a9a97;font-weight:600;">Payment via</span>
+      <span style="color:#244441;font-weight:700;">PayMongo (GCash / Card)</span>
     </div>
     <div class="meta-row" style="margin-bottom:.5rem">
-      <span class="meta-label">Appointment ID</span>
-      <span class="meta-val">${apptId}</span>
+      <span style="color:#7a9a97;font-weight:600;">Appointment ID</span>
+      <span style="color:#244441;font-weight:700;">${apptId}</span>
     </div>
   </div>
   <div class="footer">
@@ -610,6 +606,10 @@ function printReceiptDoctor() {
 </html>`);
   printWindow.document.close();
 }
+
+// ── Auto-refresh summary status while generating ──────────────────────────
+// REMOVED: 5-second auto-refresh was causing flickering
+// Summary is now checked and updated via check_summary.php polling in endCall()
 </script>
 
 <?php require_once 'includes/nav.php'; ?>

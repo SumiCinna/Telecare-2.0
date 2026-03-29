@@ -1,0 +1,99 @@
+[2026-03-29 19:22:09] === START PROCESS CONSULTATION ===
+[2026-03-29 19:22:09] appt_id=5, role=doctor, chat_length=441
+[2026-03-29 19:22:09] Calling Ollama at localhost:11434...
+[2026-03-29 19:24:38] Ollama HTTP code: 200, error: , response_len: 9914
+[2026-03-29 19:24:38] SUCCESS: Summary generated, length: 1237
+[2026-03-29 19:24:39] === START PROCESS CONSULTATION ===
+[2026-03-29 19:24:39] appt_id=5, role=patient, chat_length=376
+[2026-03-29 19:24:40] Calling Ollama at localhost:11434...
+[2026-03-29 19:26:50] Ollama HTTP code: 200, error: , response_len: 11261
+[2026-03-29 19:26:50] SUCCESS: Summary generated, length: 1256
+[2026-03-29 19:34:23] === START PROCESS CONSULTATION ===
+[2026-03-29 19:34:23] appt_id=6, role=patient, chat_length=400
+[2026-03-29 19:34:23] Calling Ollama at localhost:11434...
+[2026-03-29 19:36:11] Ollama HTTP code: 200, error: , response_len: 4831
+[2026-03-29 19:36:11] SUCCESS: Summary generated, length: 991
+[2026-03-29 19:37:05] === START PROCESS CONSULTATION ===
+[2026-03-29 19:37:05] appt_id=6, role=doctor, chat_length=478
+[2026-03-29 19:37:05] Calling Ollama at localhost:11434...
+[2026-03-29 19:38:06] Ollama HTTP code: 200, error: , response_len: 5967
+[2026-03-29 19:38:06] SUCCESS: Summary generated, length: 870
+[2026-03-29 19:47:46] === START PROCESS CONSULTATION ===
+[2026-03-29 19:47:46] appt_id=6, role=patient, chat_length=402
+[2026-03-29 19:47:46] Calling Ollama at localhost:11434...
+[2026-03-29 19:49:27] Ollama HTTP code: 200, error: , response_len: 7976
+[2026-03-29 19:49:27] SUCCESS: Summary generated, length: 1135
+[2026-03-29 19:49:27] === START PROCESS CONSULTATION ===
+[2026-03-29 19:49:27] appt_id=6, role=doctor, chat_length=480
+[2026-03-29 19:49:27] Calling Ollama at localhost:11434...
+[2026-03-29 19:50:38] Ollama HTTP code: 200, error: , response_len: 9112
+[2026-03-29 19:50:38] SUCCESS: Summary generated, length: 969
+[2026-03-29 20:00:49] === START PROCESS CONSULTATION ===
+[2026-03-29 20:00:49] appt_id=6, role=patient, chat_length=718
+[2026-03-29 20:00:50] Calling Ollama at localhost:11434...
+[2026-03-29 20:03:02] Ollama HTTP code: 200, error: , response_len: 12414
+[2026-03-29 20:03:02] SUCCESS: Summary generated, length: 1336
+[2026-03-29 20:03:02] === START PROCESS CONSULTATION ===
+[2026-03-29 20:03:02] appt_id=6, role=doctor, chat_length=874
+[2026-03-29 20:03:03] Calling Ollama at localhost:11434...
+[2026-03-29 20:04:49] Ollama HTTP code: 200, error: , response_len: 14737
+[2026-03-29 20:04:49] SUCCESS: Summary generated, length: 1336
+[2026-03-29 20:13:27] === START PROCESS CONSULTATION ===
+[2026-03-29 20:13:27] appt_id=6, role=patient, chat_length=333
+[2026-03-29 20:13:28] Calling Ollama at localhost:11434...
+[2026-03-29 20:15:50] Ollama HTTP code: 200, error: , response_len: 15877
+[2026-03-29 20:15:50] SUCCESS: Summary generated, length: 1329
+[2026-03-29 20:15:50] === START PROCESS CONSULTATION ===
+[2026-03-29 20:15:50] appt_id=6, role=doctor, chat_length=424
+[2026-03-29 20:15:51] Calling Ollama at localhost:11434...
+[2026-03-29 20:17:44] Ollama HTTP code: 200, error: , response_len: 16260
+[2026-03-29 20:17:44] SUCCESS: Summary generated, length: 843
+[2026-03-29 21:50:36] === START PROCESS CONSULTATION ===
+[2026-03-29 21:50:36] appt_id=7, role=doctor, chat_length=358
+[2026-03-29 21:50:36] Calling Ollama at localhost:11434...
+[2026-03-29 21:52:16] Ollama HTTP code: 200, error: , response_len: 4718
+[2026-03-29 21:52:16] SUCCESS: Summary generated, length: 959
+[2026-03-29 21:52:17] === START PROCESS CONSULTATION ===
+[2026-03-29 21:52:17] appt_id=7, role=patient, chat_length=293
+[2026-03-29 21:52:18] Calling Ollama at localhost:11434...
+[2026-03-29 21:53:18] Ollama HTTP code: 200, error: , response_len: 5502
+[2026-03-29 21:53:18] SUCCESS: Summary generated, length: 900
+[2026-03-29 22:18:41] === START PROCESS CONSULTATION ===
+[2026-03-29 22:18:41] appt_id=8, role=doctor, chat_length=706
+[2026-03-29 22:18:41] Calling Ollama at localhost:11434...
+[2026-03-29 22:20:20] Ollama HTTP code: 200, error: , response_len: 5832
+[2026-03-29 22:20:20] SUCCESS: Summary generated, length: 964
+[2026-03-29 22:20:20] Saving summary to DB, filename=summary_8.pdf, summary_length=964
+[2026-03-29 22:20:20] === END PROCESS CONSULTATION SUCCESS ===
+[2026-03-29 22:20:22] === START PROCESS CONSULTATION ===
+[2026-03-29 22:20:22] appt_id=8, role=patient, chat_length=641
+[2026-03-29 22:20:22] Calling Ollama at localhost:11434...
+[2026-03-29 22:21:47] Ollama HTTP code: 200, error: , response_len: 8490
+[2026-03-29 22:21:47] SUCCESS: Summary generated, length: 1137
+[2026-03-29 22:21:47] Saving summary to DB, filename=summary_8.pdf, summary_length=1137
+[2026-03-29 22:21:47] === END PROCESS CONSULTATION SUCCESS ===
+[2026-03-29 23:08:19] === START PROCESS CONSULTATION ===
+[2026-03-29 23:08:19] appt_id=1, role=patient, chat_length=457
+[2026-03-29 23:08:20] Calling Ollama at localhost:11434...
+[2026-03-29 23:11:22] Ollama HTTP code: 0, error: Operation timed out after 180002 milliseconds with 0 bytes received, response_len: 0
+[2026-03-29 23:11:23] CURL ERROR: Operation timed out after 180002 milliseconds with 0 bytes received - Ollama may not be running!
+[2026-03-29 23:11:23] No summary from Ollama, will retry/generate later
+[2026-03-29 23:11:39] Saving summary to DB, filename=summary_1.pdf, summary_length=61
+[2026-03-29 23:11:53] === END PROCESS CONSULTATION SUCCESS ===
+[2026-03-29 23:13:32] === START PROCESS CONSULTATION ===
+[2026-03-29 23:13:32] appt_id=1, role=doctor, chat_length=522
+[2026-03-29 23:15:45] Calling Ollama at localhost:11434...
+[2026-03-29 23:44:38] === START PROCESS CONSULTATION ===
+[2026-03-29 23:44:38] appt_id=1, role=patient, chat_length=501
+[2026-03-29 23:44:39] Calling Ollama at localhost:11434...
+[2026-03-29 23:46:38] Ollama HTTP code: 200, error: , response_len: 5647
+[2026-03-29 23:46:38] SUCCESS: Summary generated, length: 894
+[2026-03-29 23:46:38] Saving summary to DB, filename=summary_1.pdf, summary_length=894
+[2026-03-29 23:46:38] === END PROCESS CONSULTATION SUCCESS ===
+[2026-03-29 23:46:38] === START PROCESS CONSULTATION ===
+[2026-03-29 23:46:38] appt_id=1, role=doctor, chat_length=540
+[2026-03-29 23:46:38] Calling Ollama at localhost:11434...
+[2026-03-29 23:48:08] Ollama HTTP code: 200, error: , response_len: 6715
+[2026-03-29 23:48:08] SUCCESS: Summary generated, length: 955
+[2026-03-29 23:48:08] Saving summary to DB, filename=summary_1.pdf, summary_length=955
+[2026-03-29 23:48:08] === END PROCESS CONSULTATION SUCCESS ===
