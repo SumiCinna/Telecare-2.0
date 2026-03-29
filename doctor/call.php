@@ -189,17 +189,17 @@ $pat_photo     = $appt['patient_photo'] ?? '';
       .chat-panel {
         width:100%;
         height:calc(100% - 56px);
-        top:0;
+        top:56px;
         right:0;
-        border-radius:12px 12px 0 0;
-        border-left:none;
-        border-top:1px solid rgba(255,255,255,0.08);
         bottom:80px;
-        transform:translateY(100%);
+        border-radius:0;
+        border-left:none;
+        border-top:none;
+        transform:translateX(100%);
         transition:transform 0.25s ease;
       }
       .chat-panel.open {
-        transform:translateY(0);
+        transform:translateX(0);
       }
 
       .chat-header {
@@ -977,7 +977,7 @@ document.addEventListener('touchend', e => {
   if (!touchStart || !isMobile) return;
   const touchEnd = e.changedTouches[0].clientY;
   const diff = touchStart - touchEnd;
-  if (diff > 80 && diff < 250 && !document.getElementById('bgpanel').classList.contains('open')) {
+  if (diff > 30 && diff < 120 && !document.getElementById('bgpanel').classList.contains('open')) {
     toggleChat();
   }
   touchStart = null;

@@ -64,7 +64,7 @@ require_once '../database/config.php';
   const EMAILJS_SERVICE_ID    = 'service_bknr7e6';
   const EMAILJS_RESET_TEMPLATE = 'template_eh6dcuy';
 
-  emailjs.init(EMAILJS_PUBLIC_KEY);
+  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); 
 
   let isSending = false; // guard against double clicks
 
