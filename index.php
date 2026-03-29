@@ -73,6 +73,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       border: 2px solid var(--green) !important; border-radius: 50px;
       background: transparent;
       transition: all 0.25s !important;
+      white-space: nowrap;
     }
     .nav-login:hover { background: var(--green); color: #fff !important; }
     .nav-login::after { display: none !important; }
@@ -84,6 +85,76 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     }
     .nav-cta:hover { background: #a82d38 !important; transform: translateY(-1px); }
     .nav-cta::after { display: none !important; }
+
+    .nav-text-short { display: none; }
+
+    /* ── HAMBURGER MENU ── */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
+      gap: 0.35rem;
+    }
+    .hamburger span {
+      width: 24px;
+      height: 3px;
+      background: var(--green);
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+    .hamburger.active span:nth-child(1) {
+      transform: rotate(45deg) translate(8px, 8px);
+    }
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+    .hamburger.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(7px, -7px);
+    }
+
+    .mobile-menu {
+      display: none;
+      position: absolute;
+      top: 70px;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(36, 68, 65, 0.1);
+      flex-direction: column;
+      padding: 1.5rem 4%;
+      gap: 1rem;
+      box-shadow: 0 8px 30px rgba(36, 68, 65, 0.1);
+      z-index: 99;
+      animation: slideDown 0.3s ease;
+    }
+    .mobile-menu.active { display: flex; }
+
+    .mobile-menu a {
+      color: rgba(36, 68, 65, 0.75);
+      font-size: 0.95rem;
+      font-weight: 500;
+      text-decoration: none;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid rgba(36, 68, 65, 0.05);
+      transition: color 0.25s;
+    }
+    .mobile-menu a:last-child { border-bottom: none; }
+    .mobile-menu a:hover { color: var(--green); }
+
+    .mobile-menu .nav-login {
+      border: 2px solid var(--green);
+      padding: 0.6rem 1.2rem;
+      text-align: center;
+      margin: 0.5rem 0;
+    }
+    .mobile-menu .nav-cta {
+      background: var(--red);
+      padding: 0.6rem 1.2rem;
+      text-align: center;
+      border: none;
+      margin: 0.5rem 0;
+    }
 
     /* ── HERO ── */
     .hero {
@@ -377,13 +448,147 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     .reveal.visible { opacity: 1; transform: translateY(0); }
 
     /* ── MOBILE ── */
-    @media (max-width: 900px) {
-      .hero-stats { display: none; }
+    @media (max-width: 1024px) {
+      section { padding: 80px 4%; }
+      .features-grid, .services-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 1.5rem;
+      }
+      .steps { grid-template-columns: repeat(2, 1fr); }
       .steps::before { display: none; }
     }
-    @media (max-width: 640px) {
+
+    @media (max-width: 768px) {
       nav { padding: 1rem 4%; }
       .nav-links { display: none; }
+      .hamburger { display: flex; }
+      .logo { font-size: 1.4rem; }
+
+      section { padding: 60px 4%; }
+      
+      .hero {
+        padding: 100px 4% 60px;
+        min-height: auto;
+      }
+      .hero-badge { font-size: 0.75rem; padding: 0.35rem 0.9rem; }
+      .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
+      .hero p { font-size: 1rem; }
+      .hero-btns { flex-direction: column; gap: 0.8rem; }
+      .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
+
+      .features-grid, .services-grid {
+        grid-template-columns: 1fr;
+        gap: 1.2rem;
+      }
+      .feature-card, .service-card { padding: 1.8rem; }
+      .feature-card h3, .service-card h3 { font-size: 1rem; }
+
+      .steps { grid-template-columns: 1fr; gap: 2rem; }
+      .step { padding: 0 1rem; }
+      .step-num { width: 60px; height: 60px; font-size: 1.4rem; margin-bottom: 1rem; }
+      .step h3 { font-size: 0.95rem; }
+      .step p { font-size: 0.8rem; }
+
+      .cta-banner { padding: 60px 4%; }
+      .cta-banner h2 { font-size: clamp(1.5rem, 4vw, 2.2rem); margin-bottom: 0.8rem; }
+      .cta-banner p { font-size: 1rem; margin-bottom: 1.5rem; }
+      .btn-white { padding: 0.9rem 2.4rem; font-size: 0.95rem; }
+
+      footer { padding: 2rem 4%; font-size: 0.8rem; }
+      .footer-logo { font-size: 1.2rem; }
+
+      .nav-text-full { display: none; }
+      .nav-text-short { display: inline; }
+    }
+
+    @media (max-width: 640px) {
+      nav { padding: 0.8rem 3%; }
+      .logo { font-size: 1.2rem; }
+
+      section { padding: 50px 3%; }
+
+      .hero {
+        padding: 80px 3% 50px;
+      }
+      .hero-badge { font-size: 0.65rem; padding: 0.3rem 0.8rem; }
+      .hero h1 { font-size: clamp(1.6rem, 5vw, 2.8rem); line-height: 1.1; margin-bottom: 1.2rem; }
+      .hero p { font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.8rem; }
+      .hero-btns { flex-direction: column; gap: 0.7rem; }
+      .btn-primary, .btn-secondary {
+        width: 100%;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        justify-content: center;
+      }
+      .btn-primary { box-shadow: 0 4px 15px rgba(195,54,67,0.2); }
+
+      .section-tag { font-size: 0.7rem; }
+      .section-title { font-size: clamp(1.5rem, 4vw, 2.2rem); margin-bottom: 0.8rem; }
+      .section-sub { font-size: 0.95rem; }
+
+      .features-grid, .services-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      .feature-card, .service-card {
+        padding: 1.5rem;
+        border-radius: 16px;
+      }
+      .feature-icon { width: 48px; height: 48px; font-size: 1.4rem; margin-bottom: 1rem; }
+      .feature-card h3, .service-card h3 { font-size: 0.95rem; margin-bottom: 0.5rem; }
+      .feature-card p, .service-card p { font-size: 0.8rem; }
+      .service-emoji { font-size: 2rem; }
+
+      .steps { grid-template-columns: 1fr; gap: 2.5rem; }
+      .step { padding: 0; }
+      .step-num {
+        width: 56px;
+        height: 56px;
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+      }
+      .step h3 { font-size: 0.9rem; margin-bottom: 0.4rem; }
+      .step p { font-size: 0.75rem; }
+
+      .cta-banner { padding: 50px 3%; }
+      .cta-banner h2 { font-size: clamp(1.3rem, 4vw, 2rem); margin-bottom: 0.7rem; }
+      .cta-banner p { font-size: 0.95rem; margin-bottom: 1.2rem; }
+      .btn-white {
+        padding: 0.8rem 2rem;
+        font-size: 0.9rem;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      footer { padding: 1.5rem 3%; font-size: 0.75rem; }
+      .footer-logo { font-size: 1rem; margin-bottom: 0.3rem; }
+
+      .orb-1, .orb-2 { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      nav { padding: 0.7rem 2.5%; }
+      .logo { font-size: 1rem; letter-spacing: 0.02em; }
+
+      .hero { padding: 70px 2.5% 45px; }
+      .hero h1 { font-size: clamp(1.4rem, 5vw, 2.4rem); }
+      .hero p { font-size: 0.9rem; }
+
+      section { padding: 45px 2.5%; }
+      .section-title { font-size: clamp(1.3rem, 4vw, 2rem); }
+      .section-sub { font-size: 0.9rem; }
+
+      .feature-card, .service-card { padding: 1.3rem; }
+      .feature-card h3, .service-card h3 { font-size: 0.9rem; }
+      .feature-card p, .service-card p { font-size: 0.75rem; }
+      .feature-icon { width: 44px; height: 44px; font-size: 1.2rem; }
+      .service-emoji { font-size: 1.8rem; }
+
+      .cta-banner { padding: 45px 2.5%; }
+      .cta-banner h2 { font-size: clamp(1.2rem, 4vw, 1.8rem); }
+
+      .step-num { width: 52px; height: 52px; font-size: 1.2rem; }
     }
 
     ::-webkit-scrollbar { width: 6px; }
@@ -400,16 +605,37 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     <li><a href="#features">Features</a></li>
     <li><a href="#how">How It Works</a></li>
     <li><a href="#services">Services</a></li>
-    <li style="position:relative;display:flex;align-items:center;">
-      <div style="display:flex;gap:0.5rem;align-items:center;">
-        <a href="auth/login.php" class="nav-login" style="margin:0;">Patient Log In</a>
-        <div style="width:1px;height:20px;background:rgba(36,68,65,0.2);"></div>
-        <a href="doctor/login.php" class="nav-login" style="margin:0;">Doctor Log In</a>
-      </div>
+    <li style="position:relative;display:flex;align-items:center;gap:0.4rem;">
+      <a href="auth/login.php" class="nav-login" style="margin:0;">
+        <span class="nav-text-full">Patient Log In</span>
+        <span class="nav-text-short">Patient</span>
+      </a>
+      <div style="width:1px;height:20px;background:rgba(36,68,65,0.2);"></div>
+      <a href="doctor/login.php" class="nav-login" style="margin:0;">
+        <span class="nav-text-full">Doctor Log In</span>
+        <span class="nav-text-short">Doctor</span>
+      </a>
     </li>
-    <li><a href="auth/register.php" class="nav-cta">Register</a></li>
+    <li><a href="auth/register.php" class="nav-cta" style="padding:0.5rem 1.2rem;font-size:0.8rem;">Register</a></li>
   </ul>
+
+  <!-- Hamburger Menu for Mobile -->
+  <div class="hamburger" id="hamburger">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
 </nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#features">Features</a>
+  <a href="#how">How It Works</a>
+  <a href="#services">Services</a>
+  <a href="auth/login.php" class="nav-login">Patient Log In</a>
+  <a href="doctor/login.php" class="nav-login">Doctor Log In</a>
+  <a href="auth/register.php" class="nav-cta">Register</a>
+</div>
 
 <!-- ══ HERO ══ -->
 <section class="hero">
@@ -602,6 +828,23 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
 </footer>
 
 <script>
+  // Hamburger Menu Toggle
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobileMenu');
+
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('active');
+    mobileMenu.classList.toggle('active');
+  });
+
+  // Close menu when clicking on a link
+  document.querySelectorAll('.mobile-menu a').forEach(link => {
+    link.addEventListener('click', () => {
+      hamburger.classList.remove('active');
+      mobileMenu.classList.remove('active');
+    });
+  });
+
   const reveals = document.querySelectorAll('.reveal');
   const observer = new IntersectionObserver(entries => {
     entries.forEach((entry, i) => {

@@ -30,6 +30,6 @@ if (!file_exists($file)) {
 }
 
 header('Content-Type: application/pdf');
-header('Content-Disposition: inline; filename="consultation_summary_' . $appt_id . '.pdf"');
+header('Content-Disposition: inline; filename="Teleconsultation_Summary_Report_' . $appt_id . '.pdf"');
 header('Content-Length: ' . filesize($file));
 readfile($file);

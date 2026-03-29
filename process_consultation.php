@@ -171,6 +171,7 @@ Write a structured medical summary with these sections:
 6. Follow-up Instructions
 
 If a section was not discussed, write: Not discussed. Be concise and professional.
+IMPORTANT: Do NOT use markdown formatting. No ##, ###, **, or any symbols. Plain text only.
 If there are multiple sessions (separated by '--- Rejoined Session ---'), consolidate the information across all sessions into one coherent summary.";
 
     // ── 7. Summarize with Ollama ──────────────────────────────────────────
@@ -228,8 +229,18 @@ $has_new_data = (!empty($new_transcript) && $new_transcript !== trim($row['exist
 require_once __DIR__ . '/vendor/autoload.php';
 
 function enc(string $s): string {
-    // Strip markdown bold (**text**) and convert UTF-8 to FPDF-compatible Latin-1
+    // Strip markdown
     $s = preg_replace('/\*\*(.*?)\*\*/', '$1', $s);
+    $s = preg_replace('/#{1,6}\s*/', '', $s);
+    // Fix special characters
+    $s = str_replace(['—', '–', '−'], '-', $s);
+    $s = str_replace(['á','à','â','ä'], 'a', $s);
+    $s = str_replace(['é','è','ê','ë'], 'e', $s);
+    $s = str_replace(['í','ì','î','ï'], 'i', $s);
+    $s = str_replace(['ó','ò','ô','ö'], 'o', $s);
+    $s = str_replace(['ú','ù','û','ü'], 'u', $s);
+    $s = str_replace(['ñ','Ñ'], 'n', $s);
+    $s = str_replace(['Á','É','Í','Ó','Ú'], ['A','E','I','O','U'], $s);
     return iconv('UTF-8', 'windows-1252//TRANSLIT//IGNORE', $s);
 }
 
@@ -266,8 +277,8 @@ $pdf->SetFillColor(240, 247, 245);
 $pdf->SetDrawColor(200, 220, 215);
 $pdf->Rect(20, 36, 170, 38, 'DF');
 $fields = [
-    'Patient'   => $row['patient_name'],
-    'Doctor'    => 'Dr. ' . $row['doctor_name'] . ' — ' . ($row['specialty'] ?? ''),
+    'Patient'   => enc($row['patient_name']),
+    'Doctor'    => enc('Dr. ' . $row['doctor_name'] . ' - ' . ($row['specialty'] ?? '')),
     'Date/Time' => date('F j, Y', strtotime($row['appointment_date'])) . ' at ' . date('g:i A', strtotime($row['appointment_time'])),
     'Generated' => date('F j, Y g:i A') . ' (latest session)',
 ];

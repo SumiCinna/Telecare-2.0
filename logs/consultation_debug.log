@@ -97,3 +97,59 @@
 [2026-03-29 23:48:08] SUCCESS: Summary generated, length: 955
 [2026-03-29 23:48:08] Saving summary to DB, filename=summary_1.pdf, summary_length=955
 [2026-03-29 23:48:08] === END PROCESS CONSULTATION SUCCESS ===
+[2026-03-30 00:00:05] === START PROCESS CONSULTATION ===
+[2026-03-30 00:00:05] appt_id=1, role=patient, chat_length=379
+[2026-03-30 00:00:05] Calling Ollama at localhost:11434...
+[2026-03-30 00:02:17] Ollama HTTP code: 200, error: , response_len: 7394
+[2026-03-30 00:02:17] SUCCESS: Summary generated, length: 969
+[2026-03-30 00:02:17] Saving summary to DB, filename=summary_1.pdf, summary_length=969
+[2026-03-30 00:02:17] === END PROCESS CONSULTATION SUCCESS ===
+[2026-03-30 00:02:17] === START PROCESS CONSULTATION ===
+[2026-03-30 00:02:17] appt_id=1, role=doctor, chat_length=405
+[2026-03-30 00:02:18] Calling Ollama at localhost:11434...
+[2026-03-30 00:03:37] Ollama HTTP code: 200, error: , response_len: 8238
+[2026-03-30 00:03:37] SUCCESS: Summary generated, length: 1106
+[2026-03-30 00:03:37] Saving summary to DB, filename=summary_1.pdf, summary_length=1106
+[2026-03-30 00:03:37] === END PROCESS CONSULTATION SUCCESS ===
+[2026-03-30 00:49:04] === START PROCESS CONSULTATION ===
+[2026-03-30 00:49:04] appt_id=2, role=doctor, chat_length=477
+[2026-03-30 00:49:10] Calling Ollama at localhost:11434...
+[2026-03-30 00:51:11] Ollama HTTP code: 200, error: , response_len: 4261
+[2026-03-30 00:51:11] SUCCESS: Summary generated, length: 1134
+[2026-03-30 00:51:11] Saving summary to DB, filename=summary_2.pdf, summary_length=1134
+[2026-03-30 00:51:11] === END PROCESS CONSULTATION SUCCESS ===
+[2026-03-30 00:51:12] === START PROCESS CONSULTATION ===
+[2026-03-30 00:51:12] appt_id=2, role=patient, chat_length=451
+[2026-03-30 00:51:30] Calling Ollama at localhost:11434...
+[2026-03-30 00:53:59] Ollama HTTP code: 200, error: , response_len: 7744
+[2026-03-30 00:53:59] SUCCESS: Summary generated, length: 1457
+[2026-03-30 00:53:59] Saving summary to DB, filename=summary_2.pdf, summary_length=1457
+[2026-03-30 00:53:59] === END PROCESS CONSULTATION SUCCESS ===
+[2026-03-30 00:58:08] === START PROCESS CONSULTATION ===
+[2026-03-30 00:58:08] appt_id=2, role=doctor, chat_length=108
+[2026-03-30 00:58:09] Calling Ollama at localhost:11434...
+[2026-03-30 00:59:28] Ollama HTTP code: 200, error: , response_len: 7099
+[2026-03-30 00:59:28] SUCCESS: Summary generated, length: 1051
+[2026-03-30 00:59:28] Saving summary to DB, filename=summary_2.pdf, summary_length=1051
+[2026-03-30 00:59:28] === END PROCESS CONSULTATION SUCCESS ===
+[2026-03-30 00:59:28] === START PROCESS CONSULTATION ===
+[2026-03-30 00:59:28] appt_id=2, role=patient, chat_length=108
+[2026-03-30 00:59:29] Calling Ollama at localhost:11434...
+[2026-03-30 01:01:13] Ollama HTTP code: 200, error: , response_len: 7872
+[2026-03-30 01:01:13] SUCCESS: Summary generated, length: 1302
+[2026-03-30 01:01:13] Saving summary to DB, filename=summary_2.pdf, summary_length=1302
+[2026-03-30 01:01:13] === END PROCESS CONSULTATION SUCCESS ===
+[2026-03-30 01:15:55] === START PROCESS CONSULTATION ===
+[2026-03-30 01:15:55] appt_id=2, role=doctor, chat_length=280
+[2026-03-30 01:15:58] Calling Ollama at localhost:11434...
+[2026-03-30 01:18:08] Ollama HTTP code: 200, error: , response_len: 7876
+[2026-03-30 01:18:08] SUCCESS: Summary generated, length: 950
+[2026-03-30 01:18:08] Saving summary to DB, filename=summary_2.pdf, summary_length=950
+[2026-03-30 01:18:08] === END PROCESS CONSULTATION SUCCESS ===
+[2026-03-30 01:18:08] === START PROCESS CONSULTATION ===
+[2026-03-30 01:18:08] appt_id=2, role=patient, chat_length=267
+[2026-03-30 01:18:14] Calling Ollama at localhost:11434...
+[2026-03-30 01:19:46] Ollama HTTP code: 200, error: , response_len: 8666
+[2026-03-30 01:19:46] SUCCESS: Summary generated, length: 971
+[2026-03-30 01:19:46] Saving summary to DB, filename=summary_2.pdf, summary_length=971
+[2026-03-30 01:19:46] === END PROCESS CONSULTATION SUCCESS ===
