@@ -18,11 +18,11 @@ $today = $conn->query("
 
 // ── Recent patients ──
 $recent_patients = $conn->query("
-    SELECT p.*, pd.created_at AS assigned_at
+    SELECT p.*
     FROM patients p
     JOIN patient_doctors pd ON pd.patient_id=p.id
     WHERE pd.doctor_id=$doctor_id
-    ORDER BY pd.created_at DESC LIMIT 4
+    LIMIT 4
 ");
 
 $page_title       = 'Home — TELE-CARE';

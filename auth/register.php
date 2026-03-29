@@ -236,7 +236,7 @@ const EMAILJS_PUBLIC_KEY  = 'm-AvAiAdUDsgBbz6D';
         const patientName   = <?= json_encode($patient_name) ?>;
         const activationURL = <?= json_encode('http://'.$_SERVER['HTTP_HOST'].'/auth/verify.php?token='.urlencode($verify_token)) ?>;
 
-        emailjs.init(EMAILJS_PUBLIC_KEY);
+        emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 
         function sendActivationEmail() {
           return emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {

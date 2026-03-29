@@ -31,7 +31,7 @@ $pat_photo     = $appt['patient_photo'] ?? '';
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/>
   <title><?= htmlspecialchars($appt['patient_name']) ?> — TELE-CARE</title>
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" crossorigin="anonymous"></script>
@@ -119,6 +119,180 @@ $pat_photo     = $appt['patient_photo'] ?? '';
     .chat-send:hover{background:#1557b0;transform:scale(1.08);}
     .chat-send svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
     @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ── Mobile Responsiveness ── */
+    @media(max-width:768px) {
+      .topbar { height:48px; padding:0 0.8rem; }
+      .tb-logo { font-size:0.8rem; }
+      .topbar span { font-size:0.65rem; }
+      .timer-pill { font-size:0.7rem; padding:0.25rem 0.7rem; min-width:48px; }
+
+      .video-area {
+        flex-direction:column;
+        padding:0.5rem;
+        gap:0.5rem;
+      }
+
+      .remote-tile {
+        width:100%;
+        aspect-ratio:auto;
+        flex:1;
+        max-width:none;
+      }
+
+      .self-tile {
+        width:140px;
+        aspect-ratio:auto;
+        height:105px;
+        position:fixed;
+        bottom:88px;
+        right:0.5rem;
+        z-index:35;
+        border-radius:12px;
+      }
+
+      .name-tag { font-size:0.65rem; padding:0.2rem 0.5rem; bottom:0.4rem; left:0.4rem; }
+      .self-name-tag { font-size:0.6rem; bottom:0.3rem; left:0.3rem; padding:0.15rem 0.4rem; }
+
+      .controls {
+        height:72px;
+        gap:0.4rem;
+        padding:0 0.4rem;
+        overflow-x:auto;
+        scroll-behavior:smooth;
+      }
+      .controls::-webkit-scrollbar { height:3px; }
+      .controls::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.2); border-radius:2px; }
+
+      .cbtn { gap:0.15rem; }
+      .cbtn-icon { width:40px; height:40px; }
+      .cbtn-lbl { font-size:0.55rem; }
+      .cbtn-end .cbtn-icon { width:48px; height:48px; }
+      .cbtn-end svg { width:20px; height:20px; }
+
+      .ctrl-sep { display:none; }
+
+      .bg-panel {
+        bottom:76px;
+        width:calc(100% - 1rem);
+        max-width:none;
+        left:0.5rem;
+        right:0.5rem;
+        transform:translateX(0);
+        border-radius:12px;
+        padding:1rem;
+      }
+      .bg-grid { grid-template-columns:repeat(3,1fr); gap:0.4rem; }
+      .bgo { aspect-ratio:4/3; border-radius:6px; }
+      .bgo-lbl { font-size:0.5rem; }
+
+      .chat-panel {
+        width:100%;
+        height:calc(100% - 56px);
+        top:0;
+        right:0;
+        border-radius:12px 12px 0 0;
+        border-left:none;
+        border-top:1px solid rgba(255,255,255,0.08);
+        bottom:80px;
+        transform:translateY(100%);
+        transition:transform 0.25s ease;
+      }
+      .chat-panel.open {
+        transform:translateY(0);
+      }
+
+      .chat-header {
+        padding:0.8rem 1rem;
+        font-size:0.85rem;
+      }
+
+      .chat-messages { padding:0.6rem; gap:0.5rem; }
+      .msg-bubble { font-size:0.78rem; padding:0.5rem 0.75rem; max-width:90%; }
+      .chat-input { font-size:0.8rem; padding:0.5rem 0.9rem; }
+      .chat-send { width:34px; height:34px; }
+
+      .conn-dot { gap:0.3rem; font-size:0.7rem; }
+      .dot { width:6px; height:6px; }
+    }
+
+    @media(max-width:600px) {
+      .topbar { height:44px; padding:0 0.6rem; gap:0.4rem; }
+      .tb-logo { font-size:0.75rem; }
+      .topbar span { font-size:0.6rem; }
+      .timer-pill { font-size:0.65rem; padding:0.2rem 0.6rem; }
+
+      .video-area { padding:0.4rem; gap:0.4rem; }
+
+      .self-tile {
+        width:120px;
+        height:90px;
+        bottom:80px;
+        right:0.4rem;
+      }
+
+      .controls {
+        height:68px;
+        gap:0.35rem;
+        padding:0 0.3rem;
+      }
+
+      .cbtn-icon { width:36px; height:36px; }
+      .cbtn-lbl { font-size:0.5rem; }
+      .cbtn-end .cbtn-icon { width:44px; height:44px; }
+
+      .bg-panel {
+        bottom:68px;
+        width:calc(100% - 0.8rem);
+        left:0.4rem;
+        padding:0.9rem;
+      }
+      .bg-grid { grid-template-columns:repeat(2,1fr); gap:0.35rem; }
+
+      .chat-panel { bottom:76px; }
+      .chat-messages { padding:0.5rem; }
+      .msg-bubble { font-size:0.75rem; padding:0.45rem 0.7rem; }
+    }
+
+    @media(max-width:480px) {
+      .topbar { height:42px; }
+      .tb-logo { font-size:0.7rem; }
+      .topbar span { display:none; }
+      .timer-pill { font-size:0.6rem; }
+
+      .self-tile {
+        width:100px;
+        height:75px;
+        bottom:76px;
+      }
+
+      .controls { height:64px; gap:0.3rem; }
+      .cbtn-icon { width:32px; height:32px; }
+      .cbtn-lbl { font-size:0.48rem; }
+      .cbtn-end .cbtn-icon { width:40px; height:40px; }
+
+      .name-tag { font-size:0.6rem; }
+      .self-name-tag { font-size:0.55rem; }
+
+      .bg-panel { bottom:64px; padding:0.8rem; font-size:0.85rem; }
+      .bg-grid { gap:0.3rem; }
+      .bgo-lbl { font-size:0.48rem; }
+    }
+
+    /* ── Touch-friendly improvements ── */
+    @media(hover:none) and (pointer:coarse) {
+      .cbtn-icon { transition:background 0.15s; }
+      .cbtn:active .cbtn-icon { transform:scale(0.95); }
+      .bgo:active { border-color:var(--gm-blue); transform:scale(0.98); }
+    }
+
+    /* ── Landscape mode ── */
+    @media(max-height:500px) and (orientation:landscape) {
+      .topbar { height:40px; }
+      .controls { height:60px; }
+      .self-tile { width:110px; height:85px; bottom:62px; }
+      .video-area { padding:0.3rem; }
+    }
   </style>
 </head>
 <body>
@@ -758,6 +932,62 @@ document.addEventListener('click', e => {
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && rawStream) rawStream.getVideoTracks().forEach(t => { if (camOn) t.enabled = true; });
 });
+
+// ── Mobile: Auto-hide controls on scroll ──
+let controlsHideTimer;
+let isMobile = window.innerWidth <= 768;
+const controls = document.querySelector('.controls');
+const videoArea = document.querySelector('.video-area');
+
+if (isMobile && controls && videoArea) {
+  function showControls() {
+    controls.style.opacity = '1';
+    controls.style.pointerEvents = 'auto';
+    clearTimeout(controlsHideTimer);
+    controlsHideTimer = setTimeout(() => {
+      if (document.hidden || !chatOpen) {
+        controls.style.opacity = '0.3';
+        controls.style.pointerEvents = 'none';
+      }
+    }, 4000);
+  }
+
+  videoArea.addEventListener('touchstart', showControls, false);
+  videoArea.addEventListener('touchend', () => {
+    clearTimeout(controlsHideTimer);
+    controlsHideTimer = setTimeout(() => {
+      if (document.hidden || !chatOpen) {
+        controls.style.opacity = '0.3';
+        controls.style.pointerEvents = 'none';
+      }
+    }, 3500);
+  }, false);
+
+  controls.addEventListener('touchstart', () => clearTimeout(controlsHideTimer), false);
+  controls.style.opacity = '1';
+}
+
+// ── Mobile: Swipe up for chat ──
+let touchStart = null;
+document.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) touchStart = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchend', e => {
+  if (!touchStart || !isMobile) return;
+  const touchEnd = e.changedTouches[0].clientY;
+  const diff = touchStart - touchEnd;
+  if (diff > 80 && diff < 250 && !document.getElementById('bgpanel').classList.contains('open')) {
+    toggleChat();
+  }
+  touchStart = null;
+}, { passive: true });
+
+// ── Mobile: Prevent pinch zoom ──
+document.addEventListener('gesturestart', e => e.preventDefault(), { passive: false });
+document.addEventListener('touchmove', e => {
+  if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
 
 init();
 </script>
