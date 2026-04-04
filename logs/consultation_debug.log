@@ -163,3 +163,7 @@
 [2026-03-30 03:25:05] === START PROCESS CONSULTATION ===
 [2026-03-30 03:25:05] appt_id=3, role=doctor, chat_length=260
 [2026-03-30 03:25:09] Calling Ollama at localhost:11434...
+[2026-03-30 03:25:45] Ollama HTTP code: 200, error: , response_len: 2873
+[2026-03-30 03:25:45] SUCCESS: Summary generated, length: 324
+[2026-03-30 03:25:45] Saving summary to DB, filename=summary_3.pdf, summary_length=324
+[2026-03-30 03:25:45] === END PROCESS CONSULTATION SUCCESS ===
