@@ -1,0 +1,68 @@
+# Environment configuration - DO NOT COMMIT
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+error_log
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Vendor / Dependencies
+vendor/
+node_modules/
+__pycache__/
+
+# Cache
+.cache/
+*.cache
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+
+# Backup files
+*.bak
+*.backup
+
+# Database files (sensitive)
+*.sql
+database/telejnvk_telecare*.sql
+database/telecare*.sql
+
+# Python
+*.pyc
+*.egg-info/
+dist/
+build/
+
+# OS
+Thumbs.db
+
+# Private keys / certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Payment processing
+paymongo_*.php
+
+# OCR temporary files
+uploads/ocr/*.tmp
+
+*.zip
+
+.env
+
+.env
