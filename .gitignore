@@ -34,11 +34,6 @@ __pycache__/
 *.bak
 *.backup
 
-# Database files (sensitive)
-*.sql
-database/telejnvk_telecare*.sql
-database/telecare*.sql
-
 # Python
 *.pyc
 *.egg-info/
