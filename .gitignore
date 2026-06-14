@@ -34,9 +34,12 @@ __pycache__/
 *.bak
 *.backup
 
+<<<<<<< HEAD
 # Database files (sensitive)
 
 
+=======
+>>>>>>> e40f4ca1d3b058d87918f9a5592c586f96e66d25
 # Python
 *.pyc
 *.egg-info/
