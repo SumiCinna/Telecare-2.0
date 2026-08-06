@@ -40,7 +40,7 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
   <title>Dr. <?= htmlspecialchars($appt['doctor_name']) ?> — TELE-CARE</title>
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" crossorigin="anonymous"></script>
-  <style>
+<script src="https://unpkg.com/@metered-ca/realtime@1/dist/index.umd.js"></script>  <style>
     :root{--gm-blue:#1a73e8;--gm-bg:#202124;--gm-surface:#3c4043;--gm-surface2:#2d2e30;--gm-red:#ea4335;--gm-green:#34a853;--gm-text:#e8eaed;--gm-muted:#9aa0a6;}
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Google Sans','Roboto',sans-serif;background:var(--gm-bg);color:var(--gm-text);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
@@ -434,11 +434,11 @@ const APPT_TS  = <?= $appt_ts ?>;
 const END_TS   = <?= $end_ts ?>;
 const APPT_ID  = <?= $appt_id ?>;
 const MY_NAME  = <?= json_encode($pat_name) ?>;
-const WS_URL   = `ws://localhost:8765/ws/${ROOM_ID}/${ROLE}`;
-const ICE      = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
+const METered_API_KEY = "pk_live_b234bb5d73bc0ce3cc3ffa803f5396a186caa7d9";
 
 // ── State ──────────────────────────────────────────────────────────────────────
-let ws, pc, rawStream, segInterval, selfieSegmentation, processedStream;
+let meteredPeer = null;
+let rawStream, segInterval, selfieSegmentation, processedStream;
 let mediaRecorder = null;
 let audioChunks   = [];
 let chatMessages  = [];
@@ -447,8 +447,8 @@ let chatOpen = false, unread = 0;
 let callWasConnected = false;
 let timerEnded = false;
 let isDestroyed = false;
-let wsReconnectDelay = 1500;
-let pendingIceCandidates = [];
+
+
 
 const canvas = document.getElementById('local-canvas');
 const ctx    = canvas.getContext('2d');
@@ -463,7 +463,7 @@ async function init() {
     showToast('❌ Camera/mic access denied'); return;
   }
   initSeg();
-  connectWS();
+  await connectMetered();
   startTimer();
   updateChatAvailability();
 }
@@ -500,111 +500,62 @@ function onSegResult(r) {
   ctx.restore();
 }
 
-// ── WebSocket ─────────────────────────────────────────────────────────────────
-function connectWS() {
+// ── MeteredPeer (WebRTC) ──────────────────────────────────────────────
+async function connectMetered() {
   if (isDestroyed) return;
-  ws = new WebSocket(WS_URL);
 
-  ws.onopen = () => {
-    wsReconnectDelay = 1500;
-    setConn(false, 'Waiting for doctor…');
-  };
+  // ── Fetch TURN server credentials ──
+  let iceServers = [];
+  try {
+    const turnResp = await fetch("https://teleai.metered.live/api/v1/turn/credentials?apiKey=241d7d5baf7d8b4e032134298f8b1261427f");
+    const turnData = await turnResp.json();
+    iceServers = turnData.iceServers || turnData;
+  } catch(e) {
+    console.warn("TURN fetch failed, using fallback STUN:", e);
+    iceServers = [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }];
+  }
 
-  ws.onmessage = async ({ data }) => {
-    let m;
-    try { m = JSON.parse(data); } catch(e) { return; }
-
-    if (m.type === 'peer_joined') {
-      setConn(false, 'Doctor joined!');
-      if (Date.now() / 1000 < APPT_TS) {
-        document.getElementById('waiting-sub').textContent =
-          '✅ Doctor is here! Call starts at ' + new Date(APPT_TS * 1000).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', hour12: true });
-        showToast('Doctor is here early — waiting for scheduled time…');
-      } else {
-        showToast('Doctor joined — waiting for call…');
-      }
+meteredPeer = new MeteredPeer.MeteredPeer({ apiKey: METered_API_KEY, iceServers });
+  meteredPeer.on("peer-joined", ({ peer: remote }) => {
+    setConn(false, "Doctor joined!");
+    if (Date.now() / 1000 < APPT_TS) {
+      document.getElementById("waiting-sub").textContent =
+        "✅ Doctor is here! Call starts at " + new Date(APPT_TS * 1000).toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit", hour12: true });
+      showToast("Doctor is here early — waiting for scheduled time…");
+    } else {
+      showToast("Doctor joined — waiting for call…");
     }
 
-    else if (m.type === 'offer') {
-      if (pc) { try { pc.close(); } catch(e) {} pc = null; }
-      pendingIceCandidates = [];
-      pc = new RTCPeerConnection(ICE);
-      const stream = processedStream || rawStream;
-      if (stream && stream.getTracks().length > 0) {
-        stream.getTracks().forEach(t => pc.addTrack(t, stream));
-      }
-      pc.ontrack = e => {
-        document.getElementById('remote-video').srcObject = e.streams[0];
-        document.getElementById('waiting-overlay').style.display = 'none';
-        setConn(true, 'Connected');
-        callWasConnected = true;
-        showToast('Call connected!');
-        // Auto-add system message so we always have content for summary
-        const now = new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-        chatMessages.push(`[${now}] System: Call connected`);
-        startRecording();
-      };
-      pc.onicecandidate = e => {
-        if (e.candidate && ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: 'ice', candidate: e.candidate }));
-        }
-      };
-      pc.onconnectionstatechange = () => {
-        if (!pc) return;
-        if (pc.connectionState === 'connected') { callWasConnected = true; setConn(true, 'Connected'); }
-        if (pc.connectionState === 'failed') { showToast('Connection failed — waiting for doctor to retry…'); setConn(false, 'Reconnecting…'); }
-      };
-      try {
-        await pc.setRemoteDescription(m.sdp);
-        for (const c of pendingIceCandidates) { try { await pc.addIceCandidate(c); } catch(e) {} }
-        pendingIceCandidates = [];
-        const ans = await pc.createAnswer();
-        await pc.setLocalDescription(ans);
-        if (ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type: 'answer', sdp: ans })); }
-      } catch(e) {
-        showToast('Answer failed — waiting for retry…');
-        if (pc) { try { pc.close(); } catch(_) {} pc = null; }
-      }
-    }
+    remote.on("stream-added", ({ stream }) => {
+      document.getElementById("remote-video").srcObject = stream;
+      document.getElementById("waiting-overlay").style.display = "none";
+      setConn(true, "Connected");
+      callWasConnected = true;
+      startRecording();
+    });
+  });
 
-    else if (m.type === 'ice') {
-      if (m.candidate) {
-        if (pc && pc.remoteDescription) { try { await pc.addIceCandidate(m.candidate); } catch(e) {} }
-        else { pendingIceCandidates.push(m.candidate); }
-      }
-    }
+  meteredPeer.on("peer-left", () => {
+    document.getElementById("remote-video").srcObject = null;
+    document.getElementById("waiting-overlay").style.display = "flex";
+    document.getElementById("waiting-sub").textContent = "Doctor disconnected…";
+    setConn(false, "Doctor left");
+    if (meteredPeer) { try { meteredPeer.leave(); } catch(e) {} meteredPeer = null; }
+    showToast("Doctor left the call");
+  });
 
-    else if (m.type === 'peer_left') {
-      document.getElementById('remote-video').srcObject = null;
-      document.getElementById('waiting-overlay').style.display = 'flex';
-      document.getElementById('waiting-sub').textContent = 'Doctor disconnected…';
-      setConn(false, 'Doctor left');
-      if (pc) { try { pc.close(); } catch(e) {} pc = null; }
-      pendingIceCandidates = [];
-      showToast('Doctor left the call');
-    }
+  meteredPeer.on("connection-state", (state) => {
+    if (state === "connected") { callWasConnected = true; setConn(true, "Connected"); }
+    if (state === "failed" || state === "disconnected") { setConn(false, "Reconnecting…"); }
+  });
 
-    else if (m.type === 'chat') {
-      if (!isChatWindowOpen()) return;
-      addMsg(m.text, m.name || 'Doctor', false);
-    }
+  const stream = processedStream || rawStream;
+  if (stream && stream.getTracks().length > 0) {
+    meteredPeer.addStream(stream);
+  }
 
-    else if (m.type === 'cam_toggle') {
-      const camOff = document.getElementById('remote-cam-off');
-      m.cam_on ? camOff.classList.remove('show') : camOff.classList.add('show');
-    }
-  };
-
-  ws.onclose = () => {
-    if (isDestroyed) return;
-    setConn(false, 'Reconnecting…');
-    wsReconnectDelay = Math.min(wsReconnectDelay * 1.5, 10000);
-    setTimeout(connectWS, wsReconnectDelay);
-  };
-
-  ws.onerror = () => { try { ws.close(); } catch(e) {} };
+  meteredPeer.join(ROOM_ID);
 }
-
 function startRecording() {
   if (!rawStream) return;
   try {
@@ -634,8 +585,8 @@ async function endCall(auto = false) {
   // Cleanup
   clearInterval(segInterval);
   try { selfieSegmentation?.close(); } catch(e) {}
-  try { ws?.close(); }               catch(e) {}
-  try { pc?.close(); }               catch(e) {}
+  try { meteredPeer?.leave(); } catch(e) {}
+
   rawStream?.getTracks().forEach(t => t.stop());
 
   // Submit call data (fire and forget — PHP runs in background)
@@ -738,7 +689,7 @@ function toggleCam() {
   document.getElementById('lbl-cam').textContent = camOn ? 'Camera' : 'Cam Off';
   document.getElementById('local-canvas').style.display = camOn ? 'block' : 'none';
   document.getElementById('self-cam-off').classList.toggle('show', !camOn);
-  if (ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type: 'cam_toggle', cam_on: camOn })); }
+  if (meteredPeer) { meteredPeer.send(JSON.stringify({ type: 'cam_toggle', cam_on: camOn })); }
   showToast(camOn ? '📹 Camera on' : '🚫 Camera off');
 }
 
@@ -809,8 +760,8 @@ function sendChat() {
 
   const inp = document.getElementById('chat-input');
   const text = inp.value.trim();
-  if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
-  ws.send(JSON.stringify({ type: 'chat', text, name: MY_NAME }));
+  if (!text || !meteredPeer) return;
+  meteredPeer.send(JSON.stringify({ type: 'chat', text, name: MY_NAME }));
   addMsg(text, 'You', true);
   inp.value = '';
 }

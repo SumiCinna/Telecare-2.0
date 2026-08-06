@@ -6,8 +6,11 @@ if (!isset($patient_id)) {
     die('❌ $patient_id is not set. Check auth.php — session key may differ.');
 }
 
-define('PAYMONGO_SECRET_KEY', $_ENV['PAYMONGO_SECRET_KEY'] ?? '');
-define('PAYMONGO_PUBLIC_KEY', $_ENV['PAYMONGO_PUBLIC_KEY'] ?? '');
+$paymongoSecretKey = $_ENV['PAYMONGO_SECRET_KEY'] ?? ($_SERVER['PAYMONGO_SECRET_KEY'] ?? getenv('PAYMONGO_SECRET_KEY') ?: '');
+$paymongoPublicKey = $_ENV['PAYMONGO_PUBLIC_KEY'] ?? ($_SERVER['PAYMONGO_PUBLIC_KEY'] ?? getenv('PAYMONGO_PUBLIC_KEY') ?: '');
+
+define('PAYMONGO_SECRET_KEY', $paymongoSecretKey);
+define('PAYMONGO_PUBLIC_KEY', $paymongoPublicKey);
 define('BASE_URL', 'http://localhost:3000');
 
 $appt_id = (int)($_GET['appt_id'] ?? 0);
@@ -53,6 +56,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_method'])) {
 
     $success_url = BASE_URL . '/pay_success.php?appt_id=' . $appt_id . '&patient=' . $patient_id;
     $failed_url  = BASE_URL . '/pay_cancel.php?appt_id='  . $appt_id;
+
+    if (PAYMONGO_SECRET_KEY === '') {
+      $_SESSION['toast_error'] = 'Payment setup error: missing PAYMONGO_SECRET_KEY in .env.';
+      header('Location: pay.php?appt_id=' . $appt_id); exit;
+    }
+
+    if ($method === 'card' && PAYMONGO_PUBLIC_KEY === '') {
+      $_SESSION['toast_error'] = 'Payment setup error: missing PAYMONGO_PUBLIC_KEY in .env.';
+      header('Location: pay.php?appt_id=' . $appt_id); exit;
+    }
 
     $billing = ['name' => $name, 'email' => $email];
     if ($phone !== null) $billing['phone'] = $phone;

@@ -35,7 +35,7 @@ $pat_photo     = $appt['patient_photo'] ?? '';
   <title><?= htmlspecialchars($appt['patient_name']) ?> — TELE-CARE</title>
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" crossorigin="anonymous"></script>
-  <style>
+<script src="https://unpkg.com/@metered-ca/realtime@1/dist/index.umd.js"></script>  <style>
     :root{--gm-blue:#1a73e8;--gm-bg:#202124;--gm-surface:#3c4043;--gm-surface2:#2d2e30;--gm-red:#ea4335;--gm-green:#34a853;--gm-text:#e8eaed;--gm-muted:#9aa0a6;}
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Google Sans','Roboto',sans-serif;background:var(--gm-bg);color:var(--gm-text);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
@@ -331,7 +331,7 @@ $pat_photo     = $appt['patient_photo'] ?? '';
       <div style="font-size:0.78rem;color:var(--gm-muted);" id="waiting-sub">
         <?= time() < $appt_ts ? 'Early access — patient may not be here yet.' : 'Waiting for patient to join…' ?>
       </div>
-      <button class="start-call-btn" id="start-btn" onclick="manualStart()">📹 Start Call</button>
+      <button class="start-call-btn" id="start-btn" onclick="manualStart()" disabled>📹 Start Call</button>
     </div>
     <div class="name-tag"><?= htmlspecialchars($appt['patient_name']) ?></div>
   </div>
@@ -439,22 +439,23 @@ const APPT_TS  = <?= $appt_ts ?>;
 const END_TS   = <?= $end_ts ?>;
 const APPT_ID  = <?= $appt_id ?>;
 const MY_NAME  = <?= json_encode('Dr. ' . $doc['full_name']) ?>;
-const WS_URL   = `ws://localhost:8765/ws/${ROOM_ID}/${ROLE}`;
-const ICE      = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
+// Same Metered signalling publishable key used on the patient side — both
+// sides must join the same MeteredPeer room/app to ever discover each other.
+const METERED_API_KEY = "pk_live_b234bb5d73bc0ce3cc3ffa803f5396a186caa7d9";
 
 // ── State ───────────────────────────────────────────────────────────────────
-let ws, pc, rawStream, segInterval, selfieSegmentation, processedStream;
+let meteredPeer = null;
+let rawStream, segInterval, selfieSegmentation, processedStream;
 let mediaRecorder = null;
 let audioChunks   = [];
 let chatMessages  = [];
 let micOn = true, camOn = true;
 let bgMode = 'none', bgImg = null;
 let chatOpen = false, unreadCount = 0;
-let callStarted = false;
 let patientPresent = false;
+let streamPublished = false;
 let callWasConnected = false;
 let timerEnded = false;
-let wsReconnectDelay = 1500;
 let isDestroyed = false;
 
 const canvas = document.getElementById('local-canvas');
@@ -470,7 +471,7 @@ async function init() {
     toast('❌ Camera/mic access denied'); return;
   }
   initSegmentation();
-  connectWS();
+  await connectMetered();
   startTimer();
   updateChatAvailability();
 }
@@ -507,179 +508,104 @@ function onSegResults(results) {
   ctx.restore();
 }
 
-// ── WebSocket ────────────────────────────────────────────────────────────────
-function connectWS() {
+// ── MeteredPeer (WebRTC) ──────────────────────────────────────────────
+// NOTE: We join the room right away so we get presence ("peer-joined")
+// as soon as the patient is in the channel — but we deliberately DON'T
+// publish (addStream) our own camera until the doctor clicks "Start Call".
+// The patient's stream may already be flowing in as a preview before that.
+async function connectMetered() {
   if (isDestroyed) return;
-  ws = new WebSocket(WS_URL);
 
-  ws.onopen = () => {
-    wsReconnectDelay = 1500;
-    setConn(false, patientPresent ? 'Reconnected…' : 'Waiting for patient…');
-    if (patientPresent) { callStarted = false; setTimeout(() => scheduleStartCall(), 1000); }
-  };
+  let iceServers = [];
+  try {
+    const turnResp = await fetch("https://teleai.metered.live/api/v1/turn/credentials?apiKey=081ba51e96df1535bc3a82c9150f890ed18e");
+    const turnData = await turnResp.json();
+    iceServers = turnData.iceServers || turnData;
+  } catch(e) {
+    console.warn("TURN fetch failed, using fallback STUN:", e);
+    iceServers = [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }];
+  }
 
-  ws.onmessage = async ({ data }) => {
-    let m;
-    try { m = JSON.parse(data); } catch(e) { return; }
-
-    if (m.type === 'peer_joined') {
-      patientPresent = true;
-      callStarted = false; // Reset so retry/reconnect works
-      setConn(false, 'Patient joined!');
-      // Show waiting overlay if not connected yet
-      document.getElementById('waiting-overlay').style.display = 'flex';
-      const sub = document.getElementById('waiting-sub');
-      if (Date.now() / 1000 < APPT_TS) {
-        sub.textContent = '✅ Patient is here! Call starts at ' + new Date(APPT_TS * 1000).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', hour12: true });
-        toast('Patient is here early — waiting for scheduled time…');
-      } else {
-        sub.textContent = 'Patient is ready!';
-        toast('Patient joined — starting call…');
-        resetStartBtn(); // Show "Start Call" button again instead of "Retry"
-      }
-      if (Date.now() / 1000 >= APPT_TS) {
-        scheduleStartCall();
-      }
+meteredPeer = new MeteredPeer.MeteredPeer({ apiKey: METERED_API_KEY, iceServers });  meteredPeer.on("peer-joined", ({ peer: remote }) => {
+    patientPresent = true;
+    setConn(false, 'Patient joined!');
+    document.getElementById('waiting-overlay').style.display = 'flex';
+    const sub = document.getElementById('waiting-sub');
+    const startBtn = document.getElementById('start-btn');
+    if (Date.now() / 1000 < APPT_TS) {
+      sub.textContent = '✅ Patient is here! Call starts at ' + new Date(APPT_TS * 1000).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', hour12: true });
+      toast('Patient is here early — waiting for scheduled time…');
+      if (startBtn) startBtn.disabled = true;
+    } else {
+      sub.textContent = 'Patient is ready!';
+      toast('Patient joined — you can start the call.');
+      if (startBtn) { startBtn.disabled = false; startBtn.textContent = '📹 Start Call'; }
     }
 
-    else if (m.type === 'answer') {
-      if (pc && pc.signalingState === 'have-local-offer') {
-        try {
-          await pc.setRemoteDescription(m.sdp);
-          document.getElementById('waiting-overlay').style.display = 'none';
-          setConn(true, 'Connected');
-          toast('Call connected!');
-        } catch(e) {
-          toast('Answer error — retrying…');
-          callStarted = false;
-          setTimeout(scheduleStartCall, 2000);
-        }
-      }
-    }
+    remote.on('stream-added', ({ stream }) => {
+      document.getElementById('remote-video').srcObject = stream;
+      document.getElementById('waiting-overlay').style.display = 'none';
+      setConn(true, 'Connected');
+      callWasConnected = true;
+      startRecording();
+      toast('Call connected!');
+    });
+  });
 
-    else if (m.type === 'ice') {
-      if (pc && m.candidate && pc.remoteDescription) {
-        try { await pc.addIceCandidate(m.candidate); } catch(e) {}
-      }
-    }
+  meteredPeer.on('peer-left', () => {
+    patientPresent = false;
+    document.getElementById('remote-video').srcObject = null;
+    document.getElementById('waiting-overlay').style.display = 'flex';
+    document.getElementById('waiting-sub').textContent = 'Patient disconnected.';
+    setConn(false, 'Patient left');
+    const startBtn = document.getElementById('start-btn');
+    if (startBtn) { startBtn.disabled = true; startBtn.textContent = '📹 Start Call'; }
+    toast('Patient left the call');
+  });
 
-    else if (m.type === 'peer_left') {
-      patientPresent = false;
-      document.getElementById('remote-video').srcObject = null;
-      document.getElementById('waiting-overlay').style.display = 'flex';
-      document.getElementById('waiting-sub').textContent = 'Patient disconnected.';
-      setConn(false, 'Patient left');
-      if (pc) { pc.close(); pc = null; }
-      callStarted = false;
-      resetStartBtn();
-      toast('Patient left the call');
-    }
+  meteredPeer.on('connection-state', (state) => {
+    if (state === 'connected') { callWasConnected = true; setConn(true, 'Connected'); }
+    if (state === 'failed' || state === 'disconnected') { setConn(false, 'Reconnecting…'); }
+  });
 
-    else if (m.type === 'chat') {
+  meteredPeer.on('data', ({ senderPeerId, data }) => {
+    if (!data || !data.type) return;
+    if (data.type === 'chat') {
       if (!isChatWindowOpen()) return;
-      addChatMsg(m.text, m.name || m.from || 'Patient', false);
-    }
-
-    else if (m.type === 'cam_toggle') {
+      addChatMsg(data.text, data.name || 'Patient', false);
+    } else if (data.type === 'cam_toggle') {
       const co = document.getElementById('remote-cam-off');
-      m.cam_on ? co.classList.remove('show') : co.classList.add('show');
+      data.cam_on ? co.classList.remove('show') : co.classList.add('show');
     }
-  };
+  });
 
-  ws.onclose = () => {
-    if (isDestroyed) return;
-    setConn(false, 'Reconnecting…');
-    wsReconnectDelay = Math.min(wsReconnectDelay * 1.5, 10000);
-    setTimeout(connectWS, wsReconnectDelay);
-  };
-
-  ws.onerror = () => { try { ws.close(); } catch(e) {} };
-}
-
-// ── Start Call Flow ──────────────────────────────────────────────────────────
-function scheduleStartCall() {
-  if (callStarted || isDestroyed) return;
-  if (processedStream || rawStream) { startCall(); }
-  else { setTimeout(scheduleStartCall, 300); }
+  try {
+    await meteredPeer.join(ROOM_ID);
+    setConn(false, 'Waiting for patient…');
+  } catch(e) {
+    console.error('MeteredPeer join failed:', e);
+    toast('❌ Could not connect to call service — retrying…');
+    setTimeout(() => { if (!isDestroyed) connectMetered(); }, 3000);
+  }
 }
 
 function manualStart() {
   if (!patientPresent) { toast('⚠️ Waiting for patient to join first…'); return; }
-  callStarted = false;
-  scheduleStartCall();
-}
-
-async function startCall() {
-  if (callStarted || isDestroyed) return;
-  if (Date.now() / 1000 < APPT_TS) {
-    toast('⏳ Waiting for scheduled call time…');
-    const waitForTime = () => {
-      if (isDestroyed) return;
-      if (Date.now() / 1000 >= APPT_TS) { startCall(); }
-      else { setTimeout(waitForTime, 5000); }
-    };
-    setTimeout(waitForTime, 5000);
-    return;
-  }
-  if (!ws || ws.readyState !== WebSocket.OPEN) {
-    toast('⏳ Waiting for connection…');
-    setTimeout(() => { if (!callStarted) scheduleStartCall(); }, 2000);
-    return;
-  }
-  callStarted = true;
+  if (Date.now() / 1000 < APPT_TS) { toast('⏳ Waiting for scheduled call time…'); return; }
+  if (streamPublished || !meteredPeer) return;
+  const stream = processedStream || rawStream;
+  if (!stream || stream.getTracks().length === 0) { toast('❌ No media stream available'); return; }
   const sb = document.getElementById('start-btn');
   if (sb) { sb.disabled = true; sb.textContent = 'Connecting…'; }
-  if (pc) { try { pc.close(); } catch(e) {} pc = null; }
-  pc = new RTCPeerConnection(ICE);
-  const stream = processedStream || rawStream;
-  if (!stream || stream.getTracks().length === 0) {
-    toast('❌ No media stream available');
-    callStarted = false; resetStartBtn(); return;
-  }
-  stream.getTracks().forEach(t => pc.addTrack(t, stream));
-  pc.ontrack = e => {
-    document.getElementById('remote-video').srcObject = e.streams[0];
-    document.getElementById('waiting-overlay').style.display = 'none';
-    callWasConnected = true;
-    setConn(true, 'Connected');
-    toast('Call connected!');
-    // Auto-add system message so we always have content for summary
-    const now = new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-    chatMessages.push(`[${now}] System: Call connected`);
-    startRecording();
-  };
-  pc.onicecandidate = e => {
-    if (e.candidate && ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'ice', candidate: e.candidate }));
-    }
-  };
-  pc.onconnectionstatechange = () => {
-    if (!pc) return;
-    if (pc.connectionState === 'connected') { callWasConnected = true; setConn(true, 'Connected'); }
-    if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
-      toast('Connection lost — retrying…');
-      callStarted = false;
-      setTimeout(() => { if (!isDestroyed && patientPresent) scheduleStartCall(); }, 2000);
-    }
-  };
   try {
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error('WS closed');
-    ws.send(JSON.stringify({ type: 'offer', sdp: offer }));
-    toast('📞 Calling patient…');
+    meteredPeer.addStream(stream);
+    streamPublished = true;
+    toast('📞 Joining call…');
   } catch(e) {
-    callStarted = false;
-    if (pc) { try { pc.close(); } catch(_) {} pc = null; }
-    resetStartBtn();
-    toast('Connection failed — will retry when ready…');
-    setTimeout(() => { if (!isDestroyed && patientPresent && !callStarted) scheduleStartCall(); }, 3000);
+    console.error('addStream failed:', e);
+    toast('Connection failed — will retry…');
+    if (sb) { sb.disabled = false; sb.textContent = '📹 Retry Call'; }
   }
-}
-
-function resetStartBtn() {
-  const sb = document.getElementById('start-btn');
-  if (sb) { sb.disabled = false; sb.textContent = '📹 Retry Call'; }
 }
 
 function startRecording() {
@@ -711,8 +637,7 @@ async function endCall(auto = false) {
   // Cleanup
   clearInterval(segInterval);
   try { selfieSegmentation?.close(); } catch(e) {}
-  try { ws?.close(); }               catch(e) {}
-  try { pc?.close(); }               catch(e) {}
+  try { meteredPeer?.leave(); } catch(e) {}
   rawStream?.getTracks().forEach(t => t.stop());
 
   // Submit call data (fire and forget — PHP runs in background)
@@ -819,6 +744,13 @@ function startTimer() {
       el.style.color = '#fbbc04'; return;
     }
     el.style.color = '';
+    // If the patient is already present when the scheduled time arrives,
+    // enable the Start Call button.
+    const startBtn = document.getElementById('start-btn');
+    if (startBtn && startBtn.disabled && patientPresent && !streamPublished) {
+      startBtn.disabled = false;
+      startBtn.textContent = '📹 Start Call';
+    }
     const left = END_TS - nowSec;
     if (left <= 0) {
       if (timerEnded || guardActive) return;
@@ -856,7 +788,7 @@ function toggleCam() {
   document.getElementById('lbl-cam').textContent = camOn ? 'Camera' : 'Cam Off';
   document.getElementById('local-canvas').style.display = camOn ? 'block' : 'none';
   document.getElementById('self-cam-off').classList.toggle('show', !camOn);
-  if (ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type: 'cam_toggle', cam_on: camOn })); }
+  if (meteredPeer) { meteredPeer.send({ type: 'cam_toggle', cam_on: camOn }); }
   toast(camOn ? '📹 Camera on' : '🚫 Camera off');
 }
 
@@ -927,8 +859,8 @@ function sendChat() {
 
   const inp = document.getElementById('chat-input');
   const msg = inp.value.trim();
-  if (!msg || !ws || ws.readyState !== WebSocket.OPEN) return;
-  ws.send(JSON.stringify({ type: 'chat', text: msg, name: MY_NAME }));
+  if (!msg || !meteredPeer) return;
+  meteredPeer.send({ type: 'chat', text: msg, name: MY_NAME });
   addChatMsg(msg, MY_NAME, true);
   inp.value = ''; inp.style.height = 'auto';
 }

@@ -5,7 +5,8 @@ require_once 'includes/auth.php';
 // pay_success.php — PayMongo redirects here after payment
 // Verifies the payment server-side, marks appointment Paid, redirects to receipt.
 
-define('PAYMONGO_SECRET_KEY', $_ENV['PAYMONGO_SECRET_KEY'] ?? '');
+$paymongoSecretKey = $_ENV['PAYMONGO_SECRET_KEY'] ?? ($_SERVER['PAYMONGO_SECRET_KEY'] ?? getenv('PAYMONGO_SECRET_KEY') ?: '');
+define('PAYMONGO_SECRET_KEY', $paymongoSecretKey);
 
 $appt_id   = (int)($_GET['appt_id']   ?? 0);
 $patient_q = (int)($_GET['patient']   ?? 0);
