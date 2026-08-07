@@ -1,6 +1,7 @@
 <?php
+// download_summary.php
 date_default_timezone_set('Asia/Manila');
-require_once 'includes/auth.php';
+require_once 'includes/auth_any.php';
 
 $appt_id = (int)($_GET['appt_id'] ?? 0);
 if (!$appt_id) { header('Location: /'); exit; }
@@ -10,11 +11,11 @@ if (!$appt_id) { header('Location: /'); exit; }
 $row = null;
 
 // Try staff/doctor lookup
-if (isset($staff_id)) {
+if (isset($staff_id) && $staff_id) {
     $row = $conn->query("SELECT summary_pdf_path, consultation_summary FROM appointments WHERE id=$appt_id")->fetch_assoc();
-} elseif (isset($doctor_id)) {
+} elseif (isset($doctor_id) && $doctor_id) {
     $row = $conn->query("SELECT summary_pdf_path, consultation_summary FROM appointments WHERE id=$appt_id AND doctor_id=$doctor_id")->fetch_assoc();
-} elseif (isset($patient_id)) {
+} elseif (isset($patient_id) && $patient_id) {
     $row = $conn->query("SELECT summary_pdf_path, consultation_summary FROM appointments WHERE id=$appt_id AND patient_id=$patient_id")->fetch_assoc();
 }
 

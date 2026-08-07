@@ -1,0 +1,10 @@
+version: "2"
+authtoken: 3HZqBGSk5IufNmA4nM4PUYFoYR8_7MrCXXayVC7ZY24XhWNa8
+tunnels:
+  app:
+    proto: http
+    addr: 3000
+    domain: donated-overthrow-tackle.ngrok-free.dev
+  signaling:
+    proto: http
+    addr: 8765

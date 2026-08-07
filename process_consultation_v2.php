@@ -1,6 +1,6 @@
 <?php
 date_default_timezone_set('Asia/Manila');
-require_once 'includes/auth.php';
+require_once 'includes/auth_any.php';
 
 $log_file = __DIR__ . '/logs/consultation_debug.log';
 @mkdir(dirname($log_file), 0755, true);

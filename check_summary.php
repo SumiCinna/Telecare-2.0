@@ -1,6 +1,7 @@
 <?php
+// check_summary.php
 date_default_timezone_set('Asia/Manila');
-require_once 'includes/auth.php';
+require_once 'includes/auth_any.php';
 
 header('Content-Type: application/json');
 
@@ -42,4 +43,3 @@ echo json_encode([
     'has_summary' => $has_real_summary,
     'has_pdf' => $is_done
 ]);
-?>
