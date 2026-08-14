@@ -7,22 +7,26 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title><?= $pageTitle ?></title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --red: #C33643;
-      --red-dark: #8a1f2a;
-      --green: #244441;
-      --green-light: #2e5550;
-      --blue: #3F82E3;
-      --cream: #fafaf8;
-      --line: rgba(36,68,65,0.1);
+      --red: #B31118;
+      --red-dark: #8a000b;
+      --red-tint: #FEF2F2;
+      --teal: #006a61;
+      --teal-light: #0D9488;
+      --teal-tint: #ECFDF5;
+      --ink: #151c27;
+      --ink-soft: rgba(21,28,39,0.6);
+      --bg: #f9f9ff;
+      --cream: #f0f3ff;
+      --line: rgba(21,28,39,0.1);
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
-      font-family: 'DM Sans', sans-serif;
-      background: #fff; color: var(--green);
+      font-family: 'Inter', sans-serif;
+      background: #fff; color: var(--ink);
       overflow-x: hidden; cursor: none;
     }
 
@@ -42,26 +46,26 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     }
     .cursor-ring {
       width: 34px; height: 34px;
-      border: 1.5px solid rgba(195,54,67,0.35); border-radius: 50%;
+      border: 1.5px solid rgba(179,17,24,0.35); border-radius: 50%;
       position: fixed; pointer-events: none; z-index: 9998;
       transform: translate(-50%,-50%);
       transition: width 0.3s, height 0.3s, border-color 0.3s, background 0.3s;
     }
     body:has(a:hover) .cursor-ring,
     body:has(button:hover) .cursor-ring {
-      width: 52px; height: 52px; border-color: rgba(195,54,67,0.55);
-      background: rgba(195,54,67,0.06);
+      width: 52px; height: 52px; border-color: rgba(179,17,24,0.55);
+      background: rgba(179,17,24,0.06);
     }
     body:has(a:hover) .cursor { transform: translate(-50%,-50%) scale(0.4); }
 
     /* ── SCROLL PROGRESS ── */
     .scroll-bar {
       position: fixed; top: 0; left: 0; height: 2px;
-      background: linear-gradient(90deg, var(--red), var(--green));
+      background: linear-gradient(90deg, var(--red), var(--teal));
       z-index: 9999; width: 0%;
     }
 
-    h1, h2, h3 { font-family: 'Playfair Display', serif; }
+    h1, h2, h3 { font-family: 'Inter', sans-serif; font-weight: 800; }
 
     /* ── NAV ── */
     nav {
@@ -69,7 +73,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       background: rgba(255,255,255,0.96);
       backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--line);
-      box-shadow: 0 1px 30px rgba(36,68,65,0.06);
+      box-shadow: 0 1px 30px rgba(21,28,39,0.06);
       animation: navIn 0.8s cubic-bezier(0.16,1,0.3,1) both;
       transition: padding 0.3s;
     }
@@ -84,19 +88,14 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     }
     .nav-brand { display: flex; flex-direction: column; gap: 0.06rem; }
     .logo {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Inter', sans-serif;
       font-size: 1.5rem; font-weight: 900;
-      color: var(--green); letter-spacing: 0.04em; line-height: 1;
+      color: var(--ink); letter-spacing: 0.02em; line-height: 1;
     }
     .logo span { color: var(--red); }
-    .logo-sub {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.5rem; letter-spacing: 0.15em; text-transform: uppercase;
-      color: rgba(36,68,65,0.4); line-height: 1;
-    }
     .nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
     .nav-links a {
-      color: rgba(36,68,65,0.6); font-size: 0.87rem; font-weight: 500;
+      color: rgba(21,28,39,0.6); font-size: 0.87rem; font-weight: 500;
       text-decoration: none; position: relative; transition: color 0.2s;
     }
     .nav-links a::after {
@@ -104,28 +103,28 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       width: 0; height: 1.5px; background: var(--red);
       transition: width 0.3s cubic-bezier(0.16,1,0.3,1);
     }
-    .nav-links a:hover { color: var(--green); }
+    .nav-links a:hover { color: var(--ink); }
     .nav-links a:hover::after { width: 100%; }
     .nav-login {
-      color: var(--green) !important; font-size: 0.8rem !important; font-weight: 600 !important;
-      padding: 0.48rem 1.05rem; border: 1.5px solid rgba(36,68,65,0.22) !important; border-radius: 50px;
+      color: var(--ink) !important; font-size: 0.8rem !important; font-weight: 600 !important;
+      padding: 0.48rem 1.05rem; border: 1.5px solid rgba(21,28,39,0.22) !important; border-radius: 8px;
       background: transparent; transition: all 0.25s !important; white-space: nowrap;
     }
-    .nav-login:hover { background: var(--green) !important; color: #fff !important; border-color: var(--green) !important; }
+    .nav-login:hover { background: var(--ink) !important; color: #fff !important; border-color: var(--ink) !important; }
     .nav-login::after { display: none !important; }
     .nav-cta {
       background: var(--red) !important; color: #fff !important;
-      padding: 0.48rem 1.25rem !important; border-radius: 50px;
+      padding: 0.48rem 1.25rem !important; border-radius: 8px;
       font-weight: 600 !important; font-size: 0.8rem !important;
-      box-shadow: 0 4px 14px rgba(195,54,67,0.28);
+      box-shadow: 0 4px 14px rgba(179,17,24,0.28);
       transition: background 0.25s, transform 0.2s, box-shadow 0.25s !important;
     }
-    .nav-cta:hover { background: var(--red-dark) !important; transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(195,54,67,0.38) !important; }
+    .nav-cta:hover { background: var(--red-dark) !important; transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(179,17,24,0.38) !important; }
     .nav-cta::after { display: none !important; }
-    .nav-divider { width: 1px; height: 18px; background: rgba(36,68,65,0.14); }
+    .nav-divider { width: 1px; height: 18px; background: rgba(21,28,39,0.14); }
 
     .hamburger { display: none; flex-direction: column; gap: 0.28rem; cursor: none; }
-    .hamburger span { width: 22px; height: 2px; background: var(--green); border-radius: 2px; transition: all 0.3s; }
+    .hamburger span { width: 22px; height: 2px; background: var(--ink); border-radius: 2px; transition: all 0.3s; }
     .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5.5px,5.5px); }
     .hamburger.open span:nth-child(2) { opacity: 0; }
     .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5.5px,-5.5px); }
@@ -134,17 +133,17 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       background: rgba(255,255,255,0.99); backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--line); flex-direction: column;
       padding: 1.1rem 4%; gap: 0.7rem;
-      box-shadow: 0 12px 40px rgba(36,68,65,0.1); z-index: 199;
+      box-shadow: 0 12px 40px rgba(21,28,39,0.1); z-index: 199;
     }
     .mob-menu.open { display: flex; }
     .mob-menu a {
-      color: rgba(36,68,65,0.72); font-size: 0.9rem; font-weight: 500;
+      color: rgba(21,28,39,0.72); font-size: 0.9rem; font-weight: 500;
       text-decoration: none; padding: 0.6rem 0;
-      border-bottom: 1px solid rgba(36,68,65,0.05); transition: color 0.2s;
+      border-bottom: 1px solid rgba(21,28,39,0.05); transition: color 0.2s;
     }
     .mob-menu a:last-child { border-bottom: none; }
-    .mob-menu a:hover { color: var(--green); }
-    .mob-menu .nav-login { border: 1.5px solid var(--green) !important; text-align: center; margin: 0.25rem 0; display: block; }
+    .mob-menu a:hover { color: var(--ink); }
+    .mob-menu .nav-login { border: 1.5px solid var(--ink) !important; text-align: center; margin: 0.25rem 0; display: block; }
     .mob-menu .nav-cta   { text-align: center; margin: 0.25rem 0; display: block; }
 
     /* ══ HERO ══ */
@@ -161,8 +160,8 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     .hero-bg-grid {
       position: absolute; inset: 0; pointer-events: none; z-index: 1;
       background-image:
-        linear-gradient(rgba(36,68,65,0.027) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(36,68,65,0.027) 1px, transparent 1px);
+        linear-gradient(rgba(21,28,39,0.027) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(21,28,39,0.027) 1px, transparent 1px);
       background-size: 52px 52px;
       animation: gridMove 28s linear infinite;
     }
@@ -173,12 +172,12 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     }
     .orb-1 {
       width: 500px; height: 500px; top: -100px; right: 15%;
-      background: radial-gradient(circle, rgba(195,54,67,0.07) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(179,17,24,0.07) 0%, transparent 70%);
       animation: orbDrift 9s ease-in-out infinite; z-index: 1;
     }
     .orb-2 {
       width: 380px; height: 380px; bottom: 60px; left: 20%;
-      background: radial-gradient(circle, rgba(36,68,65,0.055) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(0,106,97,0.07) 0%, transparent 70%);
       animation: orbDrift 11s ease-in-out infinite reverse; z-index: 1;
     }
     @keyframes orbDrift {
@@ -195,7 +194,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     }
     .hero-divider {
       position: absolute; top: 0; bottom: 0; left: 50%; width: 1px;
-      background: linear-gradient(to bottom, transparent, rgba(36,68,65,0.08) 25%, rgba(195,54,67,0.12) 70%, transparent);
+      background: linear-gradient(to bottom, transparent, rgba(21,28,39,0.08) 25%, rgba(179,17,24,0.12) 70%, transparent);
       pointer-events: none;
     }
 
@@ -209,28 +208,28 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     }
     .live-pill {
       display: inline-flex; align-items: center; gap: 0.45rem;
-      background: rgba(36,68,65,0.06); border: 1px solid rgba(36,68,65,0.12);
-      color: var(--green); font-size: 0.7rem; font-weight: 700;
+      background: rgba(21,28,39,0.06); border: 1px solid rgba(21,28,39,0.12);
+      color: var(--ink); font-size: 0.7rem; font-weight: 700;
       letter-spacing: 0.12em; text-transform: uppercase;
       padding: 0.36rem 0.85rem; border-radius: 50px; margin-bottom: 1.8rem;
     }
     .live-dot {
-      width: 6px; height: 6px; border-radius: 50%; background: #22c55e;
-      box-shadow: 0 0 0 0 rgba(34,197,94,0.6);
+      width: 6px; height: 6px; border-radius: 50%; background: #0D9488;
+      box-shadow: 0 0 0 0 rgba(13,148,136,0.6);
       animation: livepulse 2s infinite;
     }
     @keyframes livepulse {
-      0%  { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
-      70% { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
-      100%{ box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+      0%  { box-shadow: 0 0 0 0 rgba(13,148,136,0.6); }
+      70% { box-shadow: 0 0 0 8px rgba(13,148,136,0); }
+      100%{ box-shadow: 0 0 0 0 rgba(13,148,136,0); }
     }
     .hero h1 {
       font-size: clamp(2.8rem, 4.2vw, 4.6rem);
       font-weight: 900; line-height: 1.07;
-      color: var(--green); margin-bottom: 1.4rem;
+      color: var(--ink); margin-bottom: 1.4rem;
       letter-spacing: -0.02em;
     }
-    .hero h1 em { color: var(--red); font-style: italic; }
+    .hero h1 em { color: var(--red); font-style: normal; }
     .word { display: inline-block; overflow: hidden; }
     .word span { display: inline-block; animation: wordUp 0.9s cubic-bezier(0.16,1,0.3,1) both; }
     .word:nth-child(1) span { animation-delay: 0.28s; }
@@ -242,7 +241,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       to   { transform: translateY(0); }
     }
     .hero-desc {
-      font-size: 1.02rem; color: rgba(36,68,65,0.58);
+      font-size: 1.02rem; color: rgba(21,28,39,0.58);
       line-height: 1.85; margin-bottom: 2rem; max-width: 450px;
       animation: fadeUp 0.9s 0.72s both;
     }
@@ -255,14 +254,14 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       display: inline-flex; align-items: center; gap: 0.4rem;
       background: var(--cream); border: 1px solid var(--line);
       padding: 0.32rem 0.8rem; border-radius: 50px;
-      font-size: 0.73rem; font-weight: 600; color: rgba(36,68,65,0.65);
+      font-size: 0.73rem; font-weight: 600; color: rgba(21,28,39,0.65);
       transition: all 0.22s;
     }
-    .pill:hover { background: #fff; border-color: rgba(36,68,65,0.2); color: var(--green); transform: translateY(-2px); box-shadow: 0 4px 14px rgba(36,68,65,0.08); }
+    .pill:hover { background: #fff; border-color: rgba(21,28,39,0.2); color: var(--ink); transform: translateY(-2px); box-shadow: 0 4px 14px rgba(21,28,39,0.08); }
     .pill svg { width: 12px; height: 12px; flex-shrink: 0; }
     .p-r { color: var(--red); }
-    .p-g { color: var(--green); }
-    .p-b { color: var(--blue); }
+    .p-g { color: var(--teal); }
+    .p-b { color: var(--teal-light); }
     .hero-btns {
       display: flex; gap: 0.9rem; flex-wrap: wrap;
       margin-bottom: 1.8rem;
@@ -270,10 +269,10 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     }
     .btn-primary {
       background: var(--red); color: #fff;
-      padding: 0.88rem 2.1rem; border-radius: 50px;
+      padding: 0.88rem 2.1rem; border-radius: 8px;
       font-weight: 600; font-size: 0.92rem;
       text-decoration: none; display: inline-flex; align-items: center; gap: 0.45rem;
-      box-shadow: 0 8px 28px rgba(195,54,67,0.26);
+      box-shadow: 0 8px 28px rgba(179,17,24,0.26);
       transition: all 0.32s cubic-bezier(0.16,1,0.3,1);
       position: relative; overflow: hidden;
     }
@@ -284,24 +283,24 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       transition: width 0.5s, height 0.5s;
     }
     .btn-primary:hover::before { width: 300px; height: 300px; }
-    .btn-primary:hover { background: var(--red-dark); transform: translateY(-3px); box-shadow: 0 16px 42px rgba(195,54,67,0.36); }
+    .btn-primary:hover { background: var(--red-dark); transform: translateY(-3px); box-shadow: 0 16px 42px rgba(179,17,24,0.36); }
     .btn-primary svg { transition: transform 0.28s; position: relative; z-index: 1; }
     .btn-primary:hover svg { transform: translateX(4px); }
     .btn-primary span { position: relative; z-index: 1; }
     .btn-secondary {
-      background: transparent; color: var(--green);
-      padding: 0.88rem 2.1rem; border-radius: 50px;
+      background: transparent; color: var(--ink);
+      padding: 0.88rem 2.1rem; border-radius: 8px;
       font-weight: 500; font-size: 0.92rem;
       text-decoration: none; display: inline-flex; align-items: center; gap: 0.45rem;
-      border: 1.5px solid rgba(36,68,65,0.18);
+      border: 1.5px solid rgba(21,28,39,0.18);
       transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
     }
-    .btn-secondary:hover { border-color: var(--green); background: rgba(36,68,65,0.05); transform: translateY(-3px); }
+    .btn-secondary:hover { border-color: var(--ink); background: rgba(21,28,39,0.05); transform: translateY(-3px); }
     .hero-note {
-      font-size: 0.8rem; color: rgba(36,68,65,0.42);
+      font-size: 0.8rem; color: rgba(21,28,39,0.42);
       animation: fadeUp 0.9s 1.02s both;
     }
-    .hero-note a { color: var(--green); font-weight: 600; text-underline-offset: 3px; text-decoration: underline; }
+    .hero-note a { color: var(--ink); font-weight: 600; text-underline-offset: 3px; text-decoration: underline; }
 
     /* Hero Right */
     .hero-right {
@@ -320,9 +319,9 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     /* Accent badges */
     .hv-badge {
       display: flex; align-items: center; gap: 0.7rem;
-      background: #fff; border: 1px solid rgba(36,68,65,0.1);
+      background: #fff; border: 1px solid rgba(21,28,39,0.1);
       border-radius: 14px; padding: 0.7rem 1rem;
-      box-shadow: 0 6px 22px rgba(36,68,65,0.08);
+      box-shadow: 0 6px 22px rgba(21,28,39,0.08);
       width: fit-content;
     }
     .hv-badge-icon {
@@ -330,11 +329,11 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .hv-badge-icon svg { width: 17px; height: 17px; }
-    .ib-red   { background: rgba(195,54,67,0.1);  color: var(--red); }
-    .ib-green { background: rgba(36,68,65,0.09);  color: var(--green); }
-    .ib-blue  { background: rgba(63,130,227,0.1); color: var(--blue); }
-    .hv-badge-label { font-size: 0.61rem; color: rgba(36,68,65,0.42); font-weight: 500; margin-bottom: 0.06rem; }
-    .hv-badge-val   { font-size: 0.83rem; font-weight: 800; color: var(--green); font-family: 'DM Sans', sans-serif; }
+    .ib-red   { background: rgba(179,17,24,0.1);  color: var(--red); }
+    .ib-green { background: rgba(0,106,97,0.1);  color: var(--teal); }
+    .ib-blue  { background: rgba(13,148,136,0.12); color: var(--teal-light); }
+    .hv-badge-label { font-size: 0.61rem; color: rgba(21,28,39,0.42); font-weight: 500; margin-bottom: 0.06rem; }
+    .hv-badge-val   { font-size: 0.83rem; font-weight: 800; color: var(--ink); font-family: 'Inter', sans-serif; }
     .badge-top { animation: bob 4s ease-in-out infinite; align-self: flex-end; }
     .badge-bot { animation: bob 5s ease-in-out infinite 1.2s; }
     @keyframes bob {
@@ -344,14 +343,14 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
 
     /* Main card */
     .hv-card {
-      background: #fff; border-radius: 22px; padding: 1.8rem;
-      border: 1px solid rgba(36,68,65,0.1);
-      box-shadow: 0 18px 70px rgba(36,68,65,0.10), 0 4px 18px rgba(36,68,65,0.05);
+      background: #fff; border-radius: 16px; padding: 1.8rem;
+      border: 1px solid rgba(21,28,39,0.1);
+      box-shadow: 0 18px 70px rgba(21,28,39,0.10), 0 4px 18px rgba(21,28,39,0.05);
       position: relative; overflow: hidden;
     }
     .hv-card::before {
       content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2.5px;
-      background: linear-gradient(90deg, var(--red), var(--green));
+      background: linear-gradient(90deg, var(--red), var(--teal));
     }
     .hv-card-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -359,13 +358,13 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     }
     .hv-card-title {
       font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
-      text-transform: uppercase; color: rgba(36,68,65,0.48);
+      text-transform: uppercase; color: rgba(21,28,39,0.48);
     }
     .hv-live {
       display: flex; align-items: center; gap: 0.35rem;
-      font-size: 0.68rem; font-weight: 700; color: #16a34a;
+      font-size: 0.68rem; font-weight: 700; color: var(--teal-light);
     }
-    .hv-live-dot { width: 5px; height: 5px; border-radius: 50%; background: #22c55e; animation: livepulse 2s infinite; }
+    .hv-live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--teal-light); animation: livepulse 2s infinite; }
 
     /* Rows */
     .hv-rows { display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 1.3rem; }
@@ -375,28 +374,28 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       background: var(--cream); border: 1px solid transparent;
       transition: all 0.28s;
     }
-    .hv-row:hover { background: #fff; border-color: rgba(36,68,65,0.1); transform: translateX(4px); }
-    .hv-row.hl { background: rgba(195,54,67,0.05); border-color: rgba(195,54,67,0.14); }
+    .hv-row:hover { background: #fff; border-color: rgba(21,28,39,0.1); transform: translateX(4px); }
+    .hv-row.hl { background: var(--red-tint); border-color: rgba(179,17,24,0.14); }
     .hv-row-icon {
       width: 36px; height: 36px; border-radius: 9px;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .hv-row-icon svg { width: 17px; height: 17px; }
-    .hv-row-name { font-size: 0.83rem; font-weight: 700; color: var(--green); margin-bottom: 0.05rem; font-family: 'DM Sans', sans-serif; }
-    .hv-row-sub  { font-size: 0.7rem; color: rgba(36,68,65,0.42); font-family: 'DM Sans', sans-serif; }
+    .hv-row-name { font-size: 0.83rem; font-weight: 700; color: var(--ink); margin-bottom: 0.05rem; font-family: 'Inter', sans-serif; }
+    .hv-row-sub  { font-size: 0.7rem; color: rgba(21,28,39,0.42); font-family: 'Inter', sans-serif; }
     .hv-row-info { flex: 1; min-width: 0; }
     .hv-tag {
       font-size: 0.62rem; font-weight: 700; letter-spacing: 0.07em;
       text-transform: uppercase; padding: 0.2rem 0.55rem; border-radius: 50px;
-      white-space: nowrap; flex-shrink: 0; font-family: 'DM Sans', sans-serif;
+      white-space: nowrap; flex-shrink: 0; font-family: 'Inter', sans-serif;
     }
-    .t-green { background: rgba(34,197,94,0.12); color: #16a34a; }
-    .t-blue  { background: rgba(63,130,227,0.1);  color: var(--blue); }
-    .t-red   { background: rgba(195,54,67,0.1);   color: var(--red); }
+    .t-green { background: var(--teal-tint); color: var(--teal-light); }
+    .t-blue  { background: rgba(13,148,136,0.1);  color: var(--teal-light); }
+    .t-red   { background: var(--red-tint);   color: var(--red); }
 
     /* Card CTA */
     .hv-cta {
-      background: var(--green); border-radius: 12px; padding: 0.9rem 1.1rem;
+      background: var(--ink); border-radius: 12px; padding: 0.9rem 1.1rem;
       display: flex; align-items: center; justify-content: space-between;
       text-decoration: none; transition: all 0.28s; position: relative; overflow: hidden;
     }
@@ -406,9 +405,9 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       transition: left 0.5s;
     }
     .hv-cta:hover::after { left: 100%; }
-    .hv-cta:hover { background: var(--green-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(36,68,65,0.2); }
-    .hv-cta-text { font-size: 0.85rem; font-weight: 700; color: #fff; font-family: 'DM Sans', sans-serif; }
-    .hv-cta-sub  { font-size: 0.68rem; color: rgba(255,255,255,0.55); margin-top: 0.07rem; font-family: 'DM Sans', sans-serif; }
+    .hv-cta:hover { background: #0a0e14; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(21,28,39,0.2); }
+    .hv-cta-text { font-size: 0.85rem; font-weight: 700; color: #fff; font-family: 'Inter', sans-serif; }
+    .hv-cta-sub  { font-size: 0.68rem; color: rgba(255,255,255,0.55); margin-top: 0.07rem; font-family: 'Inter', sans-serif; }
     .hv-cta-arrow {
       width: 30px; height: 30px; border-radius: 50%;
       background: rgba(255,255,255,0.14);
@@ -420,7 +419,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
 
     /* ══ MARQUEE STRIP ══ */
     .marquee-strip {
-      background: var(--green); padding: 0; overflow: hidden;
+      background: var(--ink); padding: 0; overflow: hidden;
       border-top: 1px solid rgba(255,255,255,0.05);
       border-bottom: 1px solid rgba(255,255,255,0.05);
     }
@@ -454,10 +453,10 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     .stag::before { content: ''; width: 22px; height: 2px; background: var(--red); display: block; }
     .stitle {
       font-size: clamp(1.9rem, 3.2vw, 2.8rem);
-      font-weight: 800; color: var(--green); line-height: 1.13;
+      font-weight: 800; color: var(--ink); line-height: 1.13;
       margin-bottom: 1rem; letter-spacing: -0.01em;
     }
-    .ssub { color: #5a7a77; font-size: 1rem; line-height: 1.8; max-width: 510px; font-family: 'DM Sans', sans-serif; }
+    .ssub { color: rgba(21,28,39,0.55); font-size: 1rem; line-height: 1.8; max-width: 510px; font-family: 'Inter', sans-serif; }
 
     /* ══ FEATURES ══ */
     .features { background: var(--cream); }
@@ -466,34 +465,34 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       gap: 1.4rem; margin-top: 3.8rem;
     }
     .feat-card {
-      background: #fff; border-radius: 20px; padding: 2rem;
-      border: 1px solid rgba(36,68,65,0.07);
+      background: #fff; border-radius: 16px; padding: 2rem;
+      border: 1px solid rgba(21,28,39,0.07);
       transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
       position: relative; overflow: hidden; cursor: default;
     }
     .feat-card::before {
       content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, var(--red), var(--green));
+      background: linear-gradient(90deg, var(--red), var(--teal));
       transform: scaleX(0); transform-origin: left;
       transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
     }
     .feat-card::after {
       content: ''; position: absolute; inset: 0;
-      background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(195,54,67,0.035) 0%, transparent 65%);
+      background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(179,17,24,0.035) 0%, transparent 65%);
       opacity: 0; transition: opacity 0.4s;
     }
-    .feat-card:hover { transform: translateY(-9px); box-shadow: 0 26px 65px rgba(36,68,65,0.11); }
+    .feat-card:hover { transform: translateY(-9px); box-shadow: 0 26px 65px rgba(21,28,39,0.11); }
     .feat-card:hover::before { transform: scaleX(1); }
     .feat-card:hover::after { opacity: 1; }
     .feat-icon {
-      width: 50px; height: 50px; border-radius: 13px;
+      width: 50px; height: 50px; border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
       margin-bottom: 1.3rem; transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
     }
     .feat-card:hover .feat-icon { transform: scale(1.1) rotate(-3deg); }
     .feat-icon svg { width: 22px; height: 22px; }
-    .feat-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.6rem; color: var(--green); }
-    .feat-card p  { font-size: 0.87rem; line-height: 1.72; color: #6b8a87; font-family: 'DM Sans', sans-serif; }
+    .feat-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.6rem; color: var(--ink); }
+    .feat-card p  { font-size: 0.87rem; line-height: 1.72; color: rgba(21,28,39,0.55); font-family: 'Inter', sans-serif; }
 
     /* ══ HOW IT WORKS ══ */
     .how { background: #fff; }
@@ -505,24 +504,24 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     .steps-row::before {
       content: ''; position: absolute;
       top: 32px; left: calc(12.5% + 14px); right: calc(12.5% + 14px); height: 1px;
-      background: linear-gradient(90deg, var(--red), var(--green)); opacity: 0.18;
+      background: linear-gradient(90deg, var(--red), var(--teal)); opacity: 0.18;
     }
     .step { text-align: center; padding: 0 1rem; }
     .step-num {
       width: 64px; height: 64px; border-radius: 50%;
-      background: #fff; border: 2px solid rgba(36,68,65,0.18);
+      background: #fff; border: 2px solid rgba(21,28,39,0.18);
       display: flex; align-items: center; justify-content: center;
-      font-family: 'Playfair Display', serif;
-      font-size: 1.45rem; font-weight: 900; color: var(--green);
+      font-family: 'Inter', sans-serif;
+      font-size: 1.45rem; font-weight: 900; color: var(--ink);
       margin: 0 auto 1.3rem; position: relative; z-index: 1;
       transition: all 0.38s cubic-bezier(0.16,1,0.3,1);
     }
     .step:hover .step-num {
-      background: var(--green); color: #fff; border-color: var(--green);
-      transform: scale(1.1); box-shadow: 0 10px 30px rgba(36,68,65,0.2);
+      background: var(--red); color: #fff; border-color: var(--red);
+      transform: scale(1.1); box-shadow: 0 10px 30px rgba(179,17,24,0.2);
     }
-    .step h3 { font-size: 0.98rem; font-weight: 700; margin-bottom: 0.45rem; color: var(--green); }
-    .step p  { font-size: 0.82rem; color: #6b8a87; line-height: 1.65; font-family: 'DM Sans', sans-serif; }
+    .step h3 { font-size: 0.98rem; font-weight: 700; margin-bottom: 0.45rem; color: var(--ink); }
+    .step p  { font-size: 0.82rem; color: rgba(21,28,39,0.55); line-height: 1.65; font-family: 'Inter', sans-serif; }
 
     /* ══ SERVICES ══ */
     .services { background: #fff; border-top: 1px solid var(--line); }
@@ -531,32 +530,32 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       gap: 1.2rem; margin-top: 3.5rem;
     }
     .svc-card {
-      background: var(--cream); border: 1px solid rgba(36,68,65,0.07);
-      border-radius: 18px; padding: 1.7rem;
+      background: var(--cream); border: 1px solid rgba(21,28,39,0.07);
+      border-radius: 14px; padding: 1.7rem;
       transition: all 0.38s cubic-bezier(0.16,1,0.3,1);
       position: relative; overflow: hidden; cursor: default;
     }
     .svc-card::after {
       content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, var(--red), var(--green));
+      background: linear-gradient(90deg, var(--red), var(--teal));
       transform: scaleX(0); transform-origin: left;
       transition: transform 0.38s cubic-bezier(0.16,1,0.3,1);
     }
-    .svc-card:hover { background: #fff; transform: translateY(-7px); border-color: rgba(36,68,65,0.12); box-shadow: 0 20px 50px rgba(36,68,65,0.10); }
+    .svc-card:hover { background: #fff; transform: translateY(-7px); border-color: rgba(21,28,39,0.12); box-shadow: 0 20px 50px rgba(21,28,39,0.10); }
     .svc-card:hover::after { transform: scaleX(1); }
     .svc-icon {
-      width: 44px; height: 44px; border-radius: 12px;
+      width: 44px; height: 44px; border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
       margin-bottom: 1rem; transition: transform 0.38s cubic-bezier(0.16,1,0.3,1);
     }
     .svc-card:hover .svc-icon { transform: scale(1.12) rotate(4deg); }
     .svc-icon svg { width: 20px; height: 20px; }
-    .svc-card h3 { font-size: 0.98rem; font-weight: 700; color: var(--green); margin-bottom: 0.45rem; }
-    .svc-card p  { font-size: 0.82rem; color: #6b8a87; line-height: 1.67; font-family: 'DM Sans', sans-serif; }
+    .svc-card h3 { font-size: 0.98rem; font-weight: 700; color: var(--ink); margin-bottom: 0.45rem; }
+    .svc-card p  { font-size: 0.82rem; color: rgba(21,28,39,0.55); line-height: 1.67; font-family: 'Inter', sans-serif; }
 
     /* ══ CTA BAND ══ */
     .cta-band {
-      background: var(--green); padding: 100px 0;
+      background: var(--ink); padding: 100px 0;
       position: relative; overflow: hidden;
     }
     .cta-bg-anim {
@@ -575,13 +574,13 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     }
     .cta-orb-1 {
       width: 600px; height: 600px;
-      background: radial-gradient(circle, rgba(195,54,67,0.16) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(179,17,24,0.18) 0%, transparent 70%);
       top: 50%; left: 50%; transform: translate(-50%,-50%);
       animation: orbDrift 8s ease-in-out infinite;
     }
     .cta-orb-2 {
       width: 300px; height: 300px;
-      background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(0,106,97,0.16) 0%, transparent 70%);
       bottom: -80px; right: 10%;
       animation: orbDrift 12s ease-in-out infinite reverse;
     }
@@ -597,11 +596,11 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       font-size: clamp(2.2rem, 4vw, 3.2rem); color: #fff;
       margin-bottom: 0.9rem; letter-spacing: -0.01em;
     }
-    .cta-band h2 em { color: rgba(195,54,67,0.9); font-style: normal; }
-    .cta-band p { color: rgba(255,255,255,0.52); margin-bottom: 2.8rem; font-size: 1.02rem; line-height: 1.8; font-family: 'DM Sans', sans-serif; }
+    .cta-band h2 em { color: #ff5a63; font-style: normal; }
+    .cta-band p { color: rgba(255,255,255,0.52); margin-bottom: 2.8rem; font-size: 1.02rem; line-height: 1.8; font-family: 'Inter', sans-serif; }
     .btn-white {
-      background: #fff; color: var(--green);
-      padding: 1rem 2.8rem; border-radius: 50px;
+      background: #fff; color: var(--ink);
+      padding: 1rem 2.8rem; border-radius: 8px;
       font-weight: 700; font-size: 0.94rem;
       text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;
       box-shadow: 0 10px 36px rgba(0,0,0,0.18);
@@ -610,7 +609,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     }
     .btn-white::before {
       content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(36,68,65,0.06), transparent);
+      background: linear-gradient(90deg, transparent, rgba(21,28,39,0.06), transparent);
       transition: left 0.5s;
     }
     .btn-white:hover::before { left: 100%; }
@@ -638,15 +637,10 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     footer {
       background: var(--cream); border-top: 1px solid var(--line);
       padding: 2.8rem 0; text-align: center;
-      color: rgba(36,68,65,0.42); font-size: 0.8rem;
+      color: rgba(21,28,39,0.42); font-size: 0.8rem;
     }
-    .foot-logo { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 900; color: var(--green); }
+    .foot-logo { font-family: 'Inter', sans-serif; font-size: 1.35rem; font-weight: 900; color: var(--ink); }
     .foot-logo span { color: var(--red); }
-    .foot-client {
-      font-family: 'DM Mono', monospace; font-size: 0.5rem;
-      letter-spacing: 0.14em; text-transform: uppercase;
-      color: rgba(36,68,65,0.32); margin-top: 0.12rem;
-    }
     footer p { margin-top: 0.5rem; }
 
     /* ══ ANIMATIONS ══ */
@@ -710,7 +704,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
 
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: #fff; }
-    ::-webkit-scrollbar-thumb { background: var(--green); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: var(--ink); border-radius: 3px; }
   </style>
 </head>
 <body>
@@ -724,7 +718,6 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
   <div class="nav-inner">
     <div class="nav-brand">
       <div class="logo">TELE<span>-</span>CARE</div>
-      <div class="logo-sub">EXCELLCARE MEDICAL SYSTEM INC.</div>
     </div>
     <ul class="nav-links">
       <li><a href="#features">Features</a></li>
@@ -1073,7 +1066,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     <div class="cta-inner">
       <div class="cta-stag">Get Started</div>
       <h2>Ready to See a Doctor <em>Today?</em></h2>
-      <p>Powered by Excellcare Medical System Inc. &mdash; experience healthcare without barriers.</p>
+      <p>Experience healthcare without barriers — anytime, anywhere.</p>
       <a href="auth/register.php" class="btn-white">
         <span>Get Started &mdash; It's Free</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -1096,7 +1089,6 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
   <div class="container">
     <div>
       <div class="foot-logo">TELE<span>-</span>CARE</div>
-      <div class="foot-client">EXCELLCARE MEDICAL SYSTEM INC.</div>
     </div>
     <p>&copy; 2026 Tele-Care Development Team &mdash; University of Caloocan City</p>
   </div>
@@ -1139,7 +1131,7 @@ class Particle {
     this.vy = (Math.random() - 0.5) * 0.28;
     this.r  = Math.random() * 1.6 + 0.4;
     this.o  = Math.random() * 0.25 + 0.05;
-    this.c  = Math.random() > 0.5 ? '36,68,65' : '195,54,67';
+    this.c  = Math.random() > 0.5 ? '21,28,39' : '179,17,24';
   }
   update() {
     this.x += this.vx; this.y += this.vy;
@@ -1164,7 +1156,7 @@ function drawLines() {
         ctx.beginPath();
         ctx.moveTo(particles[i].x,particles[i].y);
         ctx.lineTo(particles[j].x,particles[j].y);
-        ctx.strokeStyle=`rgba(36,68,65,${0.045*(1-dist/110)})`;
+        ctx.strokeStyle=`rgba(21,28,39,${0.045*(1-dist/110)})`;
         ctx.lineWidth=0.5;
         ctx.stroke();
       }
@@ -1187,8 +1179,8 @@ window.addEventListener('scroll', () => {
   const p = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
   scrollBar.style.width = (p * 100) + '%';
   nav.style.boxShadow = window.scrollY > 60
-    ? '0 4px 32px rgba(36,68,65,0.1)'
-    : '0 1px 30px rgba(36,68,65,0.06)';
+    ? '0 4px 32px rgba(21,28,39,0.1)'
+    : '0 1px 30px rgba(21,28,39,0.06)';
 }, {passive:true});
 
 /* ── HAMBURGER ── */

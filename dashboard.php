@@ -1,6 +1,6 @@
 <?php
 require_once 'includes/auth.php';
-
+// dashboard.php - Patient's dashboard
 // ── Stats ──
 $upcoming_count     = $conn->query("SELECT COUNT(*) c FROM appointments WHERE patient_id=$patient_id AND status IN ('Pending','Confirmed') AND appointment_date >= CURDATE()")->fetch_assoc()['c'];
 $prescription_count = $conn->query("SELECT COUNT(*) c FROM prescriptions WHERE patient_id=$patient_id AND status='Active'")->fetch_assoc()['c'];
@@ -25,17 +25,37 @@ $recommended = $conn->query("
 $page_title = 'Home — TELE-CARE';
 $active_nav = 'home';
 require_once 'includes/header.php';
+
+$parts     = explode(' ', $p['full_name']);
+$firstName = $parts[0];
 ?>
 
 <style>
-/* ── PAGE LAYOUT OVERRIDES ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root{
+  --tc-red:#B31118; --tc-red-dark:#8a000b;
+  --tc-teal:#006a61; --tc-teal-light:#0D9488;
+  --tc-ink:#151c27; --tc-muted:rgba(21,28,39,0.55);
+  --tc-line:rgba(21,28,39,0.08);
+  --tc-red-tint:#FEF2F2; --tc-teal-tint:#ECFDF5;
+}
+
+/* ── PAGE LAYOUT ── */
 .page {
   max-width: 1160px !important;
   margin: 0 auto !important;
   padding: 1.8rem 2rem 5rem !important;
   background: transparent !important;
   overflow-x: clip;
+  font-family:'Inter',sans-serif;
 }
+.page-head{ margin-bottom:1.5rem; }
+.page-title{
+  font-family:'Inter',sans-serif; font-weight:800; font-size:1.9rem;
+  color:var(--tc-ink); line-height:1.15; margin-bottom:0.3rem;
+}
+.page-sub{ color:var(--tc-muted); font-size:0.92rem; }
 
 /* ── DASHBOARD GRID ── */
 .db-grid {
@@ -44,98 +64,55 @@ require_once 'includes/header.php';
   grid-template-rows: auto auto;
   gap: 1.1rem;
 }
-
-/* Welcome spans full width */
 .db-welcome { grid-column: 1 / -1; }
-
-/* Stats spans full width */
 .db-stats { grid-column: 1 / -1; }
-
-/* Appointments: left | Doctors: right */
 .db-appts   { grid-column: 1 / 2; }
 .db-doctors { grid-column: 2 / 3; }
 
-/* ── WELCOME BANNER ── */
+/* ── WELCOME CARD ── */
 .welcome-banner {
-  background: linear-gradient(135deg, #3F82E3 0%, #2563C4 60%, #1a4fa8 100%);
-  border-radius: 18px;
-  padding: 0;
-  overflow: hidden;
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: stretch;
-  min-height: 140px;
+  background: #fff;
+  border: 1px solid var(--tc-line);
+  box-shadow: 0 2px 12px rgba(21,28,39,0.05);
+  border-radius: 16px;
+  padding: 1.2rem 1.6rem;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1.2rem; flex-wrap: wrap;
 }
-.welcome-banner-left {
-  padding: 1.8rem 2rem;
-  position: relative; z-index: 2;
-  display: flex; flex-direction: column; justify-content: center;
+.welcome-left{ display:flex; align-items:center; gap:1rem; min-width:0; }
+.welcome-avatar{
+  width: 56px; height: 56px; border-radius: 14px; flex-shrink: 0; overflow: hidden;
+  background: linear-gradient(135deg, var(--tc-teal), var(--tc-teal-light));
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 1.15rem;
 }
-.welcome-banner-right {
-  padding: 1.8rem 2rem;
-  position: relative; z-index: 2;
-  display: flex; flex-direction: column; justify-content: center; align-items: flex-end; gap: 0.5rem;
-  border-left: 1px solid rgba(255,255,255,0.1);
-  min-width: 220px;
-}
-.welcome-orb-1 {
-  position: absolute; top: -40px; right: 200px;
-  width: 180px; height: 180px; border-radius: 50%;
-  background: rgba(255,255,255,0.07); pointer-events: none;
-}
-.welcome-orb-2 {
-  position: absolute; bottom: -50px; right: 100px;
-  width: 140px; height: 140px; border-radius: 50%;
-  background: rgba(255,255,255,0.05); pointer-events: none;
-}
-.welcome-orb-3 {
-  position: absolute; top: -20px; left: 45%;
-  width: 90px; height: 90px; border-radius: 50%;
-  background: rgba(255,255,255,0.04); pointer-events: none;
-}
+.welcome-avatar img{ width:100%; height:100%; object-fit:cover; }
 .welcome-name {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.9rem; font-weight: 900;
-  color: #fff; line-height: 1.1; margin-bottom: 0.4rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.15rem; font-weight: 800;
+  color: var(--tc-ink); line-height: 1.2;
 }
-.welcome-sub {
-  color: rgba(255,255,255,0.72); font-size: 0.88rem; line-height: 1.5; margin-bottom: 1.1rem;
-}
-.welcome-btn {
-  display: inline-flex; align-items: center; gap: 0.45rem;
-  background: rgba(255,255,255,0.18); color: #fff;
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.28);
-  padding: 0.58rem 1.25rem; border-radius: 50px;
-  font-size: 0.82rem; font-weight: 600; text-decoration: none;
-  transition: all 0.25s; align-self: flex-start;
-}
-.welcome-btn:hover { background: rgba(255,255,255,0.28); transform: translateY(-2px); }
-.welcome-btn svg { flex-shrink: 0; }
-.welcome-date {
-  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
-  text-transform: uppercase; color: rgba(255,255,255,0.5);
-  font-family: 'DM Mono', monospace;
-}
-.welcome-time {
-  font-family: 'Playfair Display', serif;
-  font-size: 2rem; font-weight: 900; color: #fff; line-height: 1;
-}
-.welcome-status {
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.3);
-  color: #86efac; font-size: 0.72rem; font-weight: 700;
-  padding: 0.3rem 0.75rem; border-radius: 50px;
+.welcome-status-line{
+  display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;
+  font-size: 0.8rem; color: var(--tc-muted); margin-top: 0.3rem;
 }
 .welcome-status-dot {
-  width: 5px; height: 5px; border-radius: 50%; background: #22c55e;
-  animation: pulse-dot 2s infinite;
+  width: 7px; height: 7px; border-radius: 50%; background: var(--tc-teal-light);
+  flex-shrink:0;
 }
-@keyframes pulse-dot {
-  0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
-  50%      { box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+.welcome-status-text{ color:var(--tc-teal); font-weight:600; }
+.welcome-dot-sep{ color:rgba(21,28,39,0.25); }
+.welcome-btn {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  background: var(--tc-red); color: #fff;
+  border: none;
+  padding: 0.68rem 1.35rem; border-radius: 10px;
+  font-size: 0.85rem; font-weight: 600; text-decoration: none;
+  transition: all 0.25s; flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(179,17,24,0.25);
 }
+.welcome-btn:hover { background: var(--tc-red-dark); transform: translateY(-2px); }
+.welcome-btn svg { flex-shrink: 0; }
 
 /* ── STATS ROW ── */
 .stats-row {
@@ -146,10 +123,10 @@ require_once 'includes/header.php';
 .stat-card {
   background: #fff;
   border-radius: 16px;
-  padding: 1.3rem 1.5rem;
-  border: 1px solid rgba(36,68,65,0.08);
-  box-shadow: 0 2px 12px rgba(36,68,65,0.05);
-  display: flex; align-items: center; gap: 1.1rem;
+  padding: 1.2rem 1.3rem;
+  border: 1px solid var(--tc-line);
+  box-shadow: 0 2px 12px rgba(21,28,39,0.05);
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.7rem;
   transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
   position: relative; overflow: hidden;
 }
@@ -158,157 +135,158 @@ require_once 'includes/header.php';
   transform: scaleX(0); transform-origin: left;
   transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
 }
-.stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(36,68,65,0.1); }
+.stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(21,28,39,0.08); }
 .stat-card:hover::after { transform: scaleX(1); }
-.stat-card.s-blue::after  { background: linear-gradient(90deg,#3F82E3,#2563C4); }
-.stat-card.s-green::after { background: linear-gradient(90deg,#244441,#2e5550); }
-.stat-card.s-red::after   { background: linear-gradient(90deg,#C33643,#8a1f2a); }
+.stat-card.s-blue::after  { background: var(--tc-teal); }
+.stat-card.s-green::after { background: var(--tc-red); }
+.stat-card.s-red::after   { background: var(--tc-teal); }
 .stat-icon {
-  width: 48px; height: 48px; border-radius: 13px;
+  width: 38px; height: 38px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.stat-icon svg { width: 22px; height: 22px; }
-.si-blue  { background: rgba(63,130,227,0.1); color: #3F82E3; }
-.si-green { background: rgba(36,68,65,0.09); color: #244441; }
-.si-red   { background: rgba(195,54,67,0.1);  color: #C33643; }
+.stat-icon svg { width: 18px; height: 18px; }
+.si-blue  { background: var(--tc-teal-tint); color: var(--tc-teal); }
+.si-green { background: var(--tc-red-tint); color: var(--tc-red); }
+.si-red   { background: var(--tc-teal-tint);  color: var(--tc-teal-light); }
 .stat-num {
-  font-family: 'Playfair Display', serif;
-  font-size: 2rem; font-weight: 900; line-height: 1;
-  color: #244441;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.9rem; font-weight: 800; line-height: 1;
+  color: var(--tc-ink);
 }
-.stat-num.blue  { color: #3F82E3; }
-.stat-num.green { color: #244441; }
-.stat-num.red   { color: #C33643; }
+.stat-num.blue  { color: var(--tc-teal); }
+.stat-num.green { color: var(--tc-red); }
+.stat-num.red   { color: var(--tc-teal); }
 .stat-lbl {
-  font-size: 0.7rem; color: #9ab0ae; margin-top: 0.22rem;
-  font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  font-size: 0.72rem; color: var(--tc-muted); margin-top: 0.2rem;
+  font-weight: 600;
 }
 
 /* ── SECTION CARDS ── */
 .db-card {
   background: #fff;
-  border-radius: 18px;
-  border: 1px solid rgba(36,68,65,0.08);
-  box-shadow: 0 2px 16px rgba(36,68,65,0.05);
+  border-radius: 16px;
+  border: 1px solid var(--tc-line);
+  box-shadow: 0 2px 12px rgba(21,28,39,0.05);
   overflow: hidden;
   height: 100%;
   display: flex; flex-direction: column;
 }
+.db-card.teal-card{
+  background: var(--tc-teal-tint);
+  border-color: rgba(0,106,97,0.15);
+}
 .db-card-head {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 1.2rem 1.5rem 0;
+  padding: 1.2rem 1.4rem 0;
 }
 .db-card-title {
-  font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.12em; color: #9ab0ae;
+  font-size: 0.95rem; font-weight: 700; color: var(--tc-ink);
   display: flex; align-items: center; gap: 0.5rem;
 }
-.db-card-title svg { width: 13px; height: 13px; }
+.teal-card .db-card-title{ color: var(--tc-teal); }
+.db-card-title svg { width: 16px; height: 16px; flex-shrink: 0; }
 .db-card-link {
-  font-size: 0.78rem; color: #3F82E3; font-weight: 600;
+  font-size: 0.78rem; color: var(--tc-teal); font-weight: 600;
   text-decoration: none; transition: color 0.2s;
   display: flex; align-items: center; gap: 0.28rem;
 }
-.db-card-link:hover { color: #2563C4; }
+.db-card-link:hover { color: var(--tc-teal-light); }
 .db-card-link svg { width: 12px; height: 12px; }
-.db-card-body { padding: 0.9rem 1.5rem 1.4rem; flex: 1; }
+.db-card-body { padding: 0.9rem 1.4rem 1.4rem; flex: 1; }
 
 /* ── APPOINTMENT ITEMS ── */
 .appt-item {
   display: flex; align-items: center; gap: 1rem;
   padding: 0.85rem 0;
-  border-bottom: 1px solid rgba(36,68,65,0.05);
-  transition: background 0.2s;
+  border-bottom: 1px solid rgba(21,28,39,0.05);
 }
 .appt-item:last-child { border-bottom: none; }
 .appt-date-box {
   width: 48px; min-width: 48px; height: 56px;
-  background: rgba(63,130,227,0.07);
-  border: 1.5px solid rgba(63,130,227,0.15);
+  background: var(--tc-teal-tint);
+  border: 1.5px solid rgba(0,106,97,0.18);
   border-radius: 12px;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  gap: 0;
 }
 .appt-date-box .day {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.25rem; font-weight: 900;
-  color: #3F82E3; line-height: 1.1;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.2rem; font-weight: 800;
+  color: var(--tc-teal); line-height: 1.1;
 }
 .appt-date-box .mon {
   font-size: 0.6rem; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.08em;
-  color: #9ab0ae;
+  color: var(--tc-muted);
 }
 .appt-info { flex: 1; min-width: 0; }
-.appt-doctor { font-weight: 700; font-size: 0.92rem; color: #244441; }
+.appt-doctor { font-weight: 700; font-size: 0.92rem; color: var(--tc-ink); }
 .appt-meta {
-  font-size: 0.76rem; color: #9ab0ae;
+  font-size: 0.76rem; color: var(--tc-muted);
   display: flex; align-items: center; gap: 0.35rem; margin-top: 0.15rem;
 }
 .appt-meta svg { width: 11px; height: 11px; flex-shrink: 0; }
 
 /* ── BADGES ── */
 .badge {
-  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.07em;
+  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.05em;
   text-transform: uppercase; padding: 0.22rem 0.65rem; border-radius: 50px;
   white-space: nowrap; flex-shrink: 0;
 }
-.badge-green  { background: rgba(34,197,94,0.12);  color: #16a34a; }
+.badge-green  { background: var(--tc-teal-tint);  color: var(--tc-teal); }
 .badge-orange { background: rgba(234,179,8,0.12);  color: #ca8a04; }
-.badge-red    { background: rgba(195,54,67,0.1);   color: #C33643; }
+.badge-red    { background: var(--tc-red-tint);   color: var(--tc-red); }
 
 /* ── EMPTY STATE ── */
 .empty-state {
   display: flex; flex-direction: column; align-items: center;
   justify-content: center; text-align: center;
-  padding: 2.2rem 1rem; color: #b8cccb;
+  padding: 2.2rem 1rem; color: rgba(21,28,39,0.28);
   gap: 0.7rem;
 }
-.empty-state svg { width: 36px; height: 36px; opacity: 0.35; }
+.empty-state svg { width: 34px; height: 34px; opacity: 0.5; }
 .empty-state p { font-size: 0.85rem; font-weight: 500; }
 
 /* ── DOCTOR ITEMS ── */
 .doc-item {
   display: flex; align-items: center; gap: 1rem;
   padding: 0.85rem 0;
-  border-bottom: 1px solid rgba(36,68,65,0.05);
-  transition: all 0.22s;
+  border-bottom: 1px solid rgba(0,106,97,0.08);
 }
 .doc-item:last-child { border-bottom: none; }
 .doc-avatar {
   width: 48px; height: 48px; border-radius: 13px;
-  background: linear-gradient(135deg, #3F82E3, #2563C4);
+  background: linear-gradient(135deg, var(--tc-teal), var(--tc-teal-light));
   color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-weight: 800; font-size: 0.92rem;
   flex-shrink: 0; overflow: hidden;
-  box-shadow: 0 4px 14px rgba(63,130,227,0.22);
+  box-shadow: 0 4px 14px rgba(0,106,97,0.22);
 }
 .doc-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .doc-info { flex: 1; min-width: 0; }
 .doc-name {
-  font-weight: 700; font-size: 0.92rem; color: #244441;
+  font-weight: 700; font-size: 0.92rem; color: var(--tc-ink);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.doc-spec { font-size: 0.76rem; color: #9ab0ae; margin-top: 0.12rem; }
-.doc-sub  { font-size: 0.72rem; color: #b8cccb; font-style: italic; margin-top: 0.06rem; }
+.doc-spec { font-size: 0.76rem; color: var(--tc-muted); margin-top: 0.12rem; }
+.doc-sub  { font-size: 0.72rem; color: rgba(21,28,39,0.4); font-style: italic; margin-top: 0.06rem; }
 .doc-clinic {
-  font-size: 0.72rem; color: #9ab0ae; margin-top: 0.1rem;
+  font-size: 0.72rem; color: var(--tc-muted); margin-top: 0.1rem;
   display: flex; align-items: center; gap: 0.3rem;
 }
 .doc-clinic svg { width: 10px; height: 10px; flex-shrink: 0; }
 .doc-right { text-align: right; flex-shrink: 0; }
 .doc-fee {
-  font-size: 0.85rem; font-weight: 800; color: #244441;
-  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem; font-weight: 800; color: var(--tc-ink);
+  font-family: 'Inter', sans-serif;
 }
 .doc-avail {
   display: inline-block; margin-top: 0.28rem;
-  background: rgba(34,197,94,0.1); color: #16a34a;
+  background: rgba(255,255,255,0.7); color: var(--tc-teal);
   border-radius: 50px; padding: 0.18rem 0.62rem;
-  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em;
+  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -316,37 +294,30 @@ require_once 'includes/header.php';
 @media (max-width: 900px) {
   .db-grid { grid-template-columns: 1fr; }
   .db-appts, .db-doctors { grid-column: 1 / -1; }
-  .welcome-banner { grid-template-columns: 1fr; }
-  .welcome-banner-right { display: none; }
+  .topbar{ padding: 1rem 1.1rem; }
+  .topbar-search{ max-width: none; }
   .page { padding: 1rem 1rem 6rem !important; }
-  .welcome-banner-left { padding: 1.35rem 1.25rem; }
-  .welcome-name { font-size: 1.65rem; }
-  .welcome-sub { margin-bottom: 0.9rem; }
+  .page-title{ font-size: 1.55rem; }
+  .welcome-banner{ padding: 1.1rem 1.25rem; }
   .db-card-head { padding: 1rem 1.1rem 0; }
   .db-card-body { padding: 0.8rem 1.1rem 1.1rem; }
   .appt-item, .doc-item { gap: 0.75rem; }
   .doc-name { white-space: normal; }
 }
 @media (max-width: 600px) {
+  .topbar-search{ display:none; }
   .page { padding: 0.75rem 0.75rem 6.2rem !important; }
   .db-grid { gap: 0.8rem; }
   .stats-row { grid-template-columns: 1fr; gap: 0.75rem; }
-  .stat-card { padding: 1rem 1rem; gap: 0.8rem; border-radius: 14px; }
-  .stat-icon { width: 42px; height: 42px; border-radius: 11px; }
-  .stat-icon svg { width: 19px; height: 19px; }
-  .stat-num { font-size: 1.6rem; }
+  .stat-card { padding: 1rem 1rem; border-radius: 14px; }
+  .stat-icon { width: 36px; height: 36px; border-radius: 9px; }
+  .stat-icon svg { width: 16px; height: 16px; }
+  .stat-num { font-size: 1.5rem; }
   .stat-lbl { font-size: 0.65rem; }
 
-  .welcome-banner { min-height: 0; border-radius: 14px; }
-  .welcome-banner-left { padding: 1rem; }
-  .welcome-name { font-size: 1.45rem; }
-  .welcome-sub { font-size: 0.8rem; line-height: 1.45; margin-bottom: 0.75rem; }
-  .welcome-btn {
-    width: 100%;
-    justify-content: center;
-    padding: 0.6rem 0.9rem;
-    font-size: 0.78rem;
-  }
+  .welcome-banner { border-radius: 14px; flex-direction:column; align-items:flex-start; }
+  .welcome-btn{ width:100%; justify-content:center; }
+  .welcome-name { font-size: 1.05rem; }
 
   .db-card { border-radius: 14px; }
   .db-card-head { padding: 0.9rem 0.9rem 0; }
@@ -369,38 +340,41 @@ require_once 'includes/header.php';
 </style>
 
 <div class="page">
+
+  <div class="page-head">
+    <div class="page-title">Welcome back, <?= htmlspecialchars($firstName) ?></div>
+    <p class="page-sub">Here's an overview of your appointments and consultations.</p>
+  </div>
+
 <div class="db-grid">
 
-  <!-- ══ WELCOME BANNER ══ -->
+  <!-- ══ WELCOME / PROFILE CARD ══ -->
   <div class="db-welcome">
     <div class="welcome-banner">
-      <div class="welcome-orb-1"></div>
-      <div class="welcome-orb-2"></div>
-      <div class="welcome-orb-3"></div>
-
-      <div class="welcome-banner-left">
-        <?php
-          $parts     = explode(' ', $p['full_name']);
-          $firstName = $parts[0];
-        ?>
-        <div class="welcome-name">
-          Welcome back,<br><?= htmlspecialchars($firstName) ?>.
+      <div class="welcome-left">
+        <div class="welcome-avatar">
+          <?php if (!empty($p['profile_photo'])): ?>
+            <img src="<?= htmlspecialchars($p['profile_photo']) ?>" alt=""/>
+          <?php else: ?>
+            <?= strtoupper(substr($p['full_name'], 0, 2)) ?>
+          <?php endif; ?>
         </div>
-        <p class="welcome-sub">Manage your appointments and consultations all in one place.</p>
-        <a href="visits.php" class="welcome-btn">
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16m8-8H4"/></svg>
-          Book Appointment
-        </a>
-      </div>
-
-      <div class="welcome-banner-right">
-        <div class="welcome-date" id="wb-date">--</div>
-        <div class="welcome-time" id="wb-time">--:--</div>
-        <div class="welcome-status">
-          <span class="welcome-status-dot"></span>
-          Account Active
+        <div>
+          <div class="welcome-name"><?= htmlspecialchars($p['full_name']) ?></div>
+          <div class="welcome-status-line">
+            <span class="welcome-status-dot"></span>
+            <span class="welcome-status-text">Account Active</span>
+            <span class="welcome-dot-sep">&middot;</span>
+            <span id="wb-date">--</span>
+            <span class="welcome-dot-sep">&middot;</span>
+            <span id="wb-time">--:--</span>
+          </div>
         </div>
       </div>
+      <a href="visits.php" class="welcome-btn">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16m8-8H4"/></svg>
+        Book Appointment
+      </a>
     </div>
   </div>
 
@@ -472,7 +446,7 @@ require_once 'includes/header.php';
             <div class="appt-meta">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
               <?= date('g:i A', strtotime($a['appointment_time'])) ?>
-              <span style="color:rgba(36,68,65,0.15);">·</span>
+              <span style="color:rgba(21,28,39,0.15);">&middot;</span>
               <?= htmlspecialchars($a['type']) ?>
             </div>
           </div>
@@ -493,7 +467,7 @@ require_once 'includes/header.php';
 
   <!-- ══ RECOMMENDED DOCTORS ══ -->
   <div class="db-doctors">
-    <div class="db-card">
+    <div class="db-card teal-card">
       <div class="db-card-head">
         <div class="db-card-title">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -550,7 +524,7 @@ require_once 'includes/header.php';
 </div><!-- /page -->
 
 <script>
-/* ── Live clock in welcome banner ── */
+/* ── Live date/time in welcome card ── */
 function updateClock() {
   const now  = new Date();
   const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];

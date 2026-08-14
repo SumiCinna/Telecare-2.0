@@ -1,6 +1,6 @@
 <?php
 require_once 'includes/auth.php';
-
+// doctor/dashboard.php - Doctor's dashboard
 // ── Stats ──
 $patient_result = $conn->query("SELECT COUNT(*) c FROM patient_doctors WHERE doctor_id=$doctor_id");
 $patient_count = $patient_result ? $patient_result->fetch_assoc()['c'] : 0;
