@@ -12,22 +12,67 @@ $admin_id = $_SESSION['admin_id'];
    ACTIONS
    ══════════════════════════════════════════════ */
 
-// ── Create doctor (invite) ──
+// ── Create doctor (simple account — full profile filled in by the doctor later) ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_doctor'])) {
     $fn   = trim($_POST['full_name'] ?? '');
     $em   = trim($_POST['email'] ?? '');
     $spec = trim($_POST['specialty'] ?? '');
     $sub  = trim($_POST['subspecialty'] ?? '');
-    if ($fn && $em) {
-        $token   = bin2hex(random_bytes(32));
-        $expires = date('Y-m-d H:i:s', strtotime('+7 days'));
-        $stmt = $conn->prepare("INSERT INTO doctors (full_name, email, specialty, subspecialty, invite_token, invite_expires, status) VALUES (?,?,?,?,?,?,'pending')");
-        $stmt->bind_param("ssssss", $fn, $em, $spec, $sub, $token, $expires);
-        $stmt->execute();
-        $_SESSION['toast']        = "Doctor account created! Invite link generated.";
+
+    if (!$fn || !$em) {
+        $_SESSION['toast_error'] = 'Full name and email are required.';
+        header('Location: users.php'); exit;
+    }
+
+    $chk = $conn->prepare("SELECT id FROM doctors WHERE email=?");
+    $chk->bind_param("s", $em);
+    $chk->execute();
+    if ($chk->get_result()->num_rows > 0) {
+        $_SESSION['toast_error'] = 'A doctor with that email already exists.';
+        header('Location: users.php'); exit;
+    }
+
+    // No password is set yet — the doctor authenticates via the emailed setup
+    // link (token below), not by typing a password anywhere. A random,
+    // never-shared placeholder hash just satisfies the NOT NULL column.
+    $placeholder = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
+    $token   = bin2hex(random_bytes(32));
+    $expires = date('Y-m-d H:i:s', strtotime('+7 days'));
+
+    $stmt = $conn->prepare(
+        "INSERT INTO doctors (full_name, email, specialty, subspecialty, password, invite_token, invite_expires, status, is_available, setup_complete)
+         VALUES (?,?,?,?,?,?,?,'active',1,0)"
+    );
+    $stmt->bind_param("sssssss", $fn, $em, $spec, $sub, $placeholder, $token, $expires);
+    $stmt->execute();
+
+    $_SESSION['toast']       = "Doctor account created! Setup link emailed.";
+    $_SESSION['invite_link']  = 'http://' . $_SERVER['HTTP_HOST'] . '/doctor/setup.php?token=' . $token;
+    $_SESSION['invite_email'] = $em;
+    $_SESSION['invite_name']  = $fn;
+    header('Location: users.php'); exit;
+}
+
+// ── Resend a doctor's setup link (regenerates the token) ──
+if (isset($_GET['resend_invite'])) {
+    $did     = (int)$_GET['resend_invite'];
+    $token   = bin2hex(random_bytes(32));
+    $expires = date('Y-m-d H:i:s', strtotime('+7 days'));
+
+    $stmt = $conn->prepare("UPDATE doctors SET invite_token=?, invite_expires=? WHERE id=?");
+    $stmt->bind_param("ssi", $token, $expires, $did);
+    $stmt->execute();
+
+    $dq = $conn->prepare("SELECT full_name, email FROM doctors WHERE id=?");
+    $dq->bind_param("i", $did);
+    $dq->execute();
+    $d = $dq->get_result()->fetch_assoc();
+
+    if ($d) {
+        $_SESSION['toast']       = 'New setup link generated and emailed.';
         $_SESSION['invite_link']  = 'http://' . $_SERVER['HTTP_HOST'] . '/doctor/setup.php?token=' . $token;
-        $_SESSION['invite_email'] = $em;
-        $_SESSION['invite_name']  = $fn;
+        $_SESSION['invite_email'] = $d['email'];
+        $_SESSION['invite_name']  = $d['full_name'];
     }
     header('Location: users.php'); exit;
 }
@@ -338,6 +383,9 @@ foreach ($staff as $s) {
     .role-select button:disabled{opacity:0.4;cursor:not-allowed}
     .role-note{font-size:0.75rem;color:#9ab0ae;margin-bottom:1rem;line-height:1.4}
 
+    .btn-primary-alt{display:inline-flex;align-items:center;gap:0.4rem;background:var(--green);color:#fff;padding:0.6rem 1.3rem;border-radius:50px;font-size:0.85rem;font-weight:600;border:none;cursor:pointer;transition:all 0.25s;font-family:'DM Sans',sans-serif;box-shadow:0 4px 14px rgba(36,68,65,0.25);text-decoration:none}
+    .btn-primary-alt:hover{background:#1a3330;transform:translateY(-1px)}
+
     @keyframes spin{to{transform:rotate(360deg)}}
     @keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
     @keyframes fadeOut{from{opacity:1}to{opacity:0;pointer-events:none}}
@@ -359,10 +407,16 @@ foreach ($staff as $s) {
       <div style="font-size:0.75rem;color:#9ab0ae;font-weight:600;">Admin Portal</div>
       <div style="font-size:0.95rem;font-weight:700;">User Management</div>
     </div>
-    <button class="btn-primary" onclick="openModal('modal-create-account')">
-      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-      Create Account
-    </button>
+    <div style="display:flex;gap:0.6rem;">
+      <button class="btn-primary" onclick="openModal('modal-create-doctor')">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        Add Doctor
+      </button>
+      <button class="btn-primary-alt" onclick="openModal('modal-create-staff')">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        Add Staff
+      </button>
+    </div>
   </div>
 
   <div class="page-content">
@@ -376,18 +430,18 @@ foreach ($staff as $s) {
 
     <?php if ($invite_link): ?>
     <div class="invite-box">
-      <p>📧 Invite email sent to <strong><?= htmlspecialchars($invite_email) ?></strong> — link also shown below:</p>
+      <p>📧 Setup email sent to <strong><?= htmlspecialchars($invite_email) ?></strong> — link also shown below:</p>
       <code id="inviteCode"><?= htmlspecialchars($invite_link) ?></code>
       <button onclick="copyInvite()" style="margin-top:0.5rem;font-size:0.75rem;color:var(--blue);background:none;border:none;cursor:pointer;font-weight:600;">Copy link</button>
     </div>
     <script>
       const doctorEmail = <?= json_encode($invite_email) ?>;
       const doctorName  = <?= json_encode($invite_name) ?>;
-      const inviteURL   = <?= json_encode($invite_link) ?>;
+      const setupLink   = <?= json_encode($invite_link) ?>;
       emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_INVITE_TEMPLATE, {
-        to_email: doctorEmail, doctor_name: doctorName, invite_link: inviteURL,
-      }).then(() => console.log('Doctor invite email sent to ' + doctorEmail))
-        .catch(err => console.error('EmailJS invite error:', err));
+        to_email: doctorEmail, doctor_name: doctorName, invite_link: setupLink,
+      }).then(() => console.log('Doctor setup email sent to ' + doctorEmail))
+        .catch(err => console.error('EmailJS setup email error:', err));
     </script>
     <?php endif; ?>
 
@@ -425,17 +479,10 @@ foreach ($staff as $s) {
 <!-- ══════════════════════════════════════════════
      MODAL: Create Account
      ══════════════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-create-account">
+<div class="modal-overlay" id="modal-create-doctor">
   <div class="modal">
-    <h3>Create Account</h3>
-    <div class="role-select">
-      <button type="button" class="active" id="role-btn-doctor" onclick="selectCreateRole('doctor')">Doctor</button>
-      <button type="button" id="role-btn-staff" onclick="selectCreateRole('staff')">Staff</button>
-    </div>
-    <div class="role-note" id="role-note">
-      Creates a doctor invite link and emails it to them automatically. Patients register themselves from the login page, so there's no manual patient creation here.
-    </div>
-
+    <h3>Add Doctor</h3>
+    <p style="font-size:0.82rem;color:#9ab0ae;margin-bottom:1.2rem;">Fill in the doctor's basic details. A setup link will be emailed to them automatically — they click it, set their own password, and fill in the rest of their profile themselves.</p>
     <form method="POST" id="create-doctor-form">
       <div class="form-field"><label class="field-label">Full Name *</label><input type="text" name="full_name" class="field-input" placeholder="e.g. Maria Santos" required/></div>
       <div class="form-field"><label class="field-label">Email Address *</label><input type="email" name="email" class="field-input" placeholder="doctor@email.com" required/></div>
@@ -443,16 +490,21 @@ foreach ($staff as $s) {
         <div class="form-field"><label class="field-label">Specialty</label><input type="text" name="specialty" class="field-input" placeholder="e.g. Cardiology"/></div>
         <div class="form-field"><label class="field-label">Subspecialty</label><input type="text" name="subspecialty" class="field-input" placeholder="Optional"/></div>
       </div>
-      <button type="submit" name="create_doctor" class="btn-submit">Create &amp; Send Invite Email</button>
-      <button type="button" class="btn-cancel" onclick="closeModal('modal-create-account')">Cancel</button>
+      <button type="submit" name="create_doctor" class="btn-submit">Create &amp; Send Setup Link</button>
+      <button type="button" class="btn-cancel" onclick="closeModal('modal-create-doctor')">Cancel</button>
     </form>
+  </div>
+</div>
 
-    <form method="POST" id="create-staff-form" style="display:none;">
+<div class="modal-overlay" id="modal-create-staff">
+  <div class="modal">
+    <h3>Add Staff</h3>
+    <form method="POST" id="create-staff-form">
       <div class="form-field"><label class="field-label">Full Name *</label><input type="text" name="staff_full_name" class="field-input" placeholder="e.g. Ana Reyes" required/></div>
       <div class="form-field"><label class="field-label">Email Address *</label><input type="email" name="staff_email" class="field-input" placeholder="staff@telecare.com" required/></div>
       <div class="form-field"><label class="field-label">Password *</label><input type="password" name="staff_password" class="field-input" placeholder="Min. 8 characters" minlength="8" required/></div>
       <button type="submit" name="create_staff" class="btn-submit">Create Staff Account</button>
-      <button type="button" class="btn-cancel" onclick="closeModal('modal-create-account')">Cancel</button>
+      <button type="button" class="btn-cancel" onclick="closeModal('modal-create-staff')">Cancel</button>
     </form>
   </div>
 </div>
@@ -612,17 +664,6 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
 });
 
-// ── Create Account role toggle ──
-function selectCreateRole(role) {
-  document.getElementById('role-btn-doctor').classList.toggle('active', role === 'doctor');
-  document.getElementById('role-btn-staff').classList.toggle('active', role === 'staff');
-  document.getElementById('create-doctor-form').style.display = role === 'doctor' ? 'block' : 'none';
-  document.getElementById('create-staff-form').style.display  = role === 'staff'  ? 'block' : 'none';
-  document.getElementById('role-note').textContent = role === 'doctor'
-    ? "Creates a doctor invite link and emails it to them automatically. Patients register themselves from the login page, so there's no manual patient creation here."
-    : "Creates a staff login directly with the password you set here — no invite email, since staff accounts log in immediately.";
-}
-
 // ── Filters ──
 function setFilter(f) {
   currentFilter = f;
@@ -683,8 +724,8 @@ function renderRows(rows) {
       if (!d.is_verified) {
         actions += `<button class="btn-sm btn-blue" onclick="openVerifyModal(${d.id}, '${escAttr(d.full_name)}')">Verify</button>`;
       }
-      if (!d.setup_complete && d.invite_token) {
-        actions += `<button class="btn-sm btn-green" onclick="resendInvite('${escAttr(d.invite_token)}','${escAttr(d.email)}','${escAttr(d.full_name)}')" id="resend-${d.id}">Resend Invite</button>`;
+      if (!d.setup_complete) {
+        actions += `<a href="?resend_invite=${d.id}" class="btn-sm btn-green" onclick="return confirm('Send a new setup link to ${escAttr(d.email)}?')">Resend Setup Link</a>`;
       }
     } else if (u.type === 'patient') {
       const p = u.raw;
@@ -811,24 +852,10 @@ if (verifyForm) {
   });
 }
 
-// ── Copy invite link ──
+// ── Copy setup link ──
 function copyInvite() {
   const c = document.getElementById('inviteCode')?.textContent;
-  if (c) { navigator.clipboard.writeText(c); alert('Invite link copied!'); }
-}
-
-// ── Resend invite ──
-function resendInvite(token, email, name) {
-  const btn = document.getElementById(`resend-${ALL_USERS.find(u => u.type==='doctor' && u.raw.invite_token===token)?.id}`) || event.target;
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-inline"></span>Sending...'; }
-  const link = window.location.origin + '/doctor/setup.php?token=' + token;
-  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_INVITE_TEMPLATE, {
-    to_email: email, doctor_name: name, invite_link: link,
-  }).then(() => {
-    if (btn) { btn.disabled = false; btn.innerHTML = '✓ Sent!'; setTimeout(() => btn.innerHTML = 'Resend Invite', 2000); }
-  }).catch(() => {
-    if (btn) { btn.disabled = false; btn.innerHTML = 'Resend Invite'; alert('Failed to send. Check EmailJS keys.'); }
-  });
+  if (c) { navigator.clipboard.writeText(c); alert('Setup link copied!'); }
 }
 
 // ── Doctor details modal ──
