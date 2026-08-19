@@ -16,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $phone_number     = trim($_POST['phone_number'] ?? ''); // full intl e.g. +639XXXXXXXXX, optional
     $password         = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
+    $agree_terms      = isset($_POST['agree_terms']) && $_POST['agree_terms'] === '1';
 
     $full_name = $middle_name !== ''
         ? $first_name . ' ' . $middle_name . ' ' . $last_name
@@ -55,6 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Password must contain at least one number.';
     } elseif ($password !== $confirm_password) {
         $error = 'Passwords do not match.';
+    } elseif (!$agree_terms) {
+        $error = 'You must read and agree to the Data Privacy Notice, Terms and Conditions, and Privacy Policy before creating an account.';
     } else {
         $stmt = $conn->prepare("SELECT id FROM patients WHERE email = ?");
         $stmt->bind_param("s", $email);
@@ -119,6 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .field-error.visible{display:block}
     .btn-next{width:100%;padding:.9rem;border-radius:8px;background:var(--red);color:#fff;font-weight:600;font-size:.95rem;border:none;cursor:pointer;transition:all .3s;box-shadow:0 6px 20px rgba(179,17,24,.3)}
     .btn-next:hover{background:var(--red-dark);transform:translateY(-2px)}
+    .btn-next:disabled{background:#c9c9c9;box-shadow:none;cursor:not-allowed;transform:none}
     .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
     .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
     @media(max-width:580px){.grid-2{grid-template-columns:1fr}.grid-3{grid-template-columns:1fr}}
@@ -149,6 +153,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .phone-prefix-fixed{display:flex;align-items:center;justify-content:center;border-right:1.5px solid rgba(21,28,39,.1);background:rgba(21,28,39,.05);color:var(--ink);font-family:'Inter',sans-serif;font-size:.88rem;font-weight:700;padding:.75rem .85rem;min-width:64px;flex-shrink:0}
     .phone-number-input{border:none;outline:none;flex:1;padding:.75rem 1rem;font-family:'Inter',sans-serif;font-size:.95rem;color:var(--ink);background:transparent;min-width:0}
     .phone-number-input::placeholder{color:#b0c4c2}
+
+    /* ── Terms agreement row ─────────────────────────────────────────────── */
+    .terms-row{display:flex;align-items:flex-start;gap:.65rem;background:#f8fffe;border:1.5px solid rgba(21,28,39,.1);border-radius:12px;padding:.9rem 1rem;margin-bottom:.4rem}
+    .terms-row.has-error{border-color:var(--red);background:#FEF2F2}
+    .terms-checkbox{width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:var(--teal);cursor:not-allowed}
+    .terms-checkbox.unlocked{cursor:pointer}
+    .terms-text{font-size:.85rem;line-height:1.55;color:var(--ink)}
+    .terms-link{color:var(--teal);font-weight:600;text-decoration:underline;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:.85rem;padding:0}
+    .terms-hint{font-size:.74rem;color:#9ab0ae;margin-top:.35rem}
+
+    /* ── Modal ────────────────────────────────────────────────────────────── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(10,14,20,.55);backdrop-filter:blur(2px);z-index:10000;display:none;align-items:center;justify-content:center;padding:1.5rem}
+    .modal-overlay.open{display:flex}
+    .modal-box{background:#fff;border-radius:18px;width:100%;max-width:640px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,.3);overflow:hidden}
+    .modal-head{padding:1.3rem 1.6rem;border-bottom:1px solid rgba(21,28,39,.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .modal-head h3{font-size:1.15rem;font-weight:800;font-family:'Inter',sans-serif}
+    .modal-close{background:none;border:none;cursor:pointer;color:#9ab0ae;padding:.3rem;border-radius:6px;transition:background .2s,color .2s}
+    .modal-close:hover{background:rgba(21,28,39,.06);color:var(--ink)}
+    .modal-tabs{display:flex;gap:.4rem;padding:.8rem 1.6rem 0;flex-shrink:0;border-bottom:1px solid rgba(21,28,39,.08)}
+    .modal-tab{background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:600;color:#9ab0ae;padding:.55rem .9rem;border-radius:8px 8px 0 0;position:relative;top:1px}
+    .modal-tab.active{color:var(--teal);border-bottom:2px solid var(--teal)}
+    .modal-body{padding:1.4rem 1.6rem;overflow-y:auto;flex:1;font-size:.86rem;line-height:1.75;color:#3a4650}
+    .modal-body h4{font-size:.95rem;font-weight:700;color:var(--ink);margin:1.1rem 0 .4rem}
+    .modal-body h4:first-child{margin-top:0}
+    .modal-body p{margin-bottom:.7rem}
+    .modal-body ul{margin:0 0 .7rem 1.2rem}
+    .modal-body li{margin-bottom:.35rem}
+    .modal-section{display:none}
+    .modal-section.active{display:block}
+    .modal-foot{padding:1rem 1.6rem;border-top:1px solid rgba(21,28,39,.08);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:1rem;background:#fafbfc}
+    .scroll-progress{font-size:.76rem;color:#9ab0ae;display:flex;align-items:center;gap:.5rem}
+    .scroll-bar{width:90px;height:5px;border-radius:3px;background:rgba(21,28,39,.1);overflow:hidden}
+    .scroll-bar-fill{height:100%;width:0%;background:var(--teal);transition:width .15s}
+    .btn-accept{padding:.7rem 1.4rem;border-radius:8px;background:var(--teal);color:#fff;font-weight:600;font-size:.88rem;border:none;cursor:not-allowed;opacity:.5;transition:all .25s}
+    .btn-accept.unlocked{cursor:pointer;opacity:1}
+    .btn-accept.unlocked:hover{background:#005249}
   </style>
 </head>
 <body>
@@ -240,6 +280,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Hidden combined phone field submitted to PHP -->
         <input type="hidden" name="phone_number" id="h_phone"/>
+        <!-- Hidden agreement field submitted to PHP -->
+        <input type="hidden" name="agree_terms" id="h_agree" value="0"/>
 
         <!-- Google Register Button -->
         <a href="google-register.php" style="
@@ -354,13 +396,185 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <div class="field-error" id="e_pw2">Passwords do not match.</div>
         </div>
 
-        <div style="margin-top:2rem">
+        <!-- ── Terms / Data Privacy agreement ─────────────────────────────── -->
+        <div class="terms-row" id="terms_row">
+          <input type="checkbox" class="terms-checkbox" id="f_agree" disabled
+            onchange="onAgreeToggle()"/>
+          <div>
+            <div class="terms-text">
+              I have read and agree to the
+              <button type="button" class="terms-link" onclick="openModal('privacy')">Data Privacy Notice</button>,
+              <button type="button" class="terms-link" onclick="openModal('terms')">Terms and Conditions</button>, and
+              <button type="button" class="terms-link" onclick="openModal('policy')">Privacy Policy</button> of TELE-CARE.
+            </div>
+            <div class="terms-hint" id="terms_hint">You must open and read each document (scroll to the end) before you can check this box.</div>
+          </div>
+        </div>
+        <div class="field-error" id="e_agree">You must agree to the Data Privacy Notice, Terms and Conditions, and Privacy Policy to continue.</div>
+
+        <div style="margin-top:1.6rem">
           <button type="submit" class="btn-next" onclick="return combinePhoneAndValidate();">Create My Account</button>
         </div>
       </form>
       <p style="text-align:center;margin-top:2rem;font-size:.88rem;color:rgba(21,28,39,0.55)">Already have an account? <a href="login.php" style="color:var(--red);font-weight:600">Log in</a></p>
 
     <?php endif ?>
+    </div>
+  </div>
+</div>
+
+<!-- ── Legal Modal ──────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="legalModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>TELE-CARE Legal Agreements</h3>
+      <button type="button" class="modal-close" onclick="closeModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="modal-tabs">
+      <button type="button" class="modal-tab" data-tab="privacy" onclick="switchTab('privacy')">Data Privacy Notice</button>
+      <button type="button" class="modal-tab" data-tab="terms" onclick="switchTab('terms')">Terms &amp; Conditions</button>
+      <button type="button" class="modal-tab" data-tab="policy" onclick="switchTab('policy')">Privacy Policy</button>
+    </div>
+    <div class="modal-body" id="modalBody" onscroll="onModalScroll()">
+
+      <!-- DATA PRIVACY NOTICE -->
+      <div class="modal-section" data-section="privacy">
+        <h4>1. Who We Are</h4>
+        <p>This Data Privacy Notice is issued by TELE-CARE ("we," "us," or "our") for our telemedicine platform, in accordance with the Data Privacy Act of 2012 (Republic Act No. 10173) and its Implementing Rules and Regulations.</p>
+
+        <h4>2. Personal Data We Collect</h4>
+        <p>When you register and use TELE-CARE, we collect:</p>
+        <ul>
+          <li>Identity information — full name, date of birth, contact number, email address</li>
+          <li>Account credentials — password (stored in encrypted/hashed form)</li>
+          <li>Health information — medical history, symptoms, consultation notes, prescriptions, lab results, and other information you or your attending doctor provide during a teleconsultation</li>
+          <li>Technical data — device information, IP address, browser type, and log data related to your use of the platform</li>
+          <li>Communications — messages, video/audio session metadata, and files exchanged with healthcare providers through the platform</li>
+        </ul>
+
+        <h4>3. Why We Collect Your Data</h4>
+        <p>Your personal and health data are collected and processed to:</p>
+        <ul>
+          <li>Create and manage your patient account</li>
+          <li>Facilitate teleconsultations between you and licensed healthcare providers</li>
+          <li>Maintain accurate medical and consultation records</li>
+          <li>Send appointment confirmations, reminders, and account-related notifications</li>
+          <li>Process payments for consultations, where applicable</li>
+          <li>Comply with legal, regulatory, and reporting obligations</li>
+          <li>Improve the safety, security, and functionality of the platform</li>
+        </ul>
+
+        <h4>4. Sensitive Personal Information</h4>
+        <p>Health-related data is classified as "sensitive personal information" under RA 10173. We only process this data with your explicit consent, and access is restricted to your attending healthcare provider, authorized clinic/administrative staff directly involved in your care, and personnel required by law or regulation.</p>
+
+        <h4>5. Data Sharing and Disclosure</h4>
+        <p>We do not sell your personal data. Your information may only be shared with:</p>
+        <ul>
+          <li>Licensed doctors and staff directly involved in your consultation</li>
+          <li>Service providers who support platform operations (e.g., email delivery, secure hosting) under confidentiality obligations</li>
+          <li>Government agencies or regulators, when required by law, court order, or public health reporting requirements</li>
+        </ul>
+
+        <h4>6. Data Retention</h4>
+        <p>Your personal and medical records are retained for as long as your account is active and for a period thereafter as required by applicable healthcare recordkeeping laws and regulations, after which the data will be securely disposed of or anonymized.</p>
+
+        <h4>7. Your Rights</h4>
+        <p>Under the Data Privacy Act, you have the right to be informed, to access, to object, to correct, to erase or block your data (subject to legal retention requirements), to data portability, and to file a complaint with the National Privacy Commission. To exercise these rights, contact us through the channels provided on your patient dashboard.</p>
+
+        <h4>8. Security Measures</h4>
+        <p>We apply organizational, physical, and technical safeguards — including password hashing, encrypted connections, and access controls — to protect your data against unauthorized access, alteration, disclosure, or destruction.</p>
+
+        <h4>9. Consent</h4>
+        <p>By creating a TELE-CARE account, you acknowledge that you have read and understood this Data Privacy Notice and consent to the collection, use, and processing of your personal and sensitive personal information as described above.</p>
+      </div>
+
+      <!-- TERMS AND CONDITIONS -->
+      <div class="modal-section" data-section="terms">
+        <h4>1. Acceptance of Terms</h4>
+        <p>These Terms and Conditions ("Terms") govern your access to and use of TELE-CARE, operated by TELE-CARE. By creating an account, you agree to be bound by these Terms. If you do not agree, do not use the platform.</p>
+
+        <h4>2. Eligibility</h4>
+        <p>You must be at least 18 years old to register a patient account. By registering, you represent that the information you provide is accurate, current, and complete, and that you will keep it updated.</p>
+
+        <h4>3. Nature of the Service</h4>
+        <p>TELE-CARE connects patients with licensed healthcare providers for remote consultations. TELE-CARE is a technology platform and does not itself practice medicine. Medical advice, diagnosis, and treatment are provided solely by the licensed healthcare professionals you consult through the platform.</p>
+
+        <h4>4. Not for Emergency Use</h4>
+        <p>TELE-CARE is not intended for medical emergencies. If you are experiencing a medical emergency, call your local emergency hotline or go to the nearest emergency room immediately. Do not rely on this platform for time-critical or life-threatening conditions.</p>
+
+        <h4>5. Account Responsibilities</h4>
+        <ul>
+          <li>You are responsible for maintaining the confidentiality of your login credentials</li>
+          <li>You are responsible for all activity that occurs under your account</li>
+          <li>You must notify us immediately of any unauthorized use of your account</li>
+          <li>Providing false medical or personal information may result in suspension or deactivation of your account</li>
+        </ul>
+
+        <h4>6. Consultations and Payments</h4>
+        <p>Consultation fees, where applicable, will be disclosed prior to booking. Payment terms, cancellation policies, and refund conditions may be presented separately at the time of booking and form part of these Terms by reference.</p>
+
+        <h4>7. Prohibited Conduct</h4>
+        <p>You agree not to misuse the platform, including but not limited to: impersonating another person, attempting to access another user's account or medical records, uploading harmful code, or using the platform for any unlawful purpose.</p>
+
+        <h4>8. Account Suspension and Termination</h4>
+        <p>TELE-CARE reserves the right to suspend or deactivate accounts that violate these Terms, provide fraudulent information, or misuse the platform, with or without prior notice where warranted.</p>
+
+        <h4>9. Limitation of Liability</h4>
+        <p>To the extent permitted by law, TELE-CARE shall not be liable for indirect, incidental, or consequential damages arising from your use of the platform, technical interruptions, or reliance on information exchanged during a teleconsultation, except as required by applicable law.</p>
+
+        <h4>10. Changes to These Terms</h4>
+        <p>We may update these Terms from time to time. Continued use of TELE-CARE after changes are posted constitutes acceptance of the revised Terms.</p>
+
+        <h4>11. Governing Law</h4>
+        <p>These Terms are governed by the laws of the Republic of the Philippines.</p>
+      </div>
+
+      <!-- PRIVACY POLICY -->
+      <div class="modal-section" data-section="policy">
+        <h4>1. Overview</h4>
+        <p>This Privacy Policy explains how TELE-CARE handles information collected through our telemedicine platform, in addition to the specific commitments made in our Data Privacy Notice.</p>
+
+        <h4>2. Information We Collect Automatically</h4>
+        <p>When you use TELE-CARE, our systems may automatically collect device type, browser, IP address, session timestamps, and general usage patterns (e.g., pages visited, features used) to help us maintain and improve the platform.</p>
+
+        <h4>3. Cookies and Similar Technologies</h4>
+        <p>TELE-CARE may use cookies or similar technologies to keep you logged in, remember your preferences, and understand how the platform is used. You can control cookies through your browser settings, though disabling them may affect platform functionality.</p>
+
+        <h4>4. How We Use Information</h4>
+        <ul>
+          <li>To operate, maintain, and secure the platform</li>
+          <li>To personalize your experience (e.g., pre-filling known details, showing relevant appointment information)</li>
+          <li>To detect, investigate, and prevent fraudulent or unauthorized activity</li>
+          <li>To analyze aggregate usage trends for service improvement, using de-identified data where possible</li>
+        </ul>
+
+        <h4>5. Third-Party Services</h4>
+        <p>TELE-CARE relies on trusted third-party providers for functions such as email delivery and secure video communication. These providers process data only as necessary to perform their function and are contractually or technically restricted from using your data for unrelated purposes.</p>
+
+        <h4>6. Data Storage and International Transfers</h4>
+        <p>Your data is stored on secure servers. Where any data is processed or stored outside the Philippines by a service provider, we take reasonable steps to ensure it remains protected to a standard consistent with the Data Privacy Act.</p>
+
+        <h4>7. Children's Privacy</h4>
+        <p>TELE-CARE is intended for users 18 years of age and older. We do not knowingly collect personal data from minors through direct patient registration.</p>
+
+        <h4>8. Updates to This Policy</h4>
+        <p>We may revise this Privacy Policy periodically. Material changes will be communicated through the platform or via email prior to taking effect.</p>
+
+        <h4>9. Contact Us</h4>
+        <p>For questions, concerns, or requests relating to this Privacy Policy or your personal data, please reach out through the support channels available on your TELE-CARE patient dashboard.</p>
+
+        <p style="margin-top:1.2rem;color:#9ab0ae;font-size:.78rem">— End of document —</p>
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <div class="scroll-progress">
+        <span id="scrollLabel">Scroll to read</span>
+        <div class="scroll-bar"><div class="scroll-bar-fill" id="scrollFill"></div></div>
+      </div>
+      <button type="button" class="btn-accept" id="btnAccept" onclick="acceptFromModal()">I've Read This</button>
     </div>
   </div>
 </div>
@@ -412,6 +626,75 @@ function clearFieldErr(inp) {
   clearTopFormError();
 }
 
+// ── Legal modal + read-tracking ──────────────────────────────────────────────
+const readTabs = { privacy: false, terms: false, policy: false };
+let currentTab = 'privacy';
+
+function openModal(startTab) {
+  currentTab = startTab || 'privacy';
+  document.getElementById('legalModal').classList.add('open');
+  switchTab(currentTab);
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.getElementById('legalModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.modal-section').forEach(s => s.classList.toggle('active', s.dataset.section === tab));
+  const body = document.getElementById('modalBody');
+  body.scrollTop = 0;
+  updateScrollUI();
+}
+function onModalScroll() {
+  updateScrollUI();
+}
+function updateScrollUI() {
+  const body = document.getElementById('modalBody');
+  const maxScroll = body.scrollHeight - body.clientHeight;
+  const pct = maxScroll <= 0 ? 100 : Math.min(100, Math.round((body.scrollTop / maxScroll) * 100));
+  document.getElementById('scrollFill').style.width = pct + '%';
+
+  const atBottom = maxScroll <= 0 || body.scrollTop >= maxScroll - 4;
+  if (atBottom) readTabs[currentTab] = true;
+
+  const label = document.getElementById('scrollLabel');
+  const btn   = document.getElementById('btnAccept');
+  const allRead = readTabs.privacy && readTabs.terms && readTabs.policy;
+
+  if (readTabs[currentTab]) {
+    label.textContent = allRead ? 'All documents read' : 'Read — check the other tabs too';
+  } else {
+    label.textContent = 'Scroll to the bottom to mark as read (' + pct + '%)';
+  }
+  btn.classList.toggle('unlocked', allRead);
+}
+function acceptFromModal() {
+  const allRead = readTabs.privacy && readTabs.terms && readTabs.policy;
+  if (!allRead) {
+    toast('Please scroll through all three documents first.');
+    return;
+  }
+  const cb = document.getElementById('f_agree');
+  cb.disabled = false;
+  cb.classList.add('unlocked');
+  cb.checked = true;
+  document.getElementById('h_agree').value = '1';
+  document.getElementById('terms_hint').textContent = 'Thank you — you may uncheck this box if you change your mind.';
+  document.getElementById('terms_row').classList.remove('has-error');
+  document.getElementById('e_agree').classList.remove('visible');
+  closeModal();
+}
+function onAgreeToggle() {
+  const cb = document.getElementById('f_agree');
+  document.getElementById('h_agree').value = cb.checked ? '1' : '0';
+}
+document.getElementById('legalModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
 // ── Validation on submit ────────────────────────────────────────────────────────
 function combinePhoneAndValidate() {
   let ok = true;
@@ -447,6 +730,16 @@ function combinePhoneAndValidate() {
   else clearFieldErr(document.getElementById('f_pw'));
   if (pw !== pw2 || pw2 === '') { showFieldErr('pw2', null); ok = false; }
   else clearFieldErr(document.getElementById('f_pw2'));
+
+  // Terms agreement check
+  if (document.getElementById('h_agree').value !== '1' || !document.getElementById('f_agree').checked) {
+    document.getElementById('terms_row').classList.add('has-error');
+    document.getElementById('e_agree').classList.add('visible');
+    ok = false;
+  } else {
+    document.getElementById('terms_row').classList.remove('has-error');
+    document.getElementById('e_agree').classList.remove('visible');
+  }
 
   if (!ok) {
     toast('Please fill in all required fields correctly.');

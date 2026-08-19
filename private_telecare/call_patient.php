@@ -1,9 +1,9 @@
 <?php
 date_default_timezone_set('Asia/Manila');
-require_once 'includes/auth.php';
+require_once __DIR__ . '/../includes/auth.php';
 // call_patient.php (patient side)
 $appt_id = (int)($_GET['appt_id'] ?? 0);
-if (!$appt_id) { header('Location: visits.php'); exit; }
+if (!$appt_id) { header('Location: ../visits.php'); exit; }
 
 $stmt = $conn->prepare("
     SELECT a.*, d.full_name AS doctor_name, d.specialty, d.profile_photo AS doctor_photo
@@ -13,11 +13,11 @@ $stmt = $conn->prepare("
 $stmt->bind_param("ii", $appt_id, $patient_id);
 $stmt->execute();
 $appt = $stmt->get_result()->fetch_assoc();
-if (!$appt) { header('Location: visits.php'); exit; }
+if (!$appt) { header('Location: ../visits.php'); exit; }
 
 $appt_ts = strtotime($appt['appointment_date'] . ' ' . $appt['appointment_time']);
 $now     = (new DateTime('now', new DateTimeZone('Asia/Manila')))->getTimestamp();
-if ($now < ($appt_ts - 900) || $now > ($appt_ts + 3600)) { header('Location: visits.php'); exit; }
+if ($now < ($appt_ts - 900) || $now > ($appt_ts + 3600)) { header('Location: ../visits.php'); exit; }
 
 $room_id = 'telecare-' . $appt_id . '-' . str_replace('-', '', $appt['appointment_date']);
 $end_ts  = $appt_ts + 3600;
@@ -813,14 +813,14 @@ async function endCall(auto = false) {
       const startTime = Date.now(); const maxWait = 120000;
       const checkSummary = async () => {
         try {
-          const response = await fetch(`check_summary.php?appt_id=${APPT_ID}`);
+          const response = await fetch(`router.php?page=check_summary&appt_id=${APPT_ID}`);
           const data = await response.json();
           if (data.done) { window.location.href = 'visits.php'; }
           else if (Date.now() - startTime > maxWait) { window.location.href = 'visits.php'; }
           else { setTimeout(checkSummary, 2000); }
         } catch(e) { setTimeout(checkSummary, 5000); }
       };
-      await fetch('process_consultation_v2.php', { method: 'POST', body: fd });
+      await fetch('process_consultation.php_v2', { method: 'POST', body: fd });
       setTimeout(checkSummary, 2000);
     } catch(e) { setTimeout(() => { window.location.href = 'visits.php'; }, 5000); }
   } else {
@@ -975,3 +975,8 @@ init();
 </script>
 </body>
 </html>
+
+
+
+
+

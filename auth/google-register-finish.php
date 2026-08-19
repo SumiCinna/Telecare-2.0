@@ -1,6 +1,6 @@
 <?php
 require_once '../database/config.php';
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 // auth/google-register-finish.php
 if (empty($_SESSION['google_reg'])) {
     header('Location: register.php');

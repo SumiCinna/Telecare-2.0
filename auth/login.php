@@ -1,5 +1,5 @@
 <?php
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 require_once '../database/config.php';
 
 $error = '';
@@ -32,8 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $_SESSION['patient_id']   = $id;
                 $_SESSION['patient_name'] = $full_name;
-                header('Location: ../dashboard.php');
-                exit;
+                header('Location: ../router.php?page=dashboard'); exit;
             }
         }
         $stmt->close();
@@ -297,3 +296,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </script>
 </body>
 </html>
+
+

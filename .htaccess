@@ -2,12 +2,67 @@ Options -Indexes
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteBase /Telecare%202.0
 
-    # Force HTTPS
-    RewriteCond %{HTTPS} off
-    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    # ── PUBLIC PAGES ─────────────────────────────────────────────────
+    RewriteRule ^home/?$                index.php [L]
+    RewriteRule ^login/?$               auth/login.php [L]
+    RewriteRule ^register/?$            auth/register.php [L]
+    RewriteRule ^forgot-password/?$    auth/forgot_password.php [L]
+    RewriteRule ^verify/?$              auth/verify.php [L]
+    RewriteRule ^reset-password/?$      auth/reset_password.php [L]
+    RewriteRule ^terms/?$               auth/termsandpolicy.php [L]
+    RewriteRule ^privacy/?$             auth/termsandpolicy.php [L]
 
-    # Block access to hidden files (.env, .git, etc.)
+    # ── PATIENT PORTAL (through router) ─────────────────────────────
+    RewriteRule ^dashboard/?$          router.php?page=dashboard [L]
+    RewriteRule ^visits/?$             router.php?page=visits [L]
+    RewriteRule ^meds/?$               router.php?page=meds [L]
+    RewriteRule ^profile/?$            router.php?page=profile [L]
+    RewriteRule ^chat/?$               router.php?page=chat [L]
+    RewriteRule ^receipt/?$            router.php?page=receipt [L]
+    RewriteRule ^call/?$               router.php?page=call_patient [L]
+    RewriteRule ^pay/?$                router.php?page=pay [L]
+    RewriteRule ^payment-success/?$    router.php?page=pay_success [L]
+    RewriteRule ^payment-cancel/?$     router.php?page=pay_cancel [L]
+    RewriteRule ^summary/?$            router.php?page=download_summary [L]
+    RewriteRule ^privacy-policy/?$     router.php?page=privacy-policy [L]
+    RewriteRule ^staffs-portal/?$      router.php?page=staffs_index [L]
+
+    # ── AJAX / INTERNAL ENDPOINTS ───────────────────────────────────
+    RewriteRule ^check_summary/?$               router.php?page=check_summary [L]
+    RewriteRule ^process_consultation_v2/?$     router.php?page=process_consultation_v2 [L]
+    RewriteRule ^auto_complete_appt/?$          router.php?page=auto_complete_appt [L]
+
+    # ── ADMIN PORTAL ─────────────────────────────────────────────────
+    RewriteRule ^admin/?$              admin/dashboard.php [L]
+    RewriteRule ^admin/login/?$        admin/login.php [L]
+    RewriteRule ^admin/doctors/?$      admin/doctors.php [L]
+    RewriteRule ^admin/patients/?$     admin/patients.php [L]
+    RewriteRule ^admin/assignments/?$  admin/assignments.php [L]
+
+    # ── DOCTOR PORTAL ────────────────────────────────────────────────
+    RewriteRule ^doctor/?$             doctor/dashboard.php [L]
+    RewriteRule ^doctor/login/?$       doctor/login.php [L]
+    RewriteRule ^doctor/appointments/?$ doctor/appointments.php [L]
+    RewriteRule ^doctor/patients/?$    doctor/patients.php [L]
+    RewriteRule ^doctor/records/?$     doctor/patient-records.php [L]
+    RewriteRule ^doctor/profile/?$     doctor/profile.php [L]
+
+    # ── STAFF PORTAL ─────────────────────────────────────────────────
+    RewriteRule ^staff/?$              staff/dashboard.php [L]
+    RewriteRule ^staff/login/?$        staff/login.php [L]
+    RewriteRule ^staff/appointments/?$ staff/appointments.php [L]
+    RewriteRule ^staff/doctors/?$      staff/doctors.php [L]
+    RewriteRule ^staff/patients/?$     staff/patients.php [L]
+
+    # ── OCR / TOOLS ──────────────────────────────────────────────────
+    RewriteRule ^scan/?$               ocr/scan.php [L]
+
+    # ── BLOCK DIRECT .php ACCESS IN PRIVATE FOLDER ──────────────────
+    RewriteRule ^private_telecare/.*\.php$ - [F,L]
+
+    # Block access to hidden files
     RewriteRule (^|/)\.(?!well-known) - [F,L]
 </IfModule>
 

@@ -27,7 +27,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     body {
       font-family: 'Inter', sans-serif;
       background: #fff; color: var(--ink);
-      overflow-x: hidden; cursor: none;
+      overflow-x: hidden;
     }
 
     /* ── CONTAINER ── */
@@ -37,26 +37,6 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       margin: 0 auto;
       padding: 0 48px;
     }
-
-    /* ── CURSOR ── */
-    .cursor {
-      width: 9px; height: 9px; background: var(--red); border-radius: 50%;
-      position: fixed; pointer-events: none; z-index: 9999;
-      transform: translate(-50%,-50%); transition: transform 0.1s;
-    }
-    .cursor-ring {
-      width: 34px; height: 34px;
-      border: 1.5px solid rgba(179,17,24,0.35); border-radius: 50%;
-      position: fixed; pointer-events: none; z-index: 9998;
-      transform: translate(-50%,-50%);
-      transition: width 0.3s, height 0.3s, border-color 0.3s, background 0.3s;
-    }
-    body:has(a:hover) .cursor-ring,
-    body:has(button:hover) .cursor-ring {
-      width: 52px; height: 52px; border-color: rgba(179,17,24,0.55);
-      background: rgba(179,17,24,0.06);
-    }
-    body:has(a:hover) .cursor { transform: translate(-50%,-50%) scale(0.4); }
 
     /* ── SCROLL PROGRESS ── */
     .scroll-bar {
@@ -123,7 +103,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     .nav-cta::after { display: none !important; }
     .nav-divider { width: 1px; height: 18px; background: rgba(21,28,39,0.14); }
 
-    .hamburger { display: none; flex-direction: column; gap: 0.28rem; cursor: none; }
+    .hamburger { display: none; flex-direction: column; gap: 0.28rem; }
     .hamburger span { width: 22px; height: 2px; background: var(--ink); border-radius: 2px; transition: all 0.3s; }
     .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5.5px,5.5px); }
     .hamburger.open span:nth-child(2) { opacity: 0; }
@@ -678,10 +658,6 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     @media (max-width: 768px) {
       nav .nav-links { display: none; }
       .hamburger { display: flex; }
-      body { cursor: auto; }
-      .cursor, .cursor-ring { display: none; }
-      * { cursor: auto !important; }
-      a, button { cursor: pointer !important; }
       .container, .nav-inner { padding: 0 20px; }
       .hero { padding: 56px 0 48px; gap: 2.5rem; }
       .hero h1 { font-size: clamp(2rem,6vw,3.2rem); }
@@ -709,8 +685,6 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
 </head>
 <body>
 
-<div class="cursor" id="cursor"></div>
-<div class="cursor-ring" id="cursorRing"></div>
 <div class="scroll-bar" id="scrollBar"></div>
 
 <!-- ══ NAV ══ -->
@@ -1096,20 +1070,6 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
 
 
 <script>
-/* ── CURSOR ── */
-const cur = document.getElementById('cursor');
-const ring = document.getElementById('cursorRing');
-let mx=0,my=0,rx=0,ry=0;
-document.addEventListener('mousemove', e => {
-  mx=e.clientX; my=e.clientY;
-  cur.style.left=mx+'px'; cur.style.top=my+'px';
-});
-(function loop(){
-  rx+=(mx-rx)*0.11; ry+=(my-ry)*0.11;
-  ring.style.left=rx+'px'; ring.style.top=ry+'px';
-  requestAnimationFrame(loop);
-})();
-
 /* ── HERO CANVAS PARTICLES ── */
 const canvas = document.getElementById('heroCanvas');
 const ctx = canvas.getContext('2d');

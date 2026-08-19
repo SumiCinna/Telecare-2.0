@@ -881,14 +881,14 @@ async function endCall(auto = false) {
       const startTime = Date.now(); const maxWait = 120000;
       const checkSummary = async () => {
         try {
-          const response = await fetch(`../check_summary.php?appt_id=${APPT_ID}`);
+          const response = await fetch(`/check_summary?appt_id=${APPT_ID}`);
           const data = await response.json();
           if (data.done) { window.location.href = 'appointments.php'; }
           else if (Date.now() - startTime > maxWait) { window.location.href = 'appointments.php'; }
           else { setTimeout(checkSummary, 2000); }
         } catch(e) { setTimeout(checkSummary, 5000); }
       };
-      await fetch('../process_consultation_v2.php', { method: 'POST', body: fd });
+      await fetch('process_consultation.php_v2', { method: 'POST', body: fd });
       setTimeout(checkSummary, 2000);
     } catch(e) { setTimeout(() => { window.location.href = 'appointments.php'; }, 5000); }
   } else {
@@ -898,7 +898,7 @@ async function endCall(auto = false) {
 
 function autoCompleteAppt() {
   if (Date.now() / 1000 < APPT_TS) return;
-  fetch('../auto_complete_appt.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `appt_id=${APPT_ID}&role=doctor` }).catch(() => {});
+  fetch('auto_complete_appt.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `appt_id=${APPT_ID}&role=doctor` }).catch(() => {});
 }
 
 function startTimer() {
@@ -1044,3 +1044,4 @@ init();
 </script>
 </body>
 </html>
+

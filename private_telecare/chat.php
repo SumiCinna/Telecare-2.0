@@ -1,7 +1,7 @@
 
 <?php
 // WALA TO DISPLAY LANG KASI AKALA KO NEED NA FUNCTION BUT STAY KO LANG DITO
-require_once 'includes/auth.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 // ── Fetch assigned doctor ──
 $doc = null;
@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message']) && $d
         $stmt->execute();
         $stmt->close();
     }
-    header('Location: chat.php');
+    header('Location: ../chat.php');
     exit;
 }
 
@@ -40,7 +40,7 @@ if ($doc) {
 
 $page_title = 'Chat — TELE-CARE';
 $active_nav = 'chat';
-require_once 'includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
@@ -146,6 +146,11 @@ require_once 'includes/header.php';
   if (cw) cw.scrollTop = cw.scrollHeight;
 </script>
 
-<?php require_once 'includes/nav.php'; ?>
+<?php require_once __DIR__ . '/../includes/nav.php'; ?>
 </body>
 </html>
+
+
+
+
+

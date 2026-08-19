@@ -1,6 +1,7 @@
 <?php
+if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 require_once '../database/config.php';
-
+// auth/verify.php
 $message = '';
 $success = false;
 
@@ -27,8 +28,13 @@ if (empty($token)) {
         $upd = $conn->prepare("UPDATE patients SET is_verified = 1, verification_token = NULL, token_expires_at = NULL WHERE id = ?");
         $upd->bind_param("i", $patient['id']);
         $upd->execute();
-        $success = true;
-        $message = 'Your account has been activated successfully!';
+
+        // Log the patient in immediately — no separate login step needed
+        $_SESSION['patient_id']   = $patient['id'];
+        $_SESSION['patient_name'] = $patient['full_name'];
+
+        header('Location: ../router.php?page=dashboard');
+        exit;
     }
 }
 ?>
@@ -92,3 +98,5 @@ if (empty($token)) {
 </div>
 </body>
 </html>
+
+

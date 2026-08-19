@@ -7,8 +7,10 @@
 date_default_timezone_set('Asia/Manila');
 header('Content-Type: application/json');
 
-session_start();
-require_once 'database/config.php';
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+require_once __DIR__ . '/../database/config.php';
 
 $appt_id = (int)($_POST['appt_id'] ?? 0);
 $role    = trim($_POST['role'] ?? ''); // 'patient' or 'doctor'
@@ -46,3 +48,7 @@ $upd->bind_param("i", $appt_id);
 $upd->execute();
 
 echo json_encode(['ok'=>true,'msg'=>'Appointment marked as Completed','affected'=>$upd->affected_rows]);
+
+
+
+

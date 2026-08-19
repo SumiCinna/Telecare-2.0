@@ -1,6 +1,6 @@
 <?php
 date_default_timezone_set('Asia/Manila');
-require_once 'includes/auth.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 // pay_success.php — PayMongo redirects here after payment
 // Verifies the payment server-side, marks appointment Paid, redirects to receipt.
@@ -13,7 +13,7 @@ $patient_q = (int)($_GET['patient']   ?? 0);
 // intent_id may be passed in the return URL for card payments
 $intent_id_q = trim($_GET['intent_id'] ?? '');
 
-if (!$appt_id) { header('Location: visits.php'); exit; }
+if (!$appt_id) { header('Location: ../visits.php'); exit; }
 
 // Fetch appointment (no payment_status filter — we need to check paid too)
 $stmt = $conn->prepare("
@@ -28,11 +28,11 @@ $stmt->bind_param("ii", $appt_id, $patient_id);
 $stmt->execute();
 $appt = $stmt->get_result()->fetch_assoc();
 
-if (!$appt) { header('Location: visits.php'); exit; }
+if (!$appt) { header('Location: ../visits.php'); exit; }
 
 // Already paid — just show receipt
 if ($appt['payment_status'] === 'Paid') {
-    header('Location: receipt.php?appt_id=' . $appt_id);
+    header('Location: router.php?page=receipt&appt_id=' . $appt_id);
     exit;
 }
 
@@ -117,11 +117,16 @@ if ($verified) {
     }
 
     $_SESSION['toast'] = "Payment successful! Your appointment is confirmed.";
-    header('Location: receipt.php?appt_id=' . $appt_id);
+    header('Location: router.php?page=receipt&appt_id=' . $appt_id);
     exit;
 
 } else {
     $_SESSION['toast_error'] = "Payment could not be verified. Please contact support if you were charged.";
-    header('Location: visits.php');
+    header('Location: ../visits.php');
     exit;
 }
+
+
+
+
+

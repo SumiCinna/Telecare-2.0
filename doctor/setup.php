@@ -15,7 +15,7 @@
  * the session_start()/session-set block below if your app uses a different
  * key or structure for a logged-in doctor.
  */
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 require_once '../database/config.php';
 
 $token = trim($_GET['token'] ?? '');
@@ -228,3 +228,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
 </script>
 </body>
 </html>
+

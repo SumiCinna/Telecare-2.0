@@ -1,6 +1,6 @@
 <?php
 date_default_timezone_set('Asia/Manila');
-require_once 'includes/auth.php';
+require_once __DIR__ . '/../includes/auth.php';
 // pay.php
 if (!isset($patient_id)) {
     die('❌ $patient_id is not set. Check auth.php — session key may differ.');
@@ -14,7 +14,7 @@ define('PAYMONGO_PUBLIC_KEY', $paymongoPublicKey);
 define('BASE_URL', 'http://localhost:3000');
 
 $appt_id = (int)($_GET['appt_id'] ?? 0);
-if (!$appt_id) { header('Location: visits.php'); exit; }
+if (!$appt_id) { header('Location: ../visits.php'); exit; }
 
 $stmt = $conn->prepare("
     SELECT a.*, d.full_name AS doctor_name, d.specialty, d.consultation_fee,
@@ -31,7 +31,7 @@ $appt = $stmt->get_result()->fetch_assoc();
 
 if (!$appt) {
     $_SESSION['toast_error'] = "Appointment not found or already paid.";
-    header('Location: visits.php'); exit;
+    header('Location: ../visits.php'); exit;
 }
 
 function formatPhone(?string $raw): ?string {
@@ -59,12 +59,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_method'])) {
 
     if (PAYMONGO_SECRET_KEY === '') {
       $_SESSION['toast_error'] = 'Payment setup error: missing PAYMONGO_SECRET_KEY in .env.';
-      header('Location: pay.php?appt_id=' . $appt_id); exit;
+      header('Location: router.php?page=pay&appt_id=' . $appt_id); exit;
     }
 
     if ($method === 'card' && PAYMONGO_PUBLIC_KEY === '') {
       $_SESSION['toast_error'] = 'Payment setup error: missing PAYMONGO_PUBLIC_KEY in .env.';
-      header('Location: pay.php?appt_id=' . $appt_id); exit;
+      header('Location: router.php?page=pay&appt_id=' . $appt_id); exit;
     }
 
     $billing = ['name' => $name, 'email' => $email];
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_method'])) {
         } else {
             $error = $result['errors'][0]['detail'] ?? 'GCash payment gateway error.';
             $_SESSION['toast_error'] = 'PayMongo Error: ' . $error;
-            header('Location: pay.php?appt_id=' . $appt_id); exit;
+            header('Location: router.php?page=pay&appt_id=' . $appt_id); exit;
         }
 
     // ── Card — direct REST API, no PayMongo.js ──
@@ -240,7 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_method'])) {
 
     } else {
         $_SESSION['toast_error'] = 'Invalid payment method.';
-        header('Location: pay.php?appt_id=' . $appt_id); exit;
+        header('Location: router.php?page=pay&appt_id=' . $appt_id); exit;
     }
 }
 
@@ -652,7 +652,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
 </div>
 
 <!-- GCash form -->
-<form method="POST" id="pay-form" action="pay.php?appt_id=<?= $appt_id ?>">
+<form method="POST" id="pay-form" action="/pay?appt_id=<?= $appt_id ?>">
   <input type="hidden" name="pay_method" id="f-method"/>
   <input type="hidden" name="email"      id="f-email"/>
   <input type="hidden" name="name"       id="f-name"/>
@@ -806,7 +806,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
 
       let rawText;
       try {
-        const res = await fetch('pay.php?appt_id=<?= $appt_id ?>', { method:'POST', body:fd });
+        const res = await fetch('router.php?page=pay&appt_id=<?= $appt_id ?>', { method:'POST', body:fd });
         rawText = await res.text();
       } catch(e) {
         showCardError('Network error: ' + e.message);
@@ -877,3 +877,8 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
 </script>
 </body>
 </html>
+
+
+
+
+

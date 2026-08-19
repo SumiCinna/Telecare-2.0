@@ -1,5 +1,5 @@
 <?php
-require_once 'includes/auth.php';
+require_once __DIR__ . '/../includes/auth.php';
 // dashboard.php - Patient's dashboard
 // ── Stats ──
 $upcoming_count     = $conn->query("SELECT COUNT(*) c FROM appointments WHERE patient_id=$patient_id AND status IN ('Pending','Confirmed') AND appointment_date >= CURDATE()")->fetch_assoc()['c'];
@@ -24,7 +24,7 @@ $recommended = $conn->query("
 
 $page_title = 'Home — TELE-CARE';
 $active_nav = 'home';
-require_once 'includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 
 $parts     = explode(' ', $p['full_name']);
 $firstName = $parts[0];
@@ -371,7 +371,7 @@ $firstName = $parts[0];
           </div>
         </div>
       </div>
-      <a href="visits.php" class="welcome-btn">
+      <a href="router.php?page=visits" class="welcome-btn">
         <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16m8-8H4"/></svg>
         Book Appointment
       </a>
@@ -423,7 +423,7 @@ $firstName = $parts[0];
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
           Upcoming Appointments
         </div>
-        <a href="visits.php" class="db-card-link">
+        <a href="router.php?page=visits" class="db-card-link">
           See all
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
@@ -473,7 +473,7 @@ $firstName = $parts[0];
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           Recommended Doctors
         </div>
-        <a href="visits.php" class="db-card-link">
+        <a href="router.php?page=visits" class="db-card-link">
           Book now
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
@@ -556,6 +556,12 @@ document.querySelectorAll('.stat-num').forEach(el => {
 });
 </script>
 
-<?php require_once 'includes/nav.php'; ?>
+<?php require_once __DIR__ . '/../includes/nav.php'; ?>
 </body>
 </html>
+
+
+
+
+
+

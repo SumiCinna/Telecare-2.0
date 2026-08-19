@@ -1,7 +1,7 @@
 <?php
 // download_summary.php
 date_default_timezone_set('Asia/Manila');
-require_once 'includes/auth_any.php';
+require_once __DIR__ . '/../includes/auth_any.php';
 
 $appt_id = (int)($_GET['appt_id'] ?? 0);
 if (!$appt_id) { header('Location: /'); exit; }
@@ -51,3 +51,6 @@ header('Content-Type: application/pdf');
 header('Content-Disposition: inline; filename="Teleconsultation_Summary_Report_' . $appt_id . '.pdf"');
 header('Content-Length: ' . filesize($file));
 readfile($file);
+
+
+

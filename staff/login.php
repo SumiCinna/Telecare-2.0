@@ -1,5 +1,5 @@
 <?php
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 require_once '../database/config.php';
 
 if (isset($_SESSION['staff_id'])) { header('Location: dashboard.php'); exit; }

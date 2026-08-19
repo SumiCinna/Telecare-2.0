@@ -1,9 +1,9 @@
 
 <?php
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 require_once '../database/config.php';
 // doctor/login.php
-if (isset($_SESSION['doctor_id'])) { header('Location: dashboard.php'); exit; }
+    if (isset($_SESSION['doctor_id'])) { header('Location: dashboard.php'); exit; }
 
 $error = '';
 
@@ -118,3 +118,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 </body>
 </html>
+

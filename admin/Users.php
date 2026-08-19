@@ -1,5 +1,5 @@
 <?php
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 
@@ -7,6 +7,30 @@ require_once '../database/config.php';
 
 if (!isset($_SESSION['admin_id'])) { header('Location: login.php'); exit; }
 $admin_id = $_SESSION['admin_id'];
+
+// ── Ensure audit_logs table exists (fallback if the SQL file was not run) ──
+$conn->query("CREATE TABLE IF NOT EXISTS `audit_logs` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `admin_id` int NOT NULL,
+  `action` varchar(50) NOT NULL,
+  `entity_type` varchar(30) NOT NULL,
+  `entity_id` int NOT NULL,
+  `old_values` json DEFAULT NULL,
+  `new_values` json DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `admin_id` (`admin_id`),
+  KEY `entity` (`entity_type`,`entity_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+// ── Audit logging helper ──
+function log_audit($conn, $admin_id, $action, $entity_type, $entity_id, $old = null, $new = null) {
+    $old_json = $old === null ? null : json_encode($old, JSON_UNESCAPED_SLASHES);
+    $new_json = $new === null ? null : json_encode($new, JSON_UNESCAPED_SLASHES);
+    $stmt = $conn->prepare("INSERT INTO audit_logs (admin_id, action, entity_type, entity_id, old_values, new_values) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ississ", $admin_id, $action, $entity_type, $entity_id, $old_json, $new_json);
+    $stmt->execute();
+}
 
 /* ══════════════════════════════════════════════
    ACTIONS
@@ -45,6 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_doctor'])) {
     );
     $stmt->bind_param("sssssss", $fn, $em, $spec, $sub, $placeholder, $token, $expires);
     $stmt->execute();
+    $new_id = $conn->insert_id;
+    log_audit($conn, $admin_id, 'create', 'doctor', $new_id, null, [
+        'full_name'=>$fn,'email'=>$em,'specialty'=>$spec,'subspecialty'=>$sub
+    ]);
 
     $_SESSION['toast']       = "Doctor account created! Setup link emailed.";
     $_SESSION['invite_link']  = 'http://' . $_SERVER['HTTP_HOST'] . '/doctor/setup.php?token=' . $token;
@@ -80,7 +108,11 @@ if (isset($_GET['resend_invite'])) {
 // ── Toggle doctor active/inactive ──
 if (isset($_GET['toggle_doctor'])) {
     $did = (int)$_GET['toggle_doctor'];
+    $oldRow = $conn->query("SELECT status FROM doctors WHERE id=$did")->fetch_assoc();
+    $oldStatus = $oldRow['status'] ?? 'unknown';
+    $newStatus = $oldStatus === 'active' ? 'inactive' : 'active';
     $conn->query("UPDATE doctors SET status = IF(status='active','inactive','active'), is_available = IF(status='inactive',1,0) WHERE id=$did");
+    log_audit($conn, $admin_id, 'toggle', 'doctor', $did, ['status'=>$oldStatus], ['status'=>$newStatus]);
     header('Location: users.php'); exit;
 }
 
@@ -90,6 +122,7 @@ if (isset($_GET['toggle_patient'])) {
     $cur = (int)($_GET['active'] ?? 1);
     $new = $cur ? 0 : 1;
     $conn->query("UPDATE patients SET is_active=$new WHERE id=$pid");
+    log_audit($conn, $admin_id, 'toggle', 'patient', $pid, ['is_active'=>$cur], ['is_active'=>$new]);
     $_SESSION['toast'] = $new ? 'Account activated.' : 'Account deactivated.';
     header('Location: users.php'); exit;
 }
@@ -97,7 +130,11 @@ if (isset($_GET['toggle_patient'])) {
 // ── Toggle staff active/inactive ──
 if (isset($_GET['toggle_staff'])) {
     $sid = (int)$_GET['toggle_staff'];
+    $oldRow = $conn->query("SELECT status FROM staff_accounts WHERE id=$sid")->fetch_assoc();
+    $oldStatus = $oldRow['status'] ?? 'unknown';
+    $newStatus = $oldStatus === 'active' ? 'inactive' : 'active';
     $conn->query("UPDATE staff_accounts SET status = IF(status='active','inactive','active') WHERE id=$sid");
+    log_audit($conn, $admin_id, 'toggle', 'staff', $sid, ['status'=>$oldStatus], ['status'=>$newStatus]);
     $_SESSION['toast'] = 'Staff account updated.';
     header('Location: users.php'); exit;
 }
@@ -125,6 +162,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_staff'])) {
     $stmt = $conn->prepare("INSERT INTO staff_accounts (full_name, email, password, status) VALUES (?,?,?,'active')");
     $stmt->bind_param("sss", $fn, $em, $hash);
     $stmt->execute();
+    $new_id = $conn->insert_id;
+    log_audit($conn, $admin_id, 'create', 'staff', $new_id, null, ['full_name'=>$fn,'email'=>$em]);
+
     $_SESSION['toast'] = 'Staff account created.';
     header('Location: users.php'); exit;
 }
@@ -177,6 +217,111 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_doctor'])) {
     $stmt->bind_param("sssssii", $license, $board, $license_file, $cert_file, $now, $admin_id, $did);
     $stmt->execute();
     $_SESSION['toast'] = "Doctor verified successfully.";
+    log_audit($conn, $admin_id, 'verify', 'doctor', $did, null, ['license_number'=>$license,'issuing_board'=>$board,'has_license_file'=>!empty($license_file),'has_cert_file'=>!empty($cert_file)]);
+    header('Location: users.php'); exit;
+}
+
+// ── Update doctor ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_doctor'])) {
+    $did = (int)$_POST['doctor_id'];
+    $fn = trim($_POST['full_name'] ?? '');
+    $em = trim($_POST['email'] ?? '');
+    $spec = trim($_POST['specialty'] ?? '');
+    $sub = trim($_POST['subspecialty'] ?? '');
+    $clinic = trim($_POST['clinic_name'] ?? '');
+    $phone = trim($_POST['phone_number'] ?? '');
+    $fee = trim($_POST['consultation_fee'] ?? '0');
+    $langs = trim($_POST['languages_spoken'] ?? '');
+
+    $errors = [];
+    if (!$fn) $errors[] = 'Full name is required';
+    if (!$em) $errors[] = 'Email is required';
+    if ($em && !filter_var($em, FILTER_VALIDATE_EMAIL)) $errors[] = 'Invalid email format';
+    if ($fee !== '' && !is_numeric($fee)) $errors[] = 'Consultation fee must be a number';
+
+    $old = $conn->query("SELECT * FROM doctors WHERE id=$did")->fetch_assoc();
+
+    if (empty($errors)) {
+        $stmt = $conn->prepare("UPDATE doctors SET full_name=?, email=?, specialty=?, subspecialty=?, clinic_name=?, phone_number=?, consultation_fee=?, languages_spoken=? WHERE id=?");
+        $stmt->bind_param("ssssssssi", $fn, $em, $spec, $sub, $clinic, $phone, $fee, $langs, $did);
+        $stmt->execute();
+
+        $new = $conn->query("SELECT * FROM doctors WHERE id=$did")->fetch_assoc();
+        log_audit($conn, $admin_id, 'update', 'doctor', $did,
+            ['full_name'=>$old['full_name'],'email'=>$old['email']],
+            ['full_name'=>$fn,'email'=>$em]);
+
+        $_SESSION['toast'] = 'Doctor updated successfully.';
+    } else {
+        $_SESSION['toast_error'] = implode(', ', $errors);
+    }
+    header('Location: users.php'); exit;
+}
+
+// ── Update patient ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_patient'])) {
+    $pid = (int)$_POST['patient_id'];
+    $fn = trim($_POST['full_name'] ?? '');
+    $em = trim($_POST['email'] ?? '');
+    $dob = trim($_POST['date_of_birth'] ?? '');
+    $gender = trim($_POST['gender'] ?? '');
+    $phone = trim($_POST['phone_number'] ?? '');
+    $address = trim($_POST['home_address'] ?? '');
+    $city = trim($_POST['city'] ?? '');
+    $region = trim($_POST['country_region'] ?? '');
+    $lang = trim($_POST['preferred_language'] ?? '');
+    $active = trim($_POST['is_active'] ?? '1');
+
+    $errors = [];
+    if (!$fn) $errors[] = 'Full name is required';
+    if (!$em) $errors[] = 'Email is required';
+    if ($em && !filter_var($em, FILTER_VALIDATE_EMAIL)) $errors[] = 'Invalid email format';
+
+    $old = $conn->query("SELECT * FROM patients WHERE id=$pid")->fetch_assoc();
+
+    if (empty($errors)) {
+        $stmt = $conn->prepare("UPDATE patients SET full_name=?, email=?, date_of_birth=?, gender=?, phone_number=?, home_address=?, city=?, country_region=?, preferred_language=?, is_active=? WHERE id=?");
+        $stmt->bind_param("sssssssssii", $fn, $em, $dob, $gender, $phone, $address, $city, $region, $lang, $active, $pid);
+        $stmt->execute();
+
+        $new = $conn->query("SELECT * FROM patients WHERE id=$pid")->fetch_assoc();
+        log_audit($conn, $admin_id, 'update', 'patient', $pid,
+            ['full_name'=>$old['full_name'],'email'=>$old['email'],'is_active'=>$old['is_active']],
+            ['full_name'=>$fn,'email'=>$em,'is_active'=>$active]);
+
+        $_SESSION['toast'] = 'Patient updated successfully.';
+    } else {
+        $_SESSION['toast_error'] = implode(', ', $errors);
+    }
+    header('Location: users.php'); exit;
+}
+
+// ── Update staff ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_staff'])) {
+    $sid = (int)$_POST['staff_id'];
+    $fn = trim($_POST['full_name'] ?? '');
+    $em = trim($_POST['email'] ?? '');
+
+    $errors = [];
+    if (!$fn) $errors[] = 'Full name is required';
+    if (!$em) $errors[] = 'Email is required';
+    if ($em && !filter_var($em, FILTER_VALIDATE_EMAIL)) $errors[] = 'Invalid email format';
+
+    $old = $conn->query("SELECT * FROM staff_accounts WHERE id=$sid")->fetch_assoc();
+
+    if (empty($errors)) {
+        $stmt = $conn->prepare("UPDATE staff_accounts SET full_name=?, email=? WHERE id=?");
+        $stmt->bind_param("ssi", $fn, $em, $sid);
+        $stmt->execute();
+
+        log_audit($conn, $admin_id, 'update', 'staff', $sid,
+            ['full_name'=>$old['full_name'],'email'=>$old['email']],
+            ['full_name'=>$fn,'email'=>$em]);
+
+        $_SESSION['toast'] = 'Staff updated successfully.';
+    } else {
+        $_SESSION['toast_error'] = implode(', ', $errors);
+    }
     header('Location: users.php'); exit;
 }
 
@@ -257,6 +402,19 @@ foreach ($staff as $s) {
         'status' => $s['status'] === 'active' ? 'active' : 'inactive', 'raw' => $s,
     ];
 }
+
+/* ══════════════════════════════════════════════
+   FETCH AUDIT LOGS (account change history)
+   ══════════════════════════════════════════════ */
+$auditLogs = [];
+$alog = $conn->query(
+    "SELECT a.*, adm.full_name AS admin_name
+     FROM audit_logs a
+     LEFT JOIN admins adm ON adm.id = a.admin_id
+     ORDER BY a.created_at DESC
+     LIMIT 200"
+);
+if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -297,6 +455,7 @@ foreach ($staff as $s) {
     .btn-blue{background:rgba(63,130,227,0.1);color:var(--blue)}.btn-blue:hover{background:var(--blue);color:#fff}
     .btn-teal{background:rgba(36,68,65,0.08);color:var(--green)}.btn-teal:hover{background:var(--green);color:#fff}
     .btn-activate{background:rgba(34,197,94,0.1);color:#16a34a}.btn-activate:hover{background:#16a34a;color:#fff}
+    .btn-edit{background:rgba(63,130,227,0.1);color:var(--blue)}.btn-edit:hover{background:var(--blue);color:#fff}
 
     /* ── Controls bar: search + filters ── */
     .controls-bar{display:flex;flex-wrap:wrap;align-items:center;gap:1rem;margin-bottom:1.5rem}
@@ -415,6 +574,10 @@ foreach ($staff as $s) {
       <button class="btn-primary-alt" onclick="openModal('modal-create-staff')">
         <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
         Add Staff
+      </button>
+      <button class="btn-blue btn-sm" style="padding:0.6rem 1rem;border-radius:50px;border:1.5px solid rgba(63,130,227,0.2);background:rgba(63,130,227,0.1);font-weight:600;cursor:pointer;" onclick="openAuditLogs()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Log History
       </button>
     </div>
   </div>
@@ -651,9 +814,116 @@ foreach ($staff as $s) {
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════
+     MODAL: Edit Doctor
+     ══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-edit-doctor">
+  <div class="modal">
+    <h3>Edit Doctor</h3>
+    <div id="edit-doctor-live-warning" class="live-warning"></div>
+    <form method="POST" id="edit-doctor-form" onsubmit="return validateEditDoctor()">
+      <input type="hidden" name="doctor_id" id="edit-doctor-id"/>
+      <div class="form-field"><label class="field-label">Full Name *</label><input type="text" name="full_name" id="edit-doctor-name" class="field-input" required/><div class="field-warning" id="edit-warn-doctor-name">Full name is required.</div></div>
+      <div class="form-field"><label class="field-label">Email Address *</label><input type="email" name="email" id="edit-doctor-email" class="field-input" required/><div class="field-warning" id="edit-warn-doctor-email">Enter a valid email address.</div></div>
+      <div class="form-row">
+        <div class="form-field"><label class="field-label">Specialty</label><input type="text" name="specialty" id="edit-doctor-specialty" class="field-input"/></div>
+        <div class="form-field"><label class="field-label">Subspecialty</label><input type="text" name="subspecialty" id="edit-doctor-subspecialty" class="field-input"/></div>
+      </div>
+      <div class="form-field"><label class="field-label">Clinic Name</label><input type="text" name="clinic_name" id="edit-doctor-clinic" class="field-input"/></div>
+      <div class="form-row">
+        <div class="form-field"><label class="field-label">Phone Number</label><input type="text" name="phone_number" id="edit-doctor-phone" class="field-input"/></div>
+        <div class="form-field"><label class="field-label">Consultation Fee (₱)</label><input type="number" step="0.01" min="0" name="consultation_fee" id="edit-doctor-fee" class="field-input"/></div>
+      </div>
+      <div class="form-field"><label class="field-label">Languages Spoken</label><input type="text" name="languages_spoken" id="edit-doctor-langs" class="field-input" placeholder="e.g. English, Tagalog"/></div>
+      <button type="submit" name="update_doctor" class="btn-submit">Save Changes</button>
+      <button type="button" class="btn-cancel" onclick="closeModal('modal-edit-doctor')">Cancel</button>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODAL: Edit Patient
+     ══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-edit-patient">
+  <div class="modal">
+    <h3>Edit Patient</h3>
+    <div id="edit-patient-live-warning" class="live-warning"></div>
+    <form method="POST" id="edit-patient-form" onsubmit="return validateEditPatient()">
+      <input type="hidden" name="patient_id" id="edit-patient-id"/>
+      <div class="form-field"><label class="field-label">Full Name *</label><input type="text" name="full_name" id="edit-patient-name" class="field-input" required/><div class="field-warning" id="edit-warn-patient-name">Full name is required.</div></div>
+      <div class="form-field"><label class="field-label">Email Address *</label><input type="email" name="email" id="edit-patient-email" class="field-input" required/><div class="field-warning" id="edit-warn-patient-email">Enter a valid email address.</div></div>
+      <div class="form-row">
+        <div class="form-field"><label class="field-label">Date of Birth</label><input type="date" name="date_of_birth" id="edit-patient-dob" class="field-input"/></div>
+        <div class="form-field">
+          <label class="field-label">Gender</label>
+          <select name="gender" id="edit-patient-gender" class="field-input">
+            <option value="">—</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field"><label class="field-label">Phone Number</label><input type="text" name="phone_number" id="edit-patient-phone" class="field-input"/></div>
+      <div class="form-field"><label class="field-label">Home Address</label><input type="text" name="home_address" id="edit-patient-address" class="field-input"/></div>
+      <div class="form-row">
+        <div class="form-field"><label class="field-label">City</label><input type="text" name="city" id="edit-patient-city" class="field-input"/></div>
+        <div class="form-field"><label class="field-label">Country / Region</label><input type="text" name="country_region" id="edit-patient-region" class="field-input"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label class="field-label">Preferred Language</label><input type="text" name="preferred_language" id="edit-patient-lang" class="field-input"/></div>
+        <div class="form-field">
+          <label class="field-label">Status</label>
+          <select name="is_active" id="edit-patient-active" class="field-input">
+            <option value="1">Active</option>
+            <option value="0">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" name="update_patient" class="btn-submit">Save Changes</button>
+      <button type="button" class="btn-cancel" onclick="closeModal('modal-edit-patient')">Cancel</button>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODAL: Edit Staff
+     ══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-edit-staff">
+  <div class="modal">
+    <h3>Edit Staff</h3>
+    <div id="edit-staff-live-warning" class="live-warning"></div>
+    <form method="POST" id="edit-staff-form" onsubmit="return validateEditStaff()">
+      <input type="hidden" name="staff_id" id="edit-staff-id"/>
+      <div class="form-field"><label class="field-label">Full Name *</label><input type="text" name="full_name" id="edit-staff-name" class="field-input" required/><div class="field-warning" id="edit-warn-staff-name">Full name is required.</div></div>
+      <div class="form-field"><label class="field-label">Email Address *</label><input type="email" name="email" id="edit-staff-email" class="field-input" required/><div class="field-warning" id="edit-warn-staff-email">Enter a valid email address.</div></div>
+      <button type="submit" name="update_staff" class="btn-submit">Save Changes</button>
+      <button type="button" class="btn-cancel" onclick="closeModal('modal-edit-staff')">Cancel</button>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODAL: Audit Log History
+     ══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-audit-logs">
+  <div class="modal" style="max-width:640px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;">
+      <h3 style="margin-bottom:0;">Account Change History</h3>
+      <button onclick="closeModal('modal-audit-logs')" style="background:none;border:none;cursor:pointer;color:#9ab0ae;padding:4px;" title="Close">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="audit-log-body" style="max-height:55vh;overflow-y:auto;"></div>
+    <div id="audit-log-pages" style="display:flex;align-items:center;justify-content:center;gap:0.6rem;margin-top:1rem;"></div>
+    <button class="btn-cancel" onclick="closeModal('modal-audit-logs')">Close</button>
+  </div>
+</div>
+
 <!-- ── Data for JS ── -->
 <script>
 const ALL_USERS = <?= json_encode(array_values($allUsers), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+const AUDIT_LOGS = <?= json_encode($auditLogs, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 
 let currentFilter = 'all';
 
@@ -720,6 +990,7 @@ function renderRows(rows) {
     if (u.type === 'doctor') {
       const d = u.raw;
       actions += `<button class="btn-sm btn-teal" onclick="openDetailsModal(${d.id})">View</button>`;
+      actions += `<button class="btn-sm btn-edit" onclick="openEditDoctorModal(${d.id})">Edit</button>`;
       actions += `<a href="?toggle_doctor=${d.id}" class="btn-sm ${d.status==='active'?'btn-red':'btn-activate'}">${d.status==='active'?'Deactivate':'Activate'}</a>`;
       if (!d.is_verified) {
         actions += `<button class="btn-sm btn-blue" onclick="openVerifyModal(${d.id}, '${escAttr(d.full_name)}')">Verify</button>`;
@@ -731,11 +1002,13 @@ function renderRows(rows) {
       const p = u.raw;
       const isActive = u.status === 'active';
       actions += `<button class="btn-sm btn-teal" onclick="openPatientModal(${p.id})">View</button>`;
+      actions += `<button class="btn-sm btn-edit" onclick="openEditPatientModal(${p.id})">Edit</button>`;
       actions += `<a href="?toggle_patient=${p.id}&active=${isActive?1:0}" class="btn-sm ${isActive?'btn-red':'btn-activate'}" onclick="return confirm('${isActive?'Deactivate':'Activate'} ${escAttr(p.full_name)}\\'s account?')">${isActive?'Deactivate':'Activate'}</a>`;
     } else if (u.type === 'staff') {
       const s = u.raw;
       const isActive = u.status === 'active';
       actions += `<button class="btn-sm btn-teal" onclick="openStaffModal(${s.id})">View</button>`;
+      actions += `<button class="btn-sm btn-edit" onclick="openEditStaffModal(${s.id})">Edit</button>`;
       actions += `<a href="?toggle_staff=${s.id}" class="btn-sm ${isActive?'btn-red':'btn-activate'}" onclick="return confirm('${isActive?'Deactivate':'Activate'} ${escAttr(s.full_name)}\\'s account?')">${isActive?'Deactivate':'Activate'}</a>`;
     } else {
       actions += `<span style="color:#c0cece;font-size:0.78rem;font-style:italic;">No actions</span>`;
@@ -766,13 +1039,6 @@ function setFieldWarn(inputEl, warnEl, show, msg = '') {
   inputEl.classList.toggle('invalid', !!show);
   warnEl.classList.toggle('show', !!show);
   if (show && msg) warnEl.textContent = msg;
-}
-
-function setLiveWarn(msg = '') {
-  const box = document.getElementById('verify-live-warning');
-  if (!box) return;
-  if (msg) { box.textContent = msg; box.classList.add('show'); }
-  else { box.textContent = ''; box.classList.remove('show'); }
 }
 
 function clearVerifyWarnings() {
@@ -850,6 +1116,203 @@ if (verifyForm) {
     }
     setLiveWarn('');
   });
+}
+
+// ── Edit Doctor modal ──
+function openEditDoctorModal(id) {
+  const u = ALL_USERS.find(x => x.type === 'doctor' && x.id == id);
+  if (!u) return;
+  const d = u.raw;
+  document.getElementById('edit-doctor-id').value      = d.id;
+  document.getElementById('edit-doctor-name').value    = d.full_name || '';
+  document.getElementById('edit-doctor-email').value   = d.email || '';
+  document.getElementById('edit-doctor-specialty').value   = d.specialty || '';
+  document.getElementById('edit-doctor-subspecialty').value = d.subspecialty || '';
+  document.getElementById('edit-doctor-clinic').value  = d.clinic_name || '';
+  document.getElementById('edit-doctor-phone').value   = d.phone_number || '';
+  document.getElementById('edit-doctor-fee').value     = d.consultation_fee ?? '';
+   document.getElementById('edit-doctor-langs').value   = d.languages_spoken || '';
+   clearEditWarnings('edit-doctor');
+   openModal('modal-edit-doctor');
+}
+
+function validateEditDoctor() {
+  let ok = true;
+  const name  = document.getElementById('edit-doctor-name');
+  const email = document.getElementById('edit-doctor-email');
+  const fee   = document.getElementById('edit-doctor-fee');
+  if (!name.value.trim()) { setFieldWarn(name, document.getElementById('edit-warn-doctor-name'), true); ok = false; }
+  else setFieldWarn(name, document.getElementById('edit-warn-doctor-name'), false);
+  if (!email.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
+    setFieldWarn(email, document.getElementById('edit-warn-doctor-email'), true); ok = false;
+  } else setFieldWarn(email, document.getElementById('edit-warn-doctor-email'), false);
+  if (fee.value.trim() !== '' && isNaN(parseFloat(fee.value))) {
+    setLiveWarn('Consultation fee must be a number.', 'edit-doctor'); ok = false;
+  }
+  if (!ok) setLiveWarn('Please fix the highlighted fields.', 'edit-doctor');
+  return ok;
+}
+
+// ── Edit Patient modal ──
+function openEditPatientModal(id) {
+  const u = ALL_USERS.find(x => x.type === 'patient' && x.id == id);
+  if (!u) return;
+  const p = u.raw;
+  document.getElementById('edit-patient-id').value       = p.id;
+  document.getElementById('edit-patient-name').value     = p.full_name || '';
+  document.getElementById('edit-patient-email').value    = p.email || '';
+  document.getElementById('edit-patient-dob').value      = p.date_of_birth || '';
+  document.getElementById('edit-patient-gender').value   = p.gender || '';
+  document.getElementById('edit-patient-phone').value    = p.phone_number || '';
+  document.getElementById('edit-patient-address').value  = p.home_address || '';
+  document.getElementById('edit-patient-city').value     = p.city || '';
+  document.getElementById('edit-patient-region').value   = p.country_region || '';
+  document.getElementById('edit-patient-lang').value     = p.preferred_language || '';
+  document.getElementById('edit-patient-active').value   = p.is_active ? '1' : '0';
+  clearEditWarnings('edit-patient');
+  openModal('modal-edit-patient');
+}
+
+function validateEditPatient() {
+  let ok = true;
+  const name  = document.getElementById('edit-patient-name');
+  const email = document.getElementById('edit-patient-email');
+  if (!name.value.trim()) { setFieldWarn(name, document.getElementById('edit-warn-patient-name'), true); ok = false; }
+  else setFieldWarn(name, document.getElementById('edit-warn-patient-name'), false);
+  if (!email.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
+    setFieldWarn(email, document.getElementById('edit-warn-patient-email'), true); ok = false;
+  } else setFieldWarn(email, document.getElementById('edit-warn-patient-email'), false);
+  if (!ok) setLiveWarn('Please fix the highlighted fields.', 'edit-patient');
+  return ok;
+}
+
+// ── Edit Staff modal ──
+function openEditStaffModal(id) {
+  const u = ALL_USERS.find(x => x.type === 'staff' && x.id == id);
+  if (!u) return;
+  const s = u.raw;
+  document.getElementById('edit-staff-id').value     = s.id;
+  document.getElementById('edit-staff-name').value   = s.full_name || '';
+   document.getElementById('edit-staff-email').value  = s.email || '';
+   clearEditWarnings('edit-staff');
+   openModal('modal-edit-staff');
+}
+
+function validateEditStaff() {
+  let ok = true;
+  const name  = document.getElementById('edit-staff-name');
+  const email = document.getElementById('edit-staff-email');
+  if (!name.value.trim()) { setFieldWarn(name, document.getElementById('edit-warn-staff-name'), true); ok = false; }
+  else setFieldWarn(name, document.getElementById('edit-warn-staff-name'), false);
+  if (!email.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
+    setFieldWarn(email, document.getElementById('edit-warn-staff-email'), true); ok = false;
+  } else setFieldWarn(email, document.getElementById('edit-warn-staff-email'), false);
+  if (!ok) setLiveWarn('Please fix the highlighted fields.', 'edit-staff');
+  return ok;
+}
+
+function setLiveWarn(msg = '', prefix = '') {
+  const box = document.getElementById(prefix ? prefix + '-live-warning' : 'verify-live-warning');
+  if (!box) return;
+  if (msg) { box.textContent = msg; box.classList.add('show'); }
+  else { box.textContent = ''; box.classList.remove('show'); }
+}
+
+function clearEditWarnings(prefix) {
+  setLiveWarn('', prefix);
+  const map = {
+    'edit-doctor': ['edit-doctor-name','edit-doctor-email'],
+    'edit-patient': ['edit-patient-name','edit-patient-email'],
+    'edit-staff': ['edit-staff-name','edit-staff-email'],
+  };
+  (map[prefix] || []).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('invalid');
+  });
+  const warnMap = {
+    'edit-doctor': ['edit-warn-doctor-name','edit-warn-doctor-email'],
+    'edit-patient': ['edit-warn-patient-name','edit-warn-patient-email'],
+    'edit-staff': ['edit-warn-staff-name','edit-warn-staff-email'],
+  };
+  (warnMap[prefix] || []).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('show');
+  });
+}
+
+// ── Audit log history ──
+let auditPage = 0;
+const AUDIT_PAGE_SIZE = 10;
+
+function openAuditLogs() {
+  auditPage = 0;
+  renderAuditLogs();
+  openModal('modal-audit-logs');
+}
+
+function renderAuditLogs() {
+  const body = document.getElementById('audit-log-body');
+  const pages = document.getElementById('audit-log-pages');
+  if (!AUDIT_LOGS.length) {
+    body.innerHTML = `<div class="empty-row" style="padding:2rem;">No account changes logged yet.</div>`;
+    pages.innerHTML = '';
+    return;
+  }
+
+  const totalPages = Math.ceil(AUDIT_LOGS.length / AUDIT_PAGE_SIZE);
+  const start = auditPage * AUDIT_PAGE_SIZE;
+  const pageItems = AUDIT_LOGS.slice(start, start + AUDIT_PAGE_SIZE);
+
+  body.innerHTML = pageItems.map(function (l) {
+    const admin = l.admin_name || 'System';
+    const action = ucFirst(l.action);
+    const entity = ucFirst(l.entity_type) + ' #' + l.id;
+    const oldVals = l.old_values ? JSON.parse(l.old_values) : null;
+    const newVals = l.new_values ? JSON.parse(l.new_values) : null;
+    let diff = '';
+
+    if (oldVals && newVals) {
+      diff = '<div style="margin-top:0.5rem;font-size:0.78rem;color:#9ab0ae;">';
+      for (const k in newVals) {
+        if (String(oldVals[k]) !== String(newVals[k])) {
+          diff += `<div><span style="color:var(--red);">− ${escHtml(k)}:</span> ${escHtml(oldVals[k] ?? '')}</div>`;
+          diff += `<div><span style="color:#16a34a;">+ ${escHtml(k)}:</span> ${escHtml(newVals[k] ?? '')}</div>`;
+        }
+      }
+      diff += '</div>';
+    } else if (newVals) {
+      diff = '<div style="margin-top:0.5rem;font-size:0.78rem;color:#9ab0ae;">';
+      for (const k in newVals) {
+        diff += `<div><span style="color:#16a34a;">+ ${escHtml(k)}:</span> ${escHtml(newVals[k] ?? '')}</div>`;
+      }
+      diff += '</div>';
+    }
+
+    const badgeCls = l.action === 'create' ? 'badge-green' : (l.action === 'delete' ? 'badge-red' : (l.action === 'toggle' ? 'badge-orange' : 'badge-blue'));
+    return `<div style="padding:0.85rem 0;border-bottom:1px solid rgba(36,68,65,0.06);">
+      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+        <span class="badge ${badgeCls}">${escHtml(action)}</span>
+        <strong style="font-size:0.85rem;">${escHtml(entity)}</strong>
+        <span style="margin-left:auto;font-size:0.74rem;color:#9ab0ae;">${fmtDate(l.created_at)} ${escHtml((l.created_at||'').slice(11))}</span>
+      </div>
+      <div style="font-size:0.82rem;margin-top:0.3rem;color:var(--green);">by <strong>${escHtml(admin)}</strong></div>
+      ${diff}
+    </div>`;
+  }).join('');
+
+  let pagesHtml = '';
+  if (totalPages > 1) {
+    pagesHtml += `<button class="btn-sm" style="background:rgba(36,68,65,0.1);color:var(--green);${auditPage > 0 ? '' : 'opacity:0.4;cursor:not-allowed;'}" ${auditPage > 0 ? '' : 'disabled'} onclick="changeAuditPage(-1)">Prev</button>`;
+    pagesHtml += `<span style="font-size:0.78rem;color:#9ab0ae;font-weight:600;">Page ${auditPage + 1} of ${totalPages}</span>`;
+    pagesHtml += `<button class="btn-sm" style="background:rgba(36,68,65,0.1);color:var(--green);${auditPage < totalPages - 1 ? '' : 'opacity:0.4;cursor:not-allowed;'}" ${auditPage < totalPages - 1 ? '' : 'disabled'} onclick="changeAuditPage(1)">Next</button>`;
+  }
+  pages.innerHTML = pagesHtml;
+}
+
+function changeAuditPage(delta) {
+  auditPage += delta;
+  renderAuditLogs();
+  document.getElementById('audit-log-body').scrollTop = 0;
 }
 
 // ── Copy setup link ──

@@ -3,7 +3,7 @@ require_once __DIR__ . '/process_consultation_v2.php';
 __halt_compiler();
 
 date_default_timezone_set('Asia/Manila');
-require_once 'includes/auth.php';
+require_once __DIR__ . '/../includes/auth.php';
 // process_consultation.php
 
 // ── Enable error logging ─────────────────────────────────────────────────
@@ -201,7 +201,7 @@ if ($role === 'doctor') {
 }
 
 // ── 8. Generate PDF ───────────────────────────────────────────────────────
-require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 function enc(string $s): string {
     $s = preg_replace('/\*\*(.*?)\*\*/', '$1', $s);
@@ -406,3 +406,6 @@ $stmt2 = $conn->prepare("
 $stmt2->bind_param("ssi", $summary, $filename, $appt_id);
 $stmt2->execute();
 debug_log("=== END PROCESS CONSULTATION SUCCESS ===");
+
+
+

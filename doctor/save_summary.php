@@ -244,5 +244,5 @@ $stmt->execute();
 echo json_encode([
     'status'   => 'success',
     'message'  => 'Summary saved and PDF updated.',
-    'pdf_url'  => '../download_summary.php?appt_id=' . $appt_id,
+    'pdf_url'  => '/summary?appt_id=' . $appt_id,
 ]);

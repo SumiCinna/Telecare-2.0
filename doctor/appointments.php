@@ -383,7 +383,7 @@ require_once 'includes/header.php';
 
         <?php if (($status === 'Completed' || $status === 'Confirmed') && $hasSummary): ?>
           <!-- View Summary PDF -->
-          <a href="../download_summary.php?appt_id=<?= $a['id'] ?>" target="_blank" class="btn-summary-sm">
+          <a href="/summary?appt_id=<?= $a['id'] ?>" target="_blank" class="btn-summary-sm">
             📋 View Summary
           </a>
           <!-- Edit Summary button -->

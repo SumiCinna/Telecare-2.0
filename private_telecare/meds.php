@@ -1,5 +1,5 @@
 <?php
-require_once 'includes/auth.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 function formatOcrText(string $text, string $type): string {
     if (!$text) return '<span style="color:#9ab0ae;font-style:italic;">No text extracted.</span>';
@@ -60,7 +60,7 @@ $scanned = $conn->query("
 
 $page_title = 'My Prescriptions — TELE-CARE';
 $active_nav = 'meds';
-require_once 'includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="page">
@@ -117,7 +117,7 @@ require_once 'includes/header.php';
     </div>
     <?php if ($m['refills_remaining'] == 0): ?>
     <div style="margin-top:0.9rem;padding-top:0.9rem;border-top:1px solid rgba(36,68,65,0.08);font-size:0.82rem;color:var(--red);">
-      ⚠️ No refills remaining — <a href="chat.php" style="color:var(--red);font-weight:600;">message your doctor</a> to request more.
+      ⚠️ No refills remaining — <a href="router.php?page=chat" style="color:var(--red);font-weight:600;">message your doctor</a> to request more.
     </div>
     <?php endif; ?>
   </div>
@@ -248,6 +248,12 @@ function copyScanned(id) {
 }
 </script>
 
-<?php require_once 'includes/nav.php'; ?>
+<?php require_once __DIR__ . '/../includes/nav.php'; ?>
 </body>
 </html>
+
+
+
+
+
+

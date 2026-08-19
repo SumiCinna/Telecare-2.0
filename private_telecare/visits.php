@@ -1,6 +1,6 @@
 <?php
 date_default_timezone_set('Asia/Manila');
-require_once 'includes/auth.php';
+require_once __DIR__ . '/../includes/auth.php';
 // visits.php (for patients)
 // ── Handle new booking ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) {
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
     } else {
         $_SESSION['toast_error'] = "Invalid booking request.";
     }
-    header('Location: visits.php'); exit;
+    header('Location: ../visits.php'); exit;
 }
 
 // ── Fetch visits ──
@@ -92,7 +92,7 @@ unset($_SESSION['toast'], $_SESSION['toast_error']);
 
 $page_title = 'My Visits — TELE-CARE';
 $active_nav = 'visits';
-require_once 'includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 
 function isCallActive(string $date, string $time): bool {
     $appt = strtotime($date . ' ' . $time);
@@ -605,7 +605,7 @@ function isCallActive(string $date, string $time): bool {
 
             <?php elseif ($status === 'Confirmed' && $paid): ?>
               <?php if ($active): ?>
-                <a href="call_patient.php?appt_id=<?= $a['id'] ?>" class="join-call-btn">
+                <a href="router.php?page=call_patient&appt_id=<?= $a['id'] ?>" class="join-call-btn">
                   <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
                   <?= $early ? 'Join Early' : 'Join Video Call' ?>
                 </a>
@@ -620,12 +620,12 @@ function isCallActive(string $date, string $time): bool {
                   Video call opens 15 min before
                 </span>
               <?php endif; ?>
-              <a href="receipt.php?appt_id=<?= $a['id'] ?>" class="receipt-btn">
+              <a href="router.php?page=receipt&appt_id=<?= $a['id'] ?>" class="receipt-btn">
                 <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 Receipt
               </a>
               <?php if ($hasSummary): ?>
-                <a href="download_summary.php?appt_id=<?= $a['id'] ?>" target="_blank" class="summary-btn">
+                <a href="router.php?page=download_summary&appt_id=<?= $a['id'] ?>" target="_blank" class="summary-btn">
                   <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                   View Summary
                 </a>
@@ -637,12 +637,12 @@ function isCallActive(string $date, string $time): bool {
               <?php endif; ?>
 
             <?php elseif ($status === 'Completed'): ?>
-              <a href="receipt.php?appt_id=<?= $a['id'] ?>" class="receipt-btn">
+              <a href="router.php?page=receipt&appt_id=<?= $a['id'] ?>" class="receipt-btn">
                 <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 View Receipt
               </a>
               <?php if ($hasSummary): ?>
-              <a href="download_summary.php?appt_id=<?= $a['id'] ?>" target="_blank" class="summary-btn">
+              <a href="router.php?page=download_summary&appt_id=<?= $a['id'] ?>" target="_blank" class="summary-btn">
                 <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 View Summary
               </a>
@@ -673,7 +673,7 @@ function isCallActive(string $date, string $time): bool {
           Appointment confirmed &mdash; complete payment to secure your slot
           <?php if ($fee > 0): ?><strong style="color:#5b21b6;">&nbsp;&middot;&nbsp;&#8369;<?= number_format($fee, 2) ?></strong><?php endif; ?>
         </div>
-        <a href="pay.php?appt_id=<?= $a['id'] ?>" class="pay-now-btn">
+        <a href="router.php?page=pay&appt_id=<?= $a['id'] ?>" class="pay-now-btn">
           <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
           Pay Now<?php if ($fee > 0): ?> &mdash; &#8369;<?= number_format($fee, 2) ?><?php endif; ?>
         </a>
@@ -728,13 +728,13 @@ function isCallActive(string $date, string $time): bool {
           </div>
           <div class="appt-actions">
             <?php if ($paid && $a['status'] === 'Completed'): ?>
-            <a href="receipt.php?appt_id=<?= $a['id'] ?>" class="receipt-btn" style="font-size:0.75rem;padding:0.38rem 0.82rem;">
+            <a href="router.php?page=receipt&appt_id=<?= $a['id'] ?>" class="receipt-btn" style="font-size:0.75rem;padding:0.38rem 0.82rem;">
               <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               View Receipt
             </a>
             <?php endif; ?>
             <?php if ($hasSummary): ?>
-            <a href="download_summary.php?appt_id=<?= $a['id'] ?>" target="_blank" class="summary-btn" style="font-size:0.75rem;padding:0.38rem 0.82rem;">
+            <a href="router.php?page=download_summary&appt_id=<?= $a['id'] ?>" target="_blank" class="summary-btn" style="font-size:0.75rem;padding:0.38rem 0.82rem;">
               <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               View Summary
             </a>
@@ -1095,6 +1095,11 @@ document.querySelectorAll('.toast-bar.success').forEach(t => setTimeout(() => t.
 document.querySelectorAll('.toast-bar.error').forEach(t => { t.style.cursor='pointer'; t.addEventListener('click', () => t.remove()); });
 </script>
 
-<?php require_once 'includes/nav.php'; ?>
+<?php require_once __DIR__ . '/../includes/nav.php'; ?>
 </body>
 </html>
+
+
+
+
+

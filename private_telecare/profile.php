@@ -1,5 +1,5 @@
 <?php
-require_once 'includes/auth.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     $current = $_POST['current_password'] ?? '';
@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
         $stmt->bind_param("si", $hashed, $patient_id);
         $stmt->execute();
         $stmt->close();
-        header('Location: profile.php?pwd_saved=1');
+        header('Location: router.php?page=profile&pwd_saved=1');
         exit;
     }
 }
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['photo_only'])) {
         }
     }
     $p = $conn->query("SELECT * FROM patients WHERE id = $patient_id")->fetch_assoc();
-    header('Location: profile.php?saved=1');
+    header('Location: router.php?page=profile&saved=1');
     exit;
 }
 
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $stmt->execute();
     $stmt->close();
 
-    header('Location: profile.php?saved=1');
+    header('Location: router.php?page=profile&saved=1');
     exit;
 }
 
@@ -90,7 +90,7 @@ $p = $conn->query("SELECT * FROM patients WHERE id = $patient_id")->fetch_assoc(
 
 $page_title = 'My Profile — TELE-CARE';
 $active_nav = 'profile';
-require_once 'includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
@@ -523,6 +523,10 @@ function validatePassword(field) {
 }
 </script>
 
-<?php require_once 'includes/nav.php'; ?>
+<?php require_once __DIR__ . '/../includes/nav.php'; ?>
 </body>
 </html>
+
+
+
+

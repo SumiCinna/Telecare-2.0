@@ -1,6 +1,6 @@
 <?php
 date_default_timezone_set('Asia/Manila');
-require_once 'includes/auth_any.php';
+require_once __DIR__ . '/../includes/auth_any.php';
 
 $log_file = __DIR__ . '/logs/consultation_debug.log';
 @mkdir(dirname($log_file), 0755, true);
@@ -280,7 +280,7 @@ RULES:
 }
 
 // ── 8. Generate PDF ───────────────────────────────────────────────────────
-require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 function enc_v2(string $s): string {
     $s = preg_replace('/\*\*(.*?)\*\*/', '$1', $s);
@@ -490,3 +490,6 @@ $stmt2->bind_param('ssi', $summary, $filename, $appt_id);
 $stmt2->execute();
 
 debug_log_v2('=== END PROCESS CONSULTATION V2 (GROQ) SUCCESS ===');
+
+
+

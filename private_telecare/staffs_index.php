@@ -153,26 +153,28 @@ $pageTitle = 'TELE-CARE | Staff Portals';
     <p class="desc">Select the right access point for your account role.</p>
 
     <section class="portal-grid" aria-label="Portal choices">
-      <a class="portal-link" href="doctor/login.php">
+      <a class="portal-link" href="../doctor/login.php">
         <span class="portal-name">Doctor Login</span>
         <span class="portal-note">For licensed doctors handling consultations and patient records.</span>
       </a>
 
-      <a class="portal-link" href="staff/login.php">
+      <a class="portal-link" href="../staff/login.php">
         <span class="portal-name">Staff Login</span>
         <span class="portal-note">For support staff managing appointments and operational tasks.</span>
       </a>
 
-      <a class="portal-link" href="admin/login.php">
+      <a class="portal-link" href="../admin/login.php">
         <span class="portal-name">Admin Login</span>
         <span class="portal-note">For administrators with system-wide management access.</span>
       </a>
     </section>
 
     <div class="footer">
-      <a class="back-link" href="index.php">← Back to Home</a>
+      <a class="back-link" href="../index.php">← Back to Home</a>
       <p class="hint">Tip: Bookmark this page for quick portal access.</p>
     </div>
   </main>
 </body>
 </html>
+
+

@@ -1,6 +1,6 @@
 <?php
 date_default_timezone_set('Asia/Manila');
-require_once 'includes/auth.php';
+require_once __DIR__ . '/../includes/auth.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -221,3 +221,7 @@ require_once 'includes/auth.php';
 
 </body>
 </html>
+
+
+
+

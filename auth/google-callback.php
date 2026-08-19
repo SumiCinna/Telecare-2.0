@@ -1,6 +1,6 @@
 <?php
 require_once '../database/config.php';
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 
 // Load environment variables
 $env_file = '../.env';
@@ -87,5 +87,7 @@ $_SESSION['patient_id']   = $patient_id;
 $_SESSION['patient_name'] = $full_name;
 $_SESSION['patient_email']= $google_email;
 
-header('Location: ../dashboard.php');
+header('Location: ../router.php?page=dashboard');
 exit;
+
+
