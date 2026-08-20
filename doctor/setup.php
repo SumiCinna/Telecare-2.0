@@ -1,20 +1,5 @@
 <?php
-/**
- * Doctor first-time setup page — reached only via the emailed setup link
- * (?token=...) generated in admin/users.php when the account is created,
- * or regenerated via "Resend Setup Link".
- *
- * The admin already fills in the doctor's full profile (specialty, phone,
- * fee, bio, schedule, clinic) at account-creation time, so this page only
- * needs to collect: a real password, and an optional profile photo.
- *
- * On success the doctor is logged in automatically (no separate login step)
- * and sent straight to dashboard.php.
- *
- * ASSUMPTION: your doctor session key is $_SESSION['doctor_id'] — adjust
- * the session_start()/session-set block below if your app uses a different
- * key or structure for a logged-in doctor.
- */
+// doctor/setup.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 require_once '../database/config.php';
 
