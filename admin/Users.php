@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_doctor'])) {
     ]);
 
     $_SESSION['toast']       = "Doctor account created! Setup link emailed.";
-    $_SESSION['invite_link']  = 'http://' . $_SERVER['HTTP_HOST'] . '/doctor/setup.php?token=' . $token;
+    $_SESSION['invite_link']  = BASE_URL . '/doctor/setup.php?token=' . $token;
     $_SESSION['invite_email'] = $em;
     $_SESSION['invite_name']  = $fn;
     header('Location: users.php'); exit;
