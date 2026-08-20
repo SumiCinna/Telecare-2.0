@@ -8,6 +8,16 @@
 logs/
 error_log
 
+   *.exe
+   *.zip
+   *.log
+   error_log
+   .ngrok.exe.old
+   uploads/
+   vendor/
+   __pycache__/
+   *.pyc
+
 # IDE / Editor
 .vscode/
 .idea/
@@ -61,3 +71,6 @@ uploads/ocr/*.tmp
 .env
 
 .env
+
+*.pem
+!database/ca.pem

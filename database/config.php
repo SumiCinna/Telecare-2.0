@@ -1,4 +1,7 @@
 <?php
+
+define('BASE_URL', $_ENV['BASE_URL'] ?? getenv('BASE_URL') ?: 'http://localhost:3000');
+
 // Load key=value pairs from project .env so $_ENV/getenv are available in Apache/XAMPP.
 if (!function_exists('telecare_load_env')) {
     function telecare_load_env(string $envPath): void
@@ -55,12 +58,21 @@ if (!function_exists('telecare_load_env')) {
 telecare_load_env(__DIR__ . '/../.env');
 
 // ── Database Connection ──
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', 'DREAMTEAM');
-define('DB_NAME', 'telecare');
+define('DB_HOST', $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?: 'localhost');
+define('DB_USER', $_ENV['DB_USER'] ?? getenv('DB_USER') ?: 'root');
+define('DB_PASS', $_ENV['DB_PASS'] ?? getenv('DB_PASS') ?: 'DREAMTEAM');
+define('DB_NAME', $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?: 'telecare');
+define('DB_PORT', $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?: 3306);
+define('DB_SSL_CA', $_ENV['DB_SSL_CA'] ?? getenv('DB_SSL_CA') ?: '');
 
-$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+$conn = mysqli_init();
+
+if (DB_SSL_CA && is_file(DB_SSL_CA)) {
+    mysqli_ssl_set($conn, null, null, DB_SSL_CA, null, null);
+    $conn->real_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT, null, MYSQLI_CLIENT_SSL);
+} else {
+    $conn->real_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT);
+}
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
