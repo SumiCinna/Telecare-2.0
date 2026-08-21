@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// index.php
 $pageTitle = "TELE-CARE | Your Health, Connected";
 ?>
 <!DOCTYPE html>
@@ -1233,3 +1234,5 @@ document.querySelectorAll('.feat-grid .feat-card, .svc-grid .svc-card').forEach(
 </script>
 </body>
 </html>
+
+

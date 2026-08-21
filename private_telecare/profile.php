@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// private_telecare/profile.php
 require_once __DIR__ . '/../includes/auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
@@ -526,6 +527,9 @@ function validatePassword(field) {
 <?php require_once __DIR__ . '/../includes/nav.php'; ?>
 </body>
 </html>
+
+
+
 
 
 

@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// ocr/ocr_api.php
 // ocr_api.php — replaces ocr_scan.py on live server
 
 function ocr_space_scan($file_path) {
@@ -132,3 +133,5 @@ function classify_document($text) {
     if ($rx_score  > $lab_score) return 'prescription';
     return 'unknown';
 }
+
+

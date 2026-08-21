@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// private_telecare/staffs_index.php
 $pageTitle = 'TELE-CARE | Staff Portals';
 ?>
 <!DOCTYPE html>
@@ -176,5 +177,8 @@ $pageTitle = 'TELE-CARE | Staff Portals';
   </main>
 </body>
 </html>
+
+
+
 
 

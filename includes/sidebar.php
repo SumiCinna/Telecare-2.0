@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// includes/sidebar.php
 // Determine active page from current file
 $current_page = basename($_SERVER['PHP_SELF'], '.php'); // e.g. 'doctors', 'patients'
 ?>
@@ -53,3 +54,6 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php'); // e.g. 'doctors', 'pati
     </a>
   </div>
 </aside>
+
+
+

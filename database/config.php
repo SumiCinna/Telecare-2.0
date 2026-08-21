@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// database/config.php
 
 define('BASE_URL', $_ENV['BASE_URL'] ?? getenv('BASE_URL') ?: 'http://localhost:3000');
 
@@ -78,3 +79,5 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 ?>
+
+

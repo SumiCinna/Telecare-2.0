@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// doctor/call.php
 date_default_timezone_set('Asia/Manila');
 require_once 'includes/auth.php';
 header('Permissions-Policy: camera=*, microphone=*, geolocation=*');
@@ -1044,4 +1045,7 @@ init();
 </script>
 </body>
 </html>
+
+
+
 

@@ -1,9 +1,11 @@
-<?php
+﻿<?php
+// admin/Users.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 
 require_once '../database/config.php';
+require_once __DIR__ . '/../private_telecare/booking/booking_helpers.php';
 
 if (!isset($_SESSION['admin_id'])) { header('Location: login.php'); exit; }
 $admin_id = $_SESSION['admin_id'];
@@ -38,13 +40,14 @@ function log_audit($conn, $admin_id, $action, $entity_type, $entity_id, $old = n
 
 // ── Create doctor (simple account — full profile filled in by the doctor later) ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_doctor'])) {
-    $fn   = trim($_POST['full_name'] ?? '');
+        $fn   = trim($_POST['full_name'] ?? '');
     $em   = trim($_POST['email'] ?? '');
+    $dept = trim($_POST['department'] ?? '');
     $spec = trim($_POST['specialty'] ?? '');
     $sub  = trim($_POST['subspecialty'] ?? '');
 
-    if (!$fn || !$em) {
-        $_SESSION['toast_error'] = 'Full name and email are required.';
+    if (!$fn || !$em || !array_key_exists($dept, BOOKING_DEPARTMENTS)) {
+        $_SESSION['toast_error'] = 'Full name, email, and a valid department are required.';
         header('Location: users.php'); exit;
     }
 
@@ -63,15 +66,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_doctor'])) {
     $token   = bin2hex(random_bytes(32));
     $expires = date('Y-m-d H:i:s', strtotime('+7 days'));
 
-    $stmt = $conn->prepare(
-        "INSERT INTO doctors (full_name, email, specialty, subspecialty, password, invite_token, invite_expires, status, is_available, setup_complete)
-         VALUES (?,?,?,?,?,?,?,'active',1,0)"
+        $stmt = $conn->prepare(
+        "INSERT INTO doctors (full_name, email, department, specialty, subspecialty, password, invite_token, invite_expires, status, is_available, setup_complete)
+         VALUES (?,?,?,?,?,?,?,?,'active',1,0)"
     );
-    $stmt->bind_param("sssssss", $fn, $em, $spec, $sub, $placeholder, $token, $expires);
+    $stmt->bind_param("ssssssss", $fn, $em, $dept, $spec, $sub, $placeholder, $token, $expires);
     $stmt->execute();
     $new_id = $conn->insert_id;
-    log_audit($conn, $admin_id, 'create', 'doctor', $new_id, null, [
-        'full_name'=>$fn,'email'=>$em,'specialty'=>$spec,'subspecialty'=>$sub
+        log_audit($conn, $admin_id, 'create', 'doctor', $new_id, null, [
+        'full_name'=>$fn,'email'=>$em,'department'=>$dept,'specialty'=>$spec,'subspecialty'=>$sub
     ]);
 
     $_SESSION['toast']       = "Doctor account created! Setup link emailed.";
@@ -223,9 +226,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_doctor'])) {
 
 // ── Update doctor ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_doctor'])) {
-    $did = (int)$_POST['doctor_id'];
+        $did = (int)$_POST['doctor_id'];
     $fn = trim($_POST['full_name'] ?? '');
     $em = trim($_POST['email'] ?? '');
+    $dept = trim($_POST['department'] ?? '');
     $spec = trim($_POST['specialty'] ?? '');
     $sub = trim($_POST['subspecialty'] ?? '');
     $clinic = trim($_POST['clinic_name'] ?? '');
@@ -237,13 +241,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_doctor'])) {
     if (!$fn) $errors[] = 'Full name is required';
     if (!$em) $errors[] = 'Email is required';
     if ($em && !filter_var($em, FILTER_VALIDATE_EMAIL)) $errors[] = 'Invalid email format';
+    if (!array_key_exists($dept, BOOKING_DEPARTMENTS)) $errors[] = 'Please select a valid department';
     if ($fee !== '' && !is_numeric($fee)) $errors[] = 'Consultation fee must be a number';
 
     $old = $conn->query("SELECT * FROM doctors WHERE id=$did")->fetch_assoc();
 
     if (empty($errors)) {
-        $stmt = $conn->prepare("UPDATE doctors SET full_name=?, email=?, specialty=?, subspecialty=?, clinic_name=?, phone_number=?, consultation_fee=?, languages_spoken=? WHERE id=?");
-        $stmt->bind_param("ssssssssi", $fn, $em, $spec, $sub, $clinic, $phone, $fee, $langs, $did);
+                $stmt = $conn->prepare("UPDATE doctors SET full_name=?, email=?, department=?, specialty=?, subspecialty=?, clinic_name=?, phone_number=?, consultation_fee=?, languages_spoken=? WHERE id=?");
+        $stmt->bind_param("sssssssssi", $fn, $em, $dept, $spec, $sub, $clinic, $phone, $fee, $langs, $did);
         $stmt->execute();
 
         $new = $conn->query("SELECT * FROM doctors WHERE id=$did")->fetch_assoc();
@@ -426,6 +431,7 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
+    
     :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF}
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--green);display:flex;min-height:100vh}
@@ -644,17 +650,28 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
      ══════════════════════════════════════════════ -->
 <div class="modal-overlay" id="modal-create-doctor">
   <div class="modal">
-    <h3>Add Doctor</h3>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;">
+      <h3 style="margin-bottom:0;">Add Doctor</h3>
+      <button type="button" onclick="closeModal('modal-create-doctor')" style="background:none;border:none;cursor:pointer;font-size:1.3rem;color:#9ab0ae;line-height:1;">&times;</button>
+    </div>
     <p style="font-size:0.82rem;color:#9ab0ae;margin-bottom:1.2rem;">Fill in the doctor's basic details. A setup link will be emailed to them automatically — they click it, set their own password, and fill in the rest of their profile themselves.</p>
     <form method="POST" id="create-doctor-form">
       <div class="form-field"><label class="field-label">Full Name *</label><input type="text" name="full_name" class="field-input" placeholder="e.g. Maria Santos" required/></div>
       <div class="form-field"><label class="field-label">Email Address *</label><input type="email" name="email" class="field-input" placeholder="doctor@email.com" required/></div>
+            <div class="form-field">
+        <label class="field-label">Department *</label>
+        <select name="department" class="field-input" required>
+          <option value="">— Select —</option>
+          <?php foreach (array_keys(BOOKING_DEPARTMENTS) as $dep): ?>
+            <option value="<?= htmlspecialchars($dep) ?>"><?= htmlspecialchars($dep) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
       <div class="form-row">
         <div class="form-field"><label class="field-label">Specialty</label><input type="text" name="specialty" class="field-input" placeholder="e.g. Cardiology"/></div>
         <div class="form-field"><label class="field-label">Subspecialty</label><input type="text" name="subspecialty" class="field-input" placeholder="Optional"/></div>
       </div>
       <button type="submit" name="create_doctor" class="btn-submit">Create &amp; Send Setup Link</button>
-      <button type="button" class="btn-cancel" onclick="closeModal('modal-create-doctor')">Cancel</button>
     </form>
   </div>
 </div>
@@ -684,9 +701,6 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
         <div style="font-size:0.82rem;color:#9ab0ae;margin-top:0.2rem;" id="vd-specialty"></div>
         <div style="margin-top:0.5rem;display:flex;gap:0.4rem;flex-wrap:wrap;" id="vd-badges"></div>
       </div>
-      <button onclick="closeModal('modal-view-doctor')" style="background:none;border:none;cursor:pointer;color:#9ab0ae;flex-shrink:0;padding:4px;" title="Close">
-        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
     </div>
 
     <div class="details-section">
@@ -910,9 +924,6 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
   <div class="modal" style="max-width:640px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;">
       <h3 style="margin-bottom:0;">Account Change History</h3>
-      <button onclick="closeModal('modal-audit-logs')" style="background:none;border:none;cursor:pointer;color:#9ab0ae;padding:4px;" title="Close">
-        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
     </div>
     <div id="audit-log-body" style="max-height:55vh;overflow-y:auto;"></div>
     <div id="audit-log-pages" style="display:flex;align-items:center;justify-content:center;gap:0.6rem;margin-top:1rem;"></div>
@@ -930,9 +941,6 @@ let currentFilter = 'all';
 // ── Modal helpers ──
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(m => {
-  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
-});
 
 // ── Filters ──
 function setFilter(f) {
@@ -1126,6 +1134,7 @@ function openEditDoctorModal(id) {
   document.getElementById('edit-doctor-id').value      = d.id;
   document.getElementById('edit-doctor-name').value    = d.full_name || '';
   document.getElementById('edit-doctor-email').value   = d.email || '';
+   document.getElementById('edit-doctor-department').value  = d.department || '';
   document.getElementById('edit-doctor-specialty').value   = d.specialty || '';
   document.getElementById('edit-doctor-subspecialty').value = d.subspecialty || '';
   document.getElementById('edit-doctor-clinic').value  = d.clinic_name || '';
@@ -1271,19 +1280,19 @@ function renderAuditLogs() {
     const newVals = l.new_values ? JSON.parse(l.new_values) : null;
     let diff = '';
 
-    if (oldVals && newVals) {
+        if (oldVals && newVals) {
       diff = '<div style="margin-top:0.5rem;font-size:0.78rem;color:#9ab0ae;">';
       for (const k in newVals) {
         if (String(oldVals[k]) !== String(newVals[k])) {
-          diff += `<div><span style="color:var(--red);">− ${escHtml(k)}:</span> ${escHtml(oldVals[k] ?? '')}</div>`;
-          diff += `<div><span style="color:#16a34a;">+ ${escHtml(k)}:</span> ${escHtml(newVals[k] ?? '')}</div>`;
+          diff += `<div><span style="color:var(--red);">− ${escHtml(fieldLabel(k))}:</span> ${escHtml(oldVals[k] ?? '')}</div>`;
+          diff += `<div><span style="color:#16a34a;">+ ${escHtml(fieldLabel(k))}:</span> ${escHtml(newVals[k] ?? '')}</div>`;
         }
       }
       diff += '</div>';
     } else if (newVals) {
       diff = '<div style="margin-top:0.5rem;font-size:0.78rem;color:#9ab0ae;">';
       for (const k in newVals) {
-        diff += `<div><span style="color:#16a34a;">+ ${escHtml(k)}:</span> ${escHtml(newVals[k] ?? '')}</div>`;
+        diff += `<div><span style="color:#16a34a;">+ ${escHtml(fieldLabel(k))}:</span> ${escHtml(newVals[k] ?? '')}</div>`;
       }
       diff += '</div>';
     }
@@ -1419,6 +1428,23 @@ function openStaffModal(id) {
 }
 
 // ── Helpers ──
+const FIELD_LABELS = {
+  full_name: 'Full Name',
+  email: 'Email',
+  specialty: 'Specialty',
+  subspecialty: 'Subspecialty',
+  status: 'Status',
+  is_active: 'Active Status',
+  is_verified: 'Verified',
+  license_number: 'License Number',
+  issuing_board: 'Issuing Board',
+  has_license_file: 'License File',
+  has_cert_file: 'Certificate File',
+};
+function fieldLabel(key) {
+  if (FIELD_LABELS[key]) return FIELD_LABELS[key];
+  return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
 function escHtml(str) {
   if (!str) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -1446,3 +1472,6 @@ setTimeout(() => { const t = document.querySelector('.toast'); if (t) t.remove()
 </script>
 </body>
 </html>
+
+
+

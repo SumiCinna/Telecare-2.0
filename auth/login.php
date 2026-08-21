@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// auth/login.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 require_once '../database/config.php';
 
@@ -296,5 +297,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </script>
 </body>
 </html>
+
+
+
 
 

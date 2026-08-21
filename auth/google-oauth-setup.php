@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// auth/google-oauth-setup.php
 // ============================================================
 // STEP 1 — Add to your database/config.php or run this SQL
 // ============================================================
@@ -121,3 +122,5 @@ $google_login_url = $google_base . '?' . http_build_query([
        https://telecareai.site/auth/google-callback.php
        https://telecareai.site/auth/google-register-callback.php
      ============================================================ -->
+
+

@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// includes/auth.php
 // includes/auth.php
 // Include at the top of every patient page.
 
@@ -27,3 +28,6 @@ $initials   = strtoupper(
     substr($name_parts[0], 0, 1) .
     (count($name_parts) > 1 ? substr(end($name_parts), 0, 1) : '')
 );
+
+
+

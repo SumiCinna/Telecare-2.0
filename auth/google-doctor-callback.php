@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// auth/google-doctor-callback.php
 require_once '../database/config.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 
@@ -85,4 +86,7 @@ $_SESSION['doctor_name'] = $doctor['full_name'];
 
 header('Location: ../doctor/dashboard.php');
 exit;
+
+
+
 

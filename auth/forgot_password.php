@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// auth/forgot_password.php
 require_once '../database/config.php';
 ?>
 <!DOCTYPE html>
@@ -157,3 +158,5 @@ require_once '../database/config.php';
 </script>
 </body>
 </html>
+
+

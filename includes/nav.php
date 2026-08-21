@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// includes/nav.php
 // includes/nav.php
 // $active_nav must be set before including: 'home' | 'visits' | 'meds' | 'profile'
 $active_nav = $active_nav ?? 'home';
@@ -104,3 +105,6 @@ body{ padding-left:236px; background:#f7f8fb; }
     </a>
   </div>
 </aside>
+
+
+

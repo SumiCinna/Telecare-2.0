@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// staff/dashboard.php
 require_once 'includes/auth.php';
 require_once 'includes/functions.php';
 
@@ -416,3 +417,5 @@ new Chart(document.getElementById('statusChart'), {
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
+
+

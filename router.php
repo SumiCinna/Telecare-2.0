@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// router.php
 session_start();
 
 $page = $_GET['page'] ?? '';
@@ -15,7 +16,10 @@ $privatePages = [
     'dashboard', 'visits', 'meds', 'profile', 'receipt', 'chat',
     'call_patient', 'process_consultation_v2', 'process_consultation',
     'check_summary', 'download_summary', 'auto_complete_appt',
-    'pay', 'pay_success', 'pay_cancel', 'staffs_index', 'privacy-policy'
+    'pay', 'pay_success', 'pay_cancel', 'staffs_index', 'privacy-policy',
+    'booking/step1_details', 'booking/step2_doctor', 'booking/step3_schedule',
+    'booking/step4_review', 'booking/confirmed', 'booking/payment',
+    'booking/process_booking', 'booking/success'
 ];
 
 if (in_array($page, $publicPages)) {
@@ -41,3 +45,6 @@ if (!file_exists($file)) {
 
 include $file;
 exit;
+
+
+

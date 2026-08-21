@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// ocr/scan.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -585,4 +586,7 @@ function formatOcrText(string $text, string $type): string {
 </script>
 </body>
 </html>
+
+
+
 

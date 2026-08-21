@@ -1,5 +1,7 @@
+﻿// private_telecare/chat.php
 
 <?php
+// private_telecare/chat.php
 // WALA TO DISPLAY LANG KASI AKALA KO NEED NA FUNCTION BUT STAY KO LANG DITO
 require_once __DIR__ . '/../includes/auth.php';
 
@@ -149,6 +151,8 @@ require_once __DIR__ . '/../includes/header.php';
 <?php require_once __DIR__ . '/../includes/nav.php'; ?>
 </body>
 </html>
+
+
 
 
 

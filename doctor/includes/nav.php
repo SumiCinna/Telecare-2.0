@@ -1,3 +1,4 @@
+﻿// doctor/includes/nav.php
 <style>
   :root {
     --sidebar-width: 240px;
@@ -395,3 +396,5 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
+
+

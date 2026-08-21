@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// staff/includes/auth.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
@@ -13,3 +14,6 @@ if (!isset($_SESSION['staff_id'])) {
 $staff_id   = $_SESSION['staff_id'];
 $staff_name = $_SESSION['staff_name'] ?? 'Staff';
 $staff_role = $_SESSION['staff_role'] ?? 'receptionist';
+
+
+

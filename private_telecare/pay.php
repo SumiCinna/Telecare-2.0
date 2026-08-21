@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// private_telecare/pay.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../includes/auth.php';
 // pay.php
@@ -11,7 +12,6 @@ $paymongoPublicKey = $_ENV['PAYMONGO_PUBLIC_KEY'] ?? ($_SERVER['PAYMONGO_PUBLIC_
 
 define('PAYMONGO_SECRET_KEY', $paymongoSecretKey);
 define('PAYMONGO_PUBLIC_KEY', $paymongoPublicKey);
-define('BASE_URL', 'http://localhost:3000');
 
 $appt_id = (int)($_GET['appt_id'] ?? 0);
 if (!$appt_id) { header('Location: ../visits.php'); exit; }
@@ -31,7 +31,7 @@ $appt = $stmt->get_result()->fetch_assoc();
 
 if (!$appt) {
     $_SESSION['toast_error'] = "Appointment not found or already paid.";
-    header('Location: ../visits.php'); exit;
+    header('Location: visits.php'); exit;
 }
 
 function formatPhone(?string $raw): ?string {
@@ -877,6 +877,9 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
 </script>
 </body>
 </html>
+
+
+
 
 
 

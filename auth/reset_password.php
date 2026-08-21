@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// auth/reset_password.php
 require_once '../database/config.php';
 
 $token   = trim($_GET['token'] ?? '');
@@ -160,3 +161,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $patient) {
 </script>
 </body>
 </html>
+
+

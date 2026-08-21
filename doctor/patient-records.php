@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// doctor/patient-records.php
 require_once 'includes/auth.php';
 
 $patient_id = (int)($_GET['patient_id'] ?? 0);
@@ -223,3 +224,6 @@ function copyRecordText(id) {
 <?php require_once 'includes/nav.php'; ?>
 </body>
 </html>
+
+
+

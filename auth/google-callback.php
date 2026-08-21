@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// auth/google-callback.php
 require_once '../database/config.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 
@@ -89,5 +90,8 @@ $_SESSION['patient_email']= $google_email;
 
 header('Location: ../router.php?page=dashboard');
 exit;
+
+
+
 
 

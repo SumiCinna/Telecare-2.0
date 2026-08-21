@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// private_telecare/process_consultation.php
 require_once __DIR__ . '/process_consultation_v2.php';
 __halt_compiler();
 
@@ -406,6 +407,9 @@ $stmt2 = $conn->prepare("
 $stmt2->bind_param("ssi", $summary, $filename, $appt_id);
 $stmt2->execute();
 debug_log("=== END PROCESS CONSULTATION SUCCESS ===");
+
+
+
 
 
 

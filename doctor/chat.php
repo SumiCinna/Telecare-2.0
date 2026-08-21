@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// doctor/chat.php
 // WALA TO DISPLAY LANG KASI AKALA KO NEED NA FUNCTION BUT STAY KO LANG DITO
 require_once 'includes/auth.php';
 
@@ -171,3 +172,5 @@ require_once 'includes/header.php';
 <?php require_once 'includes/nav.php'; ?>
 </body>
 </html>
+
+

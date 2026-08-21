@@ -1,11 +1,12 @@
-<?php
+﻿<?php
+// private_telecare/receipt.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../includes/auth.php';
 
 // receipt.php — Shared receipt accessible by patient, doctor (via doctor/receipt.php symlink), or staff
 
 $appt_id = (int)($_GET['appt_id'] ?? 0);
-if (!$appt_id) { header('Location: ../visits.php'); exit; }
+if (!$appt_id) { header('Location: visits.php'); exit; }
 
 // Access control: patient, staff, or doctor
 $access = false;
@@ -45,7 +46,7 @@ if ($role === 'patient') {
     ");
     $stmt->bind_param("ii", $appt_id, $doctor_id);
 } else {
-    header('Location: ../visits.php'); exit;
+      header('Location: visits.php'); exit;
 }
 
 $stmt->execute();
@@ -53,7 +54,7 @@ $appt = $stmt->get_result()->fetch_assoc();
 
 if (!$appt) {
     $_SESSION['toast_error'] = "Receipt not found or payment not yet completed.";
-    header('Location: ../visits.php'); exit;
+    header('Location: visits.php'); exit;
 }
 
 $toast       = $_SESSION['toast']       ?? null;
@@ -300,6 +301,9 @@ require_once __DIR__ . '/../includes/header.php';
 <?php require_once __DIR__ . '/../includes/nav.php'; ?>
 </body>
 </html>
+
+
+
 
 
 

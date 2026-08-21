@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// admin/sidebar.php
 /**
  * Shared admin sidebar.
  * Include this from any admin page AFTER session_start() and the admin_id check.
@@ -31,4 +32,7 @@ $activeNav = $activeNav ?? '';
     </a>
   </div>
 </aside>
+
+
+
 

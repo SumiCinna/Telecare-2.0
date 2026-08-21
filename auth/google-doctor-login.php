@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// auth/google-doctor-login.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 require_once '../database/config.php';
 
@@ -34,4 +35,7 @@ header('Location: https://accounts.google.com/o/oauth2/v2/auth?' . http_build_qu
     'prompt'        => 'select_account',
 ]));
 exit;
+
+
+
 

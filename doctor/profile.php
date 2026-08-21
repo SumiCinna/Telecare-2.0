@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// doctor/profile.php
 require_once 'includes/auth.php';
 
 $fixed_clinic_name = 'EXCELLCARE MEDICAL SYSTEM INC.';
@@ -360,3 +361,5 @@ if (phoneInput) {
 <?php require_once 'includes/nav.php'; ?>
 </body>
 </html>
+
+

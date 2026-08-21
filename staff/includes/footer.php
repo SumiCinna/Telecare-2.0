@@ -1,3 +1,4 @@
+﻿// staff/includes/footer.php
 </div><!-- /page-wrap -->
 </div><!-- /main -->
 
@@ -35,9 +36,6 @@ document.addEventListener('keydown', e => {
 // ── Modal helpers ──
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(m =>
-  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); })
-);
 
 // ── Filter table by search query ──
 function filterTable(tbodyId, query) {
@@ -51,3 +49,4 @@ setTimeout(() => { const t = document.querySelector('.toast'); if (t) t.remove()
 </script>
 </body>
 </html>
+

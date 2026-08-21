@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// auth/google-register-callback.php
 require_once '../database/config.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 
@@ -109,3 +110,6 @@ $_SESSION['google_reg'] = [
 
 header('Location: google-register-finish.php');
 exit;
+
+
+

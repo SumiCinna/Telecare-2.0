@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// staff/doctors.php
 require_once 'includes/auth.php';
 
 function generateTimeOptions(): array {
@@ -468,3 +469,6 @@ require_once 'includes/header.php';
 <?php endif; ?>
 
 <?php require_once 'includes/footer.php'; ?>
+
+
+

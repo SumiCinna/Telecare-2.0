@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// private_telecare/dashboard.php
 require_once __DIR__ . '/../includes/auth.php';
 // dashboard.php - Patient's dashboard
 // ── Stats ──
@@ -559,6 +560,9 @@ document.querySelectorAll('.stat-num').forEach(el => {
 <?php require_once __DIR__ . '/../includes/nav.php'; ?>
 </body>
 </html>
+
+
+
 
 
 

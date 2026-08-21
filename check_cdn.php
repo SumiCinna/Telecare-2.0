@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// check_cdn.php
 $urls = [
     "https://cdn.jsdelivr.net/npm/@metered-ca/realtime/dist/metered-peer.min.js",
     "https://cdn.jsdelivr.net/npm/@metered-ca/realtime",
@@ -19,3 +20,5 @@ foreach ($urls as $url) {
     curl_close($ch);
     echo "$http - $url\n";
 }
+
+

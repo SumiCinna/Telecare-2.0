@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// doctor/appointments.php
 date_default_timezone_set('Asia/Manila');
 require_once 'includes/auth.php';
 // doctor/appointments.php
@@ -467,7 +468,7 @@ require_once 'includes/header.php';
 <!-- ══════════════════════════════════════════════════════════
      Edit Summary Modal
      ══════════════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-edit-summary" onclick="if(event.target===this)closeEditSummary()">
+<div class="modal-overlay" id="modal-edit-summary">
   <div class="modal" style="width:100%;max-width:720px;max-height:92vh;overflow-y:auto;border-radius:20px;background:#fff;padding:0;">
 
     <div class="edit-summary-header">
@@ -512,7 +513,7 @@ require_once 'includes/header.php';
 <!-- ══════════════════════════════════════════════════════════
      Receipt Modal (unchanged)
      ══════════════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-receipt" onclick="if(event.target===this)closeReceiptModal()">
+<div class="modal-overlay" id="modal-receipt">
   <div class="modal" style="min-width:550px;max-width:700px;padding:0;overflow-y:auto;border-radius:20px;background:#fff;max-height:90vh;">
 
     <div class="receipt-modal-header">
@@ -797,3 +798,5 @@ function printReceiptDoctor() {
 <?php require_once 'includes/nav.php'; ?>
 </body>
 </html>
+
+

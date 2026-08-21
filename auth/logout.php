@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// auth/logout.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
@@ -68,3 +69,6 @@ $user_name = $_SESSION['user_name'] ?? $_SESSION['patient_name'] ?? 'User';
   </div>
 </body>
 </html>
+
+
+

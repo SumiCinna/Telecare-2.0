@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// private_telecare/auto_complete_appt.php
 /**
  * auto_complete_appt.php
  * Called via fetch() from call pages when both parties join during scheduled time.
@@ -48,6 +49,9 @@ $upd->bind_param("i", $appt_id);
 $upd->execute();
 
 echo json_encode(['ok'=>true,'msg'=>'Appointment marked as Completed','affected'=>$upd->affected_rows]);
+
+
+
 
 
 

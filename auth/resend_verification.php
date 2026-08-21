@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// auth/resend_verification.php
 /**
  * resend_verification.php
  * Called via fetch() from login.php and register.php
@@ -47,3 +48,5 @@ echo json_encode([
     'name'    => $patient['full_name'],
     'link'    => $link,
 ]);
+
+

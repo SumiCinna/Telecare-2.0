@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// staff/includes/header.php
 // staff/includes/header.php mga sidebar
 ?>
 <!DOCTYPE html>
@@ -213,3 +214,5 @@
     };
   })();
 </script>
+
+

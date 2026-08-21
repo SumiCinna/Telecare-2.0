@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// private_telecare/meds.php
 require_once __DIR__ . '/../includes/auth.php';
 
 function formatOcrText(string $text, string $type): string {
@@ -251,6 +252,9 @@ function copyScanned(id) {
 <?php require_once __DIR__ . '/../includes/nav.php'; ?>
 </body>
 </html>
+
+
+
 
 
 

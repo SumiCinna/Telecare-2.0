@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// staff/logout.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
@@ -75,4 +76,7 @@ $staff_name = $_SESSION['staff_name'] ?? 'Staff';
   </div>
 </body>
 </html>
+
+
+
 

@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// auth/send_reset.php
 /**
  * auth/send_reset.php
  * Called via fetch() from forgot_password.php
@@ -56,3 +57,5 @@ echo json_encode([
     'name'    => $patient['full_name'],
     'link'    => $link,
 ]);
+
+

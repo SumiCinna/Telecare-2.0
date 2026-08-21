@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// doctor/setup.php
 // doctor/setup.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 require_once '../database/config.php';
@@ -213,4 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
 </script>
 </body>
 </html>
+
+
+
 

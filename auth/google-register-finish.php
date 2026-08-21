@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// auth/google-register-finish.php
 require_once '../database/config.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 // auth/google-register-finish.php
@@ -564,3 +565,6 @@ window.addEventListener('load', () => { loadRegions(); updateMobileStepInfo(); }
 </script>
 </body>
 </html>
+
+
+

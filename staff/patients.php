@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// staff/patients.php
 require_once 'includes/auth.php';
 require_once 'includes/functions.php';
 
@@ -316,3 +317,5 @@ if (epPhoneLocal && epPhone) {
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
+
+

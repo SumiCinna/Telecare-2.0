@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// auth/register.php
 require_once '../database/config.php';
 
 $error        = '';
@@ -691,11 +692,7 @@ function onAgreeToggle() {
   const cb = document.getElementById('f_agree');
   document.getElementById('h_agree').value = cb.checked ? '1' : '0';
 }
-document.getElementById('legalModal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
-
-// ── Validation on submit ────────────────────────────────────────────────────────
+function onAgreeToggle() {
 function combinePhoneAndValidate() {
   let ok = true;
   const check = (id, cond, msg) => {
@@ -791,3 +788,5 @@ if (dobEl) {
 </script>
 </body>
 </html>
+
+

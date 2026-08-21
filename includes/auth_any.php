@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// includes/auth_any.php
 // includes/auth_any.php
 // Multi-role session guard: allows staff, doctor, OR patient sessions through.
 // Use this (instead of includes/auth.php) on any endpoint that must be
@@ -24,3 +25,6 @@ if (!$staff_id && !$doctor_id && !$patient_id) {
     header('Location: auth/login.php');
     exit;
 }
+
+
+

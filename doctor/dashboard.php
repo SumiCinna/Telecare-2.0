@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// doctor/dashboard.php
 require_once 'includes/auth.php';
 // doctor/dashboard.php - Doctor's dashboard
 // ── Stats ──
@@ -188,3 +189,5 @@ require_once 'includes/header.php';
 <?php require_once 'includes/nav.php'; ?>
 </body>
 </html>
+
+

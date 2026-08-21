@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// private_telecare/pay_success.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../includes/auth.php';
 
@@ -28,11 +29,11 @@ $stmt->bind_param("ii", $appt_id, $patient_id);
 $stmt->execute();
 $appt = $stmt->get_result()->fetch_assoc();
 
-if (!$appt) { header('Location: ../visits.php'); exit; }
+if (!$appt) { header('Location: visits.php'); exit; }
 
 // Already paid — just show receipt
 if ($appt['payment_status'] === 'Paid') {
-    header('Location: router.php?page=receipt&appt_id=' . $appt_id);
+    header('Location: router.php?page=booking/success&appt_id=' . $appt_id);
     exit;
 }
 
@@ -61,8 +62,26 @@ if ($link_id) {
         $r  = paymongo_get('https://api.paymongo.com/v1/sources/' . $link_id);
         if ($r['code'] === 200) {
             $status = $r['body']['data']['attributes']['status'] ?? '';
-            // 'chargeable' means user approved; 'consumed' means already charged
-            $verified = in_array($status, ['chargeable', 'consumed', 'paid']);
+
+            if ($status === 'chargeable') {
+                // Not paid yet — must actually create the Payment to capture funds
+                $amount_cents = (int) round(floatval($appt['consultation_fee']) * 100);
+                if ($amount_cents < 10000) $amount_cents = 10000;
+
+                $charge = paymongo_post('https://api.paymongo.com/v1/payments', [
+                    'data' => ['attributes' => [
+                        'amount'   => $amount_cents,
+                        'currency' => 'PHP',
+                        'source'   => ['id' => $link_id, 'type' => 'source'],
+                    ]]
+                ]);
+                $verified = ($charge['code'] === 200)
+                    && (($charge['body']['data']['attributes']['status'] ?? '') === 'paid');
+
+            } elseif (in_array($status, ['consumed', 'paid'])) {
+                // Already actually charged previously
+                $verified = true;
+            }
         }
 
     } elseif (str_starts_with($link_id, 'pi_')) {
@@ -85,14 +104,12 @@ if ($link_id) {
         }
 
     } else {
-        // Unknown ID prefix — in test mode allow through; in production use webhooks
-        $verified = true;
-    }
+    $verified = false;
+}
 
 } else {
-    // No stored ID — allow in test mode
-    // In production this should be rejected; rely on webhooks instead.
-    $verified = true;
+    // No stored payment reference — cannot verify. Reject.
+    $verified = false;
 }
 
 if ($verified) {
@@ -117,14 +134,17 @@ if ($verified) {
     }
 
     $_SESSION['toast'] = "Payment successful! Your appointment is confirmed.";
-    header('Location: router.php?page=receipt&appt_id=' . $appt_id);
+    header('Location: router.php?page=booking/success&appt_id=' . $appt_id);
     exit;
 
 } else {
     $_SESSION['toast_error'] = "Payment could not be verified. Please contact support if you were charged.";
-    header('Location: ../visits.php');
+    header('Location: visits.php');
     exit;
 }
+
+
+
 
 
 

@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// auth/check_email.php
 require_once '../database/config.php';
 
 header('Content-Type: application/json');
@@ -30,3 +31,6 @@ $exists = $stmt->num_rows > 0;
 $stmt->close();
 
 echo json_encode(['ok' => true, 'exists' => $exists]);
+
+
+

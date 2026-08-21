@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// doctor/patients.php
 require_once 'includes/auth.php';
 
 $search = trim($_GET['q'] ?? '');
@@ -88,3 +89,5 @@ require_once 'includes/header.php';
 <?php require_once 'includes/nav.php'; ?>
 </body>
 </html>
+
+

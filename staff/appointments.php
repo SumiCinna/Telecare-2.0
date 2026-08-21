@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// staff/appointments.php
 require_once 'includes/auth.php';
 require_once 'includes/functions.php';
 // staff/appointments.php
@@ -423,7 +424,7 @@ tr.row-doctor-approved td:first-child{border-left:3px solid #3F82E3;}
 </div>
 
 <!-- Modal: Receipt Preview -->
-<div class="modal-overlay" id="modal-receipt" onclick="if(event.target===this)closeModal('modal-receipt')">
+<div class="modal-overlay" id="modal-receipt">
   <div class="modal" style="min-width:550px;max-width:700px;padding:0;overflow-y:auto;border-radius:20px;background:#fff;max-height:90vh;">
     <div class="receipt-modal-header">
       <button onclick="closeModal('modal-receipt')"
@@ -974,3 +975,5 @@ filterStatus(_activeTab);  // sets tab highlight + calls renderTable()
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
+
+

@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// auth/termsandpolicy.php
 /**
  * termsandpolicy.php
  * Include this file in any page that needs the Terms & Privacy modal.
@@ -413,11 +414,6 @@
     document.getElementById('tpAcceptBtn').disabled = !this.checked;
   });
 
-  // Close on overlay click (outside modal)
-  document.getElementById('tpOverlay').addEventListener('click', function(e) {
-    if (e.target === this) closeTermsModal();
-  });
-
   // ESC key
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeTermsModal();
@@ -425,3 +421,5 @@
 })();
 </script>
 <!-- ============================================================= -->
+
+

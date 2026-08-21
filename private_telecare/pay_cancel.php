@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// private_telecare/pay_cancel.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../includes/auth.php';
 
@@ -8,6 +9,9 @@ $appt_id = (int)($_GET['appt_id'] ?? 0);
 $_SESSION['toast_error'] = "Payment was cancelled or failed. Your appointment is still reserved — you can try paying again.";
 header('Location: visits.php' . ($appt_id ? '#appt-' . $appt_id : ''));
 exit;
+
+
+
 
 
 

@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+// private_telecare/download_summary.php
 // download_summary.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../includes/auth_any.php';
@@ -51,6 +52,9 @@ header('Content-Type: application/pdf');
 header('Content-Disposition: inline; filename="Teleconsultation_Summary_Report_' . $appt_id . '.pdf"');
 header('Content-Length: ' . filesize($file));
 readfile($file);
+
+
+
 
 
 
