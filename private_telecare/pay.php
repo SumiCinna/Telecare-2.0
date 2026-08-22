@@ -16,13 +16,15 @@ define('PAYMONGO_PUBLIC_KEY', $paymongoPublicKey);
 $appt_id = (int)($_GET['appt_id'] ?? 0);
 if (!$appt_id) { header('Location: ../visits.php'); exit; }
 
+$conn->query("UPDATE appointments SET status='Cancelled' WHERE status='Pending' AND payment_status='Unpaid' AND created_at < (NOW() - INTERVAL 10 MINUTE)");
+
 $stmt = $conn->prepare("
     SELECT a.*, d.full_name AS doctor_name, d.specialty, d.consultation_fee,
            p.full_name AS patient_name, p.email AS patient_email, p.phone_number AS patient_phone
     FROM appointments a
     JOIN doctors  d ON d.id = a.doctor_id
     JOIN patients p ON p.id = a.patient_id
-    WHERE a.id = ? AND a.patient_id = ? AND a.status = 'Confirmed' AND a.payment_status = 'Unpaid'
+    WHERE a.id = ? AND a.patient_id = ? AND a.status = 'Pending' AND a.payment_status = 'Unpaid'
 ");
 if ($stmt === false) { die('❌ Prepare failed: ' . htmlspecialchars($conn->error)); }
 $stmt->bind_param("ii", $appt_id, $patient_id);
@@ -54,8 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_method'])) {
     $amount_cents = (int)(floatval($appt['consultation_fee']) * 100);
     if ($amount_cents < 10000) $amount_cents = 10000;
 
-    $success_url = BASE_URL . '/pay_success.php?appt_id=' . $appt_id . '&patient=' . $patient_id;
-    $failed_url  = BASE_URL . '/pay_cancel.php?appt_id='  . $appt_id;
+    $success_url = BASE_URL . '/router.php?page=pay_success&appt_id=' . $appt_id . '&patient=' . $patient_id;
+$failed_url  = BASE_URL . '/router.php?page=pay_cancel&appt_id='  . $appt_id;
 
     if (PAYMONGO_SECRET_KEY === '') {
       $_SESSION['toast_error'] = 'Payment setup error: missing PAYMONGO_SECRET_KEY in .env.';
@@ -652,7 +654,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
 </div>
 
 <!-- GCash form -->
-<form method="POST" id="pay-form" action="/pay?appt_id=<?= $appt_id ?>">
+<form method="POST" id="pay-form" action="router.php?page=pay&appt_id=<?= $appt_id ?>">
   <input type="hidden" name="pay_method" id="f-method"/>
   <input type="hidden" name="email"      id="f-email"/>
   <input type="hidden" name="name"       id="f-name"/>

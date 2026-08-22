@@ -57,7 +57,7 @@ if ($dup->get_result()->fetch_assoc()) {
 // is sent straight to payment.php.
 $reference      = 'APT-' . date('Y') . '-' . str_pad((string)mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
 $type           = 'Teleconsult';
-$status         = 'Confirmed';
+$status         = 'Pending';   
 $payment_status = 'Unpaid';
 
 $stmt = $conn->prepare(
@@ -83,5 +83,6 @@ if (!$stmt->execute()) {
 $appt_id = $conn->insert_id;
 unset($_SESSION['booking']); // wizard state no longer needed
 
-header('Location: router.php?page=booking/payment&appt_id=' . $appt_id);
+header('Location: ../router.php?page=pay&appt_id=' . $appt_id);
+
 exit;

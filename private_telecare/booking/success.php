@@ -14,7 +14,7 @@ $stmt = $conn->prepare(
 $stmt->bind_param("ii", $appt_id, $patient_id);
 $stmt->execute();
 $appt = $stmt->get_result()->fetch_assoc();
-if (!$appt) { header('Location: ../visits.php'); exit; }
+if (!$appt) { header('Location: ../router.php?page=visits'); exit; }
 
 $page_title = 'Booking Confirmed — TELE-CARE';
 $active_nav = 'visits';
@@ -46,8 +46,8 @@ echo booking_wizard_css();
       Your appointment with <strong>Dr. <?= htmlspecialchars($appt['doctor_name']) ?></strong> has been confirmed for
       <strong><?= (new DateTime($appt['appointment_date']))->format('F j, Y') ?> at <?= date('g:i A', strtotime($appt['appointment_time'])) ?></strong>.
     </div>
-    <a href="confirmed.php?appt_id=<?= $appt_id ?>" class="wiz-btn primary" style="width:100%;text-align:center;box-sizing:border-box;">View Appointment</a>
-    <a href="../visits.php" class="wiz-btn ghost" style="width:100%;text-align:center;box-sizing:border-box;margin-top:0.6rem;">Return to My Visits</a>
+<a href="router.php?page=booking/confirmed&appt_id=<?= $appt_id ?>" class="wiz-btn primary" style="width:100%;text-align:center;box-sizing:border-box;">View Appointment</a>
+    <a href="router.php?page=visits" class="wiz-btn ghost" style="width:100%;text-align:center;box-sizing:border-box;margin-top:0.6rem;">Return to My Visits</a>
   </div>
 </div>
 

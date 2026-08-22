@@ -3,6 +3,10 @@
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../includes/auth.php';
 // visits.php (for patients)
+
+// ── Auto-cancel any Pending/Unpaid appointment past its 10-minute payment window ──
+$conn->query("UPDATE appointments SET status='Cancelled' WHERE status='Pending' AND payment_status='Unpaid' AND created_at < (NOW() - INTERVAL 10 MINUTE)");
+
 // ── Handle new booking ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) {
     $did   = (int)($_POST['doctor_id']   ?? 0);
@@ -37,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
                     } else {
                         $stmt->bind_param("iissss", $patient_id, $did, $date, $time, $db_type, $notes);
                         if ($stmt->execute()) {
-                            $_SESSION['toast'] = "Appointment requested! Waiting for doctor's acceptance.";
+                            $_SESSION['toast'] = "Appointment booked! Complete payment within 10 minutes to secure your slot.";
                         } else {
                             $_SESSION['toast_error'] = 'Booking failed: ' . $stmt->error;
                         }
@@ -54,23 +58,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
     } else {
         $_SESSION['toast_error'] = "Invalid booking request.";
     }
-    header('Location: ../visits.php'); exit;
+    header('Location: router.php?page=visits'); exit;
 }
 
 // ── Fetch visits ──
+// PENDING: booked but not yet paid — still inside the 10-minute window (anything past it was
+// already flipped to Cancelled by the auto-cancel query above).
+$visits_pending = $conn->query("
+    SELECT a.*, d.full_name AS doctor_name, d.specialty, d.consultation_fee
+    FROM appointments a JOIN doctors d ON d.id = a.doctor_id
+    WHERE a.patient_id=$patient_id
+      AND a.status='Pending' AND a.payment_status='Unpaid'
+    ORDER BY a.created_at DESC
+");
+
+// UPCOMING: only appointments that are actually Confirmed AND Paid
 $visits_upcoming = $conn->query("
     SELECT a.*, d.full_name AS doctor_name, d.specialty, d.consultation_fee
     FROM appointments a JOIN doctors d ON d.id = a.doctor_id
     WHERE a.patient_id=$patient_id
       AND a.appointment_date >= CURDATE()
-      AND a.status NOT IN ('Cancelled', 'Completed')
+      AND a.status='Confirmed' AND a.payment_status='Paid'
     ORDER BY a.appointment_date ASC
 ");
+
+// PAST: completed, past-dated, or cancelled — cancelled ones show here regardless of date so
+// they don't just disappear from the patient's view.
 $visits_past = $conn->query("
     SELECT a.*, d.full_name AS doctor_name, d.specialty
     FROM appointments a JOIN doctors d ON d.id = a.doctor_id
     WHERE a.patient_id=$patient_id
-    AND (a.appointment_date < CURDATE() OR a.status = 'Completed')
+      AND (a.appointment_date < CURDATE() OR a.status = 'Completed' OR a.status = 'Cancelled')
     ORDER BY a.appointment_date DESC, a.appointment_time DESC
 ");
 
@@ -87,7 +105,8 @@ if ($dres) {
     }
 }
 
-// ── Stat counts (additive only — used for the summary cards, does not affect existing queries above) ──
+// ── Stat counts ──
+$stat_pending   = $visits_pending  ? $visits_pending->num_rows  : 0;
 $stat_upcoming  = $visits_upcoming ? $visits_upcoming->num_rows : 0;
 $stat_completed = $conn->query("SELECT COUNT(*) c FROM appointments WHERE patient_id=$patient_id AND status='Completed'")->fetch_assoc()['c'] ?? 0;
 $stat_cancelled = $conn->query("SELECT COUNT(*) c FROM appointments WHERE patient_id=$patient_id AND status='Cancelled'")->fetch_assoc()['c'] ?? 0;
@@ -148,7 +167,7 @@ function isCallActive(string $date, string $time): bool {
 /* ── STAT CARDS ── */
 .stat-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
   margin-bottom: 1.4rem;
 }
@@ -166,6 +185,7 @@ function isCallActive(string $date, string $time): bool {
   flex-shrink: 0;
 }
 .stat-icon svg { width: 20px; height: 20px; }
+.stat-icon.pending   { background: rgba(217,158,11,0.12); color: #d97706; }
 .stat-icon.upcoming  { background: rgba(63,130,227,0.1);  color: #3F82E3; }
 .stat-icon.completed { background: rgba(195,54,67,0.08);  color: #C33643; }
 .stat-icon.cancelled { background: rgba(195,54,67,0.08);  color: #C33643; }
@@ -192,18 +212,12 @@ function isCallActive(string $date, string $time): bool {
   outline: none; background: #fff; transition: border-color 0.2s;
 }
 .search-input:focus { border-color: #3F82E3; }
-.control-select {
-  padding: 0.68rem 1rem; border-radius: 50px;
-  border: 1.5px solid rgba(36,68,65,0.1); background: #fff;
-  font-family: 'DM Sans', sans-serif; font-size: 0.83rem; font-weight: 600;
-  color: #244441; cursor: pointer; outline: none;
-}
 
 /* ── TABS ── */
 .inner-tabs {
   display: flex; gap: 0; margin-bottom: 1.2rem;
   background: rgba(36,68,65,0.05); border-radius: 12px; padding: 4px;
-  width: fit-content;
+  width: fit-content; flex-wrap: wrap;
 }
 .inner-tab {
   padding: 0.52rem 1.5rem; border-radius: 9px;
@@ -211,11 +225,17 @@ function isCallActive(string $date, string $time): bool {
   cursor: pointer; font-family: 'DM Sans', sans-serif;
   font-size: 0.84rem; font-weight: 600;
   color: #9ab0ae; transition: all 0.2s;
+  display: inline-flex; align-items: center; gap: 0.4rem;
 }
 .inner-tab.active {
   background: #fff; color: #244441;
   box-shadow: 0 2px 8px rgba(36,68,65,0.1);
 }
+.inner-tab .tab-count {
+  background: rgba(36,68,65,0.1); color: #244441;
+  font-size: 0.68rem; font-weight: 800; padding: 0.05rem 0.45rem; border-radius: 50px;
+}
+.inner-tab.active .tab-count { background: rgba(195,54,67,0.12); color: #C33643; }
 
 /* ── APPOINTMENT ROW CARD ── */
 .appt-card {
@@ -227,6 +247,7 @@ function isCallActive(string $date, string $time): bool {
   transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
 }
 .appt-card:hover { box-shadow: 0 8px 28px rgba(36,68,65,0.08); transform: translateY(-1px); }
+.appt-card.pending-card { border-color: rgba(217,119,6,0.25); }
 
 .appt-card-inner {
   display: grid;
@@ -246,6 +267,7 @@ function isCallActive(string $date, string $time): bool {
 }
 .appt-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .appt-avatar.past { background: rgba(36,68,65,0.15); color: #244441; }
+.appt-avatar.pending { background: #d97706; }
 
 /* Center info */
 .appt-main-info {}
@@ -279,9 +301,6 @@ function isCallActive(string $date, string $time): bool {
   font-size: 0.76rem; font-weight: 600; margin-top: 0.1rem;
 }
 .flow-note svg { width: 12px; height: 12px; flex-shrink: 0; }
-.flow-note.pending  { color: #d97706; }
-.flow-note.approved { color: #2563eb; }
-.flow-note.unpaid   { color: #7c3aed; }
 .flow-note.soon     { color: #d97706; }
 .flow-note.info     { color: #9ab0ae; font-weight: 500; }
 
@@ -304,18 +323,18 @@ function isCallActive(string $date, string $time): bool {
 .badge-orange { background: rgba(245,158,11,0.12); color: #ca8a04; }
 .badge-red    { background: rgba(195,54,67,0.1);   color: #C33643; }
 .badge-blue   { background: rgba(63,130,227,0.1);  color: #2563eb; }
-.badge-purple { background: rgba(124,58,237,0.1);  color: #7c3aed; }
 .badge-gray   { background: rgba(36,68,65,0.08);   color: #6b8886; }
 
-/* ── ACTION BUTTONS (screenshot-style: solid primary / bordered secondary) ── */
+/* ── ACTION BUTTONS ── */
 .btn-pill {
-  display: inline-flex; align-items: center; gap: 0.4rem;
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
   padding: 0.55rem 1.05rem; border-radius: 50px;
   font-size: 0.78rem; font-weight: 700; text-decoration: none;
   border: 1.5px solid transparent; cursor: pointer;
   font-family: 'DM Sans', sans-serif; transition: all 0.2s; white-space: nowrap;
+  line-height: 1;
 }
-.btn-pill svg { width: 13px; height: 13px; flex-shrink: 0; }
+.btn-pill svg { width: 13px; height: 13px; flex-shrink: 0; display: block; }
 .btn-pill.solid-green  { background: linear-gradient(135deg,#16a34a,#15803d); color:#fff; box-shadow:0 4px 14px rgba(22,163,74,0.32); animation: callPulse 2s ease-in-out infinite; }
 .btn-pill.solid-purple { background: linear-gradient(135deg,#7c3aed,#6d28d9); color:#fff; box-shadow:0 4px 14px rgba(124,58,237,0.28); }
 .btn-pill.solid-purple:hover { background: linear-gradient(135deg,#6d28d9,#5b21b6); transform: translateY(-1px); }
@@ -325,6 +344,8 @@ function isCallActive(string $date, string $time): bool {
 .btn-pill.outline-blue:hover   { background: rgba(63,130,227,0.08); }
 .btn-pill.outline-neutral{ background:#fff; border-color: rgba(36,68,65,0.15); color:#244441; }
 .btn-pill.outline-neutral:hover{ background: rgba(36,68,65,0.05); }
+.btn-pill.outline-red{ background:#fff; border-color: rgba(195,54,67,0.3); color:#C33643; }
+.btn-pill.outline-red:hover{ background: rgba(195,54,67,0.06); }
 
 @keyframes callPulse {
   0%,100% { box-shadow: 0 4px 14px rgba(22,163,74,0.32); }
@@ -340,19 +361,24 @@ function isCallActive(string $date, string $time): bool {
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin-icon { animation: spin 1.4s linear infinite; display: inline-block; }
 
-/* ── PAYMENT NOTICE STRIP ── */
-.pay-notice {
-  background: linear-gradient(135deg, rgba(124,58,237,0.06), rgba(63,130,227,0.05));
-  border-top: 1px solid rgba(124,58,237,0.12);
+/* ── PENDING NOTICE STRIP w/ countdown ── */
+.pending-notice {
+  background: linear-gradient(135deg, rgba(217,119,6,0.08), rgba(217,119,6,0.03));
+  border-top: 1px solid rgba(217,119,6,0.15);
   padding: 0.85rem 1.3rem 0.85rem 4.85rem;
   display: flex; align-items: center; justify-content: space-between; gap: 1rem;
   flex-wrap: wrap;
 }
-.pay-notice-text {
-  font-size: 0.82rem; font-weight: 600; color: #5b21b6;
+.pending-notice-text {
+  font-size: 0.82rem; font-weight: 600; color: #92400e;
   display: flex; align-items: center; gap: 0.5rem;
 }
-.pay-notice-text svg { width: 14px; height: 14px; flex-shrink: 0; color: #7c3aed; }
+.pending-notice-text svg { width: 14px; height: 14px; flex-shrink: 0; color: #d97706; }
+.countdown-chip {
+  font-family: 'Playfair Display', serif; font-weight: 900; font-size: 0.9rem;
+  color: #d97706; background: rgba(217,119,6,0.12);
+  padding: 0.25rem 0.7rem; border-radius: 50px;
+}
 
 /* ── EMPTY STATE ── */
 .empty-state {
@@ -382,15 +408,16 @@ function isCallActive(string $date, string $time): bool {
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .page { padding: 1rem 1rem 5rem !important; }
-  .stat-row { grid-template-columns: 1fr; }
+  .stat-row { grid-template-columns: 1fr 1fr; }
   .appt-card-inner { grid-template-columns: 44px 1fr; }
   .appt-side { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; padding-top: 0.6rem; }
   .appt-actions-col { flex-direction: row; flex-wrap: wrap; }
-  .pay-notice  { padding-left: 1.4rem; }
+  .pending-notice  { padding-left: 1.4rem; }
 }
 @media (max-width: 600px) {
   .appt-card-inner { grid-template-columns: 1fr; gap: 0.7rem; }
   .visits-title { font-size: 1.5rem; }
+  .stat-row { grid-template-columns: 1fr 1fr; }
 }
 </style>
 
@@ -424,6 +451,15 @@ function isCallActive(string $date, string $time): bool {
   <!-- ══ STAT CARDS ══ -->
   <div class="stat-row">
     <div class="stat-card">
+      <div class="stat-icon pending">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      </div>
+      <div>
+        <div class="stat-label">Pending</div>
+        <div class="stat-value"><?= (int)$stat_pending ?></div>
+      </div>
+    </div>
+    <div class="stat-card">
       <div class="stat-icon upcoming">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
       </div>
@@ -452,7 +488,7 @@ function isCallActive(string $date, string $time): bool {
     </div>
   </div>
 
-  <!-- ══ SEARCH BAR (client-side filter on doctor name, purely visual/additive — does not touch booking or status logic) ══ -->
+  <!-- ══ SEARCH BAR ══ -->
   <div class="controls-bar">
     <div class="search-wrap">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
@@ -462,12 +498,85 @@ function isCallActive(string $date, string $time): bool {
 
   <!-- ══ TABS ══ -->
   <div class="inner-tabs">
-    <button class="inner-tab active" id="btn-upcoming" onclick="switchTab('upcoming')">Upcoming</button>
-    <button class="inner-tab"        id="btn-past"     onclick="switchTab('past')">Past</button>
+    <button class="inner-tab active" id="btn-pending" onclick="switchTab('pending')">Pending <span class="tab-count"><?= (int)$stat_pending ?></span></button>
+    <button class="inner-tab" id="btn-upcoming" onclick="switchTab('upcoming')">Upcoming <span class="tab-count"><?= (int)$stat_upcoming ?></span></button>
+    <button class="inner-tab" id="btn-past" onclick="switchTab('past')">Past</button>
+  </div>
+
+  <!-- ══ PENDING ══ -->
+  <div id="visits-pending">
+    <?php
+    $has = false;
+    if ($visits_pending && $visits_pending->num_rows > 0):
+      while ($a = $visits_pending->fetch_assoc()):
+        $has = true;
+        $d   = new DateTime($a['appointment_date']);
+        $fee = floatval($a['consultation_fee'] ?? 0);
+        $deadlineMs = !empty($a['created_at']) ? (strtotime($a['created_at']) + 600) * 1000 : null;
+        $initials = strtoupper(substr($a['doctor_name'],0,1) . (strpos($a['doctor_name'],' ')!==false ? substr($a['doctor_name'],strpos($a['doctor_name'],' ')+1,1) : ''));
+    ?>
+    <div class="appt-card pending-card" data-search="<?= strtolower(htmlspecialchars($a['doctor_name'].' '.($a['specialty']??''))) ?>">
+      <div class="appt-card-inner">
+        <div class="appt-avatar pending"><?= $initials ?></div>
+        <div class="appt-main-info">
+          <div class="appt-name-row">
+            <span class="appt-doctor-name">Dr. <?= htmlspecialchars($a['doctor_name']) ?></span>
+            <span class="badge badge-orange">Pending Payment</span>
+          </div>
+          <div class="appt-sub">
+            <?= !empty($a['specialty']) ? htmlspecialchars($a['specialty']).' · ' : '' ?><?= htmlspecialchars($a['type']) ?>
+          </div>
+          <div class="appt-meta-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <?= $d->format('M j, Y') ?>
+            <span class="appt-meta-sep">&middot;</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <?= date('g:i A', strtotime($a['appointment_time'])) ?>
+          </div>
+          <?php if (!empty($a['notes'])): ?>
+          <div class="appt-notes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            <?= htmlspecialchars($a['notes']) ?>
+          </div>
+          <?php endif; ?>
+        </div>
+        <div class="appt-side">
+          <div class="appt-actions-col">
+            <a href="router.php?page=booking/confirmed&appt_id=<?= $a['id'] ?>" class="btn-pill outline-neutral">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Details
+            </a>
+            <a href="router.php?page=pay&appt_id=<?= $a['id'] ?>" class="btn-pill solid-purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              Pay Now<?php if ($fee > 0): ?> &mdash; &#8369;<?= number_format($fee, 2) ?><?php endif; ?>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="pending-notice">
+        <div class="pending-notice-text">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+          Pay within the time limit or this slot will be released
+        </div>
+        <?php if ($deadlineMs): ?>
+          <span class="countdown-chip" data-deadline="<?= (int)$deadlineMs ?>">--:--</span>
+        <?php endif; ?>
+      </div>
+    </div>
+    <?php endwhile; endif; ?>
+
+    <?php if (!$has): ?>
+    <div class="empty-state">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <circle cx="12" cy="12" r="9" stroke-width="1.4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.4" d="M12 7v5l3 3"/>
+      </svg>
+      <p>No pending appointments awaiting payment.</p>
+    </div>
+    <?php endif; ?>
   </div>
 
   <!-- ══ UPCOMING ══ -->
-  <div id="visits-upcoming">
+  <div id="visits-upcoming" style="display:none;">
     <?php
     $has = false;
     if ($visits_upcoming && $visits_upcoming->num_rows > 0):
@@ -479,35 +588,18 @@ function isCallActive(string $date, string $time): bool {
         $active   = $now >= ($apptTs - 900) && $now <= ($apptTs + 3600);
         $early    = $active && $now < $apptTs;
         $soon     = !$active && $now >= ($apptTs - 3600);
-        $status   = $a['status'];
-        $paid     = $a['payment_status'] === 'Paid';
-        $fee      = floatval($a['consultation_fee'] ?? 0);
         $hasSummary  = !empty($a['summary_pdf_path']);
         $hasContent  = !empty($a['chat_log']) || !empty($a['consultation_transcript']);
-        $sclass = match($status) {
-          'Confirmed'      => 'badge-green',
-          'Pending'        => 'badge-orange',
-          'DoctorApproved' => 'badge-blue',
-          default          => 'badge-red',
-        };
-        $slabel = match($status) {
-          'DoctorApproved' => 'Dr. Accepted',
-          default          => $status,
-        };
         $initials = strtoupper(substr($a['doctor_name'],0,1) . (strpos($a['doctor_name'],' ')!==false ? substr($a['doctor_name'],strpos($a['doctor_name'],' ')+1,1) : ''));
     ?>
     <div class="appt-card" id="appt-<?= $a['id'] ?>" data-search="<?= strtolower(htmlspecialchars($a['doctor_name'].' '.($a['specialty']??''))) ?>">
       <div class="appt-card-inner">
-
-        <!-- Avatar -->
         <div class="appt-avatar"><?= $initials ?></div>
-
-        <!-- Main info -->
         <div class="appt-main-info">
           <div class="appt-name-row">
             <span class="appt-doctor-name">Dr. <?= htmlspecialchars($a['doctor_name']) ?></span>
-            <span class="badge <?= $sclass ?>"><?= $slabel ?></span>
-            <span class="badge <?= $paid ? 'badge-green' : 'badge-gray' ?>"><?= $a['payment_status'] ?></span>
+            <span class="badge badge-green">Confirmed</span>
+            <span class="badge badge-green">Paid</span>
           </div>
           <div class="appt-sub">
             <?= !empty($a['specialty']) ? htmlspecialchars($a['specialty']).' · ' : '' ?><?= htmlspecialchars($a['type']) ?>
@@ -522,84 +614,54 @@ function isCallActive(string $date, string $time): bool {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87V15.13a1 1 0 01-1.447.9L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
             Online
           </div>
-
           <?php if (!empty($a['notes'])): ?>
           <div class="appt-notes">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
             <?= htmlspecialchars($a['notes']) ?>
           </div>
           <?php endif; ?>
-
-          <!-- ── FLOW STATE (informational line) ── -->
-          <?php if ($status === 'Confirmed' && !$paid): ?>
-            <div class="flow-note unpaid">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-              Payment required to unlock this appointment
-            </div>
-          <?php elseif ($status === 'Confirmed' && $paid && !$active && $soon): ?>
+          <?php if (!$active && $soon): ?>
             <div class="flow-note soon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
               Opens at <?= date('g:i A', $apptTs - 900) ?>
             </div>
-          <?php elseif ($status === 'Confirmed' && $paid && !$active && !$soon): ?>
+          <?php elseif (!$active && !$soon): ?>
             <div class="flow-note info">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
               Video call opens 15 min before
             </div>
           <?php endif; ?>
         </div>
-
-        <!-- Right side: action buttons -->
         <div class="appt-side">
           <div class="appt-actions-col">
             <a href="router.php?page=booking/confirmed&appt_id=<?= $a['id'] ?>" class="btn-pill outline-neutral">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               Appointment Details
             </a>
-            <?php if ($status === 'Confirmed' && $paid): ?>
-              <?php if ($active): ?>
-                <a href="router.php?page=call_patient&appt_id=<?= $a['id'] ?>" class="btn-pill solid-green">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-                  <?= $early ? 'Join Early' : 'Join Consultation' ?>
-                </a>
-              <?php endif; ?>
-              <a href="router.php?page=receipt&appt_id=<?= $a['id'] ?>" class="btn-pill outline-neutral">
+            <?php if ($active): ?>
+              <a href="router.php?page=call_patient&appt_id=<?= $a['id'] ?>" class="btn-pill solid-green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+                <?= $early ? 'Join Early' : 'Join Consultation' ?>
+              </a>
+            <?php endif; ?>
+            <a href="router.php?page=receipt&appt_id=<?= $a['id'] ?>" class="btn-pill outline-neutral">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Receipt
+            </a>
+            <?php if ($hasSummary): ?>
+              <a href="router.php?page=download_summary&appt_id=<?= $a['id'] ?>" target="_blank" class="btn-pill outline-blue">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                Receipt
+                View Summary
               </a>
-              <?php if ($hasSummary): ?>
-                <a href="router.php?page=download_summary&appt_id=<?= $a['id'] ?>" target="_blank" class="btn-pill outline-blue">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                  View Summary
-                </a>
-              <?php elseif ($hasContent && !$hasSummary): ?>
-                <span class="summary-generating">
-                  <svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
-                  Generating summary
-                </span>
-              <?php endif; ?>
-            <?php elseif ($status === 'Confirmed' && !$paid): ?>
-              <a href="router.php?page=booking/payment&appt_id=<?= $a['id'] ?>" class="btn-pill solid-purple">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                Pay Now<?php if ($fee > 0): ?> &mdash; &#8369;<?= number_format($fee, 2) ?><?php endif; ?>
-              </a>
+            <?php elseif ($hasContent && !$hasSummary): ?>
+              <span class="summary-generating">
+                <svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+                Generating summary
+              </span>
             <?php endif; ?>
           </div>
         </div>
-
       </div>
-
-      <!-- Pay notice strip for confirmed+unpaid -->
-      <?php if ($status === 'Confirmed' && !$paid): ?>
-      <div class="pay-notice">
-        <div class="pay-notice-text">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-          Appointment confirmed &mdash; complete payment to secure your slot
-          <?php if ($fee > 0): ?><strong style="color:#5b21b6;">&nbsp;&middot;&nbsp;&#8369;<?= number_format($fee, 2) ?></strong><?php endif; ?>
-        </div>
-      </div>
-      <?php endif; ?>
-
     </div>
     <?php endwhile; endif; ?>
 
@@ -608,7 +670,7 @@ function isCallActive(string $date, string $time): bool {
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.4" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
       </svg>
-      <p>No upcoming appointments.</p>
+      <p>No upcoming (paid) appointments.</p>
       <a href="router.php?page=booking/step1_details" style="margin-top:0.5rem;padding:0.55rem 1.4rem;background:#3F82E3;color:#fff;border:none;border-radius:50px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 4px 14px rgba(63,130,227,0.28);text-decoration:none;">
         Book Now
       </a>
@@ -691,16 +753,17 @@ function isCallActive(string $date, string $time): bool {
 
 <script>
 function switchTab(type) {
+  document.getElementById('visits-pending').style.display  = type === 'pending'  ? 'block' : 'none';
   document.getElementById('visits-upcoming').style.display = type === 'upcoming' ? 'block' : 'none';
   document.getElementById('visits-past').style.display     = type === 'past'     ? 'block' : 'none';
+  document.getElementById('btn-pending').classList.toggle('active',  type === 'pending');
   document.getElementById('btn-upcoming').classList.toggle('active', type === 'upcoming');
   document.getElementById('btn-past').classList.toggle('active',     type === 'past');
 }
 
-// ── Visit list search filter (additive UI-only helper — filters visible appt-cards by doctor/specialty) ──
 function filterVisitRows(query) {
   const q = query.toLowerCase().trim();
-  document.querySelectorAll('#visits-upcoming .appt-card, #visits-past .appt-card').forEach(card => {
+  document.querySelectorAll('#visits-pending .appt-card, #visits-upcoming .appt-card, #visits-past .appt-card').forEach(card => {
     const hay = card.dataset.search || '';
     card.style.display = (!q || hay.includes(q)) ? '' : 'none';
   });
@@ -708,6 +771,33 @@ function filterVisitRows(query) {
 
 document.querySelectorAll('.toast-bar.success').forEach(t => setTimeout(() => t.remove(), 3500));
 document.querySelectorAll('.toast-bar.error').forEach(t => { t.style.cursor='pointer'; t.addEventListener('click', () => t.remove()); });
+
+// ── Countdown chips for pending appointments ──
+(function(){
+  const chips = document.querySelectorAll('.countdown-chip[data-deadline]');
+  if (!chips.length) return;
+  let expiredOne = false;
+  function tick(){
+    chips.forEach(chip => {
+      const deadline = parseInt(chip.dataset.deadline, 10);
+      const diff = deadline - Date.now();
+      if (diff <= 0) {
+        chip.textContent = 'Expired';
+        expiredOne = true;
+        return;
+      }
+      const m = Math.floor(diff / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      chip.textContent = m + ':' + String(s).padStart(2,'0');
+    });
+    if (expiredOne) {
+      clearInterval(timer);
+      setTimeout(() => location.reload(), 1200);
+    }
+  }
+  tick();
+  const timer = setInterval(tick, 1000);
+})();
 </script>
 
 <?php require_once __DIR__ . '/../includes/nav.php'; ?>
