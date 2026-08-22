@@ -434,9 +434,11 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
     
     :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF}
     *{box-sizing:border-box;margin:0;padding:0}
+    html{background:var(--green)}
+    html,body{width:100%;margin:0!important;padding:0!important}
     body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--green);display:flex;min-height:100vh}
     h1,h2,h3{font-family:'Playfair Display',serif}
-    .sidebar{width:230px;min-width:230px;background:var(--green);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .sidebar{width:230px;min-width:230px;margin:0;background:var(--green);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
     .sidebar-logo{padding:1.8rem 1.5rem 1.2rem;font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:#fff;border-bottom:1px solid rgba(255,255,255,0.08)}
     .sidebar-logo span{color:var(--red)}
     .sidebar-admin{padding:1rem 1.5rem;font-size:0.78rem;color:rgba(255,255,255,0.45);border-bottom:1px solid rgba(255,255,255,0.08)}
