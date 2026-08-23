@@ -32,11 +32,15 @@ $activeNav = $activeNav ?? '';
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5l-8 8m0-8l8 8M5 5h.01M19 19h.01"/></svg>
       Discounts
     </a>
+    <a href="prices.php" class="nav-link <?= $activeNav === 'pos-prices' ? 'active' : '' ?>">
+  <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v20m5-17H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+  Prices
+</a>
     <a href="HMO.php" class="nav-link <?= $activeNav === 'pos-hmo' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
       HMO
     </a>
-    <a href="ReceiptConfig.php" class="nav-link <?= $activeNav === 'pos-receipt' ? 'active' : '' ?>">
+    <a href="receipt_config.php" class="nav-link <?= $activeNav === 'pos-receipt' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
       Receipt Config
     </a>
