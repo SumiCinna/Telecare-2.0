@@ -146,7 +146,7 @@ CREATE TABLE `audit_logs` (
   PRIMARY KEY (`id`),
   KEY `admin_id` (`admin_id`),
   KEY `entity` (`entity_type`,`entity_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -155,7 +155,7 @@ CREATE TABLE `audit_logs` (
 
 LOCK TABLES `audit_logs` WRITE;
 /*!40000 ALTER TABLE `audit_logs` DISABLE KEYS */;
-INSERT INTO `audit_logs` VALUES (1,1,'update','doctor',5,'{\"email\": \"dizoah3@gmail.com\", \"full_name\": \"Ian Matthew Payawal\"}','{\"email\": \"dizoah3@gmail.com\", \"full_name\": \"Ian Matthew Payawal\"}','2026-08-20 00:32:09'),(2,1,'update','staff',4,'{\"email\": \"staff@telecare.com\", \"full_name\": \"TELE-CARE Staff\"}','{\"email\": \"staff@telecare.com\", \"full_name\": \"TELE-CARE StaffS\"}','2026-08-20 00:41:26'),(3,1,'update','staff',4,'{\"email\": \"staff@telecare.com\", \"full_name\": \"TELE-CARE StaffS\"}','{\"email\": \"staff@telecare.com\", \"full_name\": \"TELE-CARE Staff\"}','2026-08-20 00:41:35'),(4,1,'update','doctor',4,'{\"email\": \"almondtofu25@gmail.com\", \"full_name\": \"Ma. Aberlee Lacanaria\"}','{\"email\": \"almondtofu25@gmail.com\", \"full_name\": \"EXAMPLE DOCTOR#1\"}','2026-08-20 00:42:12'),(5,1,'create','doctor',6,NULL,'{\"email\": \"xdreiaawe@gmail.com\", \"full_name\": \"EXAMPLE DOCTOR#2\", \"specialty\": \"General\", \"subspecialty\": \"\"}','2026-08-20 14:20:01'),(6,1,'update','doctor',4,'{\"email\": \"almondtofu25@gmail.com\", \"full_name\": \"EXAMPLE DOCTOR#1\"}','{\"email\": \"almondtofu25@gmail.com\", \"full_name\": \"EXAMPLE DOCTOR#1\"}','2026-08-21 16:53:37'),(7,1,'toggle','doctor',6,'{\"status\": \"active\"}','{\"status\": \"inactive\"}','2026-08-21 16:55:15'),(8,1,'toggle','doctor',6,'{\"status\": \"inactive\"}','{\"status\": \"active\"}','2026-08-21 16:55:15'),(9,1,'create','service',5,NULL,'{\"name\": \"asda\", \"price\": \"222\", \"category\": \"Laboratory\"}','2026-08-23 20:54:32'),(10,1,'set_requirement','service',5,NULL,'{\"product_id\": 2, \"quantity_used\": 1}','2026-08-23 20:54:43'),(11,1,'set_requirement','service',5,NULL,'{\"product_id\": 5, \"quantity_used\": 1}','2026-08-23 20:54:46');
+INSERT INTO `audit_logs` VALUES (1,1,'update','doctor',5,'{\"email\": \"dizoah3@gmail.com\", \"full_name\": \"Ian Matthew Payawal\"}','{\"email\": \"dizoah3@gmail.com\", \"full_name\": \"Ian Matthew Payawal\"}','2026-08-20 00:32:09'),(2,1,'update','staff',4,'{\"email\": \"staff@telecare.com\", \"full_name\": \"TELE-CARE Staff\"}','{\"email\": \"staff@telecare.com\", \"full_name\": \"TELE-CARE StaffS\"}','2026-08-20 00:41:26'),(3,1,'update','staff',4,'{\"email\": \"staff@telecare.com\", \"full_name\": \"TELE-CARE StaffS\"}','{\"email\": \"staff@telecare.com\", \"full_name\": \"TELE-CARE Staff\"}','2026-08-20 00:41:35'),(4,1,'update','doctor',4,'{\"email\": \"almondtofu25@gmail.com\", \"full_name\": \"Ma. Aberlee Lacanaria\"}','{\"email\": \"almondtofu25@gmail.com\", \"full_name\": \"EXAMPLE DOCTOR#1\"}','2026-08-20 00:42:12'),(5,1,'create','doctor',6,NULL,'{\"email\": \"xdreiaawe@gmail.com\", \"full_name\": \"EXAMPLE DOCTOR#2\", \"specialty\": \"General\", \"subspecialty\": \"\"}','2026-08-20 14:20:01'),(6,1,'update','doctor',4,'{\"email\": \"almondtofu25@gmail.com\", \"full_name\": \"EXAMPLE DOCTOR#1\"}','{\"email\": \"almondtofu25@gmail.com\", \"full_name\": \"EXAMPLE DOCTOR#1\"}','2026-08-21 16:53:37'),(7,1,'toggle','doctor',6,'{\"status\": \"active\"}','{\"status\": \"inactive\"}','2026-08-21 16:55:15'),(8,1,'toggle','doctor',6,'{\"status\": \"inactive\"}','{\"status\": \"active\"}','2026-08-21 16:55:15'),(9,1,'create','service',5,NULL,'{\"name\": \"asda\", \"price\": \"222\", \"category\": \"Laboratory\"}','2026-08-23 20:54:32'),(10,1,'set_requirement','service',5,NULL,'{\"product_id\": 2, \"quantity_used\": 1}','2026-08-23 20:54:43'),(11,1,'set_requirement','service',5,NULL,'{\"product_id\": 5, \"quantity_used\": 1}','2026-08-23 20:54:46'),(12,1,'remove_requirement','service',5,'{\"requirement_id\": 3}',NULL,'2026-08-23 20:56:06'),(13,1,'remove_requirement','service',5,'{\"requirement_id\": 4}',NULL,'2026-08-23 20:56:07'),(14,1,'create','service',6,NULL,'{\"name\": \"SADA\", \"price\": \"222\", \"category\": \"Laboratory\"}','2026-08-23 21:09:23'),(15,1,'create','service',7,NULL,'{\"name\": \"sdada\", \"price\": \"222\", \"category\": \"Laboratory\"}','2026-08-23 22:07:43'),(16,1,'create','service',8,NULL,'{\"name\": \"sda\", \"price\": \"222\", \"category\": \"Laboratory\"}','2026-08-23 22:11:57'),(17,1,'set_requirement','service',8,NULL,'{\"product_id\": 31, \"quantity_used\": 1}','2026-08-23 22:12:02'),(18,1,'archive','service',5,'{\"status\": \"Active\"}','{\"status\": \"Archived\"}','2026-08-23 22:12:18'),(19,1,'set_requirement','service',5,NULL,'{\"product_id\": 26, \"quantity_used\": 1}','2026-08-23 22:12:30'),(20,1,'remove_requirement','service',2,'{\"requirement_id\": 2}',NULL,'2026-08-23 22:54:40'),(21,1,'set_requirement','service',2,NULL,'{\"product_id\": 26, \"quantity_used\": 1}','2026-08-23 22:54:45');
 /*!40000 ALTER TABLE `audit_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -492,7 +492,7 @@ DROP TABLE IF EXISTS `products`;
 CREATE TABLE `products` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(150) NOT NULL,
-  `category` enum('Medicine','Supplement','Equipment','Other') NOT NULL DEFAULT 'Medicine',
+  `category` enum('Medicine','Testing Kits') NOT NULL,
   `description` text,
   `unit` enum('Tablet','Capsule','Bottle','Box','Vial','Piece','Pack','Syrup') NOT NULL DEFAULT 'Piece',
   `price` decimal(10,2) NOT NULL DEFAULT '0.00',
@@ -504,7 +504,7 @@ CREATE TABLE `products` (
   PRIMARY KEY (`id`),
   KEY `idx_status` (`status`),
   KEY `idx_category` (`category`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -513,7 +513,7 @@ CREATE TABLE `products` (
 
 LOCK TABLES `products` WRITE;
 /*!40000 ALTER TABLE `products` DISABLE KEYS */;
-INSERT INTO `products` VALUES (1,'Paracetamol 500mg','Medicine','Pain reliever / fever reducer','Tablet',10.00,20,120,'Active','2026-08-22 15:33:51','2026-08-22 15:33:51'),(2,'Amoxicillin 500mg','Medicine','Antibiotic capsule','Capsule',25.00,15,50,'Active','2026-08-22 15:33:51','2026-08-22 15:33:51'),(3,'Vitamin C 500mg','Supplement','Immune support supplement','Tablet',15.00,10,80,'Active','2026-08-22 15:33:51','2026-08-22 15:33:51'),(4,'Digital Thermometer','Equipment','Non-contact infrared thermometer','Piece',350.00,5,12,'Active','2026-08-22 15:33:51','2026-08-22 15:33:51'),(5,'Cough Syrup 60ml','Medicine','Relief for dry and wet cough','Bottle',85.00,8,3,'Active','2026-08-22 15:33:51','2026-08-22 15:33:51');
+INSERT INTO `products` VALUES (1,'Paracetamol 500mg','Medicine','Pain reliever / fever reducer','Tablet',10.00,20,120,'Active','2026-08-22 15:33:51','2026-08-22 15:33:51'),(2,'Amoxicillin 500mg','Medicine','Antibiotic capsule','Capsule',25.00,15,50,'Active','2026-08-22 15:33:51','2026-08-22 15:33:51'),(3,'Vitamin C 500mg','Medicine','Immune support supplement','Tablet',15.00,10,80,'Active','2026-08-22 15:33:51','2026-08-23 13:02:48'),(4,'Digital Thermometer','Medicine','Non-contact infrared thermometer','Piece',350.00,5,12,'Active','2026-08-22 15:33:51','2026-08-23 13:02:48'),(5,'Cough Syrup 60ml','Medicine','Relief for dry and wet cough','Bottle',85.00,8,3,'Active','2026-08-22 15:33:51','2026-08-22 15:33:51'),(26,'Urine Specimen Container','Testing Kits','Sterile container for urinalysis specimen collection.','Piece',10.00,20,100,'Active','2026-08-23 14:10:22','2026-08-23 14:11:49'),(27,'Stool Specimen Container','Testing Kits','Container for fecalysis (stool) specimen collection.','Piece',10.00,20,100,'Active','2026-08-23 14:10:22','2026-08-23 14:11:49'),(28,'Fecal Occult Blood Test Stick','Testing Kits','Stick used for fecal occult blood testing.','Piece',15.00,20,100,'Active','2026-08-23 14:10:22','2026-08-23 14:11:49'),(29,'Pregnancy Test Kit (Strip)','Testing Kits','Urine pregnancy test strip.','Piece',25.00,15,100,'Active','2026-08-23 14:10:22','2026-08-23 14:11:49'),(30,'Blood Glucose Test Strip','Testing Kits','Test strip for blood glucose monitoring.','Piece',20.00,30,100,'Active','2026-08-23 14:10:22','2026-08-23 14:11:49'),(31,'Lancet','Testing Kits','Sterile lancet for capillary blood sampling.','Piece',3.00,50,100,'Active','2026-08-23 14:10:22','2026-08-23 14:11:49'),(32,'Cotton Swab (Sterile)','Testing Kits','Sterile cotton swab for specimen collection.','Piece',2.00,50,100,'Active','2026-08-23 14:10:22','2026-08-23 14:11:49'),(33,'Alcohol Swab','Testing Kits','Alcohol prep pad for skin disinfection before sampling.','Piece',1.50,50,100,'Active','2026-08-23 14:10:22','2026-08-23 14:11:49'),(34,'Vacutainer Blood Collection Tube','Testing Kits','Tube for venous blood sample collection.','Piece',12.00,30,100,'Active','2026-08-23 14:10:22','2026-08-23 14:11:49'),(35,'Rapid Antigen Test Kit','Testing Kits','Rapid antigen test kit for infectious disease screening.','Box',150.00,10,100,'Active','2026-08-23 14:10:22','2026-08-23 14:11:49');
 /*!40000 ALTER TABLE `products` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -566,7 +566,7 @@ CREATE TABLE `service_requirements` (
   KEY `product_id` (`product_id`),
   CONSTRAINT `service_requirements_ibfk_1` FOREIGN KEY (`service_id`) REFERENCES `services` (`id`) ON DELETE CASCADE,
   CONSTRAINT `service_requirements_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -575,7 +575,7 @@ CREATE TABLE `service_requirements` (
 
 LOCK TABLES `service_requirements` WRITE;
 /*!40000 ALTER TABLE `service_requirements` DISABLE KEYS */;
-INSERT INTO `service_requirements` VALUES (1,1,1,2,'2026-08-23 11:25:58'),(2,2,3,1,'2026-08-23 11:25:58'),(3,5,2,1,'2026-08-23 12:54:43'),(4,5,5,1,'2026-08-23 12:54:46');
+INSERT INTO `service_requirements` VALUES (1,1,1,2,'2026-08-23 11:25:58'),(5,8,31,1,'2026-08-23 14:12:02'),(6,5,26,1,'2026-08-23 14:12:30'),(7,2,26,1,'2026-08-23 14:54:45');
 /*!40000 ALTER TABLE `service_requirements` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -598,7 +598,7 @@ CREATE TABLE `services` (
   PRIMARY KEY (`id`),
   KEY `idx_status` (`status`),
   KEY `idx_category` (`category`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -607,7 +607,7 @@ CREATE TABLE `services` (
 
 LOCK TABLES `services` WRITE;
 /*!40000 ALTER TABLE `services` DISABLE KEYS */;
-INSERT INTO `services` VALUES (1,'CBC Test','Complete Blood Count test',350.00,'Laboratory','Active','2026-08-23 11:25:58','2026-08-23 11:25:58'),(2,'Urinalysis','Routine urine test',150.00,'Laboratory','Active','2026-08-23 11:25:58','2026-08-23 11:25:58'),(3,'X-Ray Imaging','Standard single-view X-ray',320.00,'X-ray','Active','2026-08-23 11:25:58','2026-08-23 11:25:58'),(4,'General Consultation','Walk-in consultation with a physician',500.00,'Consultation','Active','2026-08-23 11:25:58','2026-08-23 11:25:58'),(5,'asda','asdada',222.00,'Laboratory','Active','2026-08-23 12:54:32','2026-08-23 12:54:32');
+INSERT INTO `services` VALUES (1,'CBC Test','Complete Blood Count test',350.00,'Laboratory','Active','2026-08-23 11:25:58','2026-08-23 11:25:58'),(2,'Urinalysis','Routine urine test',150.00,'Laboratory','Active','2026-08-23 11:25:58','2026-08-23 11:25:58'),(3,'X-Ray Imaging','Standard single-view X-ray',320.00,'X-ray','Active','2026-08-23 11:25:58','2026-08-23 11:25:58'),(4,'General Consultation','Walk-in consultation with a physician',500.00,'Consultation','Active','2026-08-23 11:25:58','2026-08-23 11:25:58'),(5,'asda','asdada',222.00,'Laboratory','Archived','2026-08-23 12:54:32','2026-08-23 14:12:18'),(6,'SADA','DASDSAD',222.00,'Laboratory','Active','2026-08-23 13:09:23','2026-08-23 13:09:23'),(7,'sdada','adad',222.00,'Laboratory','Active','2026-08-23 14:07:43','2026-08-23 14:07:43'),(8,'sda','adas',222.00,'Laboratory','Active','2026-08-23 14:11:57','2026-08-23 14:11:57');
 /*!40000 ALTER TABLE `services` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -649,4 +649,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-08-23 20:55:25
+-- Dump completed on 2026-08-23 23:04:47

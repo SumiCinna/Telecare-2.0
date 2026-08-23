@@ -126,7 +126,7 @@ $activeNav = 'pos-discounts';
   <link href="assets/admin.css" rel="stylesheet"/>
   <style>
     
-    .main{flex:1;overflow-y:auto}
+    .main{flex:1;overflow-y:auto;margin-left:230px}
 
 
 
@@ -275,8 +275,8 @@ function renderRows(rows) {
     const valueDisplay = d.type === 'Percentage' ? `${Number(d.value)}%` : `₱${Number(d.value).toFixed(2)}`;
     let actions = `<button class="btn-sm btn-edit" onclick="openEditModal(${d.id})">Edit</button>`;
     actions += d.status === 'Active'
-      ? `<a href="?archive_discount=${d.id}" class="btn-sm btn-red" onclick="return confirm('Archive ${escAttr(d.name)}?')">Archive</a>`
-      : `<a href="?restore_discount=${d.id}" class="btn-sm btn-activate" onclick="return confirm('Restore ${escAttr(d.name)}?')">Restore</a>`;
+      ? `<a href="?archive_discount=${d.id}" class="btn-sm btn-red" onclick="var el=this;event.preventDefault();showConfirm('Archive ${escAttr(d.name)}?').then(function(ok){if(ok)window.location=el.href});return false;">Archive</a>`
+      : `<a href="?restore_discount=${d.id}" class="btn-sm btn-activate" onclick="var el=this;event.preventDefault();showConfirm('Restore ${escAttr(d.name)}?').then(function(ok){if(ok)window.location=el.href});return false;">Restore</a>`;
     return `<tr>
       <td>${escHtml(d.name)}</td>
       <td><span class="role-pill">${escHtml(d.type)}</span></td>
@@ -304,6 +304,34 @@ function escAttr(str) { return escHtml(str).replace(/'/g, "\\'"); }
 
 renderRows(ALL_DISCOUNTS.filter(d => d.status === 'Active'));
 setTimeout(() => { const t = document.querySelector('.toast'); if (t) t.remove(); }, 3500);
+
+let _confirmResolve = null;
+function showConfirm(message) {
+  return new Promise(function(resolve) {
+    _confirmResolve = resolve;
+    document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmModal').classList.add('open');
+  });
+}
+function confirmResolve(value) {
+  document.getElementById('confirmModal').classList.remove('open');
+  if (_confirmResolve) { _confirmResolve(value); _confirmResolve = null; }
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('confirmModal').classList.contains('open')) {
+    confirmResolve(false);
+  }
+});
 </script>
+<div id="confirmModal" class="confirm-overlay" onclick="if(event.target===this)confirmResolve(false)">
+  <div class="confirm-box">
+    <h3 id="confirmTitle">Confirm Action</h3>
+    <p id="confirmMessage"></p>
+    <div class="confirm-actions">
+      <button class="btn-confirm-no" onclick="confirmResolve(false)">Cancel</button>
+      <button class="btn-confirm-yes" onclick="confirmResolve(true)">Yes, Proceed</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

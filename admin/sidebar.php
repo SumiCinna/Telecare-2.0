@@ -20,9 +20,9 @@ $activeNav = $activeNav ?? '';
       Assignments
     </a>
     <div class="nav-section-label">POS Management</div>
-    <a href="Products.php" class="nav-link <?= $activeNav === 'pos-products' ? 'active' : '' ?>">
+    <a href="Inventory.php" class="nav-link <?= $activeNav === 'pos-products' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-      Products
+      Inventory
     </a>
     <a href="Services.php" class="nav-link <?= $activeNav === 'pos-services' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M5 8h14M6 8v10a2 2 0 002 2h8a2 2 0 002-2V8"/></svg>
@@ -52,17 +52,4 @@ $activeNav = $activeNav ?? '';
     </a>
   </div>
 </aside>
-
-<style>
-.nav-section-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: #9a9ca6;
-  text-transform: uppercase;
-  margin: 20px 20px 6px;
-}
-</style>
-
-
 

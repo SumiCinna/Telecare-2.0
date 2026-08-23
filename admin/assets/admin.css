@@ -6,6 +6,7 @@
 
 :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF}
 *{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--green);display:flex;min-height:100vh}
 h1,h2,h3{font-family:'Playfair Display',serif}
 
@@ -129,6 +130,19 @@ textarea.field-input{resize:vertical;min-height:60px}
 @keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
 @keyframes fadeOut{from{opacity:1}to{opacity:0;pointer-events:none}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Confirm modal ── */
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:200;padding:1rem;backdrop-filter:blur(4px)}
+.confirm-overlay.open{display:flex}
+.confirm-box{background:var(--white);border-radius:20px;padding:2rem;width:100%;max-width:420px;text-align:center;animation:fadeUp 0.3s ease}
+.confirm-box h3{font-size:1.2rem;margin-bottom:0.6rem}
+.confirm-box p{font-size:0.88rem;color:var(--green);margin-bottom:1.5rem;line-height:1.4}
+.confirm-actions{display:flex;gap:0.8rem}
+.confirm-actions button{flex:1;padding:0.72rem;border-radius:50px;font-weight:700;font-size:0.88rem;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+.confirm-actions .btn-confirm-yes{background:var(--red);color:#fff}
+.confirm-actions .btn-confirm-yes:hover{background:#a82d38}
+.confirm-actions .btn-confirm-no{background:rgba(36,68,65,0.08);color:var(--green)}
+.confirm-actions .btn-confirm-no:hover{background:rgba(36,68,65,0.15)}
 
 @media(max-width:900px){
   .sidebar{display:none}

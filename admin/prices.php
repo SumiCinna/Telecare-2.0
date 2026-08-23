@@ -27,7 +27,7 @@ $activeNav = 'pos-prices';
   <link href="assets/admin.css" rel="stylesheet"/>
   <style>
   
-    .main{flex:1;overflow-y:auto}
+    .main{flex:1;overflow-y:auto;margin-left:230px}
     .topbar{background:var(--white);padding:1rem 2rem;border-bottom:1px solid rgba(36,68,65,0.07);position:sticky;top:0;z-index:50}
     .page-content{padding:2rem}
     .note{background:rgba(63,130,227,0.08);border:1px solid rgba(63,130,227,0.2);color:var(--blue);padding:0.8rem 1.1rem;border-radius:12px;font-size:0.82rem;font-weight:600;margin-bottom:1.5rem}

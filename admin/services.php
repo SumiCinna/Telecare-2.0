@@ -11,7 +11,7 @@ $admin_id = $_SESSION['admin_id'];
 
 $CATEGORIES = ['Laboratory', 'X-ray', 'Chemical', 'Consultation', 'Other'];
 
-// ── Ensure audit_logs table exists (same fallback as Users.php / products.php) ──
+// ── Ensure audit_logs table exists (same fallback as Users.php / inventory.php) ──
 $conn->query("CREATE TABLE IF NOT EXISTS `audit_logs` (
   `id` int NOT NULL AUTO_INCREMENT,
   `admin_id` int NOT NULL,
@@ -126,7 +126,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_requirement'])) {
     $product_id = (int)($_POST['product_id'] ?? 0);
     $qty        = (int)($_POST['quantity_used'] ?? 0);
 
-    if ($service_id && $product_id && $qty > 0) {
+    // Guard: the product being attached must actually be a Testing Kit.
+    // (Medicine is handled separately by the pharmacist POS and must
+    // never be attachable to a service requirement.)
+    $validProduct = false;
+    if ($product_id) {
+        $chk = $conn->prepare("SELECT id FROM products WHERE id=? AND category='Testing Kits' AND status='Active'");
+        $chk->bind_param("i", $product_id);
+        $chk->execute();
+        $validProduct = $chk->get_result()->num_rows > 0;
+    }
+
+    if ($service_id && $validProduct && $qty > 0) {
         $stmt = $conn->prepare(
             "INSERT INTO service_requirements (service_id, product_id, quantity_used)
              VALUES (?, ?, ?)
@@ -135,9 +146,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_requirement'])) {
         $stmt->bind_param("iii", $service_id, $product_id, $qty);
         $stmt->execute();
         log_audit($conn, $admin_id, 'set_requirement', 'service', $service_id, null, ['product_id' => $product_id, 'quantity_used' => $qty]);
-        $_SESSION['toast'] = 'Inventory item attached.';
+        $_SESSION['toast'] = 'Testing kit item attached.';
     } else {
-        $_SESSION['toast_error'] = 'Select an item and a quantity of at least 1.';
+        $_SESSION['toast_error'] = 'Select a testing kit item and a quantity of at least 1.';
     }
     $_SESSION['open_requirements_for'] = $service_id;
     header('Location: services.php'); exit;
@@ -197,8 +208,10 @@ if ($rres) {
     }
 }
 
+// Services only draw from Testing Kits — medicine is handled separately
+// by the pharmacist POS and should never be attachable to a service.
 $activeProducts = [];
-$prres = $conn->query("SELECT id, name, unit FROM products WHERE status='Active' ORDER BY name ASC");
+$prres = $conn->query("SELECT id, name, unit FROM products WHERE status='Active' AND category='Testing Kits' ORDER BY name ASC");
 if ($prres) { while ($row = $prres->fetch_assoc()) { $activeProducts[] = $row; } }
 
 $activeNav = 'pos-services';
@@ -213,7 +226,7 @@ $activeNav = 'pos-services';
   <link href="assets/admin.css" rel="stylesheet"/>
   <style>
     
-    .main{flex:1;overflow-y:auto}
+    .main{flex:1;overflow-y:auto;margin-left:230px}
 
 
 
@@ -227,6 +240,7 @@ $activeNav = 'pos-services';
     .req-row .req-unit{font-size:0.72rem;color:#9ab0ae}
     .add-req-row{display:flex;gap:0.5rem;align-items:flex-end}
     .add-req-row .form-field{margin-bottom:0;flex:1}
+    .req-empty-hint{font-size:0.78rem;color:#9ab0ae;margin-top:0.4rem}
 
 
     @media(max-width:900px){.sidebar{display:none}}
@@ -287,7 +301,7 @@ $activeNav = 'pos-services';
 <div class="modal-overlay" id="modal-add-service">
   <div class="modal">
     <h3>Add Clinic Service</h3>
-    <div class="sub">When creating a service, you'll attach its required inventory items next.</div>
+    <div class="sub">When creating a service, you'll attach its required testing kit items next.</div>
     <form method="POST">
       <div class="form-field"><label class="field-label">Service Name *</label><input type="text" name="name" class="field-input" placeholder="CBC Test" required/></div>
       <div class="form-field"><label class="field-label">Description</label><textarea name="description" class="field-input" placeholder="Complete Blood Count test"></textarea></div>
@@ -353,30 +367,33 @@ $activeNav = 'pos-services';
       <div class="detail-item"><div class="detail-item-label">Status</div><div class="detail-item-value" id="vsr-status"></div></div>
       <div class="detail-item full"><div class="detail-item-label">Description</div><div class="detail-item-value" id="vsr-description"></div></div>
     </div>
-    <div class="detail-item-label" style="margin-bottom:0.5rem;">Required Inventory Items</div>
+    <div class="detail-item-label" style="margin-bottom:0.5rem;">Required Testing Kit Items</div>
     <div class="req-list" id="vsr-req-list"></div>
     <button class="btn-cancel" onclick="closeModal('modal-view-service')">Close</button>
   </div>
 </div>
 
-<!-- Requirements (Required Inventory Items) -->
+<!-- Requirements (Required Testing Kit Items) -->
 <div class="modal-overlay" id="modal-requirements">
   <div class="modal modal-wide">
     <h3>Service Requirements</h3>
-    <div class="sub" id="req-service-name">Required inventory items for this service.</div>
+    <div class="sub" id="req-service-name">Required testing kit items for this service.</div>
 
     <div class="req-list" id="req-list"></div>
 
     <form method="POST" class="add-req-row">
       <input type="hidden" name="service_id" id="req-service-id"/>
       <div class="form-field">
-        <label class="field-label">Add Inventory Item</label>
+        <label class="field-label">Add Testing Kit Item</label>
         <select name="product_id" class="field-input" required>
-          <option value="">— Select product —</option>
+          <option value="">— Select testing kit —</option>
           <?php foreach ($activeProducts as $p): ?>
             <option value="<?= (int)$p['id'] ?>"><?= htmlspecialchars($p['name']) ?> (<?= htmlspecialchars($p['unit']) ?>)</option>
           <?php endforeach; ?>
         </select>
+        <?php if (empty($activeProducts)): ?>
+          <div class="req-empty-hint">No active testing kits yet — add some in Inventory → Testing Kits first.</div>
+        <?php endif; ?>
       </div>
       <div class="form-field qty-field">
         <label class="field-label">Qty</label>
@@ -444,9 +461,9 @@ function renderRows(rows) {
     actions += `<button class="btn-sm btn-edit" onclick="openEditModal(${s.id})">Edit</button>`;
     actions += `<button class="btn-sm" style="background:rgba(63,130,227,0.1);color:var(--blue);" onclick="openRequirementsModal(${s.id})">Requirements</button>`;
     if (s.status === 'Active') {
-      actions += `<a href="?archive_service=${s.id}" class="btn-sm btn-red" onclick="return confirm('Archive ${escAttr(s.name)}? It will no longer be available for new POS transactions.')">Archive</a>`;
+      actions += `<a href="?archive_service=${s.id}" class="btn-sm btn-red" onclick="var el=this;event.preventDefault();showConfirm('Archive ${escAttr(s.name)}? It will no longer be available for new POS transactions.').then(function(ok){if(ok)window.location=el.href});return false;">Archive</a>`;
     } else {
-      actions += `<a href="?restore_service=${s.id}" class="btn-sm btn-activate" onclick="return confirm('Restore ${escAttr(s.name)}?')">Restore</a>`;
+      actions += `<a href="?restore_service=${s.id}" class="btn-sm btn-activate" onclick="var el=this;event.preventDefault();showConfirm('Restore ${escAttr(s.name)}?').then(function(ok){if(ok)window.location=el.href});return false;">Restore</a>`;
     }
     return `<tr>
       <td>${escHtml(s.name)}</td>
@@ -484,7 +501,7 @@ function openViewModal(id) {
   const list = document.getElementById('vsr-req-list');
   list.innerHTML = items.length
     ? items.map(r => `<div class="req-row"><div class="req-name">${escHtml(r.product_name)} <span class="req-unit">(${escHtml(r.product_unit)})</span></div><div>${r.quantity_used}x</div></div>`).join('')
-    : `<div class="req-empty">No inventory items attached yet.</div>`;
+    : `<div class="req-empty">No testing kit items attached yet.</div>`;
 
   openModal('modal-view-service');
 }
@@ -493,7 +510,7 @@ function openRequirementsModal(id) {
   const s = ALL_SERVICES.find(x => x.id == id);
   if (!s) return;
   document.getElementById('req-service-id').value = s.id;
-  document.getElementById('req-service-name').textContent = 'Required inventory items for "' + s.name + '".';
+  document.getElementById('req-service-name').textContent = 'Required testing kit items for "' + s.name + '".';
   renderRequirementsList(s.id);
   openModal('modal-requirements');
 }
@@ -511,9 +528,9 @@ function renderRequirementsList(serviceId) {
             <input type="number" name="quantity_used" min="1" value="${r.quantity_used}"/>
             <button type="submit" name="update_requirement" class="btn-sm btn-edit">Save</button>
           </form>
-          <a href="?remove_requirement=${r.id}&service_id=${serviceId}" class="btn-sm btn-red" onclick="return confirm('Remove ${escAttr(r.product_name)} from this service\\'s requirements?')">Remove</a>
+          <a href="?remove_requirement=${r.id}&service_id=${serviceId}" class="btn-sm btn-red" onclick="var el=this;event.preventDefault();showConfirm('Remove ${escAttr(r.product_name)} from this service\\'s requirements?').then(function(ok){if(ok)window.location=el.href});return false;">Remove</a>
         </div>`).join('')
-    : `<div class="req-empty">No inventory items attached yet — add one below.</div>`;
+    : `<div class="req-empty">No testing kit items attached yet — add one below.</div>`;
 }
 
 function escHtml(str) {
@@ -525,6 +542,34 @@ function escAttr(str) { return escHtml(str).replace(/'/g, "\\'"); }
 renderRows(ALL_SERVICES.filter(s => s.status === 'Active'));
 if (OPEN_REQUIREMENTS_FOR) { openRequirementsModal(OPEN_REQUIREMENTS_FOR); }
 setTimeout(() => { const t = document.querySelector('.toast'); if (t) t.remove(); }, 3500);
+
+let _confirmResolve = null;
+function showConfirm(message) {
+  return new Promise(function(resolve) {
+    _confirmResolve = resolve;
+    document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmModal').classList.add('open');
+  });
+}
+function confirmResolve(value) {
+  document.getElementById('confirmModal').classList.remove('open');
+  if (_confirmResolve) { _confirmResolve(value); _confirmResolve = null; }
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('confirmModal').classList.contains('open')) {
+    confirmResolve(false);
+  }
+});
 </script>
+<div id="confirmModal" class="confirm-overlay" onclick="if(event.target===this)confirmResolve(false)">
+  <div class="confirm-box">
+    <h3 id="confirmTitle">Confirm Action</h3>
+    <p id="confirmMessage"></p>
+    <div class="confirm-actions">
+      <button class="btn-confirm-no" onclick="confirmResolve(false)">Cancel</button>
+      <button class="btn-confirm-yes" onclick="confirmResolve(true)">Yes, Proceed</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
