@@ -177,6 +177,7 @@ unset($_SESSION['toast']);
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="assets/admin.css" rel="stylesheet"/>
 <style>
 :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF;--teal:#0d9488}
 *{box-sizing:border-box;margin:0;padding:0}

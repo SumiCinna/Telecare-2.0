@@ -22,6 +22,7 @@ $doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY fu
   <title>Appointments by Doctor — TELE-CARE</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="assets/admin.css" rel="stylesheet"/>
   <style>
     :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF}
     *{box-sizing:border-box;margin:0;padding:0}

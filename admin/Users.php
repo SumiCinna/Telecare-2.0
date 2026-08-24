@@ -430,7 +430,9 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="assets/admin.css" rel="stylesheet"/>
   <style>
+<<<<<<< HEAD
     
     :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF}
     *{box-sizing:border-box;margin:0;padding:0}
@@ -454,52 +456,14 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
     .main{flex:1;overflow-y:auto}
     .topbar{background:var(--white);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(36,68,65,0.07);position:sticky;top:0;z-index:50}
     .page-content{padding:2rem}
+=======
+>>>>>>> main
 
-    .btn-primary{display:inline-flex;align-items:center;gap:0.4rem;background:var(--red);color:#fff;padding:0.6rem 1.3rem;border-radius:50px;font-size:0.85rem;font-weight:600;border:none;cursor:pointer;transition:all 0.25s;font-family:'DM Sans',sans-serif;box-shadow:0 4px 14px rgba(195,54,67,0.25);text-decoration:none}
-    .btn-primary:hover{background:#a82d38;transform:translateY(-1px)}
-    .btn-sm{padding:0.38rem 0.85rem;border-radius:50px;font-size:0.76rem;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;text-decoration:none;display:inline-block;white-space:nowrap}
-    .btn-green{background:rgba(36,68,65,0.1);color:var(--green)}.btn-green:hover{background:var(--green);color:#fff}
-    .btn-red{background:rgba(195,54,67,0.1);color:var(--red)}.btn-red:hover{background:var(--red);color:#fff}
-    .btn-blue{background:rgba(63,130,227,0.1);color:var(--blue)}.btn-blue:hover{background:var(--blue);color:#fff}
-    .btn-teal{background:rgba(36,68,65,0.08);color:var(--green)}.btn-teal:hover{background:var(--green);color:#fff}
-    .btn-activate{background:rgba(34,197,94,0.1);color:#16a34a}.btn-activate:hover{background:#16a34a;color:#fff}
-    .btn-edit{background:rgba(63,130,227,0.1);color:var(--blue)}.btn-edit:hover{background:var(--blue);color:#fff}
 
     /* ── Controls bar: search + filters ── */
-    .controls-bar{display:flex;flex-wrap:wrap;align-items:center;gap:1rem;margin-bottom:1.5rem}
-    .search-wrap{position:relative;flex:1;min-width:220px;max-width:340px}
-    .search-wrap svg{position:absolute;left:0.85rem;top:50%;transform:translateY(-50%);color:#9ab0ae;width:16px;height:16px}
-    .search-input{width:100%;padding:0.62rem 0.9rem 0.62rem 2.3rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--green);outline:none;background:var(--white);transition:border-color 0.2s}
-    .search-input:focus{border-color:var(--blue)}
-    .filter-tabs{display:flex;gap:0.5rem;flex-wrap:wrap}
-    .filter-tab{padding:0.5rem 1rem;border-radius:50px;font-size:0.8rem;font-weight:600;border:1.5px solid rgba(36,68,65,0.12);background:var(--white);color:var(--green);cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif}
-    .filter-tab:hover{border-color:var(--blue)}
-    .filter-tab.active{background:var(--green);border-color:var(--green);color:#fff}
 
-    .table-wrap{background:var(--white);border-radius:16px;overflow:hidden;border:1px solid rgba(36,68,65,0.07);box-shadow:0 2px 10px rgba(0,0,0,0.04)}
-    table{width:100%;border-collapse:collapse}
-    th{padding:0.9rem 1.2rem;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9ab0ae;text-align:left;background:rgba(36,68,65,0.03);border-bottom:1px solid rgba(36,68,65,0.07)}
-    td{padding:0.9rem 1.2rem;font-size:0.88rem;border-bottom:1px solid rgba(36,68,65,0.05);vertical-align:middle}
-    tr:last-child td{border-bottom:none}
-    tr:hover td{background:rgba(36,68,65,0.02)}
-    .row-avatar{width:36px;height:36px;border-radius:10px;background:var(--blue);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;flex-shrink:0;margin-right:0.7rem;vertical-align:middle}
     .role-pill{display:inline-block;padding:0.2rem 0.6rem;border-radius:50px;font-size:0.7rem;font-weight:700;letter-spacing:0.03em}
-    .role-doctor{background:rgba(63,130,227,0.1);color:var(--blue)}
-    .role-patient{background:rgba(36,68,65,0.08);color:var(--green)}
-    .role-staff{background:rgba(245,158,11,0.1);color:#d97706}
-    .badge{display:inline-block;padding:0.22rem 0.65rem;border-radius:50px;font-size:0.7rem;font-weight:700;letter-spacing:0.04em}
-    .badge-green{background:rgba(34,197,94,0.1);color:#16a34a}
-    .badge-red{background:rgba(195,54,67,0.1);color:var(--red)}
-    .badge-orange{background:rgba(245,158,11,0.1);color:#d97706}
-    .badge-blue{background:rgba(63,130,227,0.1);color:var(--blue)}
-    .badge-gray{background:rgba(0,0,0,0.06);color:#888}
-    .empty-row{text-align:center;padding:3rem;color:#9ab0ae;font-size:0.88rem}
-    .actions-cell{display:flex;gap:0.4rem;flex-wrap:wrap}
 
-    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:200;padding:1rem;backdrop-filter:blur(4px)}
-    .modal-overlay.open{display:flex}
-    .modal{background:var(--white);border-radius:20px;padding:2rem;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;animation:fadeUp 0.3s ease}
-    .modal h3{font-size:1.3rem;margin-bottom:1.2rem}
 
     .modal-details{max-width:640px}
     .details-header{display:flex;align-items:center;gap:1.2rem;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid rgba(36,68,65,0.08)}
@@ -507,12 +471,6 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
     .details-section{margin-bottom:1.4rem}
     .details-section-title{font-size:0.68rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#9ab0ae;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem}
     .details-section-title::after{content:'';flex:1;height:1px;background:rgba(36,68,65,0.08)}
-    .details-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem}
-    .detail-item{background:rgba(36,68,65,0.04);border-radius:10px;padding:0.7rem 0.9rem}
-    .detail-item.full{grid-column:1/-1}
-    .detail-item-label{font-size:0.68rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#9ab0ae;margin-bottom:0.2rem}
-    .detail-item-value{font-size:0.88rem;font-weight:500;color:var(--green);word-break:break-word}
-    .detail-item-value.empty{color:#c0cece;font-style:italic}
     .schedule-table{width:100%;border-collapse:collapse}
     .schedule-table th{font-size:0.68rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#9ab0ae;padding:0.4rem 0.6rem;text-align:left;border-bottom:1px solid rgba(36,68,65,0.07)}
     .schedule-table td{font-size:0.83rem;padding:0.5rem 0.6rem;border-bottom:1px solid rgba(36,68,65,0.04);color:var(--green)}
@@ -522,27 +480,9 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
     .doc-link{color:var(--blue);text-decoration:none;font-size:0.82rem;font-weight:600;display:inline-flex;align-items:center;gap:0.3rem}
     .doc-link:hover{text-decoration:underline}
 
-    .field-label{display:block;font-size:0.72rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#9ab0ae;margin-bottom:0.4rem}
-    .field-input{width:100%;padding:0.72rem 0.9rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--green);outline:none;transition:border-color 0.2s}
-    .field-input:focus{border-color:var(--blue)}
-    .field-input.invalid{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(195,54,67,0.08)}
-    .field-warning{display:none;margin-top:0.35rem;font-size:0.75rem;font-weight:600;color:var(--red);line-height:1.35}
-    .field-warning.show{display:block}
-    .live-warning{display:none;background:rgba(195,54,67,0.08);border:1px solid rgba(195,54,67,0.22);color:var(--red);padding:0.55rem 0.8rem;border-radius:10px;font-size:0.78rem;font-weight:600;margin-bottom:0.8rem}
-    .live-warning.show{display:block}
-    select.field-input{cursor:pointer}
-    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem}
-    .form-field{margin-bottom:0.9rem}
-    .btn-submit{width:100%;padding:0.85rem;border-radius:50px;background:var(--red);color:#fff;font-weight:700;font-size:0.93rem;border:none;cursor:pointer;margin-top:0.5rem;transition:all 0.25s;font-family:'DM Sans',sans-serif}
-    .btn-submit:hover{background:#a82d38}
-    .btn-submit:disabled{opacity:0.5;cursor:not-allowed}
-    .btn-cancel{width:100%;padding:0.7rem;border-radius:50px;background:transparent;color:var(--green);font-weight:600;font-size:0.88rem;border:1.5px solid rgba(36,68,65,0.15);cursor:pointer;margin-top:0.5rem;font-family:'DM Sans',sans-serif}
     .invite-box{background:rgba(63,130,227,0.08);border:1px solid rgba(63,130,227,0.2);border-radius:14px;padding:1rem 1.2rem;margin-bottom:1.5rem}
     .invite-box p{font-size:0.78rem;color:var(--blue);font-weight:600;margin-bottom:0.5rem}
     .invite-box code{font-size:0.75rem;word-break:break-all;color:var(--green);background:rgba(36,68,65,0.06);padding:0.4rem 0.6rem;border-radius:8px;display:block}
-    .toast{position:fixed;bottom:2rem;right:2rem;z-index:300;background:var(--green);color:#fff;padding:0.9rem 1.5rem;border-radius:14px;font-size:0.88rem;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:slideIn 0.4s ease,fadeOut 0.4s 3s ease forwards}
-    .toast.error{background:var(--red)}
-    .spinner-inline{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px}
 
     .role-select{display:flex;gap:0.5rem;margin-bottom:1.2rem}
     .role-select button{flex:1;padding:0.6rem;border-radius:12px;border:1.5px solid rgba(36,68,65,0.12);background:var(--white);color:var(--green);font-weight:600;font-size:0.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
@@ -550,13 +490,7 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
     .role-select button:disabled{opacity:0.4;cursor:not-allowed}
     .role-note{font-size:0.75rem;color:#9ab0ae;margin-bottom:1rem;line-height:1.4}
 
-    .btn-primary-alt{display:inline-flex;align-items:center;gap:0.4rem;background:var(--green);color:#fff;padding:0.6rem 1.3rem;border-radius:50px;font-size:0.85rem;font-weight:600;border:none;cursor:pointer;transition:all 0.25s;font-family:'DM Sans',sans-serif;box-shadow:0 4px 14px rgba(36,68,65,0.25);text-decoration:none}
-    .btn-primary-alt:hover{background:#1a3330;transform:translateY(-1px)}
 
-    @keyframes spin{to{transform:rotate(360deg)}}
-    @keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
-    @keyframes fadeOut{from{opacity:1}to{opacity:0;pointer-events:none}}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     @media(max-width:900px){.sidebar{display:none}}
     @media(max-width:520px){.details-grid{grid-template-columns:1fr}.controls-bar{flex-direction:column;align-items:stretch}.search-wrap{max-width:none}}
   </style>
