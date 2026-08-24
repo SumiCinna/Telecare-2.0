@@ -61,13 +61,25 @@ $stat_patients        = $conn->query("SELECT COUNT(*) c FROM patients")->fetch_a
 $stat_doctors         = $conn->query("SELECT COUNT(*) c FROM doctors WHERE status='active'")->fetch_assoc()['c'];
 $stat_pending         = (int)$conn->query("SELECT COUNT(*) c FROM appointments WHERE status='Pending'")->fetch_assoc()['c'];
 
-$total_collected_row = $conn->query("
+/* ══════════════════════════════════════════════
+   Revenue = Paid consultation fees + POS sales
+   ══════════════════════════════════════════════ */
+$consult_row = $conn->query("
     SELECT COALESCE(SUM(d.consultation_fee), 0) AS total
     FROM appointments a
     JOIN doctors d ON d.id = a.doctor_id
     WHERE a.payment_status = 'Paid'
 ")->fetch_assoc();
-$stat_total_collected = (float)$total_collected_row['total'];
+$stat_consultation_collected = (float)$consult_row['total'];
+
+$pos_totals_row = $conn->query("
+    SELECT COALESCE(SUM(total_amount), 0) AS total, COUNT(*) AS cnt
+    FROM pos_sales
+")->fetch_assoc();
+$stat_pos_collected = (float)$pos_totals_row['total'];
+$stat_pos_count     = (int)$pos_totals_row['cnt'];
+
+$stat_total_collected = $stat_consultation_collected + $stat_pos_collected;
 
 $range = $_GET['range'] ?? 'week';
 if (!in_array($range, ['week', 'month', 'year'], true)) {
@@ -99,6 +111,7 @@ if ($range === 'week') {
   $bucket_key_format = 'Y-m';
 }
 
+// Consultation fees per bucket
 $daily_raw = $conn->query("
   SELECT {$bucket_expr} AS bucket,
        COALESCE(SUM(d.consultation_fee), 0) AS total
@@ -107,6 +120,18 @@ $daily_raw = $conn->query("
   WHERE a.payment_status = 'Paid'
     AND a.appointment_date >= '$range_start'
     AND a.appointment_date <= '$range_end'
+  GROUP BY bucket
+  ORDER BY bucket ASC
+");
+
+// POS sales per bucket (same range, keyed off created_at instead of appointment_date)
+$pos_bucket_expr = $range === 'year' ? "DATE_FORMAT(created_at, '%Y-%m')" : "DATE(created_at)";
+$pos_daily_raw = $conn->query("
+  SELECT {$pos_bucket_expr} AS bucket,
+       COALESCE(SUM(total_amount), 0) AS total
+  FROM pos_sales
+  WHERE created_at >= '$range_start 00:00:00'
+    AND created_at <= '$range_end 23:59:59'
   GROUP BY bucket
   ORDER BY bucket ASC
 ");
@@ -132,7 +157,15 @@ if ($daily_raw) {
   while ($row = $daily_raw->fetch_assoc()) {
     $key = $row['bucket'];
     if (array_key_exists($key, $daily_map)) {
-      $daily_map[$key] = (float)$row['total'];
+      $daily_map[$key] += (float)$row['total'];
+    }
+  }
+}
+if ($pos_daily_raw) {
+  while ($row = $pos_daily_raw->fetch_assoc()) {
+    $key = $row['bucket'];
+    if (array_key_exists($key, $daily_map)) {
+      $daily_map[$key] += (float)$row['total'];
     }
   }
 }
@@ -163,6 +196,21 @@ if ($status_counts_raw) {
 }
 $donut_labels = array_keys($status_map);
 $donut_values = array_values($status_map);
+
+/* ══════════════════════════════════════════════
+   Recent POS sales (for the dashboard panel)
+   ══════════════════════════════════════════════ */
+$recent_pos_sales = [];
+$rps = $conn->query("
+    SELECT s.id, s.patient_name, s.total_amount, s.created_at,
+           st.full_name AS staff_name,
+           (SELECT COUNT(*) FROM pos_sale_items i WHERE i.sale_id = s.id) AS item_count
+    FROM pos_sales s
+    LEFT JOIN staff_accounts st ON st.id = s.staff_id
+    ORDER BY s.created_at DESC
+    LIMIT 6
+");
+if ($rps) { while ($row = $rps->fetch_assoc()) { $recent_pos_sales[] = $row; } }
 
 require_once 'includes/header.php';
 ?>
@@ -197,7 +245,11 @@ require_once 'includes/header.php';
   </div>
   <div class="stat-card">
     <div class="stat-num" style="color:#0d9488">₱<?= number_format($stat_total_collected, 2) ?></div>
-    <div class="stat-lbl">Total Fees Collected</div>
+    <div class="stat-lbl">Total Revenue (Consults + POS)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" style="color:#3F82E3">₱<?= number_format($stat_pos_collected, 2) ?></div>
+    <div class="stat-lbl">POS Sales (<?= $stat_pos_count ?> transactions)</div>
   </div>
 </div>
 
@@ -212,13 +264,13 @@ require_once 'includes/header.php';
 
   <div class="card">
     <div class="sec-head" style="margin-bottom:.8rem">
-      <h2 style="font-size:1rem">💰 Daily Collections</h2>
+      <h2 style="font-size:1rem">💰 Daily Collections (Consults + POS)</h2>
       <span class="badge bg-blue"><?= htmlspecialchars($range_label) ?></span>
     </div>
     <div style="position:relative;width:100%;height:220px;">
       <canvas id="dailyChart"
         role="img"
-        aria-label="Bar chart showing daily consultation fee collections over the last 7 days."
+        aria-label="Bar chart showing daily combined consultation and POS collections."
       >Daily collections: <?= implode(', ', array_map(fn($l,$v) => "$l ₱$v", $chart_labels, $chart_values)) ?>.</canvas>
     </div>
   </div>
@@ -241,7 +293,7 @@ require_once 'includes/header.php';
 
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem;">
 
   <div class="card">
     <div class="sec-head" style="margin-bottom:.8rem">
@@ -306,6 +358,41 @@ require_once 'includes/header.php';
     <?php endif ?>
   </div>
 
+</div>
+
+<div class="card">
+  <div class="sec-head" style="margin-bottom:.8rem">
+    <h2 style="font-size:1rem">🧾 Recent POS Sales</h2>
+    <a href="pos_services.php" class="badge bg-blue" style="text-decoration:none;">Go to POS →</a>
+  </div>
+  <?php if (!empty($recent_pos_sales)): ?>
+  <table style="width:100%;border-collapse:collapse;font-size:.83rem;">
+    <thead>
+      <tr style="text-align:left;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;">
+        <th style="padding:.4rem .3rem;">Receipt #</th>
+        <th style="padding:.4rem .3rem;">Patient</th>
+        <th style="padding:.4rem .3rem;">Items</th>
+        <th style="padding:.4rem .3rem;">Staff</th>
+        <th style="padding:.4rem .3rem;">Date</th>
+        <th style="padding:.4rem .3rem;text-align:right;">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php foreach ($recent_pos_sales as $s): ?>
+      <tr style="border-top:1px solid rgba(36,68,65,.06);">
+        <td style="padding:.5rem .3rem;font-weight:700;">#<?= (int)$s['id'] ?></td>
+        <td style="padding:.5rem .3rem;"><?= htmlspecialchars($s['patient_name'] ?: 'Walk-in') ?></td>
+        <td style="padding:.5rem .3rem;"><?= (int)$s['item_count'] ?> item<?= (int)$s['item_count'] === 1 ? '' : 's' ?></td>
+        <td style="padding:.5rem .3rem;"><?= htmlspecialchars($s['staff_name'] ?? '—') ?></td>
+        <td style="padding:.5rem .3rem;color:var(--muted);"><?= date('M j, g:i A', strtotime($s['created_at'])) ?></td>
+        <td style="padding:.5rem .3rem;text-align:right;font-weight:700;color:#0d9488;">₱<?= number_format((float)$s['total_amount'], 2) ?></td>
+      </tr>
+      <?php endforeach; ?>
+    </tbody>
+  </table>
+  <?php else: ?>
+  <div class="empty-row">No POS sales yet.</div>
+  <?php endif; ?>
 </div>
 
 <form method="POST" id="quick-form" style="display:none">
@@ -417,5 +504,3 @@ new Chart(document.getElementById('statusChart'), {
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
-
-

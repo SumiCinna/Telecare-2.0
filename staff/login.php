@@ -12,7 +12,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = trim($_POST['password'] ?? '');
 
     if ($email && $password) {
-        $stmt = $conn->prepare("SELECT id, full_name, password, role, status FROM staff_accounts WHERE email = ? LIMIT 1");
+               $stmt = $conn->prepare("SELECT id, full_name, password, status FROM staff_accounts WHERE email = ? LIMIT 1");
+        if (!$stmt) {
+            die('Prepare failed: ' . $conn->error);
+        }
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $staff = $stmt->get_result()->fetch_assoc();

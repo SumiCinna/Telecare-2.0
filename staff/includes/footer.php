@@ -1,4 +1,4 @@
-﻿// staff/includes/footer.php
+﻿
 </div><!-- /page-wrap -->
 </div><!-- /main -->
 
