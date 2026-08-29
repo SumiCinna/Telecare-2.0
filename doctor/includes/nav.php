@@ -321,6 +321,13 @@
       <span>Schedule</span>
     </a>
 
+    <a href="availability.php" class="nav-item <?= ($active_nav ?? '') === 'availability' ? 'active' : '' ?>">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>Fees &amp; Hours</span>
+    </a>
+
     <a href="profile.php" class="nav-item <?= ($active_nav ?? '') === 'profile' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />

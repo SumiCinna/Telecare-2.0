@@ -115,37 +115,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     }
 }
 
-// ── Update schedules ──
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_schedules'])) {
-  $error = 'Schedule updates are now managed by staff account.';
-}
-
-// ── Generate 30-min time options ──
-function generateTimeOptions(): array {
-    $opts = [];
-    for ($h = 0; $h < 24; $h++) {
-        foreach ([0, 30] as $m) {
-            $val  = str_pad($h,2,'0',STR_PAD_LEFT).':'.str_pad($m,2,'0',STR_PAD_LEFT);
-            $ap   = $h >= 12 ? 'PM' : 'AM';
-            $hr   = $h % 12 ?: 12;
-            $lbl  = $hr.':'.str_pad($m,2,'0',STR_PAD_LEFT).' '.$ap;
-            $opts[] = ['val'=>$val,'lbl'=>$lbl];
-        }
-    }
-    return $opts;
-}
-
-// ── Fetch schedules ──
-$schedules = [];
-$sres = $conn->query("SELECT * FROM doctor_schedules WHERE doctor_id=$doctor_id ORDER BY FIELD(day_of_week,'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')");
-if ($sres) while ($s = $sres->fetch_assoc()) $schedules[] = $s;
-
 $page_title       = 'Profile — TELE-CARE';
 $page_title_short = 'My Profile';
 $active_nav       = 'profile';
 require_once 'includes/header.php';
-
-$days_of_week = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 ?>
 
 <style>
@@ -155,10 +128,6 @@ $days_of_week = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','
   select.sched-input{cursor:pointer;}
   .sched-remove{background:rgba(195,54,67,0.08);border:none;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--red);transition:all .2s;flex-shrink:0;}
   .sched-remove:hover{background:rgba(195,54,67,0.18);}
-  .sched-chip{display:inline-flex;align-items:center;gap:0.5rem;background:rgba(36,68,65,0.07);border-radius:10px;padding:0.5rem 0.8rem;font-size:0.8rem;font-weight:600;color:var(--green);margin-bottom:0.4rem;}
-  .sched-chip .day{font-weight:700;min-width:72px;}
-  .sched-chip .time{color:var(--blue);font-size:0.78rem;}
-  .no-sched{font-size:0.85rem;color:var(--muted);font-style:italic;padding:0.5rem 0;}
   .btn-add-sched{display:inline-flex;align-items:center;gap:0.4rem;background:rgba(63,130,227,0.1);color:var(--blue);border:none;border-radius:50px;padding:0.45rem 1rem;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:0.4rem;}
   .btn-add-sched:hover{background:rgba(63,130,227,0.18);}
 
@@ -217,29 +186,6 @@ $days_of_week = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','
     </div>
   </div>
 
-  <!-- ── MY SCHEDULE ── -->
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;">
-      <div class="section-label" style="margin-bottom:0;">My Schedule</div>
-      <span class="badge badge-blue" style="font-size:0.72rem;">Managed by Staff</span>
-    </div>
-
-    <?php if (empty($schedules)): ?>
-      <div class="no-sched">No schedule set yet. Tap Edit Schedule to add your availability.</div>
-    <?php else: ?>
-      <div style="display:flex;flex-direction:column;gap:0.4rem;">
-        <?php
-        function fmt12($t){ [$h,$m]=explode(':',$t); $ap=$h>=12?'PM':'AM'; $hr=$h%12?:12; return $hr.':'.str_pad($m,2,'0',STR_PAD_LEFT).' '.$ap; }
-        foreach ($schedules as $s): ?>
-        <div class="sched-chip">
-          <span class="day"><?= htmlspecialchars($s['day_of_week']) ?></span>
-          <span class="time"><?= fmt12($s['start_time']) ?> — <?= fmt12($s['end_time']) ?></span>
-        </div>
-        <?php endforeach; ?>
-      </div>
-    <?php endif; ?>
-  </div>
-
   <!-- Edit Profile -->
   <div class="card">
     <div class="section-label">Edit Profile</div>
@@ -260,7 +206,7 @@ $days_of_week = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','
         <div class="form-field">
           <label class="field-label">Consultation Fee (₱)</label>
           <input type="text" class="field-input" value="₱<?= number_format((float)($doc['consultation_fee'] ?? 0), 2) ?>" readonly/>
-          <div style="font-size:0.75rem;color:var(--muted);margin-top:0.35rem;">Consultation fee updates are managed by staff account.</div>
+          <div style="font-size:0.75rem;color:var(--muted);margin-top:0.35rem;">Manage your fee and weekly schedule from <a href="availability.php" style="color:var(--blue);font-weight:600;">Fees &amp; Hours</a>.</div>
         </div>
         <div class="form-field">
           <label class="field-label">Languages</label>

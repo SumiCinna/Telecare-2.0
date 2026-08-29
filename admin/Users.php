@@ -830,12 +830,12 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
 <!-- ══════════════════════════════════════════════
      MODAL: Audit Log History
      ══════════════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-audit-logs">
-  <div class="modal" style="max-width:640px;">
+<div class="modal-overlay" id="modal-audit-logs" style="align-items:flex-start;padding-top:2rem;padding-bottom:2rem;">
+  <div class="modal" style="max-width:480px;max-height:none;overflow:visible;padding:1.4rem;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;">
       <h3 style="margin-bottom:0;">Account Change History</h3>
     </div>
-    <div id="audit-log-body" style="max-height:55vh;overflow-y:auto;"></div>
+    <div id="audit-log-body"></div>
     <div id="audit-log-pages" style="display:flex;align-items:center;justify-content:center;gap:0.6rem;margin-top:1rem;"></div>
     <button class="btn-cancel" onclick="closeModal('modal-audit-logs')">Close</button>
   </div>
@@ -1161,7 +1161,7 @@ function clearEditWarnings(prefix) {
 
 // ── Audit log history ──
 let auditPage = 0;
-const AUDIT_PAGE_SIZE = 10;
+const AUDIT_PAGE_SIZE = 4;
 
 function openAuditLogs() {
   auditPage = 0;
@@ -1208,13 +1208,13 @@ function renderAuditLogs() {
     }
 
     const badgeCls = l.action === 'create' ? 'badge-green' : (l.action === 'delete' ? 'badge-red' : (l.action === 'toggle' ? 'badge-orange' : 'badge-blue'));
-    return `<div style="padding:0.85rem 0;border-bottom:1px solid rgba(36,68,65,0.06);">
+    return `<div style="padding:0.5rem 0;border-bottom:1px solid rgba(36,68,65,0.06);">
       <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
         <span class="badge ${badgeCls}">${escHtml(action)}</span>
         <strong style="font-size:0.85rem;">${escHtml(entity)}</strong>
         <span style="margin-left:auto;font-size:0.74rem;color:#9ab0ae;">${fmtDate(l.created_at)} ${escHtml((l.created_at||'').slice(11))}</span>
       </div>
-      <div style="font-size:0.82rem;margin-top:0.3rem;color:var(--green);">by <strong>${escHtml(admin)}</strong></div>
+      <div style="font-size:0.82rem;margin-top:0.15rem;color:var(--green);">by <strong>${escHtml(admin)}</strong></div>
       ${diff}
     </div>`;
   }).join('');
@@ -1231,7 +1231,6 @@ function renderAuditLogs() {
 function changeAuditPage(delta) {
   auditPage += delta;
   renderAuditLogs();
-  document.getElementById('audit-log-body').scrollTop = 0;
 }
 
 // ── Copy setup link ──
@@ -1382,6 +1381,3 @@ setTimeout(() => { const t = document.querySelector('.toast'); if (t) t.remove()
 </script>
 </body>
 </html>
-
-
-

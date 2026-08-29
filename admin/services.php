@@ -36,6 +36,19 @@ if (!function_exists('log_audit')) {
     }
 }
 
+// One-time schema fix: some deployments still have `status` as
+// ENUM('Active','Archived') from before this rework, which silently
+// rejects/truncates 'Inactive' writes (the UPDATE below would appear to
+// succeed but change nothing). Widen it to a plain VARCHAR once.
+$statusCol = $conn->query("SHOW COLUMNS FROM services LIKE 'status'")->fetch_assoc();
+if ($statusCol && stripos($statusCol['Type'], 'enum') === 0) {
+    $conn->query("ALTER TABLE services MODIFY COLUMN status VARCHAR(20) NOT NULL DEFAULT 'Active'");
+}
+
+// One-time data fix: normalize any leftover 'Archived' status values from
+// before the Active/Inactive rework so filters and badges stay consistent.
+$conn->query("UPDATE services SET status='Inactive' WHERE status NOT IN ('Active','Inactive')");
+
 /* ══════════════════════════════════════════════
    ACTIONS — Service (details)
    ══════════════════════════════════════════════ */
@@ -53,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_service'])) {
     if (!$name) $errors[] = 'Service name is required.';
     if ($price === '' || !is_numeric($price) || $price < 0) $errors[] = 'Service price must be a valid positive number.';
     if (!in_array($category, $CATEGORIES, true)) $errors[] = 'Please select a valid category.';
-    if (!in_array($status, ['Active', 'Archived'], true)) $status = 'Active';
+    if (!in_array($status, ['Active', 'Inactive'], true)) $status = 'Active';
 
     if (empty($errors)) {
         $stmt = $conn->prepare("INSERT INTO services (name, description, price, category, status) VALUES (?, ?, ?, ?, ?)");
@@ -82,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_service'])) {
     if (!$name) $errors[] = 'Service name is required.';
     if ($price === '' || !is_numeric($price) || $price < 0) $errors[] = 'Service price must be a valid positive number.';
     if (!in_array($category, $CATEGORIES, true)) $errors[] = 'Please select a valid category.';
-    if (!in_array($status, ['Active', 'Archived'], true)) $status = 'Active';
+    if (!in_array($status, ['Active', 'Inactive'], true)) $status = 'Active';
 
     $old = $conn->query("SELECT * FROM services WHERE id=$id")->fetch_assoc();
 
@@ -100,19 +113,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_service'])) {
     header('Location: services.php'); exit;
 }
 
-// ── Archive / Restore service ──
-if (isset($_GET['archive_service'])) {
-    $id = (int)$_GET['archive_service'];
-    $conn->query("UPDATE services SET status='Archived' WHERE id=$id");
-    log_audit($conn, $admin_id, 'archive', 'service', $id, ['status' => 'Active'], ['status' => 'Archived']);
-    $_SESSION['toast'] = 'Service archived.';
+// ── Activate / Deactivate service ──
+if (isset($_GET['deactivate_service'])) {
+    $id = (int)$_GET['deactivate_service'];
+    $ok = $conn->query("UPDATE services SET status='Inactive' WHERE id=$id");
+    if ($ok && $conn->affected_rows > 0) {
+        log_audit($conn, $admin_id, 'deactivate', 'service', $id, ['status' => 'Active'], ['status' => 'Inactive']);
+        $_SESSION['toast'] = 'Service deactivated.';
+    } else {
+        $_SESSION['toast_error'] = 'Could not deactivate service. Please try again.';
+    }
     header('Location: services.php'); exit;
 }
-if (isset($_GET['restore_service'])) {
-    $id = (int)$_GET['restore_service'];
-    $conn->query("UPDATE services SET status='Active' WHERE id=$id");
-    log_audit($conn, $admin_id, 'restore', 'service', $id, ['status' => 'Archived'], ['status' => 'Active']);
-    $_SESSION['toast'] = 'Service restored.';
+if (isset($_GET['activate_service'])) {
+    $id = (int)$_GET['activate_service'];
+    $ok = $conn->query("UPDATE services SET status='Active' WHERE id=$id");
+    if ($ok && $conn->affected_rows > 0) {
+        log_audit($conn, $admin_id, 'activate', 'service', $id, ['status' => 'Inactive'], ['status' => 'Active']);
+        $_SESSION['toast'] = 'Service activated.';
+    } else {
+        $_SESSION['toast_error'] = 'Could not activate service. Please try again.';
+    }
     header('Location: services.php'); exit;
 }
 
@@ -280,7 +301,7 @@ $activeNav = 'pos-services';
         <?php foreach ($CATEGORIES as $cat): ?>
           <button class="filter-tab" data-filter="<?= htmlspecialchars($cat) ?>" onclick="setFilter('<?= htmlspecialchars($cat) ?>')"><?= htmlspecialchars($cat) ?></button>
         <?php endforeach; ?>
-        <button class="filter-tab" data-filter="archived" onclick="setFilter('archived')">Archived</button>
+        <button class="filter-tab" data-filter="inactive" onclick="setFilter('inactive')">Inactive</button>
       </div>
     </div>
 
@@ -318,7 +339,7 @@ $activeNav = 'pos-services';
         <label class="field-label">Status</label>
         <select name="status" class="field-input">
           <option value="Active" selected>Active</option>
-          <option value="Archived">Archived</option>
+          <option value="Inactive">Inactive</option>
         </select>
       </div>
       <button type="submit" name="add_service" class="btn-submit">Next: Requirements</button>
@@ -348,7 +369,7 @@ $activeNav = 'pos-services';
         <label class="field-label">Status</label>
         <select name="status" id="edit-service-status" class="field-input">
           <option value="Active">Active</option>
-          <option value="Archived">Archived</option>
+          <option value="Inactive">Inactive</option>
         </select>
       </div>
       <button type="submit" name="edit_service" class="btn-submit">Save Changes</button>
@@ -364,7 +385,6 @@ $activeNav = 'pos-services';
     <div class="details-grid" style="margin-bottom:1rem;">
       <div class="detail-item"><div class="detail-item-label">Category</div><div class="detail-item-value" id="vsr-category"></div></div>
       <div class="detail-item"><div class="detail-item-label">Price</div><div class="detail-item-value" id="vsr-price"></div></div>
-      <div class="detail-item"><div class="detail-item-label">Status</div><div class="detail-item-value" id="vsr-status"></div></div>
       <div class="detail-item full"><div class="detail-item-label">Description</div><div class="detail-item-value" id="vsr-description"></div></div>
     </div>
     <div class="detail-item-label" style="margin-bottom:0.5rem;">Required Testing Kit Items</div>
@@ -425,10 +445,10 @@ function setFilter(f) {
 function applyFilters() {
   const q = document.getElementById('searchInput').value.trim().toLowerCase();
   let rows = ALL_SERVICES.filter(s => {
-    if (currentFilter === 'archived') { if (s.status !== 'Archived') return false; }
-    else if (s.status === 'Archived') return false;
+    if (currentFilter === 'inactive') { if (s.status === 'Active') return false; }
+    else if (s.status !== 'Active') return false;
 
-    if (!['all','archived'].includes(currentFilter) && s.category !== currentFilter) return false;
+    if (!['all','inactive'].includes(currentFilter) && s.category !== currentFilter) return false;
     if (q && !s.name.toLowerCase().includes(q)) return false;
     return true;
   });
@@ -436,7 +456,7 @@ function applyFilters() {
 }
 
 function statusBadge(status) {
-  return status === 'Active' ? `<span class="badge badge-green">Active</span>` : `<span class="badge badge-gray">Archived</span>`;
+  return status === 'Active' ? `<span class="badge badge-green">Active</span>` : `<span class="badge badge-gray">Inactive</span>`;
 }
 
 function inventorySummary(serviceId) {
@@ -461,9 +481,9 @@ function renderRows(rows) {
     actions += `<button class="btn-sm btn-edit" onclick="openEditModal(${s.id})">Edit</button>`;
     actions += `<button class="btn-sm" style="background:rgba(63,130,227,0.1);color:var(--blue);" onclick="openRequirementsModal(${s.id})">Requirements</button>`;
     if (s.status === 'Active') {
-      actions += `<a href="?archive_service=${s.id}" class="btn-sm btn-red" onclick="var el=this;event.preventDefault();showConfirm('Archive ${escAttr(s.name)}? It will no longer be available for new POS transactions.').then(function(ok){if(ok)window.location=el.href});return false;">Archive</a>`;
+      actions += `<a href="?deactivate_service=${s.id}" class="btn-sm btn-red" onclick="var el=this;event.preventDefault();showConfirm('Deactivate ${escAttr(s.name)}? It will no longer be available for new POS transactions.').then(function(ok){if(ok)window.location=el.href});return false;">Deactivate</a>`;
     } else {
-      actions += `<a href="?restore_service=${s.id}" class="btn-sm btn-activate" onclick="var el=this;event.preventDefault();showConfirm('Restore ${escAttr(s.name)}?').then(function(ok){if(ok)window.location=el.href});return false;">Restore</a>`;
+      actions += `<a href="?activate_service=${s.id}" class="btn-sm btn-activate" onclick="var el=this;event.preventDefault();showConfirm('Activate ${escAttr(s.name)}?').then(function(ok){if(ok)window.location=el.href});return false;">Activate</a>`;
     }
     return `<tr>
       <td>${escHtml(s.name)}</td>
@@ -494,7 +514,6 @@ function openViewModal(id) {
   document.getElementById('vsr-title').textContent = s.name;
   document.getElementById('vsr-category').textContent = s.category;
   document.getElementById('vsr-price').textContent = '₱' + Number(s.price).toFixed(2);
-  document.getElementById('vsr-status').textContent = s.status;
   document.getElementById('vsr-description').textContent = s.description || 'No description';
 
   const items = REQUIREMENTS_BY_SERVICE[id] || [];
