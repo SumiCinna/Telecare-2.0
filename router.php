@@ -4,6 +4,11 @@ session_start();
 
 $page = $_GET['page'] ?? '';
 
+if ($page === 'staffs_index') {
+    include __DIR__ . '/private_telecare/staffs_index.php';
+    exit;
+}
+
 $publicPages = [
     'index', 'check_cdn', 'login', 'register', 'forgot_password', 'verify',
     'reset_password', 'resend_verification', 'check_email', 'termsandpolicy',
