@@ -4,21 +4,9 @@ require_once '../database/config.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 
 // Load environment variables
-$env_file = '../.env';
-$env_vars = [];
-if (file_exists($env_file)) {
-    $lines = file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        if (strpos($line, '=') && strpos($line, '#') !== 0) {
-            list($key, $value) = explode('=', $line, 2);
-            $env_vars[trim($key)] = trim($value);
-        }
-    }
-}
-
-$client_id     = $env_vars['GOOGLE_CLIENT_ID'] ?? '';
-$client_secret = $env_vars['GOOGLE_CLIENT_SECRET'] ?? '';
-$redirect_uri  = $env_vars['GOOGLE_REDIRECT_URI_LOGIN'] ?? '';
+  $client_id     = getenv('GOOGLE_CLIENT_ID') ?: '';
+  $client_secret = getenv('GOOGLE_CLIENT_SECRET') ?: '';
+  $redirect_uri  = getenv('GOOGLE_REDIRECT_URI_LOGIN') ?: '';
 
 if (empty($client_id) || empty($client_secret) || empty($redirect_uri)) {
     die('Error: Google OAuth credentials not configured in .env file.');

@@ -4,20 +4,8 @@ if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 require_once '../database/config.php';
 
 // Load environment variables
-$env_file = '../.env';
-$env_vars = [];
-if (file_exists($env_file)) {
-    $lines = file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        if (strpos($line, '=') && strpos($line, '#') !== 0) {
-            list($key, $value) = explode('=', $line, 2);
-            $env_vars[trim($key)] = trim($value);
-        }
-    }
-}
-
-$google_client_id = $env_vars['GOOGLE_CLIENT_ID'] ?? '';
-$google_redirect_uri = $env_vars['GOOGLE_REDIRECT_URI_DOCTOR'] ?? str_replace('auth/google-callback.php', 'auth/google-doctor-callback.php', ($env_vars['GOOGLE_REDIRECT_URI_LOGIN'] ?? ''));
+  $google_client_id = getenv('GOOGLE_CLIENT_ID') ?: '';
+  $google_redirect_uri = getenv('GOOGLE_REDIRECT_URI_DOCTOR') ?: str_replace('auth/google-callback.php', 'auth/google-doctor-callback.php', (getenv('GOOGLE_REDIRECT_URI_LOGIN') ?: ''));
 
 if (empty($google_client_id) || empty($google_redirect_uri)) {
     die('Error: Google OAuth credentials not configured in .env file.');
