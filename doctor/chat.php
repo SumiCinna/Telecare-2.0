@@ -33,9 +33,8 @@ $my_patients = $conn->query("
          ORDER BY sent_at DESC LIMIT 1) AS last_time,
         (SELECT COUNT(*) FROM messages
          WHERE sender_id=p.id AND sender_type='patient' AND receiver_id=$doctor_id AND receiver_type='doctor' AND is_read=0) AS unread
-    FROM patients p
-    JOIN patient_doctors pd ON pd.patient_id=p.id
-    WHERE pd.doctor_id=$doctor_id
+        FROM patients p
+    JOIN (SELECT DISTINCT patient_id FROM appointments WHERE doctor_id=$doctor_id) pd ON pd.patient_id=p.id
     ORDER BY last_time DESC, p.full_name ASC
 ");
 

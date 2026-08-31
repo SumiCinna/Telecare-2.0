@@ -8,8 +8,10 @@ require_once __DIR__ . '/../includes/auth.php';
 $doc = null;
 $dr  = $conn->query("
     SELECT d.* FROM doctors d
-    JOIN patient_doctors pd ON pd.doctor_id = d.id
-    WHERE pd.patient_id = $patient_id LIMIT 1
+    JOIN appointments a ON a.doctor_id = d.id
+    WHERE a.patient_id = $patient_id
+    ORDER BY a.appointment_date DESC, a.appointment_time DESC
+    LIMIT 1
 ");
 if ($dr && $dr->num_rows > 0) $doc = $dr->fetch_assoc();
 

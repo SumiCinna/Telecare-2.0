@@ -10,9 +10,8 @@ $sql = "
         (SELECT appointment_date FROM appointments WHERE patient_id=p.id AND doctor_id=$doctor_id ORDER BY appointment_date DESC LIMIT 1) AS last_visit,
         (SELECT COUNT(*) FROM lab_results WHERE patient_id=p.id AND doc_type='lab_result') AS lab_count,
         (SELECT COUNT(*) FROM lab_results WHERE patient_id=p.id AND doc_type='prescription') AS rx_count
-    FROM patients p
-    JOIN patient_doctors pd ON pd.patient_id=p.id
-    WHERE pd.doctor_id=$doctor_id
+        FROM patients p
+    JOIN (SELECT DISTINCT patient_id FROM appointments WHERE doctor_id=$doctor_id) pd ON pd.patient_id=p.id
 ";
 if ($search) {
     $s = $conn->real_escape_string($search);

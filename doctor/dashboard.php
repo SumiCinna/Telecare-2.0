@@ -3,7 +3,7 @@
 require_once 'includes/auth.php';
 // doctor/dashboard.php - Doctor's dashboard
 // ── Stats ──
-$patient_result = $conn->query("SELECT COUNT(*) c FROM patient_doctors WHERE doctor_id=$doctor_id");
+$patient_result = $conn->query("SELECT COUNT(DISTINCT patient_id) c FROM appointments WHERE doctor_id=$doctor_id");
 $patient_count = $patient_result ? $patient_result->fetch_assoc()['c'] : 0;
 
 $today_result = $conn->query("SELECT COUNT(*) c FROM appointments WHERE doctor_id=$doctor_id AND appointment_date=CURDATE() AND status IN ('Pending','Confirmed')");
@@ -26,8 +26,12 @@ $today = $conn->query("
 $recent_patients = $conn->query("
     SELECT p.*
     FROM patients p
-    JOIN patient_doctors pd ON pd.patient_id=p.id
-    WHERE pd.doctor_id=$doctor_id
+    JOIN (
+        SELECT patient_id, MAX(appointment_date) AS last_date
+        FROM appointments WHERE doctor_id=$doctor_id
+        GROUP BY patient_id
+    ) a ON a.patient_id=p.id
+    ORDER BY a.last_date DESC
     LIMIT 4
 ");
 

@@ -7,8 +7,9 @@ $patient_id = (int)($_GET['patient_id'] ?? 0);
 // Verify this doctor has access to this patient
 $check = $conn->query("
     SELECT p.* FROM patients p
-    JOIN patient_doctors pd ON pd.patient_id=p.id
-    WHERE p.id=$patient_id AND pd.doctor_id=$doctor_id LIMIT 1
+    WHERE p.id=$patient_id
+    AND EXISTS (SELECT 1 FROM appointments WHERE patient_id=p.id AND doctor_id=$doctor_id)
+    LIMIT 1
 ")->fetch_assoc();
 
 if (!$check) {
