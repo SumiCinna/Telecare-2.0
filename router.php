@@ -9,14 +9,14 @@ $publicPages = [
     'reset_password', 'resend_verification', 'check_email', 'termsandpolicy',
     'google-login', 'google-register', 'google-callback',
     'google-register-callback', 'google-register-finish',
-    'google-doctor-login', 'google-doctor-callback', 'logout'
+    'google-doctor-login', 'google-doctor-callback','staffs_index', 'logout'
 ];
 
 $privatePages = [
     'dashboard', 'visits', 'meds', 'profile', 'receipt', 'chat',
     'call_patient', 'process_consultation_v2', 'process_consultation',
     'check_summary', 'download_summary', 'auto_complete_appt',
-    'pay', 'pay_success', 'pay_cancel', 'staffs_index', 'privacy-policy',
+    'pay', 'pay_success', 'pay_cancel',  'privacy-policy',
     'booking/step1_details', 'booking/step2_doctor', 'booking/step3_schedule',
     'booking/step4_review', 'booking/confirmed', 'booking/payment',
     'booking/process_booking', 'booking/success'
