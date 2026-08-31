@@ -125,9 +125,8 @@
     <div class="header-brand">TELE<span>-</span>CARE</div>
   </div>
   <div class="header-center"><?= $page_title_short ?? '' ?></div>
-  <a href="profile.php" class="header-avatar">
+    <a href="profile.php" class="header-avatar">
     <?php if (!empty($doc['profile_photo'])): ?>
-// doctor/includes/header.php
       <img src="../../<?= htmlspecialchars($doc['profile_photo']) ?>" alt="photo"/>
     <?php else: ?>
       <?= strtoupper(substr($doc['full_name'], 0, 2)) ?>
