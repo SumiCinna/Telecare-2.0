@@ -5,33 +5,33 @@
 <style>
   /* ── Sidebar ── */
 .sidebar{width:220px;min-width:220px;max-width:220px;background:var(--green);display:flex;flex-direction:column;position:relative;top:0;height:100vh;transition:width .22s ease,min-width .22s ease;margin:0;padding:0}
-.sb-logo{padding:1rem .8rem .9rem;display:flex;align-items:center;justify-content:center;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-logo{padding:1.5rem 1rem 1.3rem;display:flex;align-items:center;justify-content:center;border-bottom:1px solid rgba(255,255,255,.1)}
 .sb-logo-text{min-width:0;display:flex;flex-direction:column;line-height:1.02;align-items:center}
-.sb-logo-title{font-family:'Playfair Display',serif;font-size:.98rem;font-weight:900;letter-spacing:.02em;color:#fff;white-space:nowrap;text-align:center}
+.sb-logo-title{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:900;letter-spacing:.02em;color:#fff;white-space:nowrap;text-align:center}
 .sb-logo-title b{color:var(--red);font-weight:900}
-.sb-logo-sub{font-size:.6rem;color:rgba(255,255,255,.62);letter-spacing:.08em;text-transform:uppercase;margin-top:.18rem}
-  .sb-badge{padding:.7rem 1.4rem;font-size:.72rem;color:rgba(255,255,255,.4);border-bottom:1px solid rgba(255,255,255,.08)}
-  .sb-badge strong{color:rgba(255,255,255,.75);display:block;font-size:.85rem;margin-top:.1rem}
-  .sb-nav{padding:.8rem 0;flex:1}
-  .sb-link{display:flex;align-items:center;gap:.75rem;padding:.75rem 1.4rem;color:rgba(255,255,255,.5);font-size:.86rem;font-weight:500;cursor:pointer;border-left:3px solid transparent;transition:all .2s;text-decoration:none;width:100%;font-family:'DM Sans',sans-serif}
-  .sb-link svg{width:17px;height:17px;stroke:currentColor;flex-shrink:0}
-  .sb-link:hover{color:#fff;background:rgba(255,255,255,.06)}
-  .sb-link.active{color:#fff;background:rgba(255,255,255,.1);border-left-color:var(--red)}
-  .sb-foot{padding:1rem 1.4rem;border-top:1px solid rgba(255,255,255,.08)}
-  .sb-foot a{display:flex;align-items:center;gap:.5rem;color:rgba(255,255,255,.4);font-size:.8rem;text-decoration:none;transition:color .2s}
+.sb-logo-sub{font-size:.62rem;color:rgba(255,255,255,.68);letter-spacing:.08em;text-transform:uppercase;margin-top:.25rem}
+  .sb-badge{padding:1rem 1.5rem;font-size:.75rem;color:rgba(255,255,255,.5);border-bottom:1px solid rgba(255,255,255,.1)}
+  .sb-badge strong{color:rgba(255,255,255,.9);display:block;font-size:.9rem;margin-top:.15rem}
+  .sb-nav{padding:1.2rem 0;flex:1}
+  .sb-link{display:flex;align-items:center;gap:.9rem;padding:1rem 1.5rem;color:rgba(255,255,255,.6);font-size:.9rem;font-weight:500;cursor:pointer;border-left:3px solid transparent;transition:all .2s;text-decoration:none;width:100%;font-family:'DM Sans',sans-serif}
+  .sb-link svg{width:18px;height:18px;stroke:currentColor;flex-shrink:0}
+  .sb-link:hover{color:#fff;background:rgba(255,255,255,.08)}
+  .sb-link.active{color:#fff;background:rgba(255,255,255,.12);border-left-color:var(--red)}
+  .sb-foot{padding:1.3rem 1.5rem;border-top:1px solid rgba(255,255,255,.1)}
+  .sb-foot a{display:flex;align-items:center;gap:.6rem;color:rgba(255,255,255,.5);font-size:.82rem;text-decoration:none;transition:color .2s}
   .sb-foot a:hover{color:var(--red)}
 
   body.sidebar-collapsed .sidebar{width:78px;min-width:78px}
-  body.sidebar-collapsed .sb-logo{padding:.8rem .28rem;justify-content:center;border-bottom:1px solid rgba(255,255,255,.08);flex-direction:column}
+  body.sidebar-collapsed .sb-logo{padding:1rem .35rem;justify-content:center;border-bottom:1px solid rgba(255,255,255,.1);flex-direction:column}
   body.sidebar-collapsed .sb-logo-text{align-items:center}
-  body.sidebar-collapsed .sb-logo-title{font-size:.52rem;letter-spacing:.08em;white-space:normal;line-height:1.02;text-align:center;max-width:56px}
+  body.sidebar-collapsed .sb-logo-title{font-size:.55rem;letter-spacing:.08em;white-space:normal;line-height:1.02;text-align:center;max-width:56px}
   body.sidebar-collapsed .sb-logo-sub{display:none}
   body.sidebar-collapsed .sb-badge,
   body.sidebar-collapsed .sb-foot{display:none}
-  body.sidebar-collapsed .sb-nav{display:block;padding:.65rem 0}
-  body.sidebar-collapsed .sb-link{justify-content:center;padding:.72rem .25rem;border-left:none}
+  body.sidebar-collapsed .sb-nav{display:block;padding:1rem 0}
+  body.sidebar-collapsed .sb-link{justify-content:center;padding:.9rem .3rem;border-left:none}
   body.sidebar-collapsed .sb-link .sb-link-label{display:none}
-  body.sidebar-collapsed .sb-link svg{width:18px;height:18px}
+  body.sidebar-collapsed .sb-link svg{width:20px;height:20px}
   body.sidebar-collapsed .sb-link.active{border-left:none}
 </style>
 
