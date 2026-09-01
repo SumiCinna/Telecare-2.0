@@ -156,7 +156,7 @@ $stat_pending = (int)$conn->query("SELECT COUNT(*) c FROM appointments WHERE sta
 /* ══════════════════════════════════════════════
    Data for the POS grid
    ══════════════════════════════════════════════ */
-$CATEGORIES = ['Laboratory', 'X-ray', 'Chemical', 'Consultation', 'Other'];
+$CATEGORIES = ['Laboratory', 'X-ray', 'Chemical', 'Consultation'];
 
 $allServices = [];
 $sres = $conn->query("SELECT * FROM services WHERE status='Active' ORDER BY name ASC");
