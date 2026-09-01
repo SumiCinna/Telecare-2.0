@@ -64,18 +64,20 @@ $stat_pending         = (int)$conn->query("SELECT COUNT(*) c FROM appointments W
 /* ══════════════════════════════════════════════
    Revenue = Paid consultation fees + POS sales
    ══════════════════════════════════════════════ */
-$consult_row = $conn->query("
+$result = $conn->query("
     SELECT COALESCE(SUM(d.consultation_fee), 0) AS total
     FROM appointments a
     JOIN doctors d ON d.id = a.doctor_id
     WHERE a.payment_status = 'Paid'
-")->fetch_assoc();
+");
+$consult_row = $result ? $result->fetch_assoc() : ['total' => 0];
 $stat_consultation_collected = (float)$consult_row['total'];
 
-$pos_totals_row = $conn->query("
+$result = $conn->query("
     SELECT COALESCE(SUM(total_amount), 0) AS total, COUNT(*) AS cnt
     FROM pos_sales
-")->fetch_assoc();
+");
+$pos_totals_row = $result ? $result->fetch_assoc() : ['total' => 0, 'cnt' => 0];
 $stat_pos_collected = (float)$pos_totals_row['total'];
 $stat_pos_count     = (int)$pos_totals_row['cnt'];
 
