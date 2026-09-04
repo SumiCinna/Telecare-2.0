@@ -33,7 +33,7 @@ function booking_require(array $keys): void {
 /** Inline stroke-SVG icon for a department card. */
 function dept_icon(string $key): string {
     $icons = [
-        'stethoscope' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M4.5 3v7a5.5 5.5 0 0011 0V3M8 3H3M20 3h-5M18 10v2a6 6 0 01-12 0v-2M18 15a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',
+        'stethoscope' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-plus-icon lucide-clipboard-plus"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 14h6"/><path d="M12 17v-6"/></svg>',
         'smile'       => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg>',
         'heart'       => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M12 21s-7-4.35-9.5-8.5C.8 9 2 5 5.5 4.5 8 4.1 10 6 12 8c2-2 4-3.9 6.5-3.5C22 5 23.2 9 21.5 12.5 19 16.65 12 21 12 21z"/></svg>',
         'leaf'        => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M11 20A7 7 0 019 6c1.5 0 3 .5 4 1.5C15 4.5 18 4 21 3c0 4-1.5 8-5 10.5-1 3-4 6.5-5 6.5z"/></svg>',
