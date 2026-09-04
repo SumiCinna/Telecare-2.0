@@ -51,7 +51,11 @@ $firstName = $parts[0];
   overflow-x: clip;
   font-family:'Inter',sans-serif;
 }
-.page-head{ margin-bottom:1.5rem; }
+.page-head{
+  display:flex; align-items:center; justify-content:space-between; gap:1rem;
+  margin-bottom:1.5rem;
+}
+.page-head-copy{ min-width:0; }
 .page-title{
   font-family:'Inter',sans-serif; font-weight:800; font-size:1.9rem;
   color:var(--tc-ink); line-height:1.15; margin-bottom:0.3rem;
@@ -65,44 +69,10 @@ $firstName = $parts[0];
   grid-template-rows: auto auto;
   gap: 1.1rem;
 }
-.db-welcome { grid-column: 1 / -1; }
 .db-stats { grid-column: 1 / -1; }
 .db-appts   { grid-column: 1 / 2; }
 .db-doctors { grid-column: 2 / 3; }
 
-/* ── WELCOME CARD ── */
-.welcome-banner {
-  background: #fff;
-  border: 1px solid var(--tc-line);
-  box-shadow: 0 2px 12px rgba(21,28,39,0.05);
-  border-radius: 16px;
-  padding: 1.2rem 1.6rem;
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 1.2rem; flex-wrap: wrap;
-}
-.welcome-left{ display:flex; align-items:center; gap:1rem; min-width:0; }
-.welcome-avatar{
-  width: 56px; height: 56px; border-radius: 14px; flex-shrink: 0; overflow: hidden;
-  background: linear-gradient(135deg, var(--tc-teal), var(--tc-teal-light));
-  color: #fff; display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 1.15rem;
-}
-.welcome-avatar img{ width:100%; height:100%; object-fit:cover; }
-.welcome-name {
-  font-family: 'Inter', sans-serif;
-  font-size: 1.15rem; font-weight: 800;
-  color: var(--tc-ink); line-height: 1.2;
-}
-.welcome-status-line{
-  display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;
-  font-size: 0.8rem; color: var(--tc-muted); margin-top: 0.3rem;
-}
-.welcome-status-dot {
-  width: 7px; height: 7px; border-radius: 50%; background: var(--tc-teal-light);
-  flex-shrink:0;
-}
-.welcome-status-text{ color:var(--tc-teal); font-weight:600; }
-.welcome-dot-sep{ color:rgba(21,28,39,0.25); }
 .welcome-btn {
   display: inline-flex; align-items: center; gap: 0.45rem;
   background: var(--tc-red); color: #fff;
@@ -299,7 +269,7 @@ $firstName = $parts[0];
   .topbar-search{ max-width: none; }
   .page { padding: 1rem 1rem 6rem !important; }
   .page-title{ font-size: 1.55rem; }
-  .welcome-banner{ padding: 1.1rem 1.25rem; }
+  .page-head{ align-items:flex-start; flex-direction:column; }
   .db-card-head { padding: 1rem 1.1rem 0; }
   .db-card-body { padding: 0.8rem 1.1rem 1.1rem; }
   .appt-item, .doc-item { gap: 0.75rem; }
@@ -309,16 +279,13 @@ $firstName = $parts[0];
   .topbar-search{ display:none; }
   .page { padding: 0.75rem 0.75rem 6.2rem !important; }
   .db-grid { gap: 0.8rem; }
+  .page-head .welcome-btn{ width:100%; justify-content:center; }
   .stats-row { grid-template-columns: 1fr; gap: 0.75rem; }
   .stat-card { padding: 1rem 1rem; border-radius: 14px; }
   .stat-icon { width: 36px; height: 36px; border-radius: 9px; }
   .stat-icon svg { width: 16px; height: 16px; }
   .stat-num { font-size: 1.5rem; }
   .stat-lbl { font-size: 0.65rem; }
-
-  .welcome-banner { border-radius: 14px; flex-direction:column; align-items:flex-start; }
-  .welcome-btn{ width:100%; justify-content:center; }
-  .welcome-name { font-size: 1.05rem; }
 
   .db-card { border-radius: 14px; }
   .db-card-head { padding: 0.9rem 0.9rem 0; }
@@ -343,41 +310,17 @@ $firstName = $parts[0];
 <div class="page">
 
   <div class="page-head">
-    <div class="page-title">Welcome back, <?= htmlspecialchars($firstName) ?></div>
-    <p class="page-sub">Here's an overview of your appointments and consultations.</p>
+    <div class="page-head-copy">
+      <div class="page-title">Welcome back, <?= htmlspecialchars($firstName) ?></div>
+      <p class="page-sub">Here's an overview of your appointments and consultations.</p>
+    </div>
+    <a href="router.php?page=visits" class="welcome-btn">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16m8-8H4"/></svg>
+      Book Appointment
+    </a>
   </div>
 
 <div class="db-grid">
-
-  <!-- ══ WELCOME / PROFILE CARD ══ -->
-  <div class="db-welcome">
-    <div class="welcome-banner">
-      <div class="welcome-left">
-               <div class="welcome-avatar">
-          <?php if (!empty($p['profile_photo'])): ?>
-            <img src="<?= htmlspecialchars($p['profile_photo']) ?>" alt=""/>
-          <?php else: ?>
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <?php endif; ?>
-        </div>
-        <div>
-          <div class="welcome-name"><?= htmlspecialchars($p['full_name']) ?></div>
-          <div class="welcome-status-line">
-            <span class="welcome-status-dot"></span>
-            <span class="welcome-status-text">Account Active</span>
-            <span class="welcome-dot-sep">&middot;</span>
-            <span id="wb-date">--</span>
-            <span class="welcome-dot-sep">&middot;</span>
-            <span id="wb-time">--:--</span>
-          </div>
-        </div>
-      </div>
-      <a href="router.php?page=visits" class="welcome-btn">
-        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16m8-8H4"/></svg>
-        Book Appointment
-      </a>
-    </div>
-  </div>
 
   <!-- ══ STATS ══ -->
   <div class="db-stats">
@@ -525,23 +468,6 @@ $firstName = $parts[0];
 </div><!-- /page -->
 
 <script>
-/* ── Live date/time in welcome card ── */
-function updateClock() {
-  const now  = new Date();
-  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const mons = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const h    = now.getHours(), m = now.getMinutes();
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const hh   = h % 12 || 12;
-  const mm   = String(m).padStart(2, '0');
-  const el_t = document.getElementById('wb-time');
-  const el_d = document.getElementById('wb-date');
-  if (el_t) el_t.textContent = `${hh}:${mm} ${ampm}`;
-  if (el_d) el_d.textContent = `${days[now.getDay()]}, ${mons[now.getMonth()]} ${now.getDate()}`;
-}
-updateClock();
-setInterval(updateClock, 1000);
-
 /* ── Stat counter animation ── */
 document.querySelectorAll('.stat-num').forEach(el => {
   const target = parseInt(el.textContent, 10);
