@@ -13,6 +13,58 @@ function getJitsiRoom(int $appt_id, string $date): string {
     return 'telecare-appt-' . $appt_id . '-' . str_replace('-', '', $date);
 }
 
+// ── POST: Doctor starts an instant call right now with a chosen patient ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_instant_call'])) {
+    header('Content-Type: application/json');
+
+    $patient_id = (int)($_POST['patient_id'] ?? 0);
+
+    // Only allow patients who already have a relationship with this doctor
+    $check = $conn->prepare("
+        SELECT p.id, p.full_name FROM patients p
+        WHERE p.id = ? AND EXISTS (
+            SELECT 1 FROM appointments WHERE patient_id = p.id AND doctor_id = ?
+        )
+    ");
+    $check->bind_param("ii", $patient_id, $doctor_id);
+    $check->execute();
+    $pat = $check->get_result()->fetch_assoc();
+
+    if (!$pat) {
+        echo json_encode(['status' => 'error', 'message' => 'Please select a valid patient.']);
+        exit;
+    }
+
+    $today    = date('Y-m-d');
+    $nowTime  = date('H:i:s');
+    $reason   = 'Instant call started by Dr. ' . $doc['full_name'];
+    $department = $doc['department'] ?? $doc['specialty'] ?? null;
+
+    // Generate a unique reference number
+    do {
+        $ref = 'APT-' . date('Y') . '-' . str_pad((string)random_int(0, 99999), 5, '0', STR_PAD_LEFT);
+        $refCheck = $conn->prepare("SELECT id FROM appointments WHERE reference_no = ?");
+        $refCheck->bind_param("s", $ref);
+        $refCheck->execute();
+        $refExists = $refCheck->get_result()->fetch_assoc();
+    } while ($refExists);
+
+    $stmt = $conn->prepare("
+        INSERT INTO appointments
+            (reference_no, patient_id, doctor_id, appointment_date, appointment_time,
+             type, department, status, reason, payment_status, paid_at)
+        VALUES (?, ?, ?, ?, ?, 'Teleconsult', ?, 'Confirmed', ?, 'Paid', NOW())
+    ");
+    $stmt->bind_param("siissss", $ref, $patient_id, $doctor_id, $today, $nowTime, $department, $reason);
+
+    if ($stmt->execute()) {
+        echo json_encode(['status' => 'success', 'appt_id' => $conn->insert_id]);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Could not start the call. Please try again.']);
+    }
+    exit;
+}
+
 // ── POST: Doctor accept/decline pending, or mark done/cancel confirmed ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $aid    = (int)$_POST['appointment_id'];
@@ -71,6 +123,15 @@ $appts = $conn->query("
 
 $pending_count = (int)$conn->query("SELECT COUNT(*) c FROM appointments WHERE doctor_id=$doctor_id AND status='Pending'")->fetch_assoc()['c'];
 
+// Patients this doctor has an existing relationship with (for the instant-call picker)
+$call_patients = $conn->query("
+    SELECT DISTINCT p.id, p.full_name, p.email, p.profile_photo
+    FROM patients p
+    JOIN appointments a ON a.patient_id = p.id
+    WHERE a.doctor_id = $doctor_id
+    ORDER BY p.full_name ASC
+");
+
 $toast = $_SESSION['toast'] ?? null;
 unset($_SESSION['toast']);
 
@@ -121,6 +182,36 @@ require_once 'includes/header.php';
   @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
   @keyframes toastOut{from{opacity:1}to{opacity:0;pointer-events:none}}
   .pending-badge-dot{background:#f59e0b;color:#fff;border-radius:50%;width:18px;height:18px;font-size:0.65rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;margin-left:0.35rem;vertical-align:middle;}
+
+  /* Start Call Now */
+  .instant-call-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:0.55rem;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;padding:0.85rem 1.2rem;border-radius:16px;font-size:0.9rem;font-weight:800;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 6px 18px rgba(220,38,38,0.3);margin-bottom:1rem;animation:instantPulse 2.2s ease-in-out infinite;}
+  .instant-call-btn:hover{box-shadow:0 8px 22px rgba(220,38,38,0.42);}
+  @keyframes instantPulse{0%,100%{box-shadow:0 6px 18px rgba(220,38,38,0.3)}50%{box-shadow:0 6px 24px rgba(220,38,38,0.55)}}
+  .instant-call-dot{width:9px;height:9px;border-radius:50%;background:#fff;animation:blinkDot 1.2s ease-in-out infinite;}
+  @keyframes blinkDot{0%,100%{opacity:1}50%{opacity:0.3}}
+
+  #modal-instant-call .modal{width:100%;max-width:460px;max-height:88vh;overflow:hidden;border-radius:20px;background:#fff;padding:0;display:flex;flex-direction:column;}
+  .ic-header{background:linear-gradient(135deg,#244441,#1a3533);padding:1.2rem 1.4rem;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .ic-header-title{font-size:1.05rem;font-weight:800;}
+  .ic-header-sub{font-size:0.72rem;opacity:0.75;margin-top:0.15rem;}
+  .ic-close{background:rgba(255,255,255,0.15);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .ic-body{padding:1rem 1.4rem;overflow-y:auto;flex:1;min-height:0;}
+  .ic-search{width:100%;padding:0.7rem 0.9rem;border:1.5px solid rgba(36,68,65,0.15);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--green);outline:none;margin-bottom:0.8rem;}
+  .ic-search:focus{border-color:var(--blue);}
+  .instant-patient-row{display:flex;align-items:center;gap:0.7rem;padding:0.6rem 0.6rem;border-radius:12px;cursor:pointer;border:1.5px solid transparent;transition:background 0.15s,border-color 0.15s;margin-bottom:0.3rem;}
+  .instant-patient-row:hover{background:rgba(36,68,65,0.04);}
+  .instant-patient-row.selected{background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.35);}
+  .instant-patient-name{font-weight:700;font-size:0.86rem;}
+  .instant-patient-email{font-size:0.72rem;color:var(--muted);}
+  .instant-patient-check{margin-left:auto;width:20px;height:20px;border-radius:50%;border:2px solid rgba(36,68,65,0.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .instant-patient-row.selected .instant-patient-check{background:#16a34a;border-color:#16a34a;color:#fff;}
+  .ic-empty{text-align:center;color:var(--muted);font-size:0.8rem;padding:1.5rem 0;}
+  .ic-footer{padding:0.9rem 1.4rem 1.2rem;border-top:1px solid rgba(36,68,65,0.08);display:flex;gap:0.7rem;flex-shrink:0;}
+  .ic-footer button{flex:1;padding:0.7rem;border-radius:50px;font-weight:700;font-size:0.85rem;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:0.4rem;}
+  .btn-ic-cancel{background:rgba(36,68,65,0.06);color:var(--muted);}
+  .btn-ic-confirm{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;}
+  .btn-ic-confirm:disabled{opacity:0.5;cursor:not-allowed;}
+  .ic-notice{background:rgba(63,130,227,0.08);border:1px solid rgba(63,130,227,0.2);border-radius:12px;padding:0.6rem 0.8rem;font-size:0.73rem;color:#244441;margin-bottom:0.9rem;line-height:1.55;}
   .btn-receipt-sm{background:rgba(34,197,94,0.09);color:#15803d;border:1px solid rgba(34,197,94,0.2);border-radius:6px;padding:0.3rem 0.7rem;font-size:0.73rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;margin-top:0.5rem;}
   .btn-receipt-sm:hover{background:rgba(34,197,94,0.18);}
   .btn-summary-sm{background:rgba(63,130,227,0.09);color:#2563eb;border:1px solid rgba(63,130,227,0.2);border-radius:6px;padding:0.3rem 0.7rem;font-size:0.73rem;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;margin-top:0.5rem;}
@@ -240,6 +331,12 @@ require_once 'includes/header.php';
 <div id="toast-js" style="display:none;position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);z-index:400;padding:0.75rem 1.4rem;border-radius:50px;font-size:0.85rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.15);white-space:nowrap;background:var(--green);color:#fff;"></div>
 
 <div class="page">
+
+  <button type="button" class="instant-call-btn" onclick="openInstantCallModal()">
+    <span class="instant-call-dot"></span>
+    <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+    Start Call Now
+  </button>
 
   <div style="background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.18);border-radius:14px;padding:0.7rem 1rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:0.6rem;font-size:0.78rem;color:#15803d;">
     <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -501,6 +598,65 @@ require_once 'includes/header.php';
 </div>
 
 <!-- ══════════════════════════════════════════════════════════
+     Start Call Now — Patient Picker Modal
+     ══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-instant-call" onclick="if (event.target === this) closeInstantCallModal()" role="dialog" aria-modal="true" aria-label="Start an instant call">
+  <div class="modal" onclick="event.stopPropagation()">
+
+    <div class="ic-header">
+      <div>
+        <div class="ic-header-title">📹 Start Call Now</div>
+        <div class="ic-header-sub">Choose a patient — the call starts immediately</div>
+      </div>
+      <button type="button" class="ic-close" onclick="closeInstantCallModal()" aria-label="Close">✕</button>
+    </div>
+
+    <div class="ic-body">
+      <div class="ic-notice">
+        The call room opens right now and stays open for <strong>1 hour</strong>. Both you and the patient can join anytime during that window.
+      </div>
+
+      <input type="text" id="instant-call-search" class="ic-search" placeholder="Search your patients..." oninput="filterInstantPatients()" autocomplete="off"/>
+
+      <div id="instant-patient-list">
+        <?php if ($call_patients && $call_patients->num_rows > 0): ?>
+          <?php while ($cp = $call_patients->fetch_assoc()): ?>
+          <div class="instant-patient-row"
+               data-name="<?= htmlspecialchars($cp['full_name'], ENT_QUOTES) ?>"
+               onclick="selectInstantPatient(<?= (int)$cp['id'] ?>, '<?= htmlspecialchars($cp['full_name'], ENT_QUOTES) ?>', this)">
+            <div class="pat-avatar" style="width:34px;height:34px;font-size:0.75rem;">
+              <?php if (!empty($cp['profile_photo'])): ?>
+                <img src="../../<?= htmlspecialchars($cp['profile_photo']) ?>" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"/>
+              <?php else: echo strtoupper(substr($cp['full_name'],0,2)); endif; ?>
+            </div>
+            <div>
+              <div class="instant-patient-name"><?= htmlspecialchars($cp['full_name']) ?></div>
+              <?php if (!empty($cp['email'])): ?><div class="instant-patient-email"><?= htmlspecialchars($cp['email']) ?></div><?php endif; ?>
+            </div>
+            <div class="instant-patient-check">
+              <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+          </div>
+          <?php endwhile; ?>
+        <?php else: ?>
+          <div class="ic-empty">You don't have any patients yet. A patient needs at least one appointment with you before you can start an instant call with them.</div>
+        <?php endif; ?>
+        <div class="ic-empty" id="instant-no-results" style="display:none;">No patients match your search.</div>
+      </div>
+    </div>
+
+    <div class="ic-footer">
+      <button type="button" class="btn-ic-cancel" onclick="closeInstantCallModal()">Cancel</button>
+      <button type="button" class="btn-ic-confirm" id="btn-confirm-instant-call" disabled onclick="confirmInstantCall()">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+        Start Call
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
      Patient Document Modal
      ══════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="modal-document" onclick="if (event.target === this) closeDocumentModal()" role="dialog" aria-modal="true" aria-label="Patient uploaded document">
@@ -693,6 +849,87 @@ document.getElementById('document-modal-viewport').addEventListener('wheel', eve
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && document.getElementById('modal-document').classList.contains('active')) {
     closeDocumentModal();
+  }
+});
+
+// ── Start Call Now ───────────────────────────────────────────────────────
+let selectedInstantPatientId = null;
+
+function openInstantCallModal() {
+  selectedInstantPatientId = null;
+  document.getElementById('instant-call-search').value = '';
+  document.querySelectorAll('.instant-patient-row').forEach(r => {
+    r.classList.remove('selected');
+    r.style.display = 'flex';
+  });
+  document.getElementById('instant-no-results').style.display = 'none';
+  const confirmBtn = document.getElementById('btn-confirm-instant-call');
+  confirmBtn.disabled = true;
+  confirmBtn.innerHTML = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg> Start Call`;
+
+  document.getElementById('modal-instant-call').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('instant-call-search').focus(), 150);
+}
+
+function closeInstantCallModal() {
+  document.getElementById('modal-instant-call').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function filterInstantPatients() {
+  const q = document.getElementById('instant-call-search').value.trim().toLowerCase();
+  const rows = document.querySelectorAll('.instant-patient-row');
+  let visibleCount = 0;
+  rows.forEach(row => {
+    const match = row.dataset.name.toLowerCase().includes(q);
+    row.style.display = match ? 'flex' : 'none';
+    if (match) visibleCount++;
+  });
+  const noResults = document.getElementById('instant-no-results');
+  if (noResults) noResults.style.display = (rows.length > 0 && visibleCount === 0) ? 'block' : 'none';
+}
+
+function selectInstantPatient(id, name, el) {
+  selectedInstantPatientId = id;
+  document.querySelectorAll('.instant-patient-row').forEach(r => r.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('btn-confirm-instant-call').disabled = false;
+}
+
+async function confirmInstantCall() {
+  if (!selectedInstantPatientId) return;
+  const btn = document.getElementById('btn-confirm-instant-call');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:inline-block;animation:spin 1s linear infinite">⏳</span> Starting...';
+
+  try {
+    const fd = new FormData();
+    fd.append('start_instant_call', '1');
+    fd.append('patient_id', selectedInstantPatientId);
+
+    const res  = await fetch('appointments.php', { method: 'POST', body: fd });
+    const data = await res.json();
+
+    if (data.status === 'success') {
+      closeInstantCallModal();
+      showToast('✓ Call started — it now shows under Today with a Start Video Call button.', '#16a34a');
+      setTimeout(() => { window.location.href = 'appointments.php?filter=today'; }, 1400);
+    } else {
+      showToast('Error: ' + (data.message || 'Could not start the call.'), '#ef4444');
+      btn.disabled = false;
+      btn.innerHTML = 'Start Call';
+    }
+  } catch (err) {
+    showToast('Network error. Please try again.', '#ef4444');
+    btn.disabled = false;
+    btn.innerHTML = 'Start Call';
+  }
+}
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && document.getElementById('modal-instant-call').classList.contains('active')) {
+    closeInstantCallModal();
   }
 });
 
