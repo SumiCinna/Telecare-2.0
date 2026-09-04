@@ -107,8 +107,16 @@ require_once 'includes/header.php';
   .patient-docs{margin-top:0.7rem;}
   .patient-docs-label{font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:0.4rem;}
   .patient-docs-grid{display:flex;gap:0.5rem;flex-wrap:wrap;}
-  .patient-doc-thumb{width:64px;height:64px;border-radius:10px;overflow:hidden;border:1.5px solid rgba(36,68,65,0.12);display:block;flex-shrink:0;}
+  .patient-doc-thumb{width:64px;height:64px;border-radius:10px;overflow:hidden;border:1.5px solid rgba(36,68,65,0.12);display:block;flex-shrink:0;cursor:zoom-in;background:#f8fafc;padding:0;}
   .patient-doc-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .document-modal-content{position:relative;width:min(92vw,900px);height:min(88vh,760px);border-radius:16px;background:#fff;padding:3.4rem 1rem 1rem;box-shadow:0 20px 60px rgba(0,0,0,0.28);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.5rem;}
+  .document-modal-viewport{width:100%;height:100%;overflow:auto;display:flex;align-items:center;justify-content:center;padding:0.25rem;}
+  .document-modal-content img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:8px;transform-origin:center center;transition:transform 0.15s ease;}
+  .document-modal-controls{position:absolute;top:0.7rem;left:0.7rem;display:flex;align-items:center;gap:0.35rem;}
+  .document-modal-control{width:32px;height:32px;border:1px solid rgba(36,68,65,0.15);border-radius:50%;background:#fff;color:#244441;font-size:1.1rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .document-modal-control:hover{background:#eef7f5;}
+  .document-modal-close{position:absolute;top:0.7rem;right:0.7rem;width:34px;height:34px;border:none;border-radius:50%;background:#244441;color:#fff;font-size:1.25rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1;}
+  .document-modal-close:hover{background:#1a3533;}
   .toast-bar{position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);z-index:400;padding:0.75rem 1.4rem;border-radius:50px;font-size:0.85rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.15);white-space:nowrap;background:var(--green);color:#fff;animation:toastIn 0.3s ease,toastOut 0.4s 3s ease forwards;}
   @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
   @keyframes toastOut{from{opacity:1}to{opacity:0;pointer-events:none}}
@@ -356,9 +364,9 @@ require_once 'includes/header.php';
         <div class="patient-docs-label">📎 Patient Uploaded Document<?= count($att_paths) > 1 ? 's' : '' ?></div>
         <div class="patient-docs-grid">
           <?php foreach ($att_paths as $ap): ?>
-          <a href="../../<?= htmlspecialchars($ap) ?>" target="_blank" class="patient-doc-thumb">
+          <button type="button" class="patient-doc-thumb" data-document-src="../../<?= htmlspecialchars($ap, ENT_QUOTES) ?>" onclick="openDocumentModal(this.dataset.documentSrc)" aria-label="Open patient document">
             <img src="../../<?= htmlspecialchars($ap) ?>" alt="Patient document"/>
-          </a>
+          </button>
           <?php endforeach; ?>
         </div>
       </div>
@@ -493,6 +501,23 @@ require_once 'includes/header.php';
 </div>
 
 <!-- ══════════════════════════════════════════════════════════
+     Patient Document Modal
+     ══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-document" onclick="if (event.target === this) closeDocumentModal()" role="dialog" aria-modal="true" aria-label="Patient uploaded document">
+  <div class="document-modal-content" onclick="event.stopPropagation()">
+    <div class="document-modal-controls" aria-label="Document zoom controls">
+      <button type="button" class="document-modal-control" onclick="zoomDocument(-0.25)" aria-label="Zoom out">&minus;</button>
+      <button type="button" class="document-modal-control" onclick="resetDocumentZoom()" aria-label="Fit document to viewer">↺</button>
+      <button type="button" class="document-modal-control" onclick="zoomDocument(0.25)" aria-label="Zoom in">+</button>
+    </div>
+    <button type="button" class="document-modal-close" onclick="closeDocumentModal()" aria-label="Close document">&times;</button>
+    <div class="document-modal-viewport" id="document-modal-viewport">
+      <img id="document-modal-image" src="" alt="Patient uploaded document"/>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
      Edit Summary Modal
      ══════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="modal-edit-summary">
@@ -622,6 +647,54 @@ setTimeout(() => {
   const t = document.querySelector('.toast-bar');
   if (t) t.remove();
 }, 3500);
+
+// ── Patient document viewer ──────────────────────────────────────────────
+let documentZoom = 1;
+
+function applyDocumentZoom() {
+  document.getElementById('document-modal-image').style.transform = `scale(${documentZoom})`;
+}
+
+function openDocumentModal(src) {
+  const modal = document.getElementById('modal-document');
+  const image = document.getElementById('document-modal-image');
+  documentZoom = 1;
+  image.src = src;
+  applyDocumentZoom();
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function zoomDocument(amount) {
+  documentZoom = Math.min(3, Math.max(1, documentZoom + amount));
+  applyDocumentZoom();
+}
+
+function resetDocumentZoom() {
+  documentZoom = 1;
+  applyDocumentZoom();
+}
+
+function closeDocumentModal() {
+  const modal = document.getElementById('modal-document');
+  const image = document.getElementById('document-modal-image');
+  modal.classList.remove('active');
+  image.src = '';
+  image.style.transform = '';
+  document.body.style.overflow = '';
+}
+
+document.getElementById('document-modal-viewport').addEventListener('wheel', event => {
+  if (!document.getElementById('modal-document').classList.contains('active')) return;
+  event.preventDefault();
+  zoomDocument(event.deltaY < 0 ? 0.1 : -0.1);
+}, { passive: false });
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && document.getElementById('modal-document').classList.contains('active')) {
+    closeDocumentModal();
+  }
+});
 
 // ── Edit Summary ──────────────────────────────────────────────────────────
 function openEditSummary(apptId, isEdited) {

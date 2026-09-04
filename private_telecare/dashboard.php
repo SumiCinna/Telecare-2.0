@@ -314,7 +314,7 @@ $firstName = $parts[0];
       <div class="page-title">Welcome back, <?= htmlspecialchars($firstName) ?></div>
       <p class="page-sub">Here's an overview of your appointments and consultations.</p>
     </div>
-    <a href="router.php?page=visits" class="welcome-btn">
+    <a href="router.php?page=booking/step1_details" class="welcome-btn">
       <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16m8-8H4"/></svg>
       Book Appointment
     </a>
