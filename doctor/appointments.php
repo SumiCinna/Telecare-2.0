@@ -908,8 +908,21 @@ async function confirmInstantCall() {
     fd.append('start_instant_call', '1');
     fd.append('patient_id', selectedInstantPatientId);
 
-    const res  = await fetch('appointments.php', { method: 'POST', body: fd });
-    const data = await res.json();
+    const res = await fetch('appointments.php', { method: 'POST', body: fd });
+    const raw = await res.text();
+
+    let data;
+    try {
+      const jsonStart = raw.indexOf('{');
+      if (jsonStart === -1) throw new Error('No JSON in response');
+      data = JSON.parse(raw.slice(jsonStart));
+    } catch (parseErr) {
+      console.error('Non-JSON response from server:', raw);
+      showToast('Server returned an invalid response — check console for details.', '#ef4444');
+      btn.disabled = false;
+      btn.innerHTML = 'Start Call';
+      return;
+    }
 
     if (data.status === 'success') {
       closeInstantCallModal();
