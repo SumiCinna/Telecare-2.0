@@ -48,11 +48,4 @@ $upd = $conn->prepare("UPDATE appointments SET status='Completed' WHERE id=? AND
 $upd->bind_param("i", $appt_id);
 $upd->execute();
 
-echo json_encode(['ok'=>true,'msg'=>'Appointment marked as Completed','affected'=>$upd->affected_rows]);
-
-
-
-
-
-
-
+echo json_encode(['ok'=>true,'msg'=>'Appointment marked as Completed','affected'=>$upd->affected_rows])

@@ -188,8 +188,8 @@ Use this exact format — section title on its own line, followed by the content
 1. Chief Complaint
 Write the patient's main reason for the visit based on the consultation content.
 
-2. Symptoms Discussed
-List all symptoms mentioned during the consultation.
+2. History of Present Illness
+Convert the following raw consultation notes into a concise HPI paragraph (3–5 sentences, third person, past tense, covering OLDCARTS elements, using precise medical terminology, ending with a one-line plan)
 
 3. Doctor's Assessment
 Summarize the doctor's clinical observations, findings, and evaluation.
