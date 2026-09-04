@@ -8,10 +8,6 @@ const BOOKING_DEPARTMENTS = [
         'desc' => 'Common illnesses, symptoms, initial assessment, prescriptions, referrals',
         'icon' => 'stethoscope',
     ],
-    'Internal Medicine' => [
-        'desc' => 'Adult illnesses, chronic disease management, follow-ups',
-        'icon' => 'leaf',
-    ],
     'Cardiology' => [
         'desc' => 'Hypertension, heart disease follow-ups, ECG/result discussion',
         'icon' => 'heart',
@@ -33,12 +29,6 @@ const BOOKING_REASONS_BY_DEPT = [
         'Fever', 'Cough', 'Colds / Runny nose', 'Sore throat', 'Headache', 'Dizziness',
         'Body pain', 'Fatigue / Weakness', 'Nausea', 'Vomiting', 'Diarrhea',
         'Abdominal pain', 'Loss of appetite', 'Mild difficulty breathing', 'General health concern',
-    ],
-    'Internal Medicine' => [
-        'Persistent fatigue', 'Weakness', 'Fever', 'Unexplained weight loss', 'Dizziness',
-        'Swelling of the legs', 'Abdominal discomfort', 'Persistent cough', 'Shortness of breath',
-        'Changes in appetite', 'Excessive thirst', 'Frequent urination', 'Chronic pain',
-        'Follow-up for existing condition', 'Abnormal laboratory results',
     ],
     'Cardiology' => [
         'Chest pain / Chest discomfort', 'Shortness of breath', 'Palpitations / Fast heartbeat',
