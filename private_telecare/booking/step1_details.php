@@ -171,7 +171,7 @@ echo booking_wizard_css();
     </div>
 
     <div class="wiz-actions">
-      <a href="../visits.php" class="wiz-btn ghost">Cancel</a>
+            <a href="../router.php?page=visits" class="wiz-btn ghost">Cancel</a>
       <button type="submit" class="wiz-btn primary">Continue to Doctor Selection &rarr;</button>
     </div>
   </form>
