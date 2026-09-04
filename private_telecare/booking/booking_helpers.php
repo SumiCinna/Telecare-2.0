@@ -4,16 +4,63 @@
 // Included by every step*.php / payment.php / success.php / confirmed.php.
 
 const BOOKING_DEPARTMENTS = [
-    'General Medicine' => ['desc' => 'Primary care and general checkups', 'icon' => 'stethoscope'],
-    'Pediatrics'        => ['desc' => 'Child healthcare and vaccinations', 'icon' => 'smile'],
-    'Cardiology'        => ['desc' => 'Heart and vascular system',        'icon' => 'heart'],
-    'Internal Medicine' => ['desc' => 'Adult diseases and prevention',    'icon' => 'leaf'],
-    'Dermatology'       => ['desc' => 'Skin, hair, and nail care',        'icon' => 'hand'],
+    'General Medicine / General Practice' => [
+        'desc' => 'Common illnesses, symptoms, initial assessment, prescriptions, referrals',
+        'icon' => 'stethoscope',
+    ],
+    'Internal Medicine' => [
+        'desc' => 'Adult illnesses, chronic disease management, follow-ups',
+        'icon' => 'leaf',
+    ],
+    'Cardiology' => [
+        'desc' => 'Hypertension, heart disease follow-ups, ECG/result discussion',
+        'icon' => 'heart',
+    ],
+    'Pulmonology' => [
+        'desc' => 'Asthma, COPD, respiratory symptoms, follow-ups',
+        'icon' => 'lungs',
+    ],
+    'Neurology' => [
+        'desc' => 'Headaches, migraines, seizures, neuropathy, follow-ups',
+        'icon' => 'brain',
+    ],
 ];
 
-const BOOKING_REASONS = [
-    'Fever', 'Cough / Cold', 'Headache', 'Stomach / Abdominal Pain',
-    'Body Pain', 'Skin Problem', 'Follow-up Consultation', 'Request for Prescription',
+// Reasons for consultation, grouped by department. Step 1 only shows/accepts
+// the group matching whichever department the patient has selected.
+const BOOKING_REASONS_BY_DEPT = [
+    'General Medicine / General Practice' => [
+        'Fever', 'Cough', 'Colds / Runny nose', 'Sore throat', 'Headache', 'Dizziness',
+        'Body pain', 'Fatigue / Weakness', 'Nausea', 'Vomiting', 'Diarrhea',
+        'Abdominal pain', 'Loss of appetite', 'Mild difficulty breathing', 'General health concern',
+    ],
+    'Internal Medicine' => [
+        'Persistent fatigue', 'Weakness', 'Fever', 'Unexplained weight loss', 'Dizziness',
+        'Swelling of the legs', 'Abdominal discomfort', 'Persistent cough', 'Shortness of breath',
+        'Changes in appetite', 'Excessive thirst', 'Frequent urination', 'Chronic pain',
+        'Follow-up for existing condition', 'Abnormal laboratory results',
+    ],
+    'Cardiology' => [
+        'Chest pain / Chest discomfort', 'Shortness of breath', 'Palpitations / Fast heartbeat',
+        'Irregular heartbeat', 'Dizziness', 'Fainting / Near-fainting', 'Fatigue',
+        'Swelling of the legs or feet', 'High blood pressure', 'Low blood pressure',
+        'Exercise intolerance', 'Unexplained sweating', 'Follow-up for heart condition',
+        'ECG result discussion', 'Blood pressure monitoring',
+    ],
+    'Pulmonology' => [
+        'Cough', 'Persistent cough', 'Shortness of breath', 'Difficulty breathing', 'Wheezing',
+        'Chest tightness', 'Chest pain when breathing', 'Excessive phlegm / Mucus',
+        'Coughing with phlegm', 'Coughing up blood', 'Frequent respiratory infections',
+        'Snoring / Breathing problems during sleep', 'Reduced exercise tolerance',
+        'Asthma symptoms', 'Follow-up for COPD or other lung condition',
+    ],
+    'Neurology' => [
+        'Headache', 'Migraine', 'Dizziness / Vertigo', 'Fainting', 'Seizures', 'Tremors',
+        'Numbness', 'Tingling sensation', 'Muscle weakness', 'Difficulty walking',
+        'Balance problems', 'Memory problems', 'Confusion', 'Difficulty speaking',
+        'Vision changes', 'Sleep problems', 'Chronic nerve pain',
+        'Follow-up for neurological condition',
+    ],
 ];
 
 /**
@@ -38,6 +85,8 @@ function dept_icon(string $key): string {
         'heart'       => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M12 21s-7-4.35-9.5-8.5C.8 9 2 5 5.5 4.5 8 4.1 10 6 12 8c2-2 4-3.9 6.5-3.5C22 5 23.2 9 21.5 12.5 19 16.65 12 21 12 21z"/></svg>',
         'leaf'        => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M11 20A7 7 0 019 6c1.5 0 3 .5 4 1.5C15 4.5 18 4 21 3c0 4-1.5 8-5 10.5-1 3-4 6.5-5 6.5z"/></svg>',
         'hand'        => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M9 11V4a1.5 1.5 0 013 0v6M12 10.5V3a1.5 1.5 0 013 0v7M15 10.5V5a1.5 1.5 0 013 0v9c0 4-2.5 7-6.5 7C7 21 5 18 5 15v-4a1.5 1.5 0 013 0"/></svg>',
+        'lungs'       => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M9 3v7.5c0 1-.5 1.8-1.3 2.4L5.5 14.7C4 15.8 3 17.6 3 19.5A2.5 2.5 0 005.5 22c1.9 0 3.5-1.2 4.1-3l1-3c.2-.7.4-1.4.4-2.1V3M15 3v7.5c0 1 .5 1.8 1.3 2.4l2.2 1.8c1.5 1.1 2.5 2.9 2.5 4.8a2.5 2.5 0 01-2.5 2.5c-1.9 0-3.5-1.2-4.1-3l-1-3c-.2-.7-.4-1.4-.4-2.1V3M9 3h6"/></svg>',
+        'brain'       => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M9.5 3a3 3 0 00-3 3v.3A3.5 3.5 0 004 9.5 3.5 3.5 0 004.8 15 3.5 3.5 0 007 21a3 3 0 003-3V6a3 3 0 00-.5-3zM14.5 3a3 3 0 013 3v.3A3.5 3.5 0 0120 9.5 3.5 3.5 0 0119.2 15 3.5 3.5 0 0117 21a3 3 0 01-3-3V6a3 3 0 01.5-3z"/></svg>',
     ];
     return $icons[$key] ?? '';
 }

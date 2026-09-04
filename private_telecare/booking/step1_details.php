@@ -19,13 +19,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $reasons = $_POST['reasons'] ?? [];
     $other   = trim($_POST['reason_other'] ?? '');
 
+    $valid_reasons = BOOKING_REASONS_BY_DEPT[$dept] ?? null;
+
     if (!array_key_exists($dept, BOOKING_DEPARTMENTS)) {
         $error = 'Please select a department.';
     } elseif (empty($reasons) && $other === '') {
         $error = 'Please select at least one reason for consultation.';
     } else {
         $_SESSION['booking']['department']   = $dept;
-        $_SESSION['booking']['reasons']      = array_values(array_intersect($reasons, BOOKING_REASONS));
+        $_SESSION['booking']['reasons']      = array_values(array_intersect($reasons, $valid_reasons ?? []));
         $_SESSION['booking']['reason_other'] = $other;
 
         // ── Optional: scan uploaded past medical documents (images only, up to 5) ──
@@ -103,6 +105,7 @@ echo booking_wizard_css();
 .dept-check{position:absolute;top:0.6rem;right:0.6rem;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;display:none;align-items:center;justify-content:center;font-size:0.7rem}
 .dept-card.selected .dept-check{display:flex}
 .reason-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.7rem}
+.reason-placeholder{font-size:0.85rem;color:var(--muted);padding:0.4rem 0;}
 .reason-opt{display:flex;align-items:center;gap:0.6rem;border:1.5px solid rgba(36,68,65,0.1);border-radius:12px;padding:0.7rem 0.9rem;cursor:pointer;font-size:0.85rem;color:var(--green)}
 .reason-opt input{accent-color:var(--red)}
 .other-input{width:100%;margin-top:0.4rem;padding:0.65rem 0.9rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--green)}
@@ -142,14 +145,17 @@ echo booking_wizard_css();
 
     <div class="wiz-card">
       <h3>2. Reason for Consultation</h3>
-      <div class="reason-grid">
-        <?php foreach (BOOKING_REASONS as $r): ?>
+      <p id="reason-placeholder" class="reason-placeholder" style="<?= $sel_department ? 'display:none;' : '' ?>">Select a department above to see relevant consultation reasons.</p>
+      <?php foreach (BOOKING_REASONS_BY_DEPT as $dept_name => $dept_reasons): ?>
+      <div class="reason-grid" data-reason-group="<?= htmlspecialchars($dept_name) ?>" style="<?= $sel_department === $dept_name ? '' : 'display:none;' ?>">
+        <?php foreach ($dept_reasons as $r): ?>
         <label class="reason-opt">
-          <input type="checkbox" name="reasons[]" value="<?= htmlspecialchars($r) ?>" <?= in_array($r, $sel_reasons, true) ? 'checked' : '' ?>/>
+          <input type="checkbox" name="reasons[]" value="<?= htmlspecialchars($r) ?>" <?= ($sel_department === $dept_name && in_array($r, $sel_reasons, true)) ? 'checked' : '' ?> <?= $sel_department === $dept_name ? '' : 'disabled' ?>/>
           <?= htmlspecialchars($r) ?>
         </label>
         <?php endforeach; ?>
       </div>
+      <?php endforeach; ?>
       <label style="display:block;font-size:0.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:0.9rem;">Other (optional)</label>
       <input type="text" name="reason_other" class="other-input" value="<?= htmlspecialchars($sel_other) ?>" placeholder="Describe your symptoms…"/>
       <p style="font-size:0.72rem;color:var(--muted);margin-top:0.6rem;">This stays the same even if you switch departments — it's just for the doctor's reference.</p>
@@ -175,7 +181,19 @@ echo booking_wizard_css();
 function pickDept(el) {
   document.querySelectorAll('.dept-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
-  document.getElementById('department-input').value = el.dataset.dept;
+  const dept = el.dataset.dept;
+  document.getElementById('department-input').value = dept;
+
+  document.getElementById('reason-placeholder').style.display = 'none';
+
+  document.querySelectorAll('.reason-grid[data-reason-group]').forEach(group => {
+    const isMatch = group.dataset.reasonGroup === dept;
+    group.style.display = isMatch ? '' : 'none';
+    group.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.disabled = !isMatch;
+      if (!isMatch) cb.checked = false;
+    });
+  });
 }
 
 const docInput = document.getElementById('medical-doc-input');
