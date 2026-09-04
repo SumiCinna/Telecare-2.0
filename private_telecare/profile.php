@@ -347,10 +347,10 @@ require_once __DIR__ . '/../includes/header.php';
       <input type="hidden" name="photo_only" value="1"/>
       <div class="profile-header">
         <div class="photo-wrap" onclick="document.getElementById('photoInput').click()">
-          <?php if (!empty($p['profile_photo'])): ?>
+                <?php if (!empty($p['profile_photo'])): ?>
             <img src="<?= htmlspecialchars($p['profile_photo']) ?>" alt="Profile" id="photoPreview"/>
           <?php else: ?>
-            <div class="avatar-lg" id="photoPreview"><?= $initials ?></div>
+            <div class="avatar-lg" id="photoPreview"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
           <?php endif; ?>
           <div class="photo-overlay">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

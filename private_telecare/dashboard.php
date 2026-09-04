@@ -353,11 +353,11 @@ $firstName = $parts[0];
   <div class="db-welcome">
     <div class="welcome-banner">
       <div class="welcome-left">
-        <div class="welcome-avatar">
+               <div class="welcome-avatar">
           <?php if (!empty($p['profile_photo'])): ?>
             <img src="<?= htmlspecialchars($p['profile_photo']) ?>" alt=""/>
           <?php else: ?>
-            <?= strtoupper(substr($p['full_name'], 0, 2)) ?>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <?php endif; ?>
         </div>
         <div>
