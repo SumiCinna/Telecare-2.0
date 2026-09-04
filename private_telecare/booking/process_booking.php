@@ -12,9 +12,8 @@ $department = $b['department'];
 $date       = $b['appt_date'];
 $time       = $b['appt_time'];
 
-$reason_parts = $b['reasons'] ?? [];
-if (!empty($b['reason_other'])) $reason_parts[] = $b['reason_other'];
-$reason = implode(', ', $reason_parts);
+$reason = implode(', ', $b['reasons'] ?? []);
+$notes  = trim($b['reason_other'] ?? '');
 
 // Multiple images may have been uploaded in step1 (up to 5). The DB still
 // has single string columns for attachment_path/type/ocr_text, so we pack
@@ -71,7 +70,7 @@ $bindTypes = 'ii' . str_repeat('s', 12); // patient_id,doctor_id are int; the re
 $stmt->bind_param(
     $bindTypes,
     $patient_id, $doctor_id, $date, $time, $type, $department,
-    $reason, $reason, $attachment_path, $attachment_type, $attachment_ocr,
+    $notes, $reason, $attachment_path, $attachment_type, $attachment_ocr,
     $status, $payment_status, $reference
 );
 

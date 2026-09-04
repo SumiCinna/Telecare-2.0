@@ -102,6 +102,8 @@ require_once 'includes/header.php';
   .act-btn-cancel{background:rgba(195,54,67,0.08);color:#C33643;}
   .act-btn-cancel:hover{background:rgba(195,54,67,0.18);}
   .notes-pill{background:rgba(245,158,11,0.08);border-radius:10px;padding:0.5rem 0.7rem;font-size:0.78rem;color:#92400e;margin:0.6rem 0 0;display:flex;align-items:flex-start;gap:0.4rem;line-height:1.45;}
+  .reason-pill{background:rgba(63,130,227,0.08);border-radius:10px;padding:0.5rem 0.7rem;font-size:0.78rem;color:#244441;margin:0.6rem 0 0;display:flex;align-items:flex-start;gap:0.4rem;line-height:1.45;}
+  .pill-label{font-weight:700;margin-right:0.3rem;}
   .patient-docs{margin-top:0.7rem;}
   .patient-docs-label{font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:0.4rem;}
   .patient-docs-grid{display:flex;gap:0.5rem;flex-wrap:wrap;}
@@ -335,10 +337,15 @@ require_once 'includes/header.php';
         </div>
       </div>
 
+      <div class="reason-pill">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <span><span class="pill-label">Reason for consultation:</span> <?= !empty($a['reason']) ? htmlspecialchars($a['reason']) : 'The patient did not select a reason in the choices' ?></span>
+      </div>
+
       <?php if (!empty($a['notes'])): ?>
       <div class="notes-pill">
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-        <?= htmlspecialchars($a['notes']) ?>
+        <span><span class="pill-label">Other reason for consultation:</span> <?= htmlspecialchars($a['notes']) ?></span>
       </div>
       <?php endif; ?>
 
