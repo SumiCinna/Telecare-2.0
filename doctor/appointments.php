@@ -102,6 +102,11 @@ require_once 'includes/header.php';
   .act-btn-cancel{background:rgba(195,54,67,0.08);color:#C33643;}
   .act-btn-cancel:hover{background:rgba(195,54,67,0.18);}
   .notes-pill{background:rgba(245,158,11,0.08);border-radius:10px;padding:0.5rem 0.7rem;font-size:0.78rem;color:#92400e;margin:0.6rem 0 0;display:flex;align-items:flex-start;gap:0.4rem;line-height:1.45;}
+  .patient-docs{margin-top:0.7rem;}
+  .patient-docs-label{font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:0.4rem;}
+  .patient-docs-grid{display:flex;gap:0.5rem;flex-wrap:wrap;}
+  .patient-doc-thumb{width:64px;height:64px;border-radius:10px;overflow:hidden;border:1.5px solid rgba(36,68,65,0.12);display:block;flex-shrink:0;}
+  .patient-doc-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
   .toast-bar{position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);z-index:400;padding:0.75rem 1.4rem;border-radius:50px;font-size:0.85rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.15);white-space:nowrap;background:var(--green);color:#fff;animation:toastIn 0.3s ease,toastOut 0.4s 3s ease forwards;}
   @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
   @keyframes toastOut{from{opacity:1}to{opacity:0;pointer-events:none}}
@@ -334,6 +339,21 @@ require_once 'includes/header.php';
       <div class="notes-pill">
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
         <?= htmlspecialchars($a['notes']) ?>
+      </div>
+      <?php endif; ?>
+
+      <?php if (!empty($a['attachment_path'])):
+        $att_paths = array_filter(array_map('trim', explode(',', $a['attachment_path'])));
+      ?>
+      <div class="patient-docs">
+        <div class="patient-docs-label">📎 Patient Uploaded Document<?= count($att_paths) > 1 ? 's' : '' ?></div>
+        <div class="patient-docs-grid">
+          <?php foreach ($att_paths as $ap): ?>
+          <a href="../../<?= htmlspecialchars($ap) ?>" target="_blank" class="patient-doc-thumb">
+            <img src="../../<?= htmlspecialchars($ap) ?>" alt="Patient document"/>
+          </a>
+          <?php endforeach; ?>
+        </div>
       </div>
       <?php endif; ?>
 
@@ -798,5 +818,3 @@ function printReceiptDoctor() {
 <?php require_once 'includes/nav.php'; ?>
 </body>
 </html>
-
-

@@ -71,6 +71,9 @@ echo booking_wizard_css();
 .doc-card{text-align:center}
 .doc-avatar{width:74px;height:74px;border-radius:18px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.4rem;margin:0 auto 0.7rem;overflow:hidden}
 .doc-avatar img{width:100%;height:100%;object-fit:cover}
+.doc-thumbs{display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:0.5rem}
+.doc-thumb{width:72px;height:72px;border-radius:12px;overflow:hidden;border:1.5px solid rgba(36,68,65,0.12);display:block;flex-shrink:0}
+.doc-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .pay-row{display:flex;justify-content:space-between;font-size:0.85rem;padding:0.4rem 0;border-bottom:1px solid rgba(36,68,65,0.06)}
 .pay-row:last-child{border-bottom:none}
 .conf-actions{display:flex;justify-content:space-between;margin-top:1.4rem;flex-wrap:wrap;gap:0.6rem}
@@ -187,6 +190,19 @@ echo booking_wizard_css();
       <?php if (!empty($appt['reason'])): ?>
         <div class="info-lbl" style="margin-top:0.8rem;">Reason for Consultation</div>
         <div class="info-v" style="font-weight:500;"><?= htmlspecialchars($appt['reason']) ?></div>
+      <?php endif; ?>
+
+      <?php if (!empty($appt['attachment_path'])):
+        $att_paths = array_filter(array_map('trim', explode(',', $appt['attachment_path'])));
+      ?>
+        <div class="info-lbl" style="margin-top:0.8rem;">Uploaded Document<?= count($att_paths) > 1 ? 's' : '' ?></div>
+        <div class="doc-thumbs">
+          <?php foreach ($att_paths as $ap): ?>
+          <a href="../../<?= htmlspecialchars($ap) ?>" target="_blank" class="doc-thumb">
+            <img src="../../<?= htmlspecialchars($ap) ?>" alt="Uploaded document"/>
+          </a>
+          <?php endforeach; ?>
+        </div>
       <?php endif; ?>
 
       <div class="join-box <?= $isPendingUnpaid ? 'pending' : '' ?>">
