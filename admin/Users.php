@@ -748,7 +748,16 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
     <form method="POST" id="edit-doctor-form" onsubmit="return validateEditDoctor()">
       <input type="hidden" name="doctor_id" id="edit-doctor-id"/>
       <div class="form-field"><label class="field-label">Full Name *</label><input type="text" name="full_name" id="edit-doctor-name" class="field-input" required/><div class="field-warning" id="edit-warn-doctor-name">Full name is required.</div></div>
-      <div class="form-field"><label class="field-label">Email Address *</label><input type="email" name="email" id="edit-doctor-email" class="field-input" required/><div class="field-warning" id="edit-warn-doctor-email">Enter a valid email address.</div></div>
+            <div class="form-field"><label class="field-label">Email Address *</label><input type="email" name="email" id="edit-doctor-email" class="field-input" required/><div class="field-warning" id="edit-warn-doctor-email">Enter a valid email address.</div></div>
+      <div class="form-field">
+        <label class="field-label">Department *</label>
+        <select name="department" id="edit-doctor-department" class="field-input" required>
+          <option value="">— Select —</option>
+          <?php foreach (array_keys(BOOKING_DEPARTMENTS) as $dep): ?>
+            <option value="<?= htmlspecialchars($dep) ?>"><?= htmlspecialchars($dep) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
       <div class="form-row">
         <div class="form-field"><label class="field-label">Specialty</label><input type="text" name="specialty" id="edit-doctor-specialty" class="field-input"/></div>
         <div class="form-field"><label class="field-label">Subspecialty</label><input type="text" name="subspecialty" id="edit-doctor-subspecialty" class="field-input"/></div>
