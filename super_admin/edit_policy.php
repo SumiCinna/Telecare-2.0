@@ -1,10 +1,16 @@
 <?php
-// edit_policy.php
-require_once 'includes/data.php'; // $policies
-
-$id     = isset($_GET['id']) ? (int) $_GET['id'] : null;
-$policy = $id ? policy_lookup($policies, $id) : null;
-$isEdit = $policy !== null;
+// Frontend-only policy editor. Save and publish actions are preview toasts.
+$isEdit = true;
+$id = 2;
+$policy = [
+	'title' => 'Privacy Policy',
+	'type' => 'Data & Privacy',
+	'short_desc' => 'Details how user information is collected, used, and secured.',
+	'status' => 'Published',
+	'effective_date' => 'Aug 10, 2026',
+	'version' => 'v1.3',
+	'desc' => 'This Privacy Policy explains how TeleCare collects, uses, stores, and protects personal and health-related information.',
+];
 
 $page_title  = $isEdit ? 'Edit Policy' : 'Create New Policy';
 $active_nav  = 'legal_policies';
@@ -38,7 +44,7 @@ $title       = $isEdit ? $policy['title'] : '';
 $type        = $isEdit ? $policy['type'] : '';
 $shortDesc   = $isEdit ? $policy['short_desc'] : '';
 $status      = $isEdit ? $policy['status'] : 'Draft';
-$effDate     = $isEdit ? $policy['effective_date'] : date('M j, Y');
+$effDate     = $isEdit ? $policy['effective_date'] : 'Sep 5, 2026';
 $currentVer  = $isEdit ? $policy['version'] : null;
 // naive "next version" bump for the demo
 $targetVer   = $isEdit ? preg_replace_callback('/(\d+)$/', fn($m) => ((int)$m[1]) + 1, $policy['version']) : 'v1.0';

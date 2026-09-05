@@ -1,14 +1,28 @@
 <?php
-// policy_history.php
-require_once 'includes/data.php'; // $policies, $policy_versions, $policy_changes
-
-$id      = isset($_GET['id']) ? (int) $_GET['id'] : 2; // default to Privacy Policy for the demo
-$policy  = policy_lookup($policies, $id);
-if ($policy === null) { $id = 2; $policy = $policies[2]; }
-$versions = $policy_versions[$id] ?? [
-	['version' => $policy['version'], 'date' => $policy['updated'], 'by' => $policy['updated_by'], 'status' => $policy['status'], 'current' => true],
+// Frontend-only version history and policy preview screen.
+$id = 2;
+$policy = [
+	'title' => 'Privacy Policy',
+	'version' => 'v1.3',
+	'updated' => 'Aug 10, 2026',
+	'updated_by' => 'Super Admin',
+	'status' => 'Published',
+	'effective_date' => 'Aug 10, 2026',
 ];
-$changes = $policy_changes[$id] ?? null;
+$versions = [
+	['version' => 'v1.3', 'date' => 'Aug 10, 2026', 'by' => 'Super Admin', 'status' => 'Published', 'current' => true],
+	['version' => 'v1.2', 'date' => 'Jul 15, 2026', 'by' => 'Super Admin', 'status' => 'Published', 'current' => false],
+	['version' => 'v1.1', 'date' => 'Jun 20, 2026', 'by' => 'Super Admin', 'status' => 'Published', 'current' => false],
+	['version' => 'v1.0', 'date' => 'May 1, 2026', 'by' => 'Super Admin', 'status' => 'Archived', 'current' => false],
+];
+$changes = [
+	'from' => 'v1.2', 'to' => 'v1.3', 'date' => 'Aug 10, 2026, 11:20 AM',
+	'items' => [
+		['title' => 'Added Section 1.9: Telehealth Encryption Protocols', 'copy' => 'Complies with Data Privacy Act of 2012 (RA 10173) and end-to-end WebRTC security mandates.'],
+		['title' => 'Updated Data Retention Period', 'copy' => 'Electronic Medical Records (EMR) retention specified to mandatory minimum of 10 years per clinical liability.'],
+		['title' => 'Super Admin Signature Attached', 'copy' => 'Digitally countersigned by Compliance Officer (ID: 4CO-8212).'],
+	],
+];
 
 $page_title  = 'Version History & Preview';
 $active_nav  = 'legal_policies';
