@@ -1,14 +1,6 @@
 <?php
 // includes/legal_policy_helper.php
-//
-// Shared helper so any page can pull the current PUBLISHED legal policy
-// content straight from the database (managed in super_admin/legal_policies.php
-// and super_admin/edit_policy.php), instead of hardcoding the text on every
-// page. Include this once, then call legal_policy_content($conn, 'slug').
-//
-// Known slugs seeded by database/add_legal_policies.sql:
-//   'data-privacy-notice'   'terms-and-conditions'
-//   'privacy-policy'        'payment-policy'
+
 
 if (!function_exists('get_legal_policy')) {
     /**
@@ -17,18 +9,25 @@ if (!function_exists('get_legal_policy')) {
      */
     function get_legal_policy(mysqli $conn, string $slug): ?array
     {
-        $stmt = $conn->prepare(
-            "SELECT title, content, version, updated_at
-             FROM legal_policies
-             WHERE slug = ? AND status = 'Published'
-             LIMIT 1"
-        );
-        if (!$stmt) { return null; }
-        $stmt->bind_param('s', $slug);
-        $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-        return $row ?: null;
+        try {
+            $stmt = $conn->prepare(
+                "SELECT title, content, version, updated_at
+                 FROM legal_policies
+                 WHERE slug = ? AND status = 'Published'
+                 LIMIT 1"
+            );
+            if (!$stmt) { return null; }
+            $stmt->bind_param('s', $slug);
+            $stmt->execute();
+            $row = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            return $row ?: null;
+        } catch (\Throwable $e) {
+            // Never let a missing table / DB hiccup take down the whole page
+            // (e.g. database/add_legal_policies.sql hasn't been run yet).
+            error_log('legal_policy_helper: ' . $e->getMessage());
+            return null;
+        }
     }
 }
 
@@ -43,6 +42,6 @@ if (!function_exists('legal_policy_content')) {
         if ($policy) {
             return $policy['content'];
         }
-        return $fallback ?? '<p><em>This document is not available yet. Please check back later.</em></p>';
+        return $fallback ?? '<p><em>This document isn\'t available yet. (If you\'re the admin: run database/add_legal_policies.sql and publish this policy in Legal Policies.)</em></p>';
     }
 }

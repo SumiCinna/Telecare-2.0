@@ -580,7 +580,6 @@ function onAgreeToggle() {
   const cb = document.getElementById('f_agree');
   document.getElementById('h_agree').value = cb.checked ? '1' : '0';
 }
-function onAgreeToggle() {
 function combinePhoneAndValidate() {
   let ok = true;
   const check = (id, cond, msg) => {
