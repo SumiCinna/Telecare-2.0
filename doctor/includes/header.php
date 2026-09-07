@@ -1,4 +1,5 @@
 // doctor/includes/header.php
+require_once __DIR__ . '/../../includes/breadcrumbs.php';
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -50,6 +51,12 @@
     }
     .header-avatar img { width:100%; height:100%; object-fit:cover; }
     .header-center { font-size:0.95rem; font-weight:700; }
+    .tc-breadcrumb{max-width:calc(100% - 240px);margin:0 0 0 240px;padding:0.75rem 1.5rem 0;color:var(--muted);font-size:0.72rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .tc-breadcrumb a{color:var(--blue);text-decoration:none;}
+    .tc-breadcrumb a:hover{text-decoration:underline;}
+    .tc-breadcrumb-sep{padding:0 .4rem;color:#c0cece;}
+    .tc-breadcrumb-current{color:var(--green);font-weight:700;}
+    @media (max-width:767px){.tc-breadcrumb{max-width:none;margin:0;padding:.75rem 1rem 0;}}
 
     /* PAGE - Responsive layout */
     @media (min-width: 768px) {
@@ -133,5 +140,7 @@
     <?php endif; ?>
   </a>
 </div>
+
+<?= tc_render_breadcrumbs('doctor', $active_nav ?? 'home', ['current' => $page_title_short ?? null]) ?>
 
 

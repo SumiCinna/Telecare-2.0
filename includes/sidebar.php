@@ -1,5 +1,6 @@
 <?php
 // includes/sidebar.php
+require_once __DIR__ . '/breadcrumbs.php';
 // Determine active page from current file
 $current_page = basename($_SERVER['PHP_SELF'], '.php'); // e.g. 'doctors', 'patients'
 ?>

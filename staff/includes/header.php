@@ -1,6 +1,7 @@
 <?php
 // staff/includes/header.php
 // staff/includes/header.php mga sidebar
+require_once __DIR__ . '/../../includes/breadcrumbs.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -37,6 +38,11 @@
   .profile-avatar{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--green),#1a2f3e);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem}
     
     .page-wrap{padding:2.5rem 3rem}
+    .tc-breadcrumb{padding:0 3rem;margin-top:1rem;color:var(--muted);font-size:.72rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .tc-breadcrumb a{color:var(--blue);text-decoration:none;}
+    .tc-breadcrumb a:hover{text-decoration:underline;}
+    .tc-breadcrumb-sep{padding:0 .4rem;color:#b8c3d6;}
+    .tc-breadcrumb-current{color:var(--text);font-weight:700;}
 
     /* ── Cards ── */
     .card{background:#fff;border-radius:16px;padding:2rem;border:1px solid rgba(36,68,65,.06);box-shadow:0 2px 10px rgba(0,0,0,.04);margin-bottom:2rem}
@@ -154,4 +160,5 @@
       </div>
     </div>
   </div>
+  <?= tc_render_breadcrumbs('staff', $active_page ?? 'dashboard', ['current' => ucfirst($active_page ?? 'Current Page')]) ?>
   <div class="page-wrap">

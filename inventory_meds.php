@@ -5,6 +5,7 @@ header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 
 require_once '../database/config.php';
+require_once __DIR__ . '/includes/breadcrumbs.php';
 
 if (!isset($_SESSION['admin_id'])) { header('Location: login.php'); exit; }
 
@@ -80,6 +81,7 @@ if ($meds) {
     .main{flex:1;overflow-y:auto}
     .topbar{background:var(--white);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(36,68,65,0.07);position:sticky;top:0;z-index:50}
     .page-content{padding:2rem}
+    .tc-breadcrumb{display:flex;align-items:center;gap:.45rem;margin-bottom:.45rem;font-size:.72rem;color:#9ab0ae;font-weight:600}.tc-breadcrumb a{color:var(--blue);text-decoration:none}.tc-breadcrumb-current{color:var(--green);font-weight:700}.tc-breadcrumb-sep{color:#c0cece}
 
     /* Summary stat chips */
     .stat-row{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
@@ -159,6 +161,7 @@ if ($meds) {
 <div class="main">
   <div class="topbar">
     <div>
+      <?= tc_render_breadcrumbs('admin', 'pos-products', ['current' => 'Medicines']) ?>
       <div style="font-size:0.75rem;color:#9ab0ae;font-weight:600;">Inventory</div>
       <div style="font-size:0.95rem;font-weight:700;">Medicine Stock — Pharmacy</div>
     </div>

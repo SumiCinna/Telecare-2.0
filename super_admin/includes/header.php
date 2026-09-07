@@ -1,5 +1,6 @@
 <?php
 // includes/header.php
+require_once __DIR__ . '/../../includes/breadcrumbs.php';
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
@@ -28,6 +29,11 @@ $super_admin_name = $_SESSION['super_admin_name'] ?? 'Super Admin';
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="assets/js/css/style.css">
+	<style>
+		.tc-breadcrumb{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--faint);margin-bottom:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+		.tc-breadcrumb a{color:var(--faint);text-decoration:none}.tc-breadcrumb a:hover{color:var(--red)}
+		.tc-breadcrumb-sep{color:#c7cfd9}.tc-breadcrumb-current{color:var(--ink);font-weight:600}
+	</style>
 </head>
 <body>
 <div class="admin-shell">
@@ -54,18 +60,7 @@ $super_admin_name = $_SESSION['super_admin_name'] ?? 'Super Admin';
 			</div>
 		</header>
 		<section class="content">
-			<?php if (!empty($breadcrumbs)): ?>
-			<nav class="crumbs">
-				<?php foreach ($breadcrumbs as $i => $c): ?>
-					<?php if ($i > 0): ?><span class="crumb-sep">&rsaquo;</span><?php endif; ?>
-					<?php if (!empty($c['href'])): ?>
-						<a href="<?= htmlspecialchars($c['href']) ?>"><?= htmlspecialchars($c['label']) ?></a>
-					<?php else: ?>
-						<span class="crumb-current"><?= htmlspecialchars($c['label']) ?></span>
-					<?php endif; ?>
-				<?php endforeach; ?>
-			</nav>
-			<?php endif; ?>
+			<?= tc_render_breadcrumbs('super_admin', $active_nav ?? 'dashboard', ['items' => $breadcrumbs ?? []]) ?>
 
 			<div class="page-heading">
 				<div class="page-heading-row">

@@ -233,6 +233,7 @@ tr:hover td{background:rgba(36,68,65,0.02)}
 <div class="main">
   <div class="topbar">
     <div>
+      <?= tc_render_breadcrumbs('admin', $activeNav ?? 'dashboard') ?>
       <div style="font-size:0.75rem;color:#9ab0ae;font-weight:600;">Good morning, Admin</div>
       <div style="font-size:0.95rem;font-weight:700;">Here's what's happening in TELE-CARE today.</div>
     </div>

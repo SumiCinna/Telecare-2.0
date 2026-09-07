@@ -479,6 +479,7 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
 <div class="main">
   <div class="topbar">
     <div>
+      <?= tc_render_breadcrumbs('admin', $activeNav ?? 'users') ?>
       <div style="font-size:0.75rem;color:#9ab0ae;font-weight:600;">Admin Portal</div>
       <div style="font-size:0.95rem;font-weight:700;">User Management</div>
     </div>

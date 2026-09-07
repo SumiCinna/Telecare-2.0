@@ -80,6 +80,7 @@ $doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY fu
 <div class="main">
   <div class="topbar">
     <div>
+      <?= tc_render_breadcrumbs('admin', $activeNav ?? 'assignments') ?>
       <div style="font-size:0.75rem;color:#9ab0ae;font-weight:600;">Admin Portal</div>
       <div style="font-size:0.95rem;font-weight:700;">Appointments by Doctor</div>
     </div>

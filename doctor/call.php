@@ -2,6 +2,7 @@
 // doctor/call.php
 date_default_timezone_set('Asia/Manila');
 require_once 'includes/auth.php';
+require_once __DIR__ . '/../includes/breadcrumbs.php';
 header('Permissions-Policy: camera=*, microphone=*, geolocation=*');
 header('Feature-Policy: camera *; microphone *');
 
@@ -73,6 +74,8 @@ $pat_photo     = $appt['patient_photo'] ?? '';
       border-bottom:1px solid rgba(255,255,255,0.06);
       z-index:10;
     }
+    .tc-call-breadcrumb{position:absolute;left:1rem;top:4.2rem;z-index:30;font:600 .68rem 'Roboto',sans-serif;color:rgba(232,234,237,.68);}
+    .tc-call-breadcrumb a{color:#8ab4f8;text-decoration:none}.tc-call-breadcrumb-sep{padding:0 .35rem;color:#9aa0a6}.tc-call-breadcrumb-current{color:#e8eaed;font-weight:700}
     .tb-logo{font-size:0.85rem;font-weight:700;}
     .tb-logo span{color:var(--gm-blue);}
     .timer-pill{background:var(--gm-surface2);border-radius:20px;padding:0.25rem 0.8rem;font-size:0.78rem;font-weight:500;min-width:52px;text-align:center;font-variant-numeric:tabular-nums;}
@@ -360,6 +363,7 @@ $pat_photo     = $appt['patient_photo'] ?? '';
     <div class="timer-pill" id="timer">--:--</div>
   </div>
 </div>
+<?= tc_render_breadcrumbs('doctor', 'chat', ['current' => 'Consultation Room']) ?>
 
 <div class="video-area">
 

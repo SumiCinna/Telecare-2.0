@@ -2,6 +2,7 @@
 // private_telecare/call_patient.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/breadcrumbs.php';
 // call_patient.php (patient side)
 $appt_id = (int)($_GET['appt_id'] ?? 0);
 if (!$appt_id) { header('Location: ../visits.php'); exit; }
@@ -63,6 +64,8 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
       padding:0 1rem;padding-top:env(safe-area-inset-top,0px);
       flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.06);z-index:10;
     }
+    .tc-call-breadcrumb{position:absolute;left:1rem;top:4.2rem;z-index:30;font:600 .68rem Inter,sans-serif;color:rgba(232,234,237,.68);}
+    .tc-call-breadcrumb a{color:#8ab4f8;text-decoration:none}.tc-call-breadcrumb-sep{padding:0 .35rem;color:#9aa0a6}.tc-call-breadcrumb-current{color:#e8eaed;font-weight:700}
     .tb-logo{font-size:0.85rem;font-weight:700;}
     .tb-logo span{color:var(--gm-blue);}
     .timer-pill{background:var(--gm-surface2);border-radius:20px;padding:0.25rem 0.8rem;font-size:0.78rem;font-weight:500;min-width:52px;text-align:center;font-variant-numeric:tabular-nums;}
@@ -338,6 +341,7 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
     <div class="timer-pill" id="timer">--:--</div>
   </div>
 </div>
+<?= tc_render_breadcrumbs('patient', 'chat', ['current' => 'Consultation Room']) ?>
 
 <div class="video-area">
 

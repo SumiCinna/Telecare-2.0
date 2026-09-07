@@ -5,6 +5,7 @@ header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 
 require_once '../database/config.php';
+require_once __DIR__ . '/includes/breadcrumbs.php';
 
 if (!isset($_SESSION['admin_id'])) { header('Location: login.php'); exit; }
 
@@ -69,6 +70,7 @@ $combined = [
     .main{flex:1;overflow-y:auto}
     .topbar{background:var(--white);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(36,68,65,0.07);position:sticky;top:0;z-index:50}
     .page-content{padding:2rem}
+    .tc-breadcrumb{display:flex;align-items:center;gap:.45rem;margin-bottom:.45rem;font-size:.72rem;color:#9ab0ae;font-weight:600}.tc-breadcrumb a{color:var(--blue);text-decoration:none}.tc-breadcrumb-current{color:var(--green);font-weight:700}.tc-breadcrumb-sep{color:#c0cece}
 
     .stat-row{display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap}
     .stat-chip{background:var(--white);border-radius:14px;border:1px solid rgba(36,68,65,0.07);box-shadow:0 2px 10px rgba(0,0,0,0.04);padding:0.9rem 1.3rem;min-width:150px}
@@ -110,6 +112,7 @@ $combined = [
 <div class="main">
   <div class="topbar">
     <div>
+      <?= tc_render_breadcrumbs('admin', 'pos-products', ['current' => 'Inventory Overview']) ?>
       <div style="font-size:0.75rem;color:#9ab0ae;font-weight:600;">Admin Portal</div>
       <div style="font-size:0.95rem;font-weight:700;">Inventory Overview</div>
     </div>

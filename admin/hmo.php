@@ -169,6 +169,7 @@ $activeNav = 'pos-hmo';
 <div class="main">
   <div class="topbar">
     <div>
+      <?= tc_render_breadcrumbs('admin', $activeNav ?? 'pos-hmo') ?>
       <div style="font-size:0.75rem;color:#9ab0ae;font-weight:600;">Admin Portal</div>
       <div style="font-size:0.95rem;font-weight:700;">HMO</div>
     </div>

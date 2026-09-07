@@ -1,6 +1,7 @@
 <?php
 // includes/header.php
 // $page_title must be set before including this.
+require_once __DIR__ . '/breadcrumbs.php';
 
 if (!function_exists('tc_notif_time_ago')) {
     function tc_notif_time_ago($datetime) {
@@ -181,6 +182,13 @@ if (isset($conn, $patient_id)) {
       .site-topbar{ padding:1rem 1.1rem; }
     }
 
+    .tc-breadcrumb{padding:0.8rem 2rem 0;color:var(--tc-muted);font-size:0.72rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .tc-breadcrumb a{color:var(--tc-teal);text-decoration:none;}
+    .tc-breadcrumb a:hover{text-decoration:underline;}
+    .tc-breadcrumb-sep{padding:0 .4rem;color:rgba(21,28,39,0.28);}
+    .tc-breadcrumb-current{color:var(--tc-ink);font-weight:800;}
+    @media (max-width:900px){.tc-breadcrumb{padding:.75rem 1.1rem 0;}}
+
     .notif-badge{
       position:absolute; top:-4px; right:-4px;
       min-width:16px; height:16px; padding:0 3px;
@@ -333,6 +341,8 @@ if (isset($conn, $patient_id)) {
     </div>
   </div>
 </div>
+
+<?= tc_render_breadcrumbs('patient', $active_nav ?? 'home', ['current' => $page_title_short ?? null]) ?>
 
 <!-- ── CareBot Floating Widget ── -->
 <div id="carebotWidget" class="carebot-widget">
