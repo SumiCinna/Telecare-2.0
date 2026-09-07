@@ -233,6 +233,21 @@ $applicableTo = $isEdit ? explode(',', $policy['applicable_to'] ?? 'all') : ['al
 	document.getElementById('policyForm').addEventListener('submit', function () {
 		document.getElementById('contentField').value = document.getElementById('editorBody').innerHTML;
 	});
+
+	const audienceCheckboxes = document.querySelectorAll('input[name="applicable[]"]');
+	const allUsersCheckbox = document.querySelector('input[name="applicable[]"][value="all"]');
+
+	audienceCheckboxes.forEach(function (checkbox) {
+		checkbox.addEventListener('change', function () {
+			if (this.value === 'all' && this.checked) {
+				audienceCheckboxes.forEach(function (audienceCheckbox) {
+					if (audienceCheckbox.value !== 'all') audienceCheckbox.checked = false;
+				});
+			} else if (this.value !== 'all' && this.checked && allUsersCheckbox) {
+				allUsersCheckbox.checked = false;
+			}
+		});
+	});
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
