@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // staff/includes/functions.php
 function logAction($conn, $appt_id, $staff_id, $action, $notes = '') {
     $stmt = $conn->prepare("INSERT INTO appointment_logs (appointment_id,staff_id,action,notes) VALUES (?,?,?,?)");

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // auth/resend_verification.php
 /**
  * resend_verification.php

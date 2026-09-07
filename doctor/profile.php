@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // doctor/profile.php
 require_once 'includes/auth.php';
 

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // index.php
 $pageTitle = "TELE-CARE | Your Health, Connected";
 ?>

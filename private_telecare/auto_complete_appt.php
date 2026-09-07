@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // private_telecare/auto_complete_appt.php
 /**
  * auto_complete_appt.php

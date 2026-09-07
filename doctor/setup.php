@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // doctor/setup.php
 // doctor/setup.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}

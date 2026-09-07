@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // router.php
 session_start();
 

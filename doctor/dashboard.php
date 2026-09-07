@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // doctor/dashboard.php
 require_once 'includes/auth.php';
 // doctor/dashboard.php - Doctor's dashboard

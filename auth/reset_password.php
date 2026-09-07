@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // auth/reset_password.php
 require_once '../database/config.php';
 

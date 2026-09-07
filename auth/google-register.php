@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // auth/google-register.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 require_once '../database/config.php';

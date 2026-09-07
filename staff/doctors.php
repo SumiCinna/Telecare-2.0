@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // staff/doctors.php
 require_once 'includes/auth.php';
 

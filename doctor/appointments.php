@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // doctor/appointments.php
 date_default_timezone_set('Asia/Manila');
 require_once 'includes/auth.php';

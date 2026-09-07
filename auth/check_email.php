@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // auth/check_email.php
 require_once '../database/config.php';
 

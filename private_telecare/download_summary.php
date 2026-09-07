@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // private_telecare/download_summary.php
 // download_summary.php
 date_default_timezone_set('Asia/Manila');

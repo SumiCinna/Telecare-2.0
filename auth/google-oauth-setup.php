@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // auth/google-oauth-setup.php
 // ============================================================
 // STEP 1 — Add to your database/config.php or run this SQL

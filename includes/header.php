@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // includes/header.php
 // $page_title must be set before including this.
 

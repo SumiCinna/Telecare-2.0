@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // includes/nav.php
 // includes/nav.php
 // $active_nav must be set before including: 'home' | 'visits' | 'meds' | 'profile'

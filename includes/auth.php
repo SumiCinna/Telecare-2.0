@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // includes/auth.php
 // includes/auth.php
 // Include at the top of every patient page.

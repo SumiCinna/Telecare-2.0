@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // check_cdn.php
 $urls = [
     "https://cdn.jsdelivr.net/npm/@metered-ca/realtime/dist/metered-peer.min.js",

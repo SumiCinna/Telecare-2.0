@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // auth/send_reset.php
 /**
  * auth/send_reset.php

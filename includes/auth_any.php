@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // includes/auth_any.php
 // includes/auth_any.php
 // Multi-role session guard: allows staff, doctor, OR patient sessions through.

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // private_telecare/dashboard.php
 require_once __DIR__ . '/../includes/auth.php';
 // dashboard.php - Patient's dashboard

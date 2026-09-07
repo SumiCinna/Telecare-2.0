@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // doctor/patient-records.php
 require_once 'includes/auth.php';
 

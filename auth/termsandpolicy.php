@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // auth/termsandpolicy.php
 /**
  * termsandpolicy.php

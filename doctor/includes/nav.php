@@ -1,4 +1,4 @@
-﻿// doctor/includes/nav.php
+// doctor/includes/nav.php
 <style>
   :root {
     --sidebar-width: 240px;

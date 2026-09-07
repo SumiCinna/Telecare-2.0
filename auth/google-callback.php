@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // auth/google-callback.php
 require_once '../database/config.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}

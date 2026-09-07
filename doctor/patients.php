@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // doctor/patients.php
 require_once 'includes/auth.php';
 

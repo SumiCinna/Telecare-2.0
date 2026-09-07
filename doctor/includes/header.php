@@ -1,4 +1,4 @@
-﻿// doctor/includes/header.php
+// doctor/includes/header.php
 <!DOCTYPE html>
 <html lang="en">
 <head>

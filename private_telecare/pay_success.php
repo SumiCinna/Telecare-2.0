@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // private_telecare/pay_success.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../includes/auth.php';

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // private_telecare/meds.php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../ocr/ocr_api.php';

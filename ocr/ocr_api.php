@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // ocr/ocr_api.php
 // ocr_api.php — replaces ocr_scan.py on live server
 

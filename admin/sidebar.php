@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // admin/sidebar.php
 
 $activeNav = $activeNav ?? '';
