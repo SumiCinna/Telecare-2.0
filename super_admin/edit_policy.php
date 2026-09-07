@@ -1,16 +1,89 @@
 <?php
-// Frontend-only policy editor. Save and publish actions are preview toasts.
-$isEdit = true;
-$id = 2;
-$policy = [
-	'title' => 'Privacy Policy',
-	'type' => 'Data & Privacy',
-	'short_desc' => 'Details how user information is collected, used, and secured.',
-	'status' => 'Published',
-	'effective_date' => 'Aug 10, 2026',
-	'version' => 'v1.3',
-	'desc' => 'This Privacy Policy explains how TeleCare collects, uses, stores, and protects personal and health-related information.',
-];
+// super_admin/edit_policy.php
+require_once __DIR__ . '/../database/config.php';
+if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
+
+$id     = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$isEdit = $id > 0;
+$policy = null;
+
+if ($isEdit) {
+    $stmt = $conn->prepare("SELECT * FROM legal_policies WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $policy = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if (!$policy) { header('Location: legal_policies.php'); exit; }
+}
+
+$errors = [];
+
+// ── Handle Save ───────────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $title       = trim($_POST['title'] ?? '');
+    $type        = trim($_POST['type'] ?? '');
+    $shortDesc   = trim($_POST['short_description'] ?? '');
+    $content     = $_POST['content'] ?? '';
+    $status      = in_array($_POST['status'] ?? '', ['Published', 'Draft', 'Archived'], true) ? $_POST['status'] : 'Draft';
+    $effDateRaw  = trim($_POST['effective_date'] ?? '');
+    $applicable  = isset($_POST['applicable']) && is_array($_POST['applicable']) ? implode(',', $_POST['applicable']) : 'all';
+    $revNotes    = trim($_POST['revision_notes'] ?? '');
+    $updated_by  = $_SESSION['super_admin_name'] ?? 'Super Admin';
+
+    $effDate = null;
+    if ($effDateRaw !== '') {
+        $ts = strtotime($effDateRaw);
+        if ($ts) { $effDate = date('Y-m-d', $ts); }
+    }
+
+    if ($title === '')   { $errors[] = 'Policy title is required.'; }
+    if ($type === '')    { $errors[] = 'Policy type is required.'; }
+    if (trim(strip_tags($content)) === '') { $errors[] = 'Policy content cannot be empty.'; }
+    if (!$isEdit && $revNotes === '') { $revNotes = 'Initial version.'; }
+    if ($revNotes === '') { $errors[] = 'Revision notes are required.'; }
+    if (!isset($_SESSION['super_admin_id'])) { $errors[] = 'Your session expired. Please log in again.'; }
+
+    if (empty($errors)) {
+        if ($isEdit) {
+            $targetVer = preg_replace_callback('/(\d+)$/', fn($m) => ((int)$m[1]) + 1, $policy['version']);
+            $stmt = $conn->prepare("UPDATE legal_policies SET title=?, type=?, short_desc=?, content=?, version=?, status=?, applicable_to=?, effective_date=?, updated_by=? WHERE id=?");
+            $stmt->bind_param("sssssssssi", $title, $type, $shortDesc, $content, $targetVer, $status, $applicable, $effDate, $updated_by, $id);
+            $stmt->execute();
+            $stmt->close();
+            $savedId = $id;
+        } else {
+            $targetVer = 'v1.0';
+            // Slug from title, made unique if needed.
+            $baseSlug = trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($title)), '-') ?: 'policy';
+            $slug = $baseSlug;
+            $n = 2;
+            while (true) {
+                $chk = $conn->prepare("SELECT id FROM legal_policies WHERE slug = ?");
+                $chk->bind_param("s", $slug);
+                $chk->execute();
+                $exists = $chk->get_result()->fetch_assoc();
+                $chk->close();
+                if (!$exists) break;
+                $slug = $baseSlug . '-' . $n;
+                $n++;
+            }
+            $stmt = $conn->prepare("INSERT INTO legal_policies (slug, title, type, short_desc, content, version, status, applicable_to, effective_date, updated_by) VALUES (?,?,?,?,?,?,?,?,?,?)");
+            $stmt->bind_param("ssssssssss", $slug, $title, $type, $shortDesc, $content, $targetVer, $status, $applicable, $effDate, $updated_by);
+            $stmt->execute();
+            $savedId = $stmt->insert_id;
+            $stmt->close();
+        }
+
+        // Log this save into the version history table.
+        $ins = $conn->prepare("INSERT INTO legal_policy_versions (policy_id, version, content, status, revision_notes, updated_by) VALUES (?,?,?,?,?,?)");
+        $ins->bind_param("isssss", $savedId, $targetVer, $content, $status, $revNotes, $updated_by);
+        $ins->execute();
+        $ins->close();
+
+        header('Location: legal_policies.php');
+        exit;
+    }
+}
 
 $page_title  = $isEdit ? 'Edit Policy' : 'Create New Policy';
 $active_nav  = 'legal_policies';
@@ -22,7 +95,7 @@ $breadcrumbs = [
 $header_icon = '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';
 $heading     = $isEdit ? 'Edit Policy' : 'Create New Policy';
 $subtitle    = $isEdit
-	? 'Update the policy content, settings, or replace with a new version.'
+	? 'Update the policy content, settings, or save as a new version.'
 	: 'Draft a new legal document and choose where it applies before publishing.';
 
 $header_actions = $isEdit
@@ -30,27 +103,30 @@ $header_actions = $isEdit
 	<a href="policy_history.php?id=' . $id . '" class="btn btn-secondary">
 		<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
 		Version History
-	</a>
-	<button type="button" class="btn btn-secondary" data-open-modal="modal-preview-changes">
-		<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M2 12s3-5 10-5 10 5 10 5-3 5-10 5-10-5-10-5Z"/><circle cx="12" cy="12" r="2"/></svg>
-		Preview Changes
-	</button>'
+	</a>'
 	: '';
 
 require_once 'includes/header.php';
 
 // Defaults for create mode vs. pre-filled values for edit mode
-$title       = $isEdit ? $policy['title'] : '';
-$type        = $isEdit ? $policy['type'] : '';
-$shortDesc   = $isEdit ? $policy['short_desc'] : '';
+$title       = $isEdit ? $policy['title'] : ($_POST['title'] ?? '');
+$type        = $isEdit ? $policy['type'] : ($_POST['type'] ?? '');
+$shortDesc   = $isEdit ? $policy['short_desc'] : ($_POST['short_description'] ?? '');
 $status      = $isEdit ? $policy['status'] : 'Draft';
-$effDate     = $isEdit ? $policy['effective_date'] : 'Sep 5, 2026';
+$effDate     = $isEdit && $policy['effective_date'] ? date('M j, Y', strtotime($policy['effective_date'])) : date('M j, Y');
 $currentVer  = $isEdit ? $policy['version'] : null;
-// naive "next version" bump for the demo
 $targetVer   = $isEdit ? preg_replace_callback('/(\d+)$/', fn($m) => ((int)$m[1]) + 1, $policy['version']) : 'v1.0';
+$editorContent = $isEdit ? $policy['content'] : '<p>Start writing the policy content here&hellip;</p>';
+$applicableTo = $isEdit ? explode(',', $policy['applicable_to'] ?? 'all') : ['all'];
 ?>
 
-<form class="form-grid" style="display:grid;grid-template-columns:minmax(0,2.1fr) minmax(280px,1fr);gap:24px;align-items:start;" onsubmit="return false;">
+<?php if (!empty($errors)): ?>
+<div class="alert alert-error" style="margin-bottom:18px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;padding:12px 16px;border-radius:10px;font-size:13px;">
+	<?php foreach ($errors as $e): ?><div><?= htmlspecialchars($e) ?></div><?php endforeach; ?>
+</div>
+<?php endif; ?>
+
+<form class="form-grid" style="display:grid;grid-template-columns:minmax(0,2.1fr) minmax(280px,1fr);gap:24px;align-items:start;" method="POST" id="policyForm">
 
 	<div class="panel">
 		<div class="panel-body" style="padding:26px;display:flex;flex-direction:column;gap:22px;">
@@ -88,39 +164,16 @@ $targetVer   = $isEdit ? preg_replace_callback('/(\d+)$/', fn($m) => ((int)$m[1]
 						<button type="button" data-cmd="insertOrderedList" title="Numbered list"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 6h11M9 12h11M9 18h11M4 6h1M4 10v-.5A1.5 1.5 0 0 1 5.5 8v0A1.5 1.5 0 0 1 7 9.5v0c0 .7-.4 1.1-1 1.5l-2 1.5h3M4 18h2v-4H4"/></svg></button>
 						<span class="sep"></span>
 						<button type="button" data-cmd="createLink" title="Insert link"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m10 14 4-4M8 16l-2 2a3 3 0 0 1-4-4l4-4M16 8l2-2a3 3 0 1 1 4 4l-4 4"/></svg></button>
-						<button type="button" title="Insert image"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m21 15-5-5L5 20"/></svg></button>
-						<button type="button" title="View source"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg></button>
 					</div>
-					<div class="editor-body" contenteditable="true">
-						<?php if ($isEdit && $policy['title'] === 'Privacy Policy'): ?>
-							<h4>Privacy Policy</h4>
-							<p>This Privacy Policy explains how TeleCare collects, uses, stores, and protects personal and health-related information...</p>
-							<h4>1. Information We Collect</h4>
-							<ul>
-								<li>Personal information (name, contact details, identification)</li>
-								<li>Medical information (consultation records, prescriptions, symptoms)</li>
-								<li>Usage information (log data, device information, telemetry)</li>
-							</ul>
-							<h4>2. How We Use Information</h4>
-							<ul>
-								<li>To coordinate teleconsultations and doctor appointments</li>
-								<li>To maintain electronic medical records securely</li>
-								<li>To ensure statutory compliance with Data Privacy Act of 2012</li>
-							</ul>
-						<?php elseif ($isEdit): ?>
-							<p><?= htmlspecialchars($policy['desc']) ?></p>
-							<p>Add the full policy text here&hellip;</p>
-						<?php else: ?>
-							<p>Start writing the policy content here&hellip;</p>
-						<?php endif; ?>
-					</div>
+					<div class="editor-body" id="editorBody" contenteditable="true"><?= $editorContent ?></div>
 				</div>
+				<input type="hidden" name="content" id="contentField">
 				<p class="hint">Formatting is applied live. Section headings should use bold text or a heading style for clarity in the reader view.</p>
 			</div>
 
 			<div class="page-actions" style="justify-content:flex-end;padding-top:4px;">
-				<a href="legal_policies.php" class="btn btn-secondary" data-open-modal="modal-discard-changes" onclick="event.preventDefault();">Cancel</a>
-				<button type="button" class="btn btn-primary" data-open-modal="modal-save-changes">
+				<a href="legal_policies.php" class="btn btn-secondary">Cancel</a>
+				<button type="submit" class="btn btn-primary">
 					<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"/></svg>
 					Save Changes
 				</button>
@@ -154,11 +207,11 @@ $targetVer   = $isEdit ? preg_replace_callback('/(\d+)$/', fn($m) => ((int)$m[1]
 			<div class="form-group" style="margin-bottom:0;">
 				<label>Applicable To</label>
 				<div class="check-list">
-					<label><input type="checkbox" name="applicable[]" value="all" checked> All Users</label>
-					<label><input type="checkbox" name="applicable[]" value="patients"> Patients</label>
-					<label><input type="checkbox" name="applicable[]" value="professionals"> Healthcare Professionals</label>
-					<label><input type="checkbox" name="applicable[]" value="staff"> Clinic Staff</label>
-					<label><input type="checkbox" name="applicable[]" value="others"> Others</label>
+					<label><input type="checkbox" name="applicable[]" value="all" <?= in_array('all', $applicableTo) ? 'checked' : '' ?>> All Users</label>
+					<label><input type="checkbox" name="applicable[]" value="patients" <?= in_array('patients', $applicableTo) ? 'checked' : '' ?>> Patients</label>
+					<label><input type="checkbox" name="applicable[]" value="professionals" <?= in_array('professionals', $applicableTo) ? 'checked' : '' ?>> Healthcare Professionals</label>
+					<label><input type="checkbox" name="applicable[]" value="staff" <?= in_array('staff', $applicableTo) ? 'checked' : '' ?>> Clinic Staff</label>
+					<label><input type="checkbox" name="applicable[]" value="others" <?= in_array('others', $applicableTo) ? 'checked' : '' ?>> Others</label>
 				</div>
 			</div>
 
@@ -168,55 +221,18 @@ $targetVer   = $isEdit ? preg_replace_callback('/(\d+)$/', fn($m) => ((int)$m[1]
 				<div class="version-row"><span>Target Version on Save:</span><strong><?= htmlspecialchars($targetVer) ?></strong></div>
 				<div class="form-group" style="margin-bottom:0;margin-top:4px;">
 					<label style="margin-bottom:6px;">Revision Notes <span class="req">*</span></label>
-					<textarea class="form-control" name="revision_notes" placeholder="Describe what changed in this revision&hellip;"></textarea>
+					<textarea class="form-control" name="revision_notes" placeholder="Describe what changed in this revision&hellip;" required></textarea>
 				</div>
 			</div>
 		</div>
 	</div>
 </form>
 
-<!-- Modal: Save changes -->
-<div class="modal-overlay" id="modal-save-changes">
-	<div class="modal-box">
-		<span class="modal-icon success"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"/></svg></span>
-		<h3 class="modal-title">Save these changes?</h3>
-		<p class="modal-text">
-			This will save a new revision of <strong><?= htmlspecialchars($title ?: 'this policy') ?></strong>
-			<?php if ($isEdit): ?> and bump the version from <strong><?= htmlspecialchars($currentVer) ?></strong> to <strong><?= htmlspecialchars($targetVer) ?></strong><?php else: ?> as <strong><?= htmlspecialchars($targetVer) ?></strong><?php endif; ?>.
-			<?php if ($status === 'Published' || !$isEdit): ?>Selecting <strong>Published</strong> status makes it live immediately.<?php endif; ?>
-		</p>
-		<div class="modal-note">Make sure the revision notes describe what changed &mdash; they're shown in the audit trail.</div>
-		<div class="modal-actions">
-			<button type="button" class="btn btn-secondary" data-close-modal="modal-save-changes">Keep Editing</button>
-			<button type="button" class="btn btn-primary" data-confirm-action="Changes saved.">Save Changes</button>
-		</div>
-	</div>
-</div>
-
-<!-- Modal: Discard changes (Cancel) -->
-<div class="modal-overlay" id="modal-discard-changes">
-	<div class="modal-box">
-		<span class="modal-icon warning"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></span>
-		<h3 class="modal-title">Discard unsaved changes?</h3>
-		<p class="modal-text">Leaving now will discard anything you've edited on this policy. This can't be undone.</p>
-		<div class="modal-actions">
-			<button type="button" class="btn btn-secondary" data-close-modal="modal-discard-changes">Keep Editing</button>
-			<a href="legal_policies.php" class="btn btn-primary" style="text-align:center;">Discard &amp; Leave</a>
-		</div>
-	</div>
-</div>
-
-<!-- Modal: Preview changes -->
-<div class="modal-overlay" id="modal-preview-changes">
-	<div class="modal-box" style="max-width:460px;">
-		<span class="modal-icon info"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M2 12s3-5 10-5 10 5 10 5-3 5-10 5-10-5-10-5Z"/><circle cx="12" cy="12" r="2"/></svg></span>
-		<h3 class="modal-title">Preview before publishing</h3>
-		<p class="modal-text">Open the full Version History &amp; Preview page to see exactly how this draft will render for patients and clinicians before you publish it.</p>
-		<div class="modal-actions">
-			<button type="button" class="btn btn-secondary" data-close-modal="modal-preview-changes">Not Yet</button>
-			<a href="policy_history.php<?= $isEdit ? '?id=' . $id : '' ?>" class="btn btn-primary" style="text-align:center;">Open Preview</a>
-		</div>
-	</div>
-</div>
+<script>
+	// Sync the contenteditable editor into the hidden "content" field right before submit.
+	document.getElementById('policyForm').addEventListener('submit', function () {
+		document.getElementById('contentField').value = document.getElementById('editorBody').innerHTML;
+	});
+</script>
 
 <?php require_once 'includes/footer.php'; ?>

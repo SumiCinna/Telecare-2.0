@@ -1,6 +1,7 @@
 ﻿<?php
 // auth/register.php
 require_once '../database/config.php';
+require_once '../includes/legal_policy_helper.php';
 
 $error        = '';
 $show_verify  = false;
@@ -440,132 +441,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <div class="modal-body" id="modalBody" onscroll="onModalScroll()">
 
-      <!-- DATA PRIVACY NOTICE -->
+      <!-- DATA PRIVACY NOTICE (pulled live from super_admin/legal_policies.php) -->
       <div class="modal-section" data-section="privacy">
-        <h4>1. Who We Are</h4>
-        <p>This Data Privacy Notice is issued by TELE-CARE ("we," "us," or "our") for our telemedicine platform, in accordance with the Data Privacy Act of 2012 (Republic Act No. 10173) and its Implementing Rules and Regulations.</p>
-
-        <h4>2. Personal Data We Collect</h4>
-        <p>When you register and use TELE-CARE, we collect:</p>
-        <ul>
-          <li>Identity information — full name, date of birth, contact number, email address</li>
-          <li>Account credentials — password (stored in encrypted/hashed form)</li>
-          <li>Health information — medical history, symptoms, consultation notes, prescriptions, lab results, and other information you or your attending doctor provide during a teleconsultation</li>
-          <li>Technical data — device information, IP address, browser type, and log data related to your use of the platform</li>
-          <li>Communications — messages, video/audio session metadata, and files exchanged with healthcare providers through the platform</li>
-        </ul>
-
-        <h4>3. Why We Collect Your Data</h4>
-        <p>Your personal and health data are collected and processed to:</p>
-        <ul>
-          <li>Create and manage your patient account</li>
-          <li>Facilitate teleconsultations between you and licensed healthcare providers</li>
-          <li>Maintain accurate medical and consultation records</li>
-          <li>Send appointment confirmations, reminders, and account-related notifications</li>
-          <li>Process payments for consultations, where applicable</li>
-          <li>Comply with legal, regulatory, and reporting obligations</li>
-          <li>Improve the safety, security, and functionality of the platform</li>
-        </ul>
-
-        <h4>4. Sensitive Personal Information</h4>
-        <p>Health-related data is classified as "sensitive personal information" under RA 10173. We only process this data with your explicit consent, and access is restricted to your attending healthcare provider, authorized clinic/administrative staff directly involved in your care, and personnel required by law or regulation.</p>
-
-        <h4>5. Data Sharing and Disclosure</h4>
-        <p>We do not sell your personal data. Your information may only be shared with:</p>
-        <ul>
-          <li>Licensed doctors and staff directly involved in your consultation</li>
-          <li>Service providers who support platform operations (e.g., email delivery, secure hosting) under confidentiality obligations</li>
-          <li>Government agencies or regulators, when required by law, court order, or public health reporting requirements</li>
-        </ul>
-
-        <h4>6. Data Retention</h4>
-        <p>Your personal and medical records are retained for as long as your account is active and for a period thereafter as required by applicable healthcare recordkeeping laws and regulations, after which the data will be securely disposed of or anonymized.</p>
-
-        <h4>7. Your Rights</h4>
-        <p>Under the Data Privacy Act, you have the right to be informed, to access, to object, to correct, to erase or block your data (subject to legal retention requirements), to data portability, and to file a complaint with the National Privacy Commission. To exercise these rights, contact us through the channels provided on your patient dashboard.</p>
-
-        <h4>8. Security Measures</h4>
-        <p>We apply organizational, physical, and technical safeguards — including password hashing, encrypted connections, and access controls — to protect your data against unauthorized access, alteration, disclosure, or destruction.</p>
-
-        <h4>9. Consent</h4>
-        <p>By creating a TELE-CARE account, you acknowledge that you have read and understood this Data Privacy Notice and consent to the collection, use, and processing of your personal and sensitive personal information as described above.</p>
+        <?= legal_policy_content($conn, 'data-privacy-notice') ?>
       </div>
 
-      <!-- TERMS AND CONDITIONS -->
+      <!-- TERMS AND CONDITIONS (pulled live from super_admin/legal_policies.php) -->
       <div class="modal-section" data-section="terms">
-        <h4>1. Acceptance of Terms</h4>
-        <p>These Terms and Conditions ("Terms") govern your access to and use of TELE-CARE, operated by TELE-CARE. By creating an account, you agree to be bound by these Terms. If you do not agree, do not use the platform.</p>
-
-        <h4>2. Eligibility</h4>
-        <p>You must be at least 18 years old to register a patient account. By registering, you represent that the information you provide is accurate, current, and complete, and that you will keep it updated.</p>
-
-        <h4>3. Nature of the Service</h4>
-        <p>TELE-CARE connects patients with licensed healthcare providers for remote consultations. TELE-CARE is a technology platform and does not itself practice medicine. Medical advice, diagnosis, and treatment are provided solely by the licensed healthcare professionals you consult through the platform.</p>
-
-        <h4>4. Not for Emergency Use</h4>
-        <p>TELE-CARE is not intended for medical emergencies. If you are experiencing a medical emergency, call your local emergency hotline or go to the nearest emergency room immediately. Do not rely on this platform for time-critical or life-threatening conditions.</p>
-
-        <h4>5. Account Responsibilities</h4>
-        <ul>
-          <li>You are responsible for maintaining the confidentiality of your login credentials</li>
-          <li>You are responsible for all activity that occurs under your account</li>
-          <li>You must notify us immediately of any unauthorized use of your account</li>
-          <li>Providing false medical or personal information may result in suspension or deactivation of your account</li>
-        </ul>
-
-        <h4>6. Consultations and Payments</h4>
-        <p>Consultation fees, where applicable, will be disclosed prior to booking. Payment terms, cancellation policies, and refund conditions may be presented separately at the time of booking and form part of these Terms by reference.</p>
-
-        <h4>7. Prohibited Conduct</h4>
-        <p>You agree not to misuse the platform, including but not limited to: impersonating another person, attempting to access another user's account or medical records, uploading harmful code, or using the platform for any unlawful purpose.</p>
-
-        <h4>8. Account Suspension and Termination</h4>
-        <p>TELE-CARE reserves the right to suspend or deactivate accounts that violate these Terms, provide fraudulent information, or misuse the platform, with or without prior notice where warranted.</p>
-
-        <h4>9. Limitation of Liability</h4>
-        <p>To the extent permitted by law, TELE-CARE shall not be liable for indirect, incidental, or consequential damages arising from your use of the platform, technical interruptions, or reliance on information exchanged during a teleconsultation, except as required by applicable law.</p>
-
-        <h4>10. Changes to These Terms</h4>
-        <p>We may update these Terms from time to time. Continued use of TELE-CARE after changes are posted constitutes acceptance of the revised Terms.</p>
-
-        <h4>11. Governing Law</h4>
-        <p>These Terms are governed by the laws of the Republic of the Philippines.</p>
+        <?= legal_policy_content($conn, 'terms-and-conditions') ?>
       </div>
 
-      <!-- PRIVACY POLICY -->
+      <!-- PRIVACY POLICY (pulled live from super_admin/legal_policies.php) -->
       <div class="modal-section" data-section="policy">
-        <h4>1. Overview</h4>
-        <p>This Privacy Policy explains how TELE-CARE handles information collected through our telemedicine platform, in addition to the specific commitments made in our Data Privacy Notice.</p>
-
-        <h4>2. Information We Collect Automatically</h4>
-        <p>When you use TELE-CARE, our systems may automatically collect device type, browser, IP address, session timestamps, and general usage patterns (e.g., pages visited, features used) to help us maintain and improve the platform.</p>
-
-        <h4>3. Cookies and Similar Technologies</h4>
-        <p>TELE-CARE may use cookies or similar technologies to keep you logged in, remember your preferences, and understand how the platform is used. You can control cookies through your browser settings, though disabling them may affect platform functionality.</p>
-
-        <h4>4. How We Use Information</h4>
-        <ul>
-          <li>To operate, maintain, and secure the platform</li>
-          <li>To personalize your experience (e.g., pre-filling known details, showing relevant appointment information)</li>
-          <li>To detect, investigate, and prevent fraudulent or unauthorized activity</li>
-          <li>To analyze aggregate usage trends for service improvement, using de-identified data where possible</li>
-        </ul>
-
-        <h4>5. Third-Party Services</h4>
-        <p>TELE-CARE relies on trusted third-party providers for functions such as email delivery and secure video communication. These providers process data only as necessary to perform their function and are contractually or technically restricted from using your data for unrelated purposes.</p>
-
-        <h4>6. Data Storage and International Transfers</h4>
-        <p>Your data is stored on secure servers. Where any data is processed or stored outside the Philippines by a service provider, we take reasonable steps to ensure it remains protected to a standard consistent with the Data Privacy Act.</p>
-
-        <h4>7. Children's Privacy</h4>
-        <p>TELE-CARE is intended for users 18 years of age and older. We do not knowingly collect personal data from minors through direct patient registration.</p>
-
-        <h4>8. Updates to This Policy</h4>
-        <p>We may revise this Privacy Policy periodically. Material changes will be communicated through the platform or via email prior to taking effect.</p>
-
-        <h4>9. Contact Us</h4>
-        <p>For questions, concerns, or requests relating to this Privacy Policy or your personal data, please reach out through the support channels available on your TELE-CARE patient dashboard.</p>
-
+        <?= legal_policy_content($conn, 'privacy-policy') ?>
         <p style="margin-top:1.2rem;color:#9ab0ae;font-size:.78rem">— End of document —</p>
       </div>
 

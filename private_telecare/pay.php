@@ -2,6 +2,7 @@
 // private_telecare/pay.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/legal_policy_helper.php';
 // pay.php
 if (!isset($patient_id)) {
     die('❌ $patient_id is not set. Check auth.php — session key may differ.');
@@ -582,69 +583,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
       <button class="policy-modal-close" onclick="closePolicyModal()">&times;</button>
     </div>
     <div class="policy-modal-body">
-      <h3>Overview</h3>
-      <p>TELE-CARE is a telehealth platform that connects you with licensed doctors for remote consultations. By using our service, you acknowledge this Privacy Policy.</p>
-
-      <h3>Information We Collect</h3>
-      <ul>
-        <li><strong>Account:</strong> Full name, email, phone, date of birth</li>
-        <li><strong>Medical:</strong> Health records, consultation notes, diagnoses</li>
-        <li><strong>Payment:</strong> Billing details only—card details are NOT stored by us</li>
-        <li><strong>Communications:</strong> Chat messages, voice and video recordings during consultations</li>
-      </ul>
-
-      <h3>Voice & Video Recording</h3>
-      <div class="highlight">
-        <strong>You consent to voice and video recording during consultations for:</strong>
-        <ul style="margin-top:0.6rem;">
-          <li>Medical record keeping and continuity of care</li>
-          <li>Quality assurance and compliance verification</li>
-          <li>Patient and provider safety</li>
-          <li>AI Summarization of the teleconsultations</li>
-        </ul>
-      </div>
-      <p style="font-size:0.88rem;margin-top:0.8rem;">Recordings are encrypted and stored securely. Contact support to access your recording.</p>
-
-      <h3>Payment Security</h3>
-      <p><strong>We use PayMongo for all payments.</strong> Your card details are transmitted directly to PayMongo and are NOT stored on TELE-CARE servers. We only store billing name, email, and payment status for records.</p>
-      <p style="font-size:0.88rem;"><em>PayMongo is PCI DSS compliant and handles all sensitive payment data securely.</em></p>
-
-      <h3>How We Use Your Information</h3>
-      <ul>
-        <li>To provide telehealth services and schedule appointments</li>
-        <li>To process payments securely through PayMongo</li>
-        <li>To maintain medical records and consultation history</li>
-        <li>To send appointment reminders and follow-ups</li>
-        <li>To improve platform security and performance</li>
-        <li>To comply with legal requirements</li>
-      </ul>
-
-      <h3>Who Can Access Your Information</h3>
-      <ul>
-        <li><strong>Your Doctor:</strong> Full access to medical records for treatment only</li>
-        <li><strong>Support Team:</strong> Limited access to billing and account info</li>
-        <li><strong>PayMongo:</strong> Billing details for payment processing only</li>
-        <li><strong>Legal:</strong> Disclosure only as required by law</li>
-      </ul>
-      <p style="font-size:0.88rem;margin-top:0.8rem;"><em>Your consultation recordings and medical records are NOT shared with third parties without your consent.</em></p>
-
-      <h3>Data Security</h3>
-      <ul>
-        <li>All data transmitted via TLS/SSL encryption</li>
-        <li>Medical records stored on secure servers with access controls</li>
-        <li>Payment processing delegated to certified PayMongo</li>
-        <li>Consultation sessions require authentication</li>
-      </ul>
-
-      <h3>Your Rights</h3>
-      <ul>
-        <li>Request access to your personal data and medical records</li>
-        <li>Request correction of inaccurate information</li>
-        <li>Request the clinic for deletion of your account at any time</li>
-      </ul>
-
-      <h3>Contact</h3>
-      <p>For questions about this Privacy Policy or your data:<br/><strong>telecareteamsystem@gmail.com</strong></p>
+      <?= legal_policy_content($conn, 'payment-policy') ?>
     </div>
     <div class="policy-modal-footer">
       <button class="btn-policy-close" onclick="closePolicyModal()">Close</button>
