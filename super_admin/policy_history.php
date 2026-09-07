@@ -13,13 +13,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['super_admin_id']))
 
     if ($action === 'publish' || $action === 'unpublish') {
         $newStatus = $action === 'publish' ? 'Published' : 'Draft';
-        $stmt = $conn->prepare("UPDATE legal_policies SET status = ?, updated_by = ? WHERE id = ?");
+        $stmt = safe_prepare($conn, "UPDATE legal_policies SET status = ?, updated_by = ? WHERE id = ?");
         $stmt->bind_param("ssi", $newStatus, $updated_by, $id);
         $stmt->execute();
         $stmt->close();
     } elseif ($action === 'restore' && isset($_POST['version_id'])) {
         $version_id = (int)$_POST['version_id'];
-        $stmt = $conn->prepare("SELECT version, content FROM legal_policy_versions WHERE id = ? AND policy_id = ?");
+        $stmt = safe_prepare($conn, "SELECT version, content FROM legal_policy_versions WHERE id = ? AND policy_id = ?");
         $stmt->bind_param("ii", $version_id, $id);
         $stmt->execute();
         $old = $stmt->get_result()->fetch_assoc();
@@ -27,20 +27,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['super_admin_id']))
 
         if ($old) {
             // Bump to a new version number based on the current one.
-            $curStmt = $conn->prepare("SELECT version FROM legal_policies WHERE id = ?");
+            $curStmt = safe_prepare($conn, "SELECT version FROM legal_policies WHERE id = ?");
             $curStmt->bind_param("i", $id);
             $curStmt->execute();
             $cur = $curStmt->get_result()->fetch_assoc();
             $curStmt->close();
             $targetVer = preg_replace_callback('/(\d+)$/', fn($m) => ((int)$m[1]) + 1, $cur['version'] ?? 'v1.0');
 
-            $upd = $conn->prepare("UPDATE legal_policies SET content = ?, version = ?, status = 'Draft', updated_by = ? WHERE id = ?");
+            $upd = safe_prepare($conn, "UPDATE legal_policies SET content = ?, version = ?, status = 'Draft', updated_by = ? WHERE id = ?");
             $upd->bind_param("sssi", $old['content'], $targetVer, $updated_by, $id);
             $upd->execute();
             $upd->close();
 
             $notes = "Restored from {$old['version']}.";
-            $ins = $conn->prepare("INSERT INTO legal_policy_versions (policy_id, version, content, status, revision_notes, updated_by) VALUES (?, ?, ?, 'Draft', ?, ?)");
+            $ins = safe_prepare($conn, "INSERT INTO legal_policy_versions (policy_id, version, content, status, revision_notes, updated_by) VALUES (?, ?, ?, 'Draft', ?, ?)");
             $ins->bind_param("issss", $id, $targetVer, $old['content'], $notes, $updated_by);
             $ins->execute();
             $ins->close();
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['super_admin_id']))
 }
 
 // ── Load policy + version history ───────────────────────────────────────
-$stmt = $conn->prepare("SELECT * FROM legal_policies WHERE id = ?");
+$stmt = safe_prepare($conn, "SELECT * FROM legal_policies WHERE id = ?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $policy = $stmt->get_result()->fetch_assoc();
@@ -60,7 +60,7 @@ $stmt->close();
 if (!$policy) { header('Location: legal_policies.php'); exit; }
 
 $versions = [];
-$vstmt = $conn->prepare("SELECT id, version, status, updated_by, created_at FROM legal_policy_versions WHERE policy_id = ? ORDER BY created_at DESC, id DESC");
+$vstmt = safe_prepare($conn, "SELECT id, version, status, updated_by, created_at FROM legal_policy_versions WHERE policy_id = ? ORDER BY created_at DESC, id DESC");
 $vstmt->bind_param("i", $id);
 $vstmt->execute();
 $vres = $vstmt->get_result();

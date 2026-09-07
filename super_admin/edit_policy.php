@@ -8,7 +8,7 @@ $isEdit = $id > 0;
 $policy = null;
 
 if ($isEdit) {
-    $stmt = $conn->prepare("SELECT * FROM legal_policies WHERE id = ?");
+    $stmt = safe_prepare($conn, "SELECT * FROM legal_policies WHERE id = ?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $policy = $stmt->get_result()->fetch_assoc();
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($errors)) {
         if ($isEdit) {
             $targetVer = preg_replace_callback('/(\d+)$/', fn($m) => ((int)$m[1]) + 1, $policy['version']);
-            $stmt = $conn->prepare("UPDATE legal_policies SET title=?, type=?, short_desc=?, content=?, version=?, status=?, applicable_to=?, effective_date=?, updated_by=? WHERE id=?");
+            $stmt = safe_prepare($conn, "UPDATE legal_policies SET title=?, type=?, short_desc=?, content=?, version=?, status=?, applicable_to=?, effective_date=?, updated_by=? WHERE id=?");
             $stmt->bind_param("sssssssssi", $title, $type, $shortDesc, $content, $targetVer, $status, $applicable, $effDate, $updated_by, $id);
             $stmt->execute();
             $stmt->close();
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $slug = $baseSlug;
             $n = 2;
             while (true) {
-                $chk = $conn->prepare("SELECT id FROM legal_policies WHERE slug = ?");
+                $chk = safe_prepare($conn, "SELECT id FROM legal_policies WHERE slug = ?");
                 $chk->bind_param("s", $slug);
                 $chk->execute();
                 $exists = $chk->get_result()->fetch_assoc();
@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $slug = $baseSlug . '-' . $n;
                 $n++;
             }
-            $stmt = $conn->prepare("INSERT INTO legal_policies (slug, title, type, short_desc, content, version, status, applicable_to, effective_date, updated_by) VALUES (?,?,?,?,?,?,?,?,?,?)");
+            $stmt = safe_prepare($conn, "INSERT INTO legal_policies (slug, title, type, short_desc, content, version, status, applicable_to, effective_date, updated_by) VALUES (?,?,?,?,?,?,?,?,?,?)");
             $stmt->bind_param("ssssssssss", $slug, $title, $type, $shortDesc, $content, $targetVer, $status, $applicable, $effDate, $updated_by);
             $stmt->execute();
             $savedId = $stmt->insert_id;
@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Log this save into the version history table.
-        $ins = $conn->prepare("INSERT INTO legal_policy_versions (policy_id, version, content, status, revision_notes, updated_by) VALUES (?,?,?,?,?,?)");
+        $ins = safe_prepare($conn, "INSERT INTO legal_policy_versions (policy_id, version, content, status, revision_notes, updated_by) VALUES (?,?,?,?,?,?)");
         $ins->bind_param("isssss", $savedId, $targetVer, $content, $status, $revNotes, $updated_by);
         $ins->execute();
         $ins->close();

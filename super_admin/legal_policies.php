@@ -7,7 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
     if (isset($_SESSION['super_admin_id'])) {
         $del_id = (int)$_POST['delete_id'];
-        $stmt = $conn->prepare("DELETE FROM legal_policies WHERE id = ?");
+        $stmt = safe_prepare($conn, "DELETE FROM legal_policies WHERE id = ?");
         $stmt->bind_param("i", $del_id);
         $stmt->execute();
         $stmt->close();

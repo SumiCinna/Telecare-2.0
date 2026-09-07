@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $matched = false;
 
         // 1) Super Admin
-        $stmt = $conn->prepare("SELECT id, full_name, password FROM super_admins WHERE email = ? LIMIT 1");
+        $stmt = safe_prepare($conn, "SELECT id, full_name, password FROM super_admins WHERE email = ? LIMIT 1");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // 2) Admin
         if (!$matched) {
-            $stmt = $conn->prepare("SELECT id, full_name, password FROM admins WHERE email = ? LIMIT 1");
+            $stmt = safe_prepare($conn, "SELECT id, full_name, password FROM admins WHERE email = ? LIMIT 1");
             $stmt->bind_param("s", $email);
             $stmt->execute();
             $row = $stmt->get_result()->fetch_assoc();
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // 3) Staff
         if (!$matched) {
-            $stmt = $conn->prepare("SELECT id, full_name, password, status, role FROM staff_accounts WHERE email = ? LIMIT 1");
+            $stmt = safe_prepare($conn, "SELECT id, full_name, password, status, role FROM staff_accounts WHERE email = ? LIMIT 1");
             $stmt->bind_param("s", $email);
             $stmt->execute();
             $row = $stmt->get_result()->fetch_assoc();
@@ -226,7 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <main class="card">
     <div class="brand">TELE<span>-</span>CARE</div>
     <p class="subtitle">Internal staff sign-in</p>
-    <span class="badge"> Super Admin · Admin · Staff</span>
+    <span class="badge">🔒 Super Admin · Admin · Staff</span>
 
     <?php if ($error): ?><div class="alert"><?= htmlspecialchars($error) ?></div><?php endif; ?>
 

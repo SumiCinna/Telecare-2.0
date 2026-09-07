@@ -78,6 +78,35 @@ if (DB_SSL_CA && is_file(DB_SSL_CA)) {
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+
+if (!function_exists('safe_prepare')) {
+    /**
+     * Wraps $conn->prepare() and fails loudly with the REAL MySQL error
+     * instead of returning false and causing a confusing
+     * "Call to a member function bind_param() on bool" fatal error.
+     */
+    function safe_prepare(mysqli $conn, string $sql): mysqli_stmt
+    {
+        try {
+            $stmt = $conn->prepare($sql);
+        } catch (\mysqli_sql_exception $e) {
+            $stmt = false;
+            $conn_error = $e->getMessage();
+        }
+        if ($stmt === false || $stmt === null) {
+            $mysql_error = $conn_error ?? $conn->error;
+            http_response_code(500);
+            die(
+                '<div style="font-family:monospace;background:#fef2f2;color:#b91c1c;padding:1.5rem;border:1px solid #fecaca;border-radius:10px;margin:2rem;max-width:800px;">'
+                . '<h2 style="margin:0 0 .6rem;">Database query failed to prepare</h2>'
+                . '<p><strong>SQL:</strong><br>' . htmlspecialchars($sql) . '</p>'
+                . '<p><strong>MySQL says:</strong><br>' . htmlspecialchars($mysql_error) . '</p>'
+                . '</div>'
+            );
+        }
+        return $stmt;
+    }
+}
 ?>
 
 
