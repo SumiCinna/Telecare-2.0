@@ -1,5 +1,13 @@
 <?php
 // includes/header.php
+if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+if (!isset($_SESSION['super_admin_id'])) {
+    header('Location: ../router.php?page=staffs_index');
+    exit;
+}
+$super_admin_name = $_SESSION['super_admin_name'] ?? 'Super Admin';
 // Expects (set before requiring this file):
 //   $page_title       string  <title> tag text
 //   $active_nav       string  which sidebar link is highlighted
@@ -32,7 +40,17 @@
 			</label>
 			<div class="top-actions">
 				<div class="notification" aria-label="Notifications"><b>3</b><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></div>
-				<div class="profile"><span class="profile-avatar">SA</span><div><strong>Super Admin</strong><small>System Administrator</small></div></div>
+				<?php
+					$sa_initials = '';
+					foreach (preg_split('/\s+/', trim($super_admin_name)) as $part) {
+						if ($part !== '') { $sa_initials .= strtoupper($part[0]); }
+					}
+					$sa_initials = substr($sa_initials, 0, 2) ?: 'SA';
+				?>
+				<a href="logout.php" class="icon-action" title="Log out" style="color:#91a0b1;text-decoration:none;">
+					<svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+				</a>
+				<div class="profile"><span class="profile-avatar"><?= htmlspecialchars($sa_initials) ?></span><div><strong><?= htmlspecialchars($super_admin_name) ?></strong><small>System Administrator</small></div></div>
 			</div>
 		</header>
 		<section class="content">

@@ -1,3 +1,14 @@
+<?php
+// super_admin/dashboard.php
+if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+if (!isset($_SESSION['super_admin_id'])) {
+    header('Location: ../router.php?page=staffs_index');
+    exit;
+}
+$super_admin_name = $_SESSION['super_admin_name'] ?? 'Super Admin';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +17,6 @@
 	<title>Super Admin Dashboard | TELE-CARE</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-					<a class="panel-link" href="edit_policy.php">+ Add New Policy</a>
 	<style>
 		:root{--red:#b31118;--red-dark:#8a000b;--teal:#006a61;--teal-light:#0d9488;--ink:#151c27;--muted:#718096;--line:rgba(21,28,39,.09);--canvas:#f7f9fb;--white:#fff;--green:#10b981}
 		*{box-sizing:border-box}html,body{min-height:100%}body{margin:0;background:var(--canvas);color:var(--ink);font-family:'Inter',sans-serif;font-size:15px}a{color:inherit;text-decoration:none}button,input{font:inherit}
@@ -45,7 +55,13 @@
 			</nav>
 		</aside>
 		<main class="main">
-			<header class="topbar"><label class="search"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input type="search" placeholder="Search anything..." aria-label="Search dashboard"></label><div class="top-actions"><div class="notification" aria-label="Notifications"><b>3</b><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></div><div class="profile"><span class="profile-avatar">SA</span><div><strong>Super Admin</strong><small>System Administrator</small></div></div></div></header>
+			<header class="topbar"><label class="search"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input type="search" placeholder="Search anything..." aria-label="Search dashboard"></label><div class="top-actions"><div class="notification" aria-label="Notifications"><b>3</b><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></div><a href="logout.php" title="Log out" style="color:#91a0b1;"><svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></a><div class="profile"><span class="profile-avatar"><?php
+					$sa_initials = '';
+					foreach (preg_split('/\s+/', trim($super_admin_name)) as $part) {
+						if ($part !== '') { $sa_initials .= strtoupper($part[0]); }
+					}
+					echo htmlspecialchars(substr($sa_initials, 0, 2) ?: 'SA');
+				?></span><div><strong><?= htmlspecialchars($super_admin_name) ?></strong><small>System Administrator</small></div></div></div></header>
 			<section class="content">
 				<div class="page-heading"><div><h1>Welcome, Super Admin!</h1><p class="subtitle">Manage the system's legal policies, monitor platform activity, and ensure compliance.</p></div><div class="date-note"><strong>September 5, 2026</strong>Keep the platform secure and compliant.</div></div>
 				<div class="stats">

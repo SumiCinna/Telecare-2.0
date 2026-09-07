@@ -25,4 +25,7 @@ function nav_active($key, $active_nav) { return $key === $active_nav ? ' active'
 			<a class="nav-link<?= nav_active('system_settings', $active_nav) ?>" href="system_settings.php"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 6v5c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6zM9 12l2 2 4-4"/></svg>System Settings</a>
 		</div>
 	</nav>
+	<div class="sidebar-footer">
+		<a class="nav-link" href="logout.php"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Log Out</a>
+	</div>
 </aside>

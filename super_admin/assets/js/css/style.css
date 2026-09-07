@@ -23,6 +23,8 @@ button,input,select,textarea{font:inherit}
 .brand-name{font-size:14px;font-weight:800}
 .brand-role{display:block;color:var(--faint);font-size:9px;letter-spacing:.04em;margin-top:3px}
 .sidebar-nav{padding:26px 12px;overflow-y:auto}
+.sidebar-footer{margin-top:auto;padding:12px 12px 20px;border-top:1px solid var(--line)}
+.sidebar-footer .nav-link:hover{background:var(--red-light);color:var(--red)}
 .nav-label{color:#9aa4b2;font-size:10px;font-weight:700;letter-spacing:.08em;margin:0 13px 11px;text-transform:uppercase}
 .nav-link{display:flex;align-items:center;gap:12px;padding:12px 13px;margin:3px 0;border-radius:6px;color:#50617a;font-size:13px;font-weight:500;transition:background .2s,color .2s}
 .nav-link svg{width:17px;height:17px;color:#8fa0b7;flex-shrink:0}
