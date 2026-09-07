@@ -763,7 +763,7 @@ $pageTitle = 'Doctor Portal — TELE-CARE';
           </div>
           <div class="meta-card">
             <div class="meta-value">Connected</div>
-            <div class="meta-label">Messages, summaries, and follow-ups in one workspace</div>
+            <div class="meta-label">Records, summaries, and follow-ups in one workspace</div>
           </div>
         </div>
       </div>
@@ -790,7 +790,7 @@ $pageTitle = 'Doctor Portal — TELE-CARE';
 
           <div class="snapshot-note">
             <strong>What the portal shows after login</strong>
-            <p>Use the doctor dashboard to view the current appointment queue, review patient information, continue conversations, and save consultation summaries without switching tools.</p>
+            <p>Use the doctor dashboard to view the current appointment queue, review patient information, and save consultation summaries without switching tools.</p>
           </div>
 
           <div class="snapshot-cta">
@@ -809,7 +809,7 @@ $pageTitle = 'Doctor Portal — TELE-CARE';
         </div>
       </div>
       <p class="section-desc">
-        This landing page describes the actual portal capabilities already present in the doctor area: appointments, patient records, messaging, consultation calls, and summary review.
+        This landing page describes the actual portal capabilities already present in the doctor area: appointments, patient records, consultation calls, and summary review.
       </p>
 
       <div class="feature-grid">
@@ -829,15 +829,6 @@ $pageTitle = 'Doctor Portal — TELE-CARE';
           <h3>Patient records</h3>
           <p>Review the records, histories, and profile details available under the doctor workspace.</p>
           <a class="feature-foot" href="patient-records.php">Open records →</a>
-        </article>
-
-        <article class="feature-card">
-          <div class="feature-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-          </div>
-          <h3>Messaging</h3>
-          <p>Continue patient conversations without leaving the portal.</p>
-          <a class="feature-foot" href="chat.php">Open chat →</a>
         </article>
 
         <article class="feature-card">
@@ -890,7 +881,7 @@ $pageTitle = 'Doctor Portal — TELE-CARE';
         <div class="step">
           <div class="step-num">3</div>
           <h4>Consult and document</h4>
-          <p>Handle the appointment, message the patient if needed, and record the consultation summary.</p>
+          <p>Handle the appointment and record the consultation summary.</p>
         </div>
         <div class="step">
           <div class="step-num">4</div>
@@ -910,8 +901,8 @@ $pageTitle = 'Doctor Portal — TELE-CARE';
         <div class="txt">Review patient history and profile details before each visit.</div>
       </div>
       <div class="band-stat">
-        <div class="num">Messaging</div>
-        <div class="txt">Continue patient conversations inside the portal.</div>
+        <div class="num">Availability</div>
+        <div class="txt">Set and update your available schedule blocks for consultations.</div>
       </div>
       <div class="band-stat">
         <div class="num">Summaries</div>
