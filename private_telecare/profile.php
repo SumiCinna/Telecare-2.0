@@ -1,6 +1,7 @@
-<?php
+﻿<?php
 // private_telecare/profile.php
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/legal_policy_helper.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     $current = $_POST['current_password'] ?? '';
@@ -88,6 +89,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
 }
 
 $p = $conn->query("SELECT * FROM patients WHERE id = $patient_id")->fetch_assoc();
+
+$legal_policy_slugs = [
+  'data-privacy-notice' => 'Data Privacy Notice',
+  'terms-and-conditions' => 'Terms and Conditions',
+  'privacy-policy' => 'Privacy Policy',
+];
+$legal_policy_items = [];
+$latest_legal_update = null;
+
+foreach ($legal_policy_slugs as $slug => $label) {
+  $policy = get_legal_policy($conn, $slug);
+  $legal_policy_items[$slug] = [
+    'label' => $label,
+    'updated_at' => $policy['updated_at'] ?? null,
+  ];
+
+  if (!empty($policy['updated_at'])) {
+    if ($latest_legal_update === null || strtotime($policy['updated_at']) > strtotime($latest_legal_update)) {
+      $latest_legal_update = $policy['updated_at'];
+    }
+  }
+}
+
+$latest_legal_update_label = $latest_legal_update
+  ? date('M j, Y g:i A', strtotime($latest_legal_update))
+  : 'Unavailable';
 
 $page_title = 'My Profile — TELE-CARE';
 $active_nav = 'profile';
@@ -265,6 +292,206 @@ require_once __DIR__ . '/../includes/header.php';
     align-items: start;
   }
 
+  .legal-policy-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.9rem;
+  }
+
+  .legal-policy-copy {
+    min-width: 0;
+  }
+
+  .legal-policy-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.2rem;
+  }
+
+  .legal-policy-note {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .legal-policy-btn {
+    border: 1px solid rgba(63,130,227,0.2);
+    background: rgba(63,130,227,0.08);
+    color: var(--blue);
+    border-radius: 12px;
+    padding: 0.78rem 1rem;
+    font-size: 0.86rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background 0.2s, transform 0.2s;
+  }
+
+  .legal-policy-btn:hover {
+    background: rgba(63,130,227,0.14);
+    transform: translateY(-1px);
+  }
+
+  .policy-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,14,20,0.55);
+    backdrop-filter: blur(2px);
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1.1rem;
+  }
+
+  .policy-modal-overlay.open { display: flex; }
+
+  .policy-modal-box {
+    width: min(100%, 760px);
+    max-height: 86vh;
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.28);
+  }
+
+  .policy-modal-head {
+    padding: 1.1rem 1.3rem;
+    border-bottom: 1px solid rgba(36,68,65,0.1);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-shrink: 0;
+  }
+
+  .policy-modal-head h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .policy-modal-subtitle {
+    margin-top: 0.2rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .policy-modal-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  .policy-modal-close:hover {
+    background: rgba(36,68,65,0.06);
+    color: var(--text);
+  }
+
+  .policy-modal-tabs {
+    display: flex;
+    gap: 0.35rem;
+    padding: 0.8rem 1.3rem 0;
+    border-bottom: 1px solid rgba(36,68,65,0.1);
+    flex-shrink: 0;
+    overflow-x: auto;
+  }
+
+  .policy-modal-tab {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--muted);
+    padding: 0.55rem 0.85rem;
+    border-radius: 10px 10px 0 0;
+    white-space: nowrap;
+  }
+
+  .policy-modal-tab.active {
+    color: var(--blue);
+    background: rgba(63,130,227,0.08);
+  }
+
+  .policy-modal-body {
+    padding: 1.2rem 1.3rem;
+    overflow-y: auto;
+    flex: 1;
+    font-size: 0.88rem;
+    line-height: 1.8;
+    color: var(--text);
+  }
+
+  .policy-modal-section {
+    display: none;
+  }
+
+  .policy-modal-section.active {
+    display: block;
+  }
+
+  .policy-section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .policy-section-head h4 {
+    margin: 0;
+    font-size: 0.98rem;
+    font-weight: 800;
+  }
+
+  .policy-section-update {
+    font-size: 0.76rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .policy-modal-footer {
+    padding: 0.95rem 1.3rem;
+    border-top: 1px solid rgba(36,68,65,0.1);
+    background: #fafbfc;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-shrink: 0;
+  }
+
+  .policy-footer-note {
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .policy-close-btn {
+    border: 1px solid rgba(63,130,227,0.2);
+    background: var(--blue);
+    color: #fff;
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
+    font-size: 0.86rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .policy-close-btn:hover { background: var(--blue-dark); }
+
   @media (max-width: 720px) {
     .two-col-layout {
       grid-template-columns: 1fr;
@@ -424,6 +651,15 @@ require_once __DIR__ . '/../includes/header.php';
     <button type="submit" class="btn-save">Save Changes</button>
   </form>
 
+  <div class="section-label">Legal Policies</div>
+  <div class="card legal-policy-card" style="padding:1rem 1.1rem;">
+    <div class="legal-policy-copy">
+      <div class="legal-policy-title">View the current legal documents used by TELE-CARE.</div>
+      <div class="legal-policy-note">Read the Data Privacy Notice, Terms and Conditions, and Privacy Policy. Latest update: <?= htmlspecialchars($latest_legal_update_label) ?>.</div>
+    </div>
+    <button type="button" class="legal-policy-btn" onclick="openLegalPolicies()">View Policies</button>
+  </div>
+
   <!-- Change Password Section -->
   <div class="section-label">Security</div>
   <form method="POST" class="card" style="display:flex;flex-direction:column;gap:0.75rem;">
@@ -484,6 +720,43 @@ require_once __DIR__ . '/../includes/header.php';
   <div style="height:0.5rem;"></div>
 </div>
 
+<!-- Legal Policies Modal -->
+<div class="policy-modal-overlay" id="legalPoliciesModal">
+  <div class="policy-modal-box">
+    <div class="policy-modal-head">
+      <div>
+        <h3>TELE-CARE Legal Policies</h3>
+        <div class="policy-modal-subtitle">Published policies below are loaded live from the Super Admin legal policies records.</div>
+      </div>
+      <button type="button" class="policy-modal-close" onclick="closeLegalPolicies()" aria-label="Close legal policies modal">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="policy-modal-tabs">
+      <button type="button" class="policy-modal-tab" data-tab="data-privacy-notice" onclick="switchLegalPolicyTab('data-privacy-notice')">Data Privacy Notice</button>
+      <button type="button" class="policy-modal-tab" data-tab="terms-and-conditions" onclick="switchLegalPolicyTab('terms-and-conditions')">Terms &amp; Conditions</button>
+      <button type="button" class="policy-modal-tab" data-tab="privacy-policy" onclick="switchLegalPolicyTab('privacy-policy')">Privacy Policy</button>
+    </div>
+    <div class="policy-modal-body" id="legalPoliciesBody" onscroll="updateLegalPolicyScroll()">
+      <?php foreach ($legal_policy_slugs as $slug => $label): ?>
+        <div class="policy-modal-section" data-section="<?= htmlspecialchars($slug) ?>">
+          <div class="policy-section-head">
+            <h4><?= htmlspecialchars($label) ?></h4>
+            <div class="policy-section-update">
+              Last updated: <?= !empty($legal_policy_items[$slug]['updated_at']) ? htmlspecialchars(date('M j, Y g:i A', strtotime($legal_policy_items[$slug]['updated_at']))) : 'Unavailable' ?>
+            </div>
+          </div>
+          <?= legal_policy_content($conn, $slug) ?>
+        </div>
+      <?php endforeach; ?>
+    </div>
+    <div class="policy-modal-footer">
+      <div class="policy-footer-note">Latest policy update across all documents: <?= htmlspecialchars($latest_legal_update_label) ?></div>
+      <button type="button" class="policy-close-btn" onclick="closeLegalPolicies()">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 function previewAndSubmit(input) {
   if (!input.files || !input.files[0]) return;
@@ -522,6 +795,59 @@ function validatePassword(field) {
   set('check_lower',  lower,  '1 lowercase letter (a-z)');
   set('check_number', number, '1 number (0-9)');
 }
+
+// ── Legal policies modal ────────────────────────────────────────────────────
+const legalPolicyReadTabs = {
+  'data-privacy-notice': false,
+  'terms-and-conditions': false,
+  'privacy-policy': false,
+};
+let currentLegalPolicyTab = 'data-privacy-notice';
+
+function openLegalPolicies() {
+  document.getElementById('legalPoliciesModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  switchLegalPolicyTab(currentLegalPolicyTab);
+}
+
+function closeLegalPolicies() {
+  document.getElementById('legalPoliciesModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function switchLegalPolicyTab(tab) {
+  currentLegalPolicyTab = tab;
+  document.querySelectorAll('.policy-modal-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+  document.querySelectorAll('.policy-modal-section').forEach(section => {
+    section.classList.toggle('active', section.dataset.section === tab);
+  });
+  const body = document.getElementById('legalPoliciesBody');
+  if (body) body.scrollTop = 0;
+  updateLegalPolicyScroll();
+}
+
+function updateLegalPolicyScroll() {
+  const body = document.getElementById('legalPoliciesBody');
+  const currentSection = document.querySelector('.policy-modal-section.active');
+  if (!body || !currentSection) return;
+
+  const maxScroll = body.scrollHeight - body.clientHeight;
+  const atBottom = maxScroll <= 0 || body.scrollTop >= maxScroll - 4;
+  if (atBottom) {
+    legalPolicyReadTabs[currentLegalPolicyTab] = true;
+  }
+}
+
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape') {
+    const modal = document.getElementById('legalPoliciesModal');
+    if (modal && modal.classList.contains('open')) {
+      closeLegalPolicies();
+    }
+  }
+});
 </script>
 
 <?php require_once __DIR__ . '/../includes/nav.php'; ?>
