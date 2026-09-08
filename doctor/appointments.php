@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // doctor/appointments.php
 date_default_timezone_set('Asia/Manila');
 require_once 'includes/auth.php';
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
             $stmt->execute();
             $_SESSION['toast'] = 'Appointment accepted. Waiting for staff to confirm.';
         } elseif ($status === 'Completed') {
-            $stmt = $conn->prepare("UPDATE appointments SET status='Completed' WHERE id=? AND doctor_id=? AND status='Confirmed' AND payment_status='Paid'");
+          $stmt = $conn->prepare("UPDATE appointments SET status='Completed', completed_at=NOW() WHERE id=? AND doctor_id=? AND status='Confirmed' AND payment_status='Paid'");
             $stmt->bind_param("ii", $aid, $doctor_id);
             $stmt->execute();
             $_SESSION['toast'] = 'Appointment marked as completed.';

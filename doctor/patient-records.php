@@ -140,6 +140,8 @@ require_once 'includes/header.php';
         $type_info = [
           'lab_result' => ['label' => 'Lab Result', 'color' => '#3F82E3', 'bg' => 'rgba(63,130,227,0.1)', 'icon' => '🧪'],
           'prescription' => ['label' => 'Prescription', 'color' => '#f4845f', 'bg' => 'rgba(244,132,95,0.1)', 'icon' => '💊'],
+          'lab_request' => ['label' => 'Lab Request', 'color' => '#3F82E3', 'bg' => 'rgba(63,130,227,0.1)', 'icon' => '🧾'],
+          'med_cert' => ['label' => 'Medical Certificate', 'color' => '#16a34a', 'bg' => 'rgba(34,197,94,0.1)', 'icon' => '📄'],
           'unknown' => ['label' => 'Document', 'color' => '#9ab0ae', 'bg' => 'rgba(154,176,174,0.1)', 'icon' => '📄'],
         ];
         $info = $type_info[$rec['doc_type']] ?? $type_info['unknown'];

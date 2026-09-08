@@ -1,15 +1,25 @@
-<?php
+﻿<?php
 // doctor/patients.php
 require_once 'includes/auth.php';
+require_once __DIR__ . '/../includes/document_delivery.php';
+
+telecare_document_delivery_schema($conn);
 
 $search = trim($_GET['q'] ?? '');
+$toast = $_SESSION['toast'] ?? null;
+$toast_error = $_SESSION['toast_error'] ?? null;
+unset($_SESSION['toast'], $_SESSION['toast_error']);
 
 $sql = "
     SELECT p.*,
         (SELECT COUNT(*) FROM appointments WHERE patient_id=p.id AND doctor_id=$doctor_id) AS total_visits,
         (SELECT appointment_date FROM appointments WHERE patient_id=p.id AND doctor_id=$doctor_id ORDER BY appointment_date DESC LIMIT 1) AS last_visit,
         (SELECT COUNT(*) FROM lab_results WHERE patient_id=p.id AND doc_type='lab_result') AS lab_count,
-        (SELECT COUNT(*) FROM lab_results WHERE patient_id=p.id AND doc_type='prescription') AS rx_count
+    (SELECT COUNT(*) FROM lab_results WHERE patient_id=p.id AND doc_type='prescription') AS rx_count,
+    (SELECT COUNT(*) FROM lab_results WHERE patient_id=p.id AND doc_type='lab_request') AS lab_req_count,
+    (SELECT COUNT(*) FROM lab_results WHERE patient_id=p.id AND doc_type='med_cert') AS med_cert_count,
+    (SELECT id FROM appointments WHERE patient_id=p.id AND doctor_id=$doctor_id AND status='Completed' AND completed_at IS NOT NULL ORDER BY completed_at DESC LIMIT 1) AS latest_completed_appt_id,
+    (SELECT completed_at FROM appointments WHERE patient_id=p.id AND doctor_id=$doctor_id AND status='Completed' AND completed_at IS NOT NULL ORDER BY completed_at DESC LIMIT 1) AS latest_completed_at
         FROM patients p
     JOIN (SELECT DISTINCT patient_id FROM appointments WHERE doctor_id=$doctor_id) pd ON pd.patient_id=p.id
 ";
@@ -28,6 +38,9 @@ require_once 'includes/header.php';
 
 <div class="page">
 
+  <?php if ($toast): ?><div class="alert-success" style="margin-bottom:1rem;">✓ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
+  <?php if ($toast_error): ?><div class="alert-error" style="margin-bottom:1rem;">✕ <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
+
   <!-- Search -->
   <div style="position:relative;margin-bottom:1rem;">
     <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:#9ab0ae;" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -39,6 +52,12 @@ require_once 'includes/header.php';
   <?php if ($patients && $patients->num_rows > 0): ?>
   <div class="card" style="padding:0.5rem 0;">
     <?php while ($pt = $patients->fetch_assoc()): ?>
+    <?php
+      $latestCompletedAt = $pt['latest_completed_at'] ?? null;
+      $sendWindowOpen = telecare_document_send_window_open($latestCompletedAt);
+      $sendRemaining = telecare_document_send_window_remaining($latestCompletedAt);
+      $sendAppointmentId = (int)($pt['latest_completed_appt_id'] ?? 0);
+    ?>
     <div style="padding:0.9rem 1.2rem;border-bottom:1px solid rgba(36,68,65,0.06);display:flex;align-items:center;gap:0.9rem;">
       <div class="pat-avatar">
         <?php if (!empty($pt['profile_photo'])): ?>
@@ -65,7 +84,27 @@ require_once 'includes/header.php';
               💊 <?= $pt['rx_count'] ?> Rx
             </span>
           <?php endif; ?>
+          <?php if ($pt['lab_req_count'] > 0): ?>
+            <span style="background:rgba(63,130,227,0.08);color:var(--blue);padding:0.2rem 0.5rem;border-radius:4px;font-weight:600;">
+              🧾 <?= $pt['lab_req_count'] ?> Lab Req<?= $pt['lab_req_count'] != 1 ? 's' : '' ?>
+            </span>
+          <?php endif; ?>
+          <?php if ($pt['med_cert_count'] > 0): ?>
+            <span style="background:rgba(34,197,94,0.08);color:#16a34a;padding:0.2rem 0.5rem;border-radius:4px;font-weight:600;">
+              📄 <?= $pt['med_cert_count'] ?> Med Cert<?= $pt['med_cert_count'] != 1 ? 's' : '' ?>
+            </span>
+          <?php endif; ?>
         </div>
+        <?php if ($sendWindowOpen): ?>
+        <div style="margin-top:0.55rem;display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center;">
+          <span style="font-size:0.68rem;color:#15803d;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.18);padding:0.2rem 0.45rem;border-radius:999px;font-weight:700;">Send window: <?= max(1, (int)ceil($sendRemaining / 60)) ?> min left</span>
+          <a href="send_document.php?appt_id=<?= $sendAppointmentId ?>&doc_type=prescription" style="background:rgba(244,132,95,0.1);color:#f4845f;border-radius:10px;padding:0.3rem 0.65rem;font-size:0.72rem;font-weight:700;text-decoration:none;">Send Rx</a>
+          <a href="send_document.php?appt_id=<?= $sendAppointmentId ?>&doc_type=lab_request" style="background:rgba(63,130,227,0.1);color:var(--blue);border-radius:10px;padding:0.3rem 0.65rem;font-size:0.72rem;font-weight:700;text-decoration:none;">Send Lab Req</a>
+          <a href="send_document.php?appt_id=<?= $sendAppointmentId ?>&doc_type=med_cert" style="background:rgba(22,163,74,0.1);color:#16a34a;border-radius:10px;padding:0.3rem 0.65rem;font-size:0.72rem;font-weight:700;text-decoration:none;">Send Med Cert</a>
+        </div>
+        <?php elseif ($sendAppointmentId > 0): ?>
+        <div style="margin-top:0.55rem;font-size:0.68rem;color:var(--muted);">Document sending is available only within 1 hour after the teleconsultation is marked completed.</div>
+        <?php endif; ?>
       </div>
       <div style="display:flex;flex-direction:column;gap:0.4rem;align-items:flex-end;">
         <a href="appointments.php?patient_id=<?= $pt['id'] ?>" style="background:rgba(63,130,227,0.1);color:var(--blue);border-radius:10px;padding:0.35rem 0.8rem;font-size:0.73rem;font-weight:600;text-decoration:none;">Visits</a>

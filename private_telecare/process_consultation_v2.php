@@ -2,6 +2,9 @@
 // private_telecare/process_consultation_v2.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../includes/auth_any.php';
+require_once __DIR__ . '/../includes/document_delivery.php';
+
+telecare_document_delivery_schema($conn);
 
 $log_file = __DIR__ . '/logs/consultation_debug.log';
 @mkdir(dirname($log_file), 0755, true);
@@ -41,7 +44,7 @@ set_time_limit(300);
 
 // ── 1. Fetch appointment ──────────────────────────────────────────────────
 $row = $conn->query("
-    SELECT a.appointment_date, a.appointment_time,
+    SELECT a.patient_id, a.appointment_date, a.appointment_time,
            a.chat_log                AS existing_chat,
            a.consultation_transcript AS existing_transcript,
            a.summary_session_key     AS existing_session_key,
@@ -57,6 +60,11 @@ $row = $conn->query("
 if (!$row) {
     debug_log_v2("Appointment not found: {$appt_id}");
     exit;
+}
+
+$patientRow = $conn->query("SELECT * FROM patients WHERE id = " . (int)$row['patient_id'])->fetch_assoc();
+if (!$patientRow) {
+    $patientRow = ['full_name' => $row['patient_name'] ?? ''];
 }
 
 // ── 2. Session deduplication ──────────────────────────────────────────────
@@ -278,6 +286,26 @@ RULES:
 
 } elseif (empty($contextParts) && !$summary) {
     $summary = 'No consultation content was captured for this session yet. A full summary will be generated once the consultation is completed.';
+}
+
+// ── 7b. Build doctor-review drafts for any document types suggested by the summary ──
+if ($role === 'doctor' && !empty($summary) && strpos($summary, 'No consultation content was captured') === false) {
+    $suggestedTypes = telecare_document_suggest_types($summary);
+    if (!empty($suggestedTypes)) {
+        foreach ($suggestedTypes as $docType) {
+            $template = telecare_get_document_template($conn, $docType);
+            $draftText = telecare_document_draft_text(
+                $docType,
+                $patientRow,
+                [
+                    'full_name' => $row['doctor_name'],
+                ],
+                $template,
+                $summary
+            );
+            telecare_store_document_draft($conn, $appt_id, $docType, $draftText, $summary, 'groq');
+        }
+    }
 }
 
 // ── 8. Generate PDF ───────────────────────────────────────────────────────
