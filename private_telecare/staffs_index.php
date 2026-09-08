@@ -226,7 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <main class="card">
     <div class="brand">TELE<span>-</span>CARE</div>
     <p class="subtitle">Internal staff sign-in</p>
-    <span class="badge">🔒 Super Admin · Admin · Staff</span>
+    <span class="badge"> Super Admin · Admin · Staff</span>
 
     <?php if ($error): ?><div class="alert"><?= htmlspecialchars($error) ?></div><?php endif; ?>
 
