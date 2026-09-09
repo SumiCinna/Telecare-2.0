@@ -41,7 +41,6 @@ if (!$appt) { header('Location: ../router.php?page=visits'); exit; }
 
 $initials = strtoupper(substr($appt['doctor_name'],0,1).(strpos($appt['doctor_name'],' ')!==false ? substr($appt['doctor_name'],strpos($appt['doctor_name'],' ')+1,1) : ''));
 $apptTs   = strtotime($appt['appointment_date'].' '.$appt['appointment_time']);
-$canJoin  = time() >= ($apptTs - 900) && time() <= ($apptTs + 3600);
 
 $isPaid          = $appt['payment_status'] === 'Paid';
 $isCancelled     = $appt['status'] === 'Cancelled';
@@ -78,8 +77,6 @@ echo booking_wizard_css();
 .info-row svg{width:16px;height:16px;color:var(--muted);flex-shrink:0;margin-top:2px}
 .info-lbl{color:var(--muted);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em}
 .info-v{color:var(--green);font-weight:600}
-.join-box{background:rgba(34,197,94,0.06);border:1px dashed rgba(34,197,94,0.35);border-radius:14px;padding:1.4rem;text-align:center;color:var(--muted);font-size:0.85rem;margin-top:1rem}
-.join-box.pending{background:rgba(217,119,6,0.06);border-color:rgba(217,119,6,0.35)}
 .doc-card{text-align:center}
 .doc-avatar{width:74px;height:74px;border-radius:18px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.4rem;margin:0 auto 0.7rem;overflow:hidden}
 .doc-avatar img{width:100%;height:100%;object-fit:cover}
@@ -217,23 +214,6 @@ echo booking_wizard_css();
         </div>
       <?php endif; ?>
 
-      <div class="join-box <?= $isPendingUnpaid ? 'pending' : '' ?>">
-        <?php if ($isCancelled): ?>
-          This appointment was cancelled.
-        <?php elseif ($isPendingUnpaid): ?>
-          <div>Complete payment to unlock your consultation link.</div>
-          <?php if ($secondsLeft !== null): ?>
-            <div class="countdown-wrap" id="countdown">
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-              <span id="countdown-text">--:--</span>
-            </div>
-          <?php endif; ?>
-        <?php elseif ($canJoin): ?>
-          <a href="../router.php?page=call_patient&appt_id=<?= $appt_id ?>" class="wiz-btn primary">Join Consultation</a>
-        <?php else: ?>
-          Video link will be available here — opens 15 minutes before your scheduled time.
-        <?php endif; ?>
-      </div>
     </div>
 
     <div>
@@ -254,7 +234,6 @@ echo booking_wizard_css();
 
   <div class="conf-actions">
     <a href="../router.php?page=visits" class="btn-fix save">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
       Back to Appointments
     </a>
     <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
