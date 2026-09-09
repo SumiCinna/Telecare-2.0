@@ -28,11 +28,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $date = trim($_POST['appt_date'] ?? '');
     $time = trim($_POST['appt_time'] ?? '');
     if ($date && $time) {
-        $_SESSION['booking']['appt_date'] = $date;
-        $_SESSION['booking']['appt_time'] = $time;
-        header('Location: router.php?page=booking/step4_review'); exit;
+    $dateObj = DateTime::createFromFormat('!Y-m-d', $date);
+    $dateValid = $dateObj && $dateObj->format('Y-m-d') === $date;
+    $timeValue = substr($time, 0, 5);
+    $timeValid = preg_match('/^\d{2}:\d{2}$/', $timeValue) === 1;
+    $dayName = $dateValid ? $dateObj->format('l') : '';
+    $slotValid = false;
+
+    if ($dateValid && $timeValid && $dateObj->format('Y-m-d') >= date('Y-m-d')) {
+      foreach ($schedules as $schedule) {
+        if ($schedule['day_of_week'] === $dayName && $timeValue >= substr($schedule['start_time'], 0, 5) && $timeValue < substr($schedule['end_time'], 0, 5)) {
+          $slotValid = true;
+          break;
+        }
+      }
+      foreach ($booked as $bookedSlot) {
+        if ($bookedSlot['appointment_date'] === $date && substr($bookedSlot['appointment_time'], 0, 5) === $timeValue) {
+          $slotValid = false;
+          break;
+        }
+      }
+      if ($date === date('Y-m-d') && $timeValue <= date('H:i')) $slotValid = false;
     }
-    $error = 'Please pick both a date and a time.';
+
+    if ($slotValid) {
+      $_SESSION['booking']['appt_date'] = $date;
+      $_SESSION['booking']['appt_time'] = $timeValue . ':00';
+      header('Location: router.php?page=booking/step4_review'); exit;
+    }
+    $error = 'That date and time is no longer available. Please choose another slot.';
+    }
+  if (!$date || !$time) $error = 'Please pick both a date and a time.';
 }
 
 $page_title = 'Pick Schedule — TELE-CARE';
@@ -62,6 +88,15 @@ echo booking_wizard_css();
 .doctor-strip{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.2rem}
 .doctor-strip .doctor-avatar{width:44px;height:44px;border-radius:12px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;overflow:hidden}
 .doctor-strip .doctor-avatar img{width:100%;height:100%;object-fit:cover}
+.schedule-layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(220px,.8fr);gap:1.2rem;align-items:start}
+.schedule-summary{background:#fff;border:1px solid rgba(36,68,65,.1);border-radius:14px;padding:1rem;color:var(--green)}
+.schedule-summary h3{font-family:'DM Sans',sans-serif;font-size:.95rem;margin-bottom:.8rem}
+.schedule-summary-row{padding:.65rem 0;border-top:1px solid rgba(36,68,65,.08);font-size:.78rem}
+.schedule-summary-row strong{display:block;font-size:.7rem;color:var(--muted);font-weight:600;margin-bottom:.2rem}
+.schedule-time-picker{margin-top:1rem;padding-top:.9rem;border-top:1px solid rgba(36,68,65,.08)}
+.schedule-time-picker h4{font-size:.82rem;margin-bottom:.35rem;color:var(--green)}
+.schedule-time-picker .time-grid{margin-top:.65rem;grid-template-columns:repeat(2,1fr);max-height:360px;overflow:auto;padding-right:.15rem}
+@media(max-width:800px){.schedule-layout{grid-template-columns:1fr}.schedule-summary{order:-1}}
 </style>
 
 <div class="wiz-page">
@@ -71,9 +106,12 @@ echo booking_wizard_css();
   <?php render_stepper(3); ?>
   <?php if ($error): ?><div class="wiz-err"><?= htmlspecialchars($error) ?></div><?php endif; ?>
 
+  <div class="schedule-layout">
   <div class="wiz-card">
     <div class="doctor-strip">
-      <div class="doctor-avatar"><?= strtoupper(substr($doctor['full_name'],0,1)) ?></div>
+      <div class="doctor-avatar">
+        <?php if (!empty($doctor['profile_photo'])): ?><img src="../../<?= htmlspecialchars($doctor['profile_photo']) ?>" alt=""/><?php else: ?><?= strtoupper(substr($doctor['full_name'],0,1)) ?><?php endif; ?>
+      </div>
       <div>
         <div style="font-weight:700;color:var(--green);">Dr. <?= htmlspecialchars($doctor['full_name']) ?></div>
         <div style="font-size:0.8rem;color:var(--muted);"><?= htmlspecialchars($doctor['specialty'] ?? '') ?></div>
@@ -87,8 +125,17 @@ echo booking_wizard_css();
     </div>
     <div class="cal-grid" id="cal-grid"></div>
 
-    <h3 style="margin-top:1.2rem;">Available Slots</h3>
-    <div class="time-grid" id="time-grid"><div style="grid-column:1/-1;color:var(--muted);font-size:0.82rem;">Pick a date first.</div></div>
+  </div>
+  <aside class="schedule-summary">
+    <h3>Appointment Summary</h3>
+    <div class="schedule-summary-row"><strong>Department</strong><?= htmlspecialchars($_SESSION['booking']['department']) ?></div>
+    <div class="schedule-summary-row"><strong>Doctor</strong>Dr. <?= htmlspecialchars($doctor['full_name']) ?></div>
+    <div class="schedule-summary-row"><strong>Date &amp; Time</strong><span id="summary-date">Pending Selection</span><span id="summary-time"></span></div>
+    <div class="schedule-time-picker">
+      <h4>Select a time</h4>
+      <div class="time-grid" id="time-grid"><div style="grid-column:1/-1;color:var(--muted);font-size:0.78rem;">Select a date to view times.</div></div>
+    </div>
+  </aside>
   </div>
 
   <form method="POST" id="schedule-form">
@@ -150,7 +197,7 @@ function renderCalendar(){
   }
 }
 
-function pickDate(dateStr){ selDate = dateStr; selTime = null; renderCalendar(); renderTimeSlots(); updateContinue(); }
+function pickDate(dateStr){ selDate = dateStr; selTime = null; renderCalendar(); renderTimeSlots(); updateSummary(); updateContinue(); }
 
 function renderTimeSlots(){
   const grid = document.getElementById('time-grid');
@@ -174,10 +221,14 @@ function renderTimeSlots(){
     if(!disabled) any=true;
     html += `<div class="time-slot ${disabled?'booked':''} ${isSel?'selected':''}" ${!disabled?`onclick="pickTime('${t}')"`:''}>${fmt12h(t)}</div>`;
   });
-  grid.innerHTML = any ? html : `<div style="grid-column:1/-1;color:var(--muted);font-size:0.82rem;">No available slots for this date.</div>`;
+  grid.innerHTML = any ? html : `<div style="grid-column:1/-1;color:var(--muted);font-size:0.82rem;">No times available for this date.</div>`;
 }
 
-function pickTime(t){ selTime = t; renderTimeSlots(); updateContinue(); }
+function pickTime(t){ selTime = t; renderTimeSlots(); updateSummary(); updateContinue(); }
+function updateSummary(){
+  document.getElementById('summary-date').textContent = selDate || 'Pending Selection';
+  document.getElementById('summary-time').textContent = selTime ? ' at ' + fmt12h(selTime) : '';
+}
 function updateContinue(){ document.getElementById('btn-continue').disabled = !(selDate && selTime); }
 
 document.getElementById('schedule-form').addEventListener('submit', function(e){

@@ -517,7 +517,7 @@ function isCallActive(string $date, string $time): bool {
   <div class="controls-bar">
     <div class="search-wrap">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
-      <input type="text" id="visitSearchInput" class="search-input" placeholder="Search doctor or specialty" oninput="filterVisitRows()"/>
+      <input type="text" id="visitSearchInput" class="search-input" placeholder="Search doctor or clinic" oninput="filterVisitRows()"/>
     </div>
     <select id="visitStatusFilter" class="filter-select" aria-label="Filter by status" onchange="filterVisitRows()">
       <option value="">All Statuses</option>
@@ -796,18 +796,11 @@ function switchTab(type) {
   document.getElementById('btn-past').classList.toggle('active',     type === 'past');
 }
 
-function filterVisitRows() {
-  const q = document.getElementById('visitSearchInput').value.toLowerCase().trim();
-  const status = document.getElementById('visitStatusFilter').value;
-  const type = document.getElementById('visitTypeFilter').value;
-  const date = document.getElementById('visitDateFilter').value;
+function filterVisitRows(query) {
+  const q = query.toLowerCase().trim();
   document.querySelectorAll('#visits-pending .appt-card, #visits-upcoming .appt-card, #visits-past .appt-card').forEach(card => {
     const hay = card.dataset.search || '';
-    const matchesSearch = !q || hay.includes(q);
-    const matchesStatus = !status || card.dataset.status === status;
-    const matchesType = !type || card.dataset.type === type;
-    const matchesDate = !date || card.dataset.date === date;
-    card.style.display = matchesSearch && matchesStatus && matchesType && matchesDate ? '' : 'none';
+    card.style.display = (!q || hay.includes(q)) ? '' : 'none';
   });
 }
 

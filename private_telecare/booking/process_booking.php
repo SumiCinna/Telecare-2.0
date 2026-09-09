@@ -42,6 +42,30 @@ if (!$doc_chk->get_result()->fetch_assoc()) {
     header('Location: router.php?page=booking/step2_doctor'); exit;
 }
 
+$date_obj = DateTime::createFromFormat('!Y-m-d', $date);
+$time_value = substr($time, 0, 5);
+$schedule_ok = $date_obj && $date_obj->format('Y-m-d') === $date && preg_match('/^\d{2}:\d{2}$/', $time_value) === 1;
+if ($schedule_ok) {
+    $day_name = $date_obj->format('l');
+    $schedule_stmt = $conn->prepare("SELECT start_time, end_time FROM doctor_schedules WHERE doctor_id=? AND day_of_week=?");
+    $schedule_stmt->bind_param('is', $doctor_id, $day_name);
+    $schedule_stmt->execute();
+    $schedule_result = $schedule_stmt->get_result();
+    $schedule_ok = false;
+    while ($schedule = $schedule_result->fetch_assoc()) {
+        if ($time_value >= substr($schedule['start_time'], 0, 5) && $time_value < substr($schedule['end_time'], 0, 5)) {
+            $schedule_ok = true;
+            break;
+        }
+    }
+    $schedule_stmt->close();
+    if ($date < date('Y-m-d') || ($date === date('Y-m-d') && $time_value <= date('H:i'))) $schedule_ok = false;
+}
+if (!$schedule_ok) {
+    $_SESSION['toast_error'] = 'Selected date and time are not available for this doctor.';
+    header('Location: router.php?page=booking/step3_schedule'); exit;
+}
+
 $dup = $conn->prepare("SELECT id FROM appointments WHERE doctor_id=? AND appointment_date=? AND appointment_time=? AND status NOT IN ('Cancelled')");
 $dup->bind_param("iss", $doctor_id, $date, $time);
 $dup->execute();
