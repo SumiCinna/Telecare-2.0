@@ -72,34 +72,39 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
     :root { --red:#bd0f18; --red-dark:#a20c14; --ink:#101827; --line:#efc9c9; --panel:#fff; }
     * { box-sizing:border-box; }
     body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem 1rem; font-family:'DM Sans',sans-serif; color:var(--ink); background:linear-gradient(125deg,#eef1ff 0%,#faf4f8 52%,#dff8ff 100%); }
-    .page { width:min(100%, 420px); text-align:center; }
-    .brand-mark { width:48px; height:48px; margin:0 auto .65rem; display:grid; place-items:center; border-radius:50%; background:var(--red); color:#fff; font-weight:800; font-size:1.1rem; }
-    .brand-name { margin:0; color:#a70009; font-family:'Plus Jakarta Sans',sans-serif; font-size:1.55rem; letter-spacing:-.03em; }
-    .brand-subtitle { margin:.25rem 0 1.55rem; color:#62353b; font-size:.76rem; }
+    .page { width:min(100%, 500px); text-align:center; }
+    .brand-mark { width:56px; height:56px; margin:0 auto .75rem; display:grid; place-items:center; border-radius:50%; background:var(--red); color:#fff; font-weight:800; font-size:1.25rem; }
+    .brand-name { margin:0; color:#a70009; font-family:'Plus Jakarta Sans',sans-serif; font-size:1.8rem; letter-spacing:-.03em; }
+    .brand-subtitle { margin:.3rem 0 1.8rem; color:#62353b; font-size:.88rem; }
     .login-card { overflow:hidden; text-align:left; background:var(--panel); border:1px solid var(--line); border-radius:12px; box-shadow:0 10px 18px rgba(62,32,42,.12); }
-    .card-body { padding:1.55rem 1.45rem 1.4rem; }
-    h1 { margin:0 0 1.4rem; text-align:center; font-size:1.1rem; font-weight:700; }
-    .field { margin-bottom:.85rem; }
-    label { display:block; margin-bottom:.3rem; color:#8d1c25; font-size:.64rem; font-weight:600; }
-    input[type=email], input[type=password] { width:100%; height:32px; padding:0 .75rem; border:1px solid var(--line); border-radius:6px; background:#fbfaff; color:var(--ink); font:inherit; font-size:.72rem; outline:none; }
+    .card-body { padding:1.85rem 1.75rem 1.7rem; }
+    h1 { margin:0 0 1.6rem; text-align:center; font-size:1.3rem; font-weight:700; }
+    .field { margin-bottom:1rem; }
+    label { display:block; margin-bottom:.4rem; color:#8d1c25; font-size:.75rem; font-weight:600; }
+    input[type=email], input[type=password] { width:100%; height:40px; padding:0 .85rem; border:1px solid var(--line); border-radius:6px; background:#fbfaff; color:var(--ink); font:inherit; font-size:.85rem; outline:none; }
     input:focus { border-color:var(--red); box-shadow:0 0 0 3px rgba(189,15,24,.1); }
     .password-wrap { position:relative; }
     .password-wrap input { padding-right:2.5rem; }
     .password-toggle { position:absolute; top:50%; right:.65rem; transform:translateY(-50%); padding:0; border:0; background:none; color:#8c5360; cursor:pointer; }
-    .password-toggle svg { width:15px; height:15px; }
-    .form-options { display:flex; align-items:center; justify-content:space-between; margin:.85rem 0 1.25rem; font-size:.68rem; }
+    .password-toggle svg { width:17px; height:17px; }
+    .form-options { display:flex; align-items:center; justify-content:space-between; margin:1rem 0 1.45rem; font-size:.78rem; }
     .remember { display:flex; align-items:center; gap:.4rem; color:#663d45; cursor:pointer; }
     .remember input { width:12px; height:12px; margin:0; accent-color:var(--red); }
     a { color:var(--red); text-decoration:none; }
     a:hover, button.policy-button:hover { text-decoration:underline; }
-    .btn-login { width:100%; height:31px; border:0; border-radius:6px; background:var(--red); color:#fff; font-size:.68rem; font-weight:700; cursor:pointer; }
+    .btn-login { width:100%; height:40px; border:0; border-radius:6px; background:var(--red); color:#fff; font-size:.8rem; font-weight:700; cursor:pointer; }
     .btn-login:hover { background:var(--red-dark); }
+    .google-login { display:flex; align-items:center; justify-content:center; gap:.65rem; width:100%; height:40px; margin-bottom:1.2rem; border:1px solid #d8dce4; border-radius:6px; background:#fff; color:#253043; font-size:.8rem; font-weight:600; text-decoration:none; box-shadow:0 2px 6px rgba(16,24,39,.06); }
+    .google-login:hover { border-color:#b8c0ce; background:#fafbfc; text-decoration:none; }
+    .google-login svg { width:18px; height:18px; flex:0 0 auto; }
+    .login-divider { display:flex; align-items:center; gap:.75rem; margin:0 0 1.2rem; color:#8b929e; font-size:.7rem; }
+    .login-divider::before, .login-divider::after { content:''; height:1px; flex:1; background:#e7dede; }
     .error { margin-bottom:1rem; padding:.65rem .75rem; border:1px solid #efb7b7; border-radius:6px; background:#fff3f3; color:#a20c14; font-size:.72rem; }
     .alert { margin-bottom:1rem; padding:.75rem; border-radius:7px; font-size:.72rem; line-height:1.5; }
     .alert-unverified { border:1px solid #b6ddd8; background:#effaf8; color:#12685f; }
     .alert-deactivated { border:1px solid #efb7b7; background:#fff3f3; color:#a20c14; }
-    .card-footer { padding:.78rem 1rem; border-top:1px solid #eadada; background:#fcfbff; text-align:center; font-size:.7rem; color:#663d45; }
-    .legal-links { display:flex; justify-content:center; gap:1.35rem; margin-top:1.55rem; font-size:.68rem; }
+    .card-footer { padding:.95rem 1rem; border-top:1px solid #eadada; background:#fcfbff; text-align:center; font-size:.78rem; color:#663d45; }
+    .legal-links { display:flex; justify-content:center; gap:1.5rem; margin-top:1.8rem; font-size:.76rem; }
     .policy-button { padding:0; border:0; background:none; color:#62353b; font:inherit; cursor:pointer; }
     .policy-button:hover { color:var(--red); }
     .modal-backdrop { display:none; position:fixed; inset:0; z-index:10; align-items:center; justify-content:center; padding:1rem; background:rgba(24,22,31,.55); }
@@ -129,6 +134,17 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
         <?php elseif ($error): ?>
           <div class="error"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
+
+        <a class="google-login" href="google-login.php">
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.92-2.13 15.89-5.8l-7.73-6c-2.14 1.44-4.89 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.9l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          Continue with Google
+        </a>
+        <div class="login-divider" aria-hidden="true">or continue with email</div>
 
         <form method="POST">
           <div class="field">
