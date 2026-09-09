@@ -143,8 +143,8 @@ echo booking_wizard_css();
     <input type="hidden" name="appt_date" id="f-date"/>
     <input type="hidden" name="appt_time" id="f-time"/>
     <div class="wiz-actions">
-      <a href="router.php?page=booking/step2_doctor" class="wiz-btn ghost">&larr; Back</a>
-      <button type="submit" class="wiz-btn primary" id="btn-continue" disabled>Continue to Review &rarr;</button>
+      <a href="router.php?page=booking/step2_doctor" class="wiz-btn ghost">Back</a>
+      <button type="submit" class="wiz-btn primary" id="btn-continue" disabled>Continue to Review</button>
     </div>
   </form>
 </div>

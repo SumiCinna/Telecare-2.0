@@ -48,7 +48,7 @@ echo booking_wizard_css();
       this appointment id and then redirects to:
         booking/success.php?appt_id=<?= $appt_id ?>
     -->
-    <a href="../router.php?page=pay&appt_id=<?= $appt_id ?>" class="wiz-btn primary" style="width:100%;text-align:center;box-sizing:border-box;margin-top:1.2rem;">Proceed to Payment &rarr;</a>
+    <a href="../router.php?page=pay&appt_id=<?= $appt_id ?>" class="wiz-btn primary" style="width:100%;text-align:center;box-sizing:border-box;margin-top:1.2rem;">Proceed to Payment</a>
     <a href="../visits.php" class="wiz-btn ghost" style="width:100%;text-align:center;box-sizing:border-box;margin-top:0.6rem;">Pay later from My Visits</a>
   </div>
 </div>

@@ -94,7 +94,7 @@ echo booking_wizard_css();
   </div>
 
   <div class="wiz-actions">
-    <a href="router.php?page=booking/step1_details" class="wiz-btn ghost">&larr; Back</a>
+    <a href="router.php?page=booking/step1_details" class="wiz-btn ghost">Back</a>
   </div>
 </div>
 

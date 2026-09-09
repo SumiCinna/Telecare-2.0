@@ -22,12 +22,13 @@ require_once __DIR__ . '/../../includes/header.php';
 echo booking_wizard_css();
 ?>
 <style>
-.success-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:400;backdrop-filter:blur(4px);padding:1rem}
-.success-modal{background:#fff;border-radius:20px;padding:2.2rem 2rem;max-width:420px;width:100%;text-align:center;animation:popIn .3s ease}
+.success-overlay{position:fixed;inset:0;background:rgba(15,25,24,.5);display:flex;align-items:center;justify-content:center;z-index:400;backdrop-filter:blur(4px);padding:1rem}
+.success-modal{background:#fff;border:1px solid rgba(36,68,65,.12);border-radius:10px;padding:1.35rem 1.15rem;max-width:320px;width:100%;text-align:center;box-shadow:0 18px 45px rgba(0,0,0,.22);animation:popIn .3s ease}
 @keyframes popIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
-.success-icon{width:64px;height:64px;border-radius:50%;background:rgba(34,197,94,0.12);color:#16a34a;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
-.success-title{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:var(--green);margin-bottom:0.5rem}
-.success-sub{font-size:0.88rem;color:var(--muted);margin-bottom:1.4rem;line-height:1.5}
+.success-icon{width:48px;height:48px;border-radius:50%;background:rgba(195,54,67,.1);color:var(--red);display:flex;align-items:center;justify-content:center;margin:0 auto .8rem}
+.success-title{font-family:'DM Sans',sans-serif;font-size:1.05rem;font-weight:800;color:var(--green);margin-bottom:.45rem}
+.success-sub{font-size:.7rem;color:var(--muted);margin-bottom:1rem;line-height:1.45}
+.success-modal .wiz-btn{font-size:.68rem;padding:.65rem 1rem;border-radius:6px}
 </style>
 
 <!-- Faded page behind the modal so it reads like a confirmation overlay -->
@@ -39,15 +40,15 @@ echo booking_wizard_css();
 <div class="success-overlay">
   <div class="success-modal">
     <div class="success-icon">
-      <svg width="30" height="30" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+      <svg width="25" height="25" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
     </div>
     <div class="success-title">Appointment Booked Successfully!</div>
     <div class="success-sub">
       Your appointment with <strong>Dr. <?= htmlspecialchars($appt['doctor_name']) ?></strong> has been confirmed for
       <strong><?= (new DateTime($appt['appointment_date']))->format('F j, Y') ?> at <?= date('g:i A', strtotime($appt['appointment_time'])) ?></strong>.
     </div>
-<a href="router.php?page=booking/confirmed&appt_id=<?= $appt_id ?>" class="wiz-btn primary" style="width:100%;text-align:center;box-sizing:border-box;">View Appointment</a>
-    <a href="router.php?page=visits" class="wiz-btn ghost" style="width:100%;text-align:center;box-sizing:border-box;margin-top:0.6rem;">Return to My Visits</a>
+  <a href="router.php?page=booking/confirmed&amp;appt_id=<?= $appt_id ?>" class="wiz-btn primary" style="width:100%;text-align:center;box-sizing:border-box;">View Appointment</a>
+  <a href="router.php?page=dashboard" class="wiz-btn ghost" style="width:100%;text-align:center;box-sizing:border-box;margin-top:.45rem;">Return to Dashboard</a>
   </div>
 </div>
 
