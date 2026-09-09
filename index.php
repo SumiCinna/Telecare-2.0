@@ -11,13 +11,13 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --red: #B31118;
-      --red-dark: #8a000b;
+      --red: #2F5F3F;
+      --red-dark: #1e4620;
       --red-tint: #FEF2F2;
       --teal: #006a61;
       --teal-light: #0D9488;
       --teal-tint: #ECFDF5;
-      --ink: #151c27;
+      --ink: #1800ad;
       --ink-soft: rgba(21,28,39,0.6);
       --bg: #f9f9ff;
       --cream: #f0f3ff;
