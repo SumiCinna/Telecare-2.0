@@ -67,6 +67,7 @@ require_once __DIR__ . '/../../includes/header.php';
 echo booking_wizard_css();
 ?>
 <style>
+.wiz-page{max-width:1180px;padding:1rem 2rem .5rem}
 .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem}
 .cal-nav{background:none;border:none;cursor:pointer;color:var(--green);padding:0.3rem 0.6rem;border-radius:8px;font-size:1.1rem}
 .cal-nav:hover{background:rgba(36,68,65,0.08)}
@@ -88,15 +89,15 @@ echo booking_wizard_css();
 .doctor-strip{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.2rem}
 .doctor-strip .doctor-avatar{width:44px;height:44px;border-radius:12px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;overflow:hidden}
 .doctor-strip .doctor-avatar img{width:100%;height:100%;object-fit:cover}
-.schedule-layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(220px,.8fr);gap:1.2rem;align-items:start}
-.schedule-summary{background:#fff;border:1px solid rgba(36,68,65,.1);border-radius:14px;padding:1rem;color:var(--green)}
+.schedule-layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(240px,.9fr);gap:1.2rem;align-items:start}
+.schedule-summary{background:#fff;border:1px solid rgba(36,68,65,.1);border-radius:14px;padding:1rem;color:var(--green);position:sticky;top:1rem}
 .schedule-summary h3{font-family:'DM Sans',sans-serif;font-size:.95rem;margin-bottom:.8rem}
 .schedule-summary-row{padding:.65rem 0;border-top:1px solid rgba(36,68,65,.08);font-size:.78rem}
 .schedule-summary-row strong{display:block;font-size:.7rem;color:var(--muted);font-weight:600;margin-bottom:.2rem}
 .schedule-time-picker{margin-top:1rem;padding-top:.9rem;border-top:1px solid rgba(36,68,65,.08)}
 .schedule-time-picker h4{font-size:.82rem;margin-bottom:.35rem;color:var(--green)}
-.schedule-time-picker .time-grid{margin-top:.65rem;grid-template-columns:repeat(2,1fr);max-height:360px;overflow:auto;padding-right:.15rem}
-@media(max-width:800px){.schedule-layout{grid-template-columns:1fr}.schedule-summary{order:-1}}
+.schedule-time-picker .time-grid{margin-top:.65rem;grid-template-columns:repeat(2,1fr);max-height:420px;overflow:auto;padding-right:.15rem}
+@media(max-width:800px){.schedule-layout{grid-template-columns:1fr}.schedule-summary{order:-1;position:static}}
 </style>
 
 <div class="wiz-page">

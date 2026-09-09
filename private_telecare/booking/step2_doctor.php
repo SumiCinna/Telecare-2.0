@@ -32,9 +32,10 @@ require_once __DIR__ . '/../../includes/header.php';
 echo booking_wizard_css();
 ?>
 <style>
+.wiz-page{max-width:1180px;padding:1rem 2rem .5rem}
 .doctor-layout{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:1rem;align-items:start}
 .doctor-toolbar{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid rgba(36,68,65,0.08);border-radius:12px;padding:.65rem .8rem;margin-bottom:1rem;color:var(--muted);font-size:.78rem}
-.doctor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.doctor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1rem;max-height:600px;overflow-y:auto;padding-right:.4rem}
 .doctor-card{background:#fff;border:1px solid rgba(195,54,67,.16);border-radius:12px;padding:1rem;display:grid;grid-template-columns:44px 1fr;gap:.15rem .75rem}
 .doctor-avatar{width:44px;height:44px;border-radius:50%;background:#eaf1ff;color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.95rem;overflow:hidden;grid-row:span 4}
 .doctor-avatar img{width:100%;height:100%;object-fit:cover}
@@ -43,14 +44,14 @@ echo booking_wizard_css();
 .doctor-rating{font-size:.7rem;color:#ca8a04}
 .doctor-meta{grid-column:1/-1;background:#f3f6ff;border-radius:8px;padding:.55rem .7rem;font-size:.76rem;color:var(--green);margin:.5rem 0 .1rem;font-weight:600}
 .doctor-card .wiz-btn{grid-column:1/-1;width:100%;padding:.6rem 1rem;font-size:.76rem;border-radius:6px}
-.doctor-summary{background:#fff;border:1px solid rgba(36,68,65,.1);border-radius:12px;padding:1rem;font-size:.78rem;color:var(--green)}
+.doctor-summary{background:#fff;border:1px solid rgba(36,68,65,.1);border-radius:12px;padding:1rem;font-size:.78rem;color:var(--green);position:sticky;top:1rem}
 .doctor-summary h3{font-family:'DM Sans',sans-serif;font-size:.9rem;margin-bottom:.8rem;color:var(--green)}
 .summary-line{display:flex;justify-content:space-between;gap:.6rem;padding:.55rem 0;border-top:1px solid rgba(36,68,65,.08)}
 .summary-line span:first-child{color:var(--muted)}
 .summary-line span:last-child{text-align:right;font-weight:700}
 .empty-state{grid-column:1/-1;text-align:center;padding:2.5rem;color:var(--muted);font-size:0.88rem}
-@media(max-width:800px){.doctor-layout{grid-template-columns:1fr}.doctor-summary{order:-1}}
-@media(max-width:560px){.doctor-grid{grid-template-columns:1fr}}
+@media(max-width:800px){.doctor-layout{grid-template-columns:1fr}.doctor-summary{order:-1;position:static}}
+@media(max-width:560px){.doctor-grid{grid-template-columns:1fr;max-height:none;overflow-y:visible}}
 </style>
 
 <div class="wiz-page">

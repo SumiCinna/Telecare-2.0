@@ -45,13 +45,12 @@ echo booking_wizard_css();
 .wiz-page .stepper{padding:.65rem 1.2rem;margin-bottom:.85rem}
 .wiz-page .wiz-card{padding:.9rem 1.1rem;margin-bottom:.65rem}
 .wiz-page .wiz-card h3{font-size:.95rem;margin-bottom:.65rem}
-.booking-footer{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin:.7rem -2rem 0;padding:.55rem 2rem;border-top:1px solid rgba(36,68,65,.1);color:var(--muted);font-size:.62rem}
+.booking-footer{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin:.7rem 0 0;padding:.55rem 2rem;border-top:1px solid rgba(36,68,65,.1);color:var(--muted);font-size:.62rem}
 .booking-footer-links{display:flex;align-items:center;gap:1rem}
 .booking-footer a{color:var(--green);text-decoration:none}
 .booking-footer a:hover{text-decoration:underline;color:var(--red)}
 @media(max-width:800px){.review-grid{grid-template-columns:1fr}.info-grid{grid-template-columns:1fr}}
-@media(max-width:600px){.booking-footer{align-items:flex-start;flex-direction:column;margin-left:-1rem;margin-right:-1rem;padding-left:1rem;padding-right:1rem}.booking-footer-links{flex-wrap:wrap;gap:.7rem}}
-@media(min-width:901px){body:has(.booking-footer){overflow:hidden}}
+@media(max-width:600px){.booking-footer{align-items:flex-start;flex-direction:column;padding-left:1rem;padding-right:1rem}.booking-footer-links{flex-wrap:wrap;gap:.7rem}}
 </style>
 
 <div class="wiz-page">
