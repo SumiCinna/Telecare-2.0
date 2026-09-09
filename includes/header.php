@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // includes/header.php
 // $page_title must be set before including this.
 
@@ -25,6 +25,19 @@ $notif_icons = [
     'consultation_summary'   => '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6M9 11h3"/>',
     'doctor_notes'           => '<path d="M11 4H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-4"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>',
     'default'                => '<path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>',
+];
+
+$notif_type_pref_column = [
+    'appointment_request'     => 'notif_appointment_reminders',
+    'appointment_approved'    => 'notif_appointment_reminders',
+    'appointment_rescheduled' => 'notif_appointment_reminders',
+    'appointment_cancelled'   => 'notif_appointment_reminders',
+    'appointment_reminder'    => 'notif_appointment_reminders',
+    'consultation_soon'       => 'notif_appointment_reminders',
+    'appointment_missed'      => 'notif_appointment_reminders',
+    'consultation_completed'  => 'notif_medical_record_updates',
+    'consultation_summary'    => 'notif_medical_record_updates',
+    'doctor_notes'            => 'notif_medical_record_updates',
 ];
 
 $notif_unread_count = 0;
@@ -58,6 +71,14 @@ if (isset($conn, $patient_id)) {
         @$conn->query("ALTER TABLE notifications ADD UNIQUE KEY uniq_notif (patient_id, type, reference_id)");
     }
 
+     
+    $notif_excluded_types = [];
+    foreach ($notif_type_pref_column as $type => $pref_column) {
+        if (isset($p[$pref_column]) && (int) $p[$pref_column] === 0) {
+            $notif_excluded_types[] = $type;
+        }
+    }
+
     $stmt = $conn->prepare("
         SELECT a.id, a.appointment_date, a.appointment_time, a.status, d.full_name AS doctor_name
         FROM appointments a JOIN doctors d ON d.id = a.doctor_id
@@ -68,6 +89,7 @@ if (isset($conn, $patient_id)) {
     $stmt->bind_param('i', $patient_id);
     $stmt->execute();
     $appts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    
     $stmt->close();
 
     $ins = $conn->prepare("INSERT IGNORE INTO notifications (patient_id, type, title, message, link, reference_type, reference_id) VALUES (?, ?, ?, ?, ?, 'appointment', ?)");
@@ -101,21 +123,30 @@ if (isset($conn, $patient_id)) {
             $events[] = ['consultation_completed', 'Consultation Completed', "Your consultation with Dr. $doc on $dateLabel has been completed."];
         }
 
-        foreach ($events as [$type, $title, $message]) {
-            $ins->bind_param('issssi', $patient_id, $type, $title, $message, $link, $a['id']);
-            $ins->execute();
-        }
+                foreach ($events as [$type, $title, $message]) {
+            if (in_array($type, $notif_excluded_types, true)) {
+                continue; // this category is turned off in Settings
+            }
+         }
     }
     $ins->close();
 
-    $stmt = $conn->prepare("SELECT COUNT(*) c FROM notifications WHERE patient_id = ? AND is_read = 0");
-    $stmt->bind_param('i', $patient_id);
+        $exclude_sql = '';
+    if (!empty($notif_excluded_types)) {
+        $placeholders = implode(',', array_fill(0, count($notif_excluded_types), '?'));
+        $exclude_sql  = " AND type NOT IN ($placeholders)";
+    }
+    $bind_types  = 'i' . str_repeat('s', count($notif_excluded_types));
+    $bind_params = array_merge([$patient_id], $notif_excluded_types);
+
+    $stmt = $conn->prepare("SELECT COUNT(*) c FROM notifications WHERE patient_id = ? AND is_read = 0" . $exclude_sql);
+    $stmt->bind_param($bind_types, ...$bind_params);
     $stmt->execute();
     $notif_unread_count = (int) $stmt->get_result()->fetch_assoc()['c'];
     $stmt->close();
 
-    $stmt = $conn->prepare("SELECT id, type, title, message, link, is_read, created_at FROM notifications WHERE patient_id = ? ORDER BY created_at DESC LIMIT 15");
-    $stmt->bind_param('i', $patient_id);
+    $stmt = $conn->prepare("SELECT id, type, title, message, link, is_read, created_at FROM notifications WHERE patient_id = ?" . $exclude_sql . " ORDER BY created_at DESC LIMIT 15");
+    $stmt->bind_param($bind_types, ...$bind_params);
     $stmt->execute();
     $res = $stmt->get_result();
     while ($row = $res->fetch_assoc()) {

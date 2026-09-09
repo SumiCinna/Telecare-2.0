@@ -22,6 +22,7 @@ $privatePages = [
     'call_patient', 'process_consultation_v2', 'process_consultation',
     'check_summary', 'download_summary', 'auto_complete_appt',
     'pay', 'pay_success', 'pay_cancel',  'privacy-policy',
+    'billings',
     'booking/step1_details', 'booking/step2_doctor', 'booking/step3_schedule',
     'booking/step4_review', 'booking/confirmed', 'booking/payment',
     'booking/process_booking', 'booking/success'
