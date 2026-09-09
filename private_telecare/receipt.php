@@ -75,9 +75,9 @@ $receipt_no = !empty($appt['receipt_number'])
   : makeReceiptRef($paid_at, $appt_id);
 
 $back_url = match($role) {
-    'staff'  => 'staff/appointments.php',
-    'doctor' => 'doctor/appointments.php',
-    default  => 'visits.php',
+    'staff'  => 'staff/router.php?page=appointments',
+    'doctor' => 'doctor/router.php?page=appointments',
+    default  => 'router.php?page=visits',
 };
 
 $page_title = 'Payment Receipt — TELE-CARE';

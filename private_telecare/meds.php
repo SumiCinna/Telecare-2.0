@@ -31,6 +31,10 @@ function formatOcrText(string $text, string $type): string {
     return nl2br($text);
 }
 
+  function scanFileUrl(string $filePath): string {
+    return '../' . ltrim($filePath, '/');
+  }
+
 $notice = '';
 $error  = '';
 $modal_open = false;
@@ -385,7 +389,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <span style="font-size:0.55rem;font-weight:700;color:#C33643;letter-spacing:0.04em;">PDF</span>
               </div>
             <?php else: ?>
-              <img src="<?= htmlspecialchars($s['file_path']) ?>" class="scan-thumb" onclick="toggleScanned(<?= $s['id'] ?>)"/>
+              <img src="<?= htmlspecialchars(scanFileUrl($s['file_path'])) ?>" class="scan-thumb" onclick="toggleScanned(<?= $s['id'] ?>)"/>
             <?php endif; ?>
             <div style="flex:1;">
               <div class="scan-name-row">
@@ -418,6 +422,9 @@ require_once __DIR__ . '/../includes/header.php';
                   <button onclick="copyScanned(<?= $s['id'] ?>)" id="copy-<?= $s['id'] ?>" style="flex:1;padding:0.5rem;border-radius:50px;background:rgba(63,130,227,0.1);color:#3F82E3;border:none;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;">
                     Copy Text
                   </button>
+                  <a href="<?= htmlspecialchars(scanFileUrl($s['file_path'])) ?>" target="_blank" rel="noopener noreferrer" style="flex:1;padding:0.5rem;border-radius:50px;background:rgba(36,68,65,0.08);color:#244441;border:none;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:none;display:flex;align-items:center;justify-content:center;">
+                    View Original
+                  </a>
                   <button type="button" onclick="openUploadModal()" style="flex:1;padding:0.5rem;border-radius:50px;background:rgba(244,132,95,0.1);color:#f4845f;border:none;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;">
                     Scan New
                   </button>

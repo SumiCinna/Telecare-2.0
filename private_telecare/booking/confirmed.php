@@ -11,10 +11,21 @@ $conn->query("UPDATE appointments SET status='Cancelled' WHERE status='Pending' 
 
 // ── Cancel action ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_appointment'])) {
-    $c = $conn->prepare("UPDATE appointments SET status='Cancelled' WHERE id=? AND patient_id=?");
+    $c = $conn->prepare("
+        UPDATE appointments
+        SET status='Cancelled'
+        WHERE id=? AND patient_id=?
+          AND status NOT IN ('Completed','Cancelled')
+          AND TIMESTAMP(appointment_date, appointment_time) >= NOW()
+    ");
     $c->bind_param("ii", $appt_id, $patient_id);
     $c->execute();
-    $_SESSION['toast'] = 'Appointment cancelled.';
+
+    if ($c->affected_rows > 0) {
+        $_SESSION['toast'] = 'Appointment cancelled.';
+    } else {
+        $_SESSION['toast_error'] = 'This appointment can no longer be cancelled.';
+    }
     header('Location: ../router.php?page=visits'); exit;
 }
 
@@ -35,6 +46,7 @@ $canJoin  = time() >= ($apptTs - 900) && time() <= ($apptTs + 3600);
 $isPaid          = $appt['payment_status'] === 'Paid';
 $isCancelled     = $appt['status'] === 'Cancelled';
 $isPendingUnpaid = !$isPaid && !$isCancelled; // anything not paid/cancelled is awaiting payment
+$isPast          = $appt['status'] === 'Completed' || $apptTs < time();
 
 $deadlineTsMs = null;
 $secondsLeft  = null;
@@ -253,7 +265,7 @@ echo booking_wizard_css();
           Pay Now
         </a>
       <?php endif; ?>
-      <?php if (!$isCancelled): ?>
+            <?php if (!$isCancelled && !$isPast): ?>
         <button type="button" class="btn-fix danger-outline" onclick="openCancelModal()">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
           Cancel Appointment
