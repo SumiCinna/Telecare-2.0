@@ -1,18 +1,20 @@
 <?php
 // includes/nav.php
 // includes/nav.php
-// $active_nav must be set before including: 'home' | 'visits' | 'meds' | 'profile'
+// $active_nav must be set before including: 'home' | 'visits' | 'meds' | 'billing' | 'profile'
 $active_nav = $active_nav ?? 'home';
 
 $nav_pages = [
-    'home'    => ['href' => 'router.php?page=dashboard', 'label' => 'Home',
-                  'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>'],
-    'visits'  => ['href' => 'router.php?page=visits',    'label' => 'Visits',
-                  'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>'],
-    'meds'    => ['href' => 'router.php?page=meds',      'label' => 'Meds',
-                  'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>'],
-    'profile' => ['href' => 'router.php?page=profile',   'label' => 'Profile',
-                  'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>'],
+    'home'    => ['href' => 'router.php?page=dashboard', 'label' => 'Dashboard',
+            'icon' => '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>'],
+    'visits'  => ['href' => 'router.php?page=visits',    'label' => 'Appointments',
+            'icon' => '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/>'],
+    'meds'    => ['href' => 'router.php?page=meds',      'label' => 'Records',
+            'icon' => '<path d="M6 3h9l3 3v15H6a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M14 3v4h4M8 11h6M8 15h6M8 19h4"/>'],
+    'billing' => ['href' => 'router.php?page=visits',    'label' => 'Billing',
+            'icon' => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/>'],
+    'profile' => ['href' => 'router.php?page=profile',   'label' => 'Settings',
+            'icon' => '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.64 5.64l1.42 1.42M16.94 16.94l1.42 1.42M5.64 18.36l1.42-1.42M16.94 7.06l1.42-1.42"/><circle cx="12" cy="12" r="4"/>'],
 ];
 ?>
 <style>
@@ -21,25 +23,25 @@ $nav_pages = [
   --tc-line:rgba(21,28,39,0.08); --tc-muted:rgba(21,28,39,0.5);
 }
 .sidebar{
-  position:fixed; top:0; left:0; bottom:0; width:236px; z-index:150;
-  background:#fff; border-right:1px solid var(--tc-line);
-  display:flex; flex-direction:column; padding:1.5rem 1rem;
+  position:fixed; top:0; left:0; bottom:0; width:190px; z-index:150;
+  background:#f1f3fc; border-right:1px solid #dce1ef;
+  display:flex; flex-direction:column; padding:1.2rem .85rem;
   font-family:'Inter',sans-serif;
 }
-.sidebar-brand{ display:flex; align-items:center; gap:0.7rem; padding:0 .4rem; margin-bottom:2.2rem; }
+.sidebar-brand{ display:flex; align-items:center; gap:.65rem; padding:0 .3rem; margin-bottom:2rem; }
 .sidebar-brand-icon{
-  width:36px; height:36px; border-radius:10px; background:var(--tc-red); color:#fff;
+  width:32px; height:32px; border-radius:6px; background:var(--tc-red); color:#fff;
   display:flex; align-items:center; justify-content:center; flex-shrink:0;
 }
-.sidebar-brand-icon svg{ width:18px; height:18px; }
-.sidebar-brand-name{ font-weight:800; font-size:0.98rem; color:var(--tc-ink); line-height:1.15; letter-spacing:0.01em; }
-.sidebar-brand-sub{ font-size:0.66rem; color:var(--tc-muted); margin-top:0.1rem; }
-.sidebar-nav{ display:flex; flex-direction:column; gap:0.3rem; flex:1; }
+.sidebar-brand-icon svg{ width:17px; height:17px; }
+.sidebar-brand-name{ font-weight:800; font-size:0.86rem; color:var(--tc-ink); line-height:1.15; letter-spacing:0; }
+.sidebar-brand-sub{ font-size:0.6rem; color:var(--tc-muted); margin-top:0.1rem; }
+.sidebar-nav{ display:flex; flex-direction:column; gap:.3rem; flex:1; }
 .sidebar-footer{ border-top:1px solid var(--tc-line); padding-top:0.6rem; margin-top:0.6rem; }
 .sidebar-logout{
-  display:flex; align-items:center; gap:0.75rem;
-  padding:0.65rem 0.85rem; border-radius:10px;
-  color:var(--tc-muted); font-size:0.87rem; font-weight:600;
+  display:flex; align-items:center; gap:.55rem;
+  padding:.65rem .7rem; border-radius:7px;
+  color:var(--tc-muted); font-size:.78rem; font-weight:600;
   text-decoration:none; transition:all 0.2s; width:100%; background:none; border:none;
   cursor:pointer; font-family:'Inter',sans-serif;
 }
@@ -47,17 +49,17 @@ $nav_pages = [
 .sidebar-logout .nav-icon{ width:19px; height:19px; flex-shrink:0; display:flex; }
 .sidebar-logout .nav-icon svg{ width:100%; height:100%; stroke:currentColor; }
 .sidebar-link{
-  display:flex; align-items:center; gap:0.75rem;
-  padding:0.65rem 0.85rem; border-radius:10px;
-  color:var(--tc-muted); font-size:0.87rem; font-weight:600;
+  display:flex; align-items:center; gap:.55rem;
+  padding:.65rem .7rem; border-radius:7px;
+  color:var(--tc-muted); font-size:.78rem; font-weight:600;
   text-decoration:none; transition:all 0.2s;
 }
 .sidebar-link:hover{ background:rgba(21,28,39,0.05); color:var(--tc-ink); }
-.sidebar-link.active{ background:var(--tc-red); color:#fff; box-shadow:0 4px 14px rgba(179,17,24,0.28); }
-.sidebar-link .nav-icon{ width:19px; height:19px; flex-shrink:0; display:flex; }
+.sidebar-link.active{ background:var(--tc-red); color:#fff; box-shadow:0 3px 9px rgba(179,17,24,0.22); }
+.sidebar-link .nav-icon{ width:17px; height:17px; flex-shrink:0; display:flex; }
 .sidebar-link .nav-icon svg{ width:100%; height:100%; stroke:currentColor; }
 
-body{ padding-left:236px; background:#f7f8fb; }
+body{ padding-left:190px; background:#f7f8fb; }
 
 @media (max-width:900px){
   body{ padding-left:0; padding-bottom:72px; }
