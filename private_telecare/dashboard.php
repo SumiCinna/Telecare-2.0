@@ -44,7 +44,7 @@ $firstName = $parts[0];
 
 /* ── PAGE LAYOUT ── */
 .page {
-  max-width: 1160px !important;
+  max-width: 1320px !important;
   margin: 0 auto !important;
   padding: 1.8rem 2rem 5rem !important;
   background: transparent !important;
@@ -53,7 +53,7 @@ $firstName = $parts[0];
 }
 .page-head{
   display:flex; align-items:center; justify-content:space-between; gap:1rem;
-  margin-bottom:1.5rem;
+  margin-bottom:1.25rem;
 }
 .page-head-copy{ min-width:0; }
 .page-title{
@@ -62,16 +62,33 @@ $firstName = $parts[0];
 }
 .page-sub{ color:var(--tc-muted); font-size:0.92rem; }
 
+.patient-strip {
+  display:flex; align-items:center; gap:1rem; justify-content:space-between;
+  background:#fff; border:1px solid rgba(179,17,24,0.2); border-radius:14px;
+  padding:1rem 1.2rem; margin-bottom:1.1rem;
+  box-shadow:0 2px 12px rgba(21,28,39,0.05);
+}
+.patient-strip-main { display:flex; align-items:center; gap:.85rem; min-width:0; }
+.patient-strip-avatar {
+  width:48px; height:48px; border-radius:50%; flex-shrink:0; overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,var(--tc-teal),var(--tc-teal-light));
+  color:#fff; font-size:.9rem; font-weight:800;
+}
+.patient-strip-avatar img { width:100%; height:100%; object-fit:cover; }
+.patient-strip-name { font-size:.95rem; font-weight:700; color:var(--tc-ink); }
+.patient-strip-status { display:flex; align-items:center; gap:.35rem; margin-top:.2rem; color:var(--tc-teal); font-size:.72rem; }
+.patient-strip-status::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--tc-teal-light); }
+
 /* ── DASHBOARD GRID ── */
 .db-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto;
   gap: 1.1rem;
 }
 .db-stats { grid-column: 1 / -1; }
-.db-appts   { grid-column: 1 / 2; }
-.db-doctors { grid-column: 2 / 3; }
+.db-appts, .db-doctors { grid-column: 1 / -1; }
 
 .welcome-btn {
   display: inline-flex; align-items: center; gap: 0.45rem;
@@ -225,6 +242,10 @@ $firstName = $parts[0];
   padding: 0.85rem 0;
   border-bottom: 1px solid rgba(0,106,97,0.08);
 }
+.db-doctors .db-card-body {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:0 1.4rem;
+}
+.db-doctors .doc-item { min-width:0; }
 .doc-item:last-child { border-bottom: none; }
 .doc-avatar {
   width: 48px; height: 48px; border-radius: 13px;
@@ -263,8 +284,6 @@ $firstName = $parts[0];
 
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
-  .db-grid { grid-template-columns: 1fr; }
-  .db-appts, .db-doctors { grid-column: 1 / -1; }
   .topbar{ padding: 1rem 1.1rem; }
   .topbar-search{ max-width: none; }
   .page { padding: 1rem 1rem 6rem !important; }
@@ -272,6 +291,7 @@ $firstName = $parts[0];
   .page-head{ align-items:flex-start; flex-direction:column; }
   .db-card-head { padding: 1rem 1.1rem 0; }
   .db-card-body { padding: 0.8rem 1.1rem 1.1rem; }
+  .db-doctors .db-card-body { grid-template-columns:1fr; }
   .appt-item, .doc-item { gap: 0.75rem; }
   .doc-name { white-space: normal; }
 }
@@ -280,6 +300,8 @@ $firstName = $parts[0];
   .page { padding: 0.75rem 0.75rem 6.2rem !important; }
   .db-grid { gap: 0.8rem; }
   .page-head .welcome-btn{ width:100%; justify-content:center; }
+  .patient-strip { align-items:flex-start; flex-direction:column; }
+  .patient-strip .welcome-btn { width:100%; justify-content:center; }
   .stats-row { grid-template-columns: 1fr; gap: 0.75rem; }
   .stat-card { padding: 1rem 1rem; border-radius: 14px; }
   .stat-icon { width: 36px; height: 36px; border-radius: 9px; }
@@ -313,6 +335,22 @@ $firstName = $parts[0];
     <div class="page-head-copy">
       <div class="page-title">Welcome back, <?= htmlspecialchars($firstName) ?></div>
       <p class="page-sub">Here's an overview of your appointments and consultations.</p>
+    </div>
+  </div>
+
+  <div class="patient-strip">
+    <div class="patient-strip-main">
+      <div class="patient-strip-avatar">
+        <?php if (!empty($p['profile_photo'])): ?>
+          <img src="<?= htmlspecialchars($p['profile_photo']) ?>" alt=""/>
+        <?php else: ?>
+          <?= htmlspecialchars($initials) ?>
+        <?php endif; ?>
+      </div>
+      <div>
+        <div class="patient-strip-name"><?= htmlspecialchars($p['full_name']) ?></div>
+        <div class="patient-strip-status">Your patient portal is active</div>
+      </div>
     </div>
     <a href="router.php?page=booking/step1_details" class="welcome-btn">
       <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16m8-8H4"/></svg>
