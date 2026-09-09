@@ -140,16 +140,39 @@ $scanned = $conn->query("
     LIMIT $scan_per_page OFFSET $scan_offset
 ");
 
-$page_title = 'My Prescriptions — TELE-CARE';
-$active_nav = 'meds';
+$history_stmt = $conn->prepare("SELECT a.appointment_date, a.status, a.reason, d.full_name AS doctor_name, d.specialty
+  FROM appointments a JOIN doctors d ON d.id = a.doctor_id
+  WHERE a.patient_id = ? ORDER BY a.appointment_date DESC, a.appointment_time DESC LIMIT 5");
+$history_stmt->bind_param('i', $patient_id);
+$history_stmt->execute();
+$history = $history_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$history_stmt->close();
+
+$page_title = 'Medical Records — TELE-CARE';
+$active_nav = 'records';
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
-.rx-page{max-width:1180px;margin:0 auto;padding:1.8rem 2rem 5rem}
+.rx-page{max-width:1320px;margin:0 auto;padding:1.4rem 2rem 5rem}
 .rx-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.6rem}
 .rx-title{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:900;color:#244441;line-height:1}
 .rx-sub{font-size:0.85rem;color:#9ab0ae;margin-top:0.4rem}
+.record-profile{display:flex;align-items:center;justify-content:space-between;gap:1rem;background:#fff;border:1px solid rgba(36,68,65,.08);border-radius:14px;padding:.9rem 1.1rem;margin-bottom:1.2rem}
+.record-profile-main{display:flex;align-items:center;gap:.8rem;min-width:0}
+.record-avatar{width:54px;height:54px;border-radius:50%;overflow:hidden;background:#eaf1ff;color:#3F82E3;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}
+.record-avatar img{width:100%;height:100%;object-fit:cover}
+.record-name{font-weight:800;color:#244441;font-size:1rem}
+.record-meta{display:flex;flex-wrap:wrap;gap:.35rem .9rem;color:#6b8886;font-size:.7rem;margin-top:.25rem}
+.record-edit{padding:.55rem .85rem;border:1px solid rgba(195,54,67,.25);border-radius:7px;color:#C33643;text-decoration:none;font-size:.72rem;font-weight:700;white-space:nowrap}
+.record-edit:hover{background:rgba(195,54,67,.06)}
+.history-section{background:#fff;border:1px solid rgba(36,68,65,.08);border-radius:18px;padding:1.2rem 1.4rem;margin-bottom:1.3rem}
+.history-title{display:flex;align-items:center;justify-content:space-between;color:#244441;font-family:'Playfair Display',serif;font-weight:900;font-size:1rem;margin-bottom:.8rem}
+.history-item{display:grid;grid-template-columns:82px 1fr auto;gap:.8rem;padding:.75rem 0;border-top:1px solid rgba(36,68,65,.07);align-items:center}
+.history-date{font-size:.7rem;color:#C33643;font-weight:700}
+.history-name{font-size:.82rem;color:#244441;font-weight:700}
+.history-detail{font-size:.7rem;color:#6b8886;margin-top:.15rem}
+.history-status{font-size:.62rem;padding:.2rem .5rem;border-radius:50px;background:rgba(63,130,227,.1);color:#2563eb;font-weight:700}
 .rx-scan-btn{
   display:inline-flex;align-items:center;gap:0.45rem;background:#C33643;color:#fff;
   padding:0.7rem 1.4rem;border-radius:50px;font-size:0.84rem;font-weight:700;
@@ -240,6 +263,25 @@ require_once __DIR__ . '/../includes/header.php';
   position:fixed;inset:0;background:rgba(15,30,28,0.55);z-index:1000;
   align-items:center;justify-content:center;padding:1rem;
 }
+.original-overlay{
+  position:fixed; inset:0; z-index:1100; display:none; align-items:center; justify-content:center;
+  padding:1rem; background:rgba(15,30,28,.72); backdrop-filter:blur(4px);
+}
+.original-overlay.open{display:flex}
+.original-modal{
+  width:min(100%,980px); height:min(92vh,760px); display:flex; flex-direction:column;
+  overflow:hidden; background:#fff; border-radius:16px; box-shadow:0 20px 70px rgba(0,0,0,.35);
+}
+.original-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 1rem;border-bottom:1px solid rgba(36,68,65,.1);flex-shrink:0}
+.original-title{min-width:0;font-size:.88rem;font-weight:800;color:#244441;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.original-tools{display:flex;align-items:center;gap:.35rem;flex-shrink:0}
+.original-tool,.original-close{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(36,68,65,.12);border-radius:8px;background:#fff;color:#244441;cursor:pointer;font:700 .8rem 'DM Sans',sans-serif}
+.original-tool:hover,.original-close:hover{background:#f1f3fc}
+.original-close{font-size:1.1rem;color:#C33643}
+.original-stage{position:relative;display:flex;align-items:center;justify-content:center;min-height:0;flex:1;overflow:auto;background:#eef1f6;padding:1.2rem}
+.original-image{max-width:none;max-height:none;display:none;transform-origin:center center;transition:transform .15s ease;box-shadow:0 4px 18px rgba(21,28,39,.18);background:#fff}
+.original-frame{width:100%;height:100%;display:none;border:0;background:#fff}
+.original-hint{position:absolute;bottom:.7rem;left:50%;transform:translateX(-50%);padding:.35rem .65rem;border-radius:50px;background:rgba(21,28,39,.72);color:#fff;font-size:.68rem;pointer-events:none}
 .upl-modal{
   background:#fff;border-radius:20px;padding:1.8rem;max-width:520px;width:100%;
   max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.25);
@@ -283,19 +325,43 @@ require_once __DIR__ . '/../includes/header.php';
 .upl-submit-btn:disabled{background:#b0c4e8;cursor:not-allowed;transform:none;box-shadow:none}
 .upl-spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:upl-spin 0.7s linear infinite}
 @keyframes upl-spin{to{transform:rotate(360deg)}}
-.rx-top-notice{background:rgba(63,130,227,0.08);border:1px solid rgba(63,130,227,0.2);color:#3F82E3;border-radius:12px;padding:0.75rem 1rem;font-size:0.85rem;margin-bottom:1.2rem}
+.rx-top-notice{display:flex;align-items:center;gap:.45rem;background:rgba(63,130,227,0.08);border:1px solid rgba(63,130,227,0.2);color:#3F82E3;border-radius:12px;padding:0.75rem 1rem;font-size:0.85rem;margin-bottom:1.2rem}
+.record-inline-icon{width:14px;height:14px;display:inline-block;vertical-align:-2px;flex-shrink:0}
+.scan-date{display:flex;align-items:center;gap:.3rem}
+.scan-date .record-inline-icon{width:12px;height:12px}
+.rx-notes{display:flex;align-items:flex-start;gap:.35rem}
+.legend-chip{display:inline-flex;align-items:center;gap:.25rem}
+.legend-chip .record-inline-icon{width:12px;height:12px;vertical-align:0}
 </style>
 
 <div class="rx-page">
 
+  <div class="record-profile">
+    <div class="record-profile-main">
+      <div class="record-avatar">
+        <?php if (!empty($p['profile_photo'])): ?><img src="<?= htmlspecialchars($p['profile_photo']) ?>" alt=""/><?php else: ?><?= htmlspecialchars($initials) ?><?php endif; ?>
+      </div>
+      <div>
+        <div class="record-name"><?= htmlspecialchars($p['full_name']) ?></div>
+        <div class="record-meta">
+          <?php if (!empty($p['patient_id'])): ?><span>ID: <?= htmlspecialchars($p['patient_id']) ?></span><?php endif; ?>
+          <?php if (!empty($p['date_of_birth'])): ?><span>DOB: <?= htmlspecialchars($p['date_of_birth']) ?></span><?php endif; ?>
+          <?php if (!empty($p['blood_type'])): ?><span>Blood Type: <?= htmlspecialchars($p['blood_type']) ?></span><?php endif; ?>
+          <span>Contact: <?= htmlspecialchars($p['emergency_name'] ?? 'Not set') ?></span>
+        </div>
+      </div>
+    </div>
+    <a class="record-edit" href="router.php?page=profile">Edit Profile</a>
+  </div>
+
   <?php if ($notice && !$modal_open): ?>
-  <div class="rx-top-notice">✅ <?= htmlspecialchars($notice) ?></div>
+  <div class="rx-top-notice"><svg class="record-inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><?= htmlspecialchars($notice) ?></div>
   <?php endif; ?>
 
   <div class="rx-header">
     <div>
-      <div class="rx-title">My Prescriptions</div>
-      <div class="rx-sub">Active medications from your doctors, plus anything you've scanned yourself.</div>
+      <div class="rx-title">Medical Records</div>
+      <div class="rx-sub">View and manage your personal medical information and health history.</div>
     </div>
     <button type="button" class="rx-scan-btn" onclick="openUploadModal()">
       <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -304,6 +370,19 @@ require_once __DIR__ . '/../includes/header.php';
       </svg>
       Scan Prescription
     </button>
+  </div>
+
+  <div class="history-section">
+    <div class="history-title"><span>Medical History</span><span style="font-family:'DM Sans',sans-serif;font-size:.7rem;color:#C33643;">Recent consultations</span></div>
+    <?php if ($history): foreach ($history as $visit): ?>
+      <div class="history-item">
+        <div class="history-date"><?= date('M j, Y', strtotime($visit['appointment_date'])) ?></div>
+        <div><div class="history-name">Dr. <?= htmlspecialchars($visit['doctor_name']) ?></div><div class="history-detail"><?= htmlspecialchars($visit['specialty'] ?: 'Consultation') ?><?= !empty($visit['reason']) ? ' · ' . htmlspecialchars($visit['reason']) : '' ?></div></div>
+        <span class="history-status"><?= htmlspecialchars($visit['status']) ?></span>
+      </div>
+    <?php endforeach; else: ?>
+      <div class="rx-empty"><p>No consultation history yet.</p></div>
+    <?php endif; ?>
   </div>
 
   <div class="rx-grid">
@@ -340,7 +419,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php endif; ?>
               </div>
               <?php if (!empty($m['notes'])): ?>
-              <div class="rx-notes">📝 <?= htmlspecialchars($m['notes']) ?></div>
+              <div class="rx-notes"><svg class="record-inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><?= htmlspecialchars($m['notes']) ?></div>
               <?php endif; ?>
               <div class="rx-prescriber">Prescribed by Dr. <?= htmlspecialchars($m['doctor_name']) ?></div>
             </div>
@@ -385,7 +464,7 @@ require_once __DIR__ . '/../includes/header.php';
           <div class="scan-row">
             <?php if ($ext === 'pdf'): ?>
               <div onclick="toggleScanned(<?= $s['id'] ?>)" class="scan-thumb-pdf">
-                <span style="font-size:1.4rem;line-height:1;">📄</span>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C33643" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v5h5"/></svg>
                 <span style="font-size:0.55rem;font-weight:700;color:#C33643;letter-spacing:0.04em;">PDF</span>
               </div>
             <?php else: ?>
@@ -398,7 +477,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <span class="chip" style="<?= $type_style ?>"><?= htmlspecialchars($type_label) ?></span>
                 <button type="button" class="scan-rename-toggle" onclick="toggleRename(<?= $s['id'] ?>)">Rename</button>
               </div>
-              <div class="scan-date">📅 <?= date('M d, Y — g:i A', strtotime($s['uploaded_at'])) ?></div>
+              <div class="scan-date"><svg class="record-inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg><?= date('M d, Y — g:i A', strtotime($s['uploaded_at'])) ?></div>
 
               <form method="POST" class="scan-rename-form" id="rename-<?= $s['id'] ?>" onclick="event.stopPropagation();">
                 <input type="hidden" name="action" value="rename_scan"/>
@@ -414,17 +493,17 @@ require_once __DIR__ . '/../includes/header.php';
                   <?= formatOcrText($s['extracted_text'] ?? '', $s['doc_type']) ?>
                 </div>
                 <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.6rem;">
-                  <span class="legend-chip" style="background:rgba(63,130,227,0.12);color:#1a4fa8;">💊 Medicine</span>
-                  <span class="legend-chip" style="background:rgba(244,132,95,0.12);color:#c05621;">⚡ Dosage/Freq</span>
-                  <span class="legend-chip" style="background:rgba(168,85,247,0.12);color:#6d28d9;">⚠️ Important</span>
+                  <span class="legend-chip" style="background:rgba(63,130,227,0.12);color:#1a4fa8;"><svg class="record-inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8v4H8z"/><path d="M6 7h12v14H6z"/><path d="M9 12h6M9 16h6"/></svg>Medicine</span>
+                  <span class="legend-chip" style="background:rgba(244,132,95,0.12);color:#c05621;"><svg class="record-inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m13 2-9 12h7l-1 8 9-12h-7z"/></svg>Dosage/Freq</span>
+                  <span class="legend-chip" style="background:rgba(168,85,247,0.12);color:#6d28d9;"><svg class="record-inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3z"/><path d="M12 9v5M12 17h.01"/></svg>Important</span>
                 </div>
                 <div style="display:flex;gap:0.6rem;margin-top:0.7rem;">
                   <button onclick="copyScanned(<?= $s['id'] ?>)" id="copy-<?= $s['id'] ?>" style="flex:1;padding:0.5rem;border-radius:50px;background:rgba(63,130,227,0.1);color:#3F82E3;border:none;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;">
                     Copy Text
                   </button>
-                  <a href="<?= htmlspecialchars(scanFileUrl($s['file_path'])) ?>" target="_blank" rel="noopener noreferrer" style="flex:1;padding:0.5rem;border-radius:50px;background:rgba(36,68,65,0.08);color:#244441;border:none;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:none;display:flex;align-items:center;justify-content:center;">
+                  <button type="button" onclick="openOriginalModal(<?= htmlspecialchars(json_encode(scanFileUrl($s['file_path']))) ?>, <?= htmlspecialchars(json_encode($s['doc_label'] ?: 'Scanned Document')) ?>, <?= htmlspecialchars(json_encode($ext)) ?>)" style="flex:1;padding:0.5rem;border-radius:50px;background:rgba(36,68,65,0.08);color:#244441;border:none;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;">
                     View Original
-                  </a>
+                  </button>
                   <button type="button" onclick="openUploadModal()" style="flex:1;padding:0.5rem;border-radius:50px;background:rgba(244,132,95,0.1);color:#f4845f;border:none;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;">
                     Scan New
                   </button>
@@ -503,6 +582,26 @@ require_once __DIR__ . '/../includes/header.php';
   </div>
 </div>
 
+<!-- Original scanned document viewer -->
+<div class="original-overlay" id="originalModal" role="dialog" aria-modal="true" aria-labelledby="originalTitle" onclick="closeOriginalModal(event)">
+  <section class="original-modal">
+    <header class="original-head">
+      <div class="original-title" id="originalTitle">Scanned Document</div>
+      <div class="original-tools">
+        <button type="button" class="original-tool" id="zoomOutBtn" onclick="zoomOriginal(-.15)" aria-label="Zoom out">−</button>
+        <button type="button" class="original-tool" onclick="resetOriginalZoom()" aria-label="Reset zoom">100%</button>
+        <button type="button" class="original-tool" id="zoomInBtn" onclick="zoomOriginal(.15)" aria-label="Zoom in">+</button>
+        <button type="button" class="original-close" onclick="closeOriginalModal()" aria-label="Close document viewer">&times;</button>
+      </div>
+    </header>
+    <div class="original-stage" id="originalStage">
+      <img class="original-image" id="originalImage" alt="Scanned document"/>
+      <iframe class="original-frame" id="originalFrame" title="Scanned document PDF"></iframe>
+      <div class="original-hint" id="originalHint">Use + and − to zoom</div>
+    </div>
+  </section>
+</div>
+
 <!-- ══ UPLOAD MODAL (formerly ocr/scan.php) ══ -->
 <div class="upl-overlay" id="uploadModalOverlay" style="<?= $modal_open ? 'display:flex;' : 'display:none;' ?>">
   <div class="upl-modal">
@@ -514,7 +613,7 @@ require_once __DIR__ . '/../includes/header.php';
       <!-- unreachable branch guard, kept intentionally empty -->
     <?php endif; ?>
     <?php if ($error && isset($_FILES['doc_file'])): ?>
-      <div class="upl-alert-error">⚠️ <?= htmlspecialchars($error) ?></div>
+      <div class="upl-alert-error"><svg class="record-inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3z"/><path d="M12 9v5M12 17h.01"/></svg><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
 
     <form method="POST" enctype="multipart/form-data" id="scanForm">
@@ -532,7 +631,7 @@ require_once __DIR__ . '/../includes/header.php';
       <div class="upl-preview-wrap" id="previewWrap">
         <img id="previewImg" src="" alt="Preview" style="display:none;"/>
         <div id="pdfPreview" style="display:none;align-items:center;gap:1rem;background:rgba(195,54,67,0.06);border:1px solid rgba(195,54,67,0.15);border-radius:12px;padding:1rem 1.2rem;">
-          <div style="font-size:2.4rem;line-height:1;">📄</div>
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#C33643" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v5h5"/></svg>
           <div>
             <div style="font-weight:700;color:#C33643;font-size:0.88rem;">PDF File Ready</div>
           </div>
@@ -557,6 +656,63 @@ function toggleScanned(id) {
   arrow.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
   arrow.style.transition = 'transform 0.25s';
 }
+
+let originalZoom = 1;
+
+function openOriginalModal(url, title, extension) {
+  const modal = document.getElementById('originalModal');
+  const image = document.getElementById('originalImage');
+  const frame = document.getElementById('originalFrame');
+  const stage = document.getElementById('originalStage');
+  const isPdf = String(extension).toLowerCase() === 'pdf';
+
+  document.getElementById('originalTitle').textContent = title;
+  originalZoom = 1;
+  updateOriginalZoom();
+  image.style.display = isPdf ? 'none' : 'block';
+  frame.style.display = isPdf ? 'block' : 'none';
+  if (isPdf) {
+    frame.src = url;
+    image.removeAttribute('src');
+  } else {
+    image.src = url;
+    frame.removeAttribute('src');
+  }
+  stage.scrollTop = 0;
+  stage.scrollLeft = 0;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeOriginalModal(event) {
+  if (event && event.target !== document.getElementById('originalModal')) return;
+  const modal = document.getElementById('originalModal');
+  const image = document.getElementById('originalImage');
+  const frame = document.getElementById('originalFrame');
+  modal.classList.remove('open');
+  image.removeAttribute('src');
+  frame.removeAttribute('src');
+  document.body.style.overflow = '';
+}
+
+function zoomOriginal(amount) {
+  originalZoom = Math.min(3, Math.max(.5, originalZoom + amount));
+  updateOriginalZoom();
+}
+
+function resetOriginalZoom() {
+  originalZoom = 1;
+  updateOriginalZoom();
+}
+
+function updateOriginalZoom() {
+  document.getElementById('originalImage').style.transform = 'scale(' + originalZoom + ')';
+  document.querySelector('.original-tool[aria-label="Reset zoom"]').textContent = Math.round(originalZoom * 100) + '%';
+}
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') closeOriginalModal();
+});
 
 function toggleRename(id) {
   document.getElementById('rename-' + id).classList.toggle('open');
