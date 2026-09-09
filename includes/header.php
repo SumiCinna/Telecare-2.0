@@ -176,6 +176,30 @@ if (isset($conn, $patient_id)) {
     .site-topbar-status-dot{ width:6px; height:6px; border-radius:50%; background:var(--tc-teal-light); flex-shrink:0; }
     .site-topbar-identity-text{ display:none; }
     @media (min-width:1080px){ .site-topbar-identity-text{ display:block; } }
+    .profile-menu{ position:relative; }
+    .profile-trigger{
+      display:flex; align-items:center; gap:0.65rem; padding:0; border:0;
+      background:none; color:inherit; cursor:pointer; font:inherit; text-align:left;
+    }
+    .profile-trigger:focus-visible{ outline:2px solid var(--tc-teal-light); outline-offset:4px; border-radius:10px; }
+    .profile-chevron{ width:14px; height:14px; color:var(--tc-muted); transition:transform .2s; }
+    .profile-menu.open .profile-chevron{ transform:rotate(180deg); }
+    .profile-dropdown{
+      position:absolute; top:calc(100% + .7rem); right:0; z-index:220;
+      display:none; min-width:175px; padding:.4rem;
+      background:#fff; border:1px solid var(--tc-line); border-radius:10px;
+      box-shadow:0 12px 30px rgba(21,28,39,.14);
+    }
+    .profile-menu.open .profile-dropdown{ display:flex; flex-direction:column; }
+    .profile-option{
+      display:flex; align-items:center; gap:.6rem; width:100%; padding:.6rem .65rem;
+      border:0; border-radius:7px; background:none; color:var(--tc-ink);
+      font:600 .78rem 'Inter',sans-serif; text-decoration:none; text-align:left; cursor:pointer;
+    }
+    .profile-option:hover{ background:#f1f3fc; color:var(--tc-ink); text-decoration:none; }
+    .profile-option.logout{ color:var(--tc-red); }
+    .profile-option.logout:hover{ background:var(--tc-red-tint); color:var(--tc-red); }
+    .profile-option svg{ width:16px; height:16px; flex-shrink:0; }
 
     @media (max-width:900px){
       .site-topbar{ padding:1rem 1.1rem; }
@@ -317,18 +341,33 @@ if (isset($conn, $patient_id)) {
     <button type="button" class="site-topbar-icon" aria-label="Help">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 015 .5c0 1.5-2.5 1.5-2.5 3.5"/><path d="M12 17h.01"/></svg>
     </button>
-    <div class="site-topbar-identity" title="<?= htmlspecialchars($p['email']) ?>">
-      <?php if (!empty($p['profile_photo'])): ?>
-        <img src="<?= htmlspecialchars($p['profile_photo']) ?>" class="site-topbar-photo" alt=""/>
-      <?php else: ?>
-        <div class="avatar-circle"><?= $initials ?></div>
-      <?php endif; ?>
-      <div class="site-topbar-identity-text">
-        <div class="site-topbar-name"><?= htmlspecialchars($p['full_name']) ?></div>
-        <div class="site-topbar-status">
-          <span class="site-topbar-status-dot"></span>
-          Active
+    <div class="profile-menu" id="profileMenu">
+      <button type="button" class="profile-trigger" id="profileBtn" aria-label="Open profile menu" aria-expanded="false" title="<?= htmlspecialchars($p['email']) ?>" onclick="toggleProfileMenu()">
+        <div class="site-topbar-identity">
+          <?php if (!empty($p['profile_photo'])): ?>
+            <img src="<?= htmlspecialchars($p['profile_photo']) ?>" class="site-topbar-photo" alt=""/>
+          <?php else: ?>
+            <div class="avatar-circle"><?= $initials ?></div>
+          <?php endif; ?>
+          <div class="site-topbar-identity-text">
+            <div class="site-topbar-name"><?= htmlspecialchars($p['full_name']) ?></div>
+            <div class="site-topbar-status">
+              <span class="site-topbar-status-dot"></span>
+              Active
+            </div>
+          </div>
         </div>
+        <svg class="profile-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="profile-dropdown" role="menu" aria-label="Profile options">
+        <a class="profile-option" role="menuitem" href="router.php?page=profile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          Profile
+        </a>
+        <a class="profile-option logout" role="menuitem" href="auth/logout.php">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg>
+          Log Out
+        </a>
       </div>
     </div>
   </div>
@@ -417,10 +456,32 @@ if (isset($conn, $patient_id)) {
     panel.classList.toggle('open');
   }
 
+  function toggleProfileMenu() {
+    const menu = document.getElementById('profileMenu');
+    const button = document.getElementById('profileBtn');
+    const isOpen = menu.classList.toggle('open');
+    button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  }
+
   document.addEventListener('click', function (e) {
     const wrap = document.querySelector('.notif-wrap');
     if (wrap && !wrap.contains(e.target)) {
       document.getElementById('notifPanel').classList.remove('open');
+    }
+    const profileMenu = document.getElementById('profileMenu');
+    if (profileMenu && !profileMenu.contains(e.target)) {
+      profileMenu.classList.remove('open');
+      document.getElementById('profileBtn').setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      const profileMenu = document.getElementById('profileMenu');
+      if (profileMenu) {
+        profileMenu.classList.remove('open');
+        document.getElementById('profileBtn').setAttribute('aria-expanded', 'false');
+      }
     }
   });
 

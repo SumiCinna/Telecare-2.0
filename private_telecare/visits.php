@@ -129,11 +129,20 @@ function isCallActive(string $date, string $time): bool {
 <style>
 /* ── PAGE LAYOUT ── */
 .page {
-  max-width: 1160px !important;
+  max-width: 1320px !important;
   margin: 0 auto !important;
   padding: 1.8rem 2rem 5rem !important;
   background: transparent !important;
 }
+
+.breadcrumbs {
+  display:flex; align-items:center; gap:.45rem; margin-bottom:1rem;
+  color:#9ab0ae; font-size:.72rem; font-weight:600;
+}
+.breadcrumbs a { color:#6b8886; text-decoration:none; }
+.breadcrumbs a:hover { color:#C33643; }
+.breadcrumbs-separator { color:rgba(36,68,65,.3); }
+.breadcrumbs-current { color:#244441; }
 
 /* ── PAGE HEADER ── */
 .visits-header {
@@ -171,6 +180,11 @@ function isCallActive(string $date, string $time): bool {
   gap: 1rem;
   margin-bottom: 1.4rem;
 }
+.visits-sticky {
+  position:sticky; top:70px; z-index:80;
+  margin:0 -2rem 1.2rem; padding:0 2rem .65rem;
+  background:#f7f8fb;
+}
 .stat-card {
   background: #fff;
   border: 1px solid rgba(36,68,65,0.08);
@@ -200,6 +214,14 @@ function isCallActive(string $date, string $time): bool {
   display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem;
   margin-bottom: 1.3rem;
 }
+.filter-select, .filter-date {
+  height:36px; padding:0 .8rem; border:1.5px solid rgba(36,68,65,.1);
+  border-radius:8px; background:#fff; color:#244441;
+  font:500 .78rem 'DM Sans',sans-serif; outline:none;
+}
+.filter-select:focus, .filter-date:focus { border-color:#3F82E3; }
+.filter-select { min-width:118px; }
+.filter-date { width:142px; }
 .search-wrap { position: relative; flex: 1; min-width: 220px; }
 .search-wrap svg {
   position: absolute; left: 0.95rem; top: 50%; transform: translateY(-50%);
@@ -408,6 +430,7 @@ function isCallActive(string $date, string $time): bool {
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .page { padding: 1rem 1rem 5rem !important; }
+  .visits-sticky { top:59px; margin:0 -1rem 1rem; padding:0 1rem .55rem; }
   .stat-row { grid-template-columns: 1fr 1fr; }
   .appt-card-inner { grid-template-columns: 44px 1fr; }
   .appt-side { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; padding-top: 0.6rem; }
@@ -418,6 +441,10 @@ function isCallActive(string $date, string $time): bool {
   .appt-card-inner { grid-template-columns: 1fr; gap: 0.7rem; }
   .visits-title { font-size: 1.5rem; }
   .stat-row { grid-template-columns: 1fr 1fr; }
+  .visits-sticky { top:57px; }
+  .controls-bar { display:grid; grid-template-columns:1fr 1fr; }
+  .search-wrap { grid-column:1 / -1; min-width:0; }
+  .filter-select, .filter-date { width:100%; min-width:0; }
 }
 </style>
 
@@ -436,6 +463,12 @@ function isCallActive(string $date, string $time): bool {
 
 <div class="page">
 
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="router.php?page=dashboard">Dashboard</a>
+    <span class="breadcrumbs-separator">/</span>
+    <span class="breadcrumbs-current">Appointments</span>
+  </nav>
+
   <!-- ══ PAGE HEADER ══ -->
   <div class="visits-header">
     <div class="visits-title">
@@ -448,17 +481,9 @@ function isCallActive(string $date, string $time): bool {
     </a>
   </div>
 
+  <div class="visits-sticky">
   <!-- ══ STAT CARDS ══ -->
   <div class="stat-row">
-    <div class="stat-card">
-      <div class="stat-icon pending">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-      </div>
-      <div>
-        <div class="stat-label">Pending</div>
-        <div class="stat-value"><?= (int)$stat_pending ?></div>
-      </div>
-    </div>
     <div class="stat-card">
       <div class="stat-icon upcoming">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -492,8 +517,21 @@ function isCallActive(string $date, string $time): bool {
   <div class="controls-bar">
     <div class="search-wrap">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
-      <input type="text" id="visitSearchInput" class="search-input" placeholder="Search doctor or specialty…" oninput="filterVisitRows(this.value)"/>
+      <input type="text" id="visitSearchInput" class="search-input" placeholder="Search doctor or specialty" oninput="filterVisitRows()"/>
     </div>
+    <select id="visitStatusFilter" class="filter-select" aria-label="Filter by status" onchange="filterVisitRows()">
+      <option value="">All Statuses</option>
+      <option value="pending">Pending</option>
+      <option value="confirmed">Confirmed</option>
+      <option value="completed">Completed</option>
+      <option value="cancelled">Cancelled</option>
+    </select>
+    <select id="visitTypeFilter" class="filter-select" aria-label="Filter by appointment type" onchange="filterVisitRows()">
+      <option value="">All Types</option>
+      <option value="teleconsult">Teleconsult</option>
+    </select>
+    <input type="date" id="visitDateFilter" class="filter-date" aria-label="Filter by appointment date" onchange="filterVisitRows()"/>
+  </div>
   </div>
 
   <!-- ══ TABS ══ -->
@@ -515,7 +553,7 @@ function isCallActive(string $date, string $time): bool {
         $deadlineMs = !empty($a['created_at']) ? (strtotime($a['created_at']) + 600) * 1000 : null;
         $initials = strtoupper(substr($a['doctor_name'],0,1) . (strpos($a['doctor_name'],' ')!==false ? substr($a['doctor_name'],strpos($a['doctor_name'],' ')+1,1) : ''));
     ?>
-    <div class="appt-card pending-card" data-search="<?= strtolower(htmlspecialchars($a['doctor_name'].' '.($a['specialty']??''))) ?>">
+    <div class="appt-card pending-card" data-search="<?= strtolower(htmlspecialchars($a['doctor_name'].' '.($a['specialty']??''))) ?>" data-status="pending" data-type="<?= strtolower(htmlspecialchars($a['type'])) ?>" data-date="<?= htmlspecialchars($a['appointment_date']) ?>">
       <div class="appt-card-inner">
         <div class="appt-avatar pending"><?= $initials ?></div>
         <div class="appt-main-info">
@@ -592,7 +630,7 @@ function isCallActive(string $date, string $time): bool {
         $hasContent  = !empty($a['chat_log']) || !empty($a['consultation_transcript']);
         $initials = strtoupper(substr($a['doctor_name'],0,1) . (strpos($a['doctor_name'],' ')!==false ? substr($a['doctor_name'],strpos($a['doctor_name'],' ')+1,1) : ''));
     ?>
-    <div class="appt-card" id="appt-<?= $a['id'] ?>" data-search="<?= strtolower(htmlspecialchars($a['doctor_name'].' '.($a['specialty']??''))) ?>">
+    <div class="appt-card" id="appt-<?= $a['id'] ?>" data-search="<?= strtolower(htmlspecialchars($a['doctor_name'].' '.($a['specialty']??''))) ?>" data-status="confirmed" data-type="<?= strtolower(htmlspecialchars($a['type'])) ?>" data-date="<?= htmlspecialchars($a['appointment_date']) ?>">
       <div class="appt-card-inner">
         <div class="appt-avatar"><?= $initials ?></div>
         <div class="appt-main-info">
@@ -610,9 +648,6 @@ function isCallActive(string $date, string $time): bool {
             <span class="appt-meta-sep">&middot;</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
             <?= date('g:i A', strtotime($a['appointment_time'])) ?>
-            <span class="appt-meta-sep">&middot;</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87V15.13a1 1 0 01-1.447.9L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-            Online
           </div>
           <?php if (!empty($a['notes'])): ?>
           <div class="appt-notes">
@@ -691,7 +726,7 @@ function isCallActive(string $date, string $time): bool {
         $hasContent = !empty($a['chat_log']) || !empty($a['consultation_transcript']);
         $initials = strtoupper(substr($a['doctor_name'],0,1) . (strpos($a['doctor_name'],' ')!==false ? substr($a['doctor_name'],strpos($a['doctor_name'],' ')+1,1) : ''));
     ?>
-    <div class="appt-card" style="opacity:0.9;" data-search="<?= strtolower(htmlspecialchars($a['doctor_name'].' '.($a['specialty']??''))) ?>">
+    <div class="appt-card" style="opacity:0.9;" data-search="<?= strtolower(htmlspecialchars($a['doctor_name'].' '.($a['specialty']??''))) ?>" data-status="<?= strtolower(htmlspecialchars($a['status'])) ?>" data-type="<?= strtolower(htmlspecialchars($a['type'])) ?>" data-date="<?= htmlspecialchars($a['appointment_date']) ?>">
       <div class="appt-card-inner">
         <div class="appt-avatar past"><?= $initials ?></div>
         <div class="appt-main-info">
@@ -761,11 +796,18 @@ function switchTab(type) {
   document.getElementById('btn-past').classList.toggle('active',     type === 'past');
 }
 
-function filterVisitRows(query) {
-  const q = query.toLowerCase().trim();
+function filterVisitRows() {
+  const q = document.getElementById('visitSearchInput').value.toLowerCase().trim();
+  const status = document.getElementById('visitStatusFilter').value;
+  const type = document.getElementById('visitTypeFilter').value;
+  const date = document.getElementById('visitDateFilter').value;
   document.querySelectorAll('#visits-pending .appt-card, #visits-upcoming .appt-card, #visits-past .appt-card').forEach(card => {
     const hay = card.dataset.search || '';
-    card.style.display = (!q || hay.includes(q)) ? '' : 'none';
+    const matchesSearch = !q || hay.includes(q);
+    const matchesStatus = !status || card.dataset.status === status;
+    const matchesType = !type || card.dataset.type === type;
+    const matchesDate = !date || card.dataset.date === date;
+    card.style.display = matchesSearch && matchesStatus && matchesType && matchesDate ? '' : 'none';
   });
 }
 

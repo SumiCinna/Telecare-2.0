@@ -98,14 +98,6 @@ body{ padding-left:190px; background:#f7f8fb; }
     </a>
     <?php endforeach; ?>
   </nav>
-  <div class="sidebar-footer">
-    <a href="auth/logout.php" class="sidebar-logout">
-      <span class="nav-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
-      </span>
-      Log Out
-    </a>
-  </div>
 </aside>
 
 
