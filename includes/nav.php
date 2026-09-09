@@ -9,7 +9,7 @@ $nav_pages = [
             'icon' => '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>'],
     'visits'  => ['href' => 'router.php?page=visits',    'label' => 'Appointments',
             'icon' => '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/>'],
-    'meds'    => ['href' => 'router.php?page=meds',      'label' => 'Records',
+    'records'  => ['href' => 'router.php?page=records',   'label' => 'Records',
             'icon' => '<path d="M6 3h9l3 3v15H6a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M14 3v4h4M8 11h6M8 15h6M8 19h4"/>'],
     'billing' => ['href' => 'router.php?page=visits',    'label' => 'Billing',
             'icon' => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/>'],

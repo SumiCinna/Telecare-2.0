@@ -18,7 +18,7 @@ $publicPages = [
 ];
 
 $privatePages = [
-    'dashboard', 'visits', 'meds', 'profile', 'receipt', 'chat',
+    'dashboard', 'visits', 'records', 'profile', 'receipt', 'chat',
     'call_patient', 'process_consultation_v2', 'process_consultation',
     'check_summary', 'download_summary', 'auto_complete_appt',
     'pay', 'pay_success', 'pay_cancel',  'privacy-policy',
