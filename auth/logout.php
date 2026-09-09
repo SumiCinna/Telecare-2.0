@@ -1,8 +1,11 @@
 <?php
 // auth/logout.php
-if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
+if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
+
+require_once '../database/config.php';
+require_once '../includes/remember_me.php';
 
 if (!isset($_SESSION['user_id']) && !isset($_SESSION['patient_id'])) {
     header('Location: login.php');
@@ -10,6 +13,22 @@ if (!isset($_SESSION['user_id']) && !isset($_SESSION['patient_id'])) {
 }
 
 if (isset($_POST['confirm_logout'])) {
+    $patientId = $_SESSION['patient_id'] ?? null;
+
+    // Wipe the remember-me token from the DB and the cookie itself.
+    if ($patientId) {
+        tc_patient_clear_remember_cookie($conn, (int)$patientId);
+    }
+
+    // Also clear the separate "remembered email" convenience cookie set in login.php.
+    setcookie('telecare_remember_email', '', [
+        'expires'  => time() - 3600,
+        'path'     => '/',
+        'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+
     session_unset();
     session_destroy();
     session_write_close();
@@ -69,6 +88,3 @@ $user_name = $_SESSION['user_name'] ?? $_SESSION['patient_name'] ?? 'User';
   </div>
 </body>
 </html>
-
-
-

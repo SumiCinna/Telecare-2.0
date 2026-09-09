@@ -3,6 +3,12 @@
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 require_once '../database/config.php';
 require_once '../includes/legal_policy_helper.php';
+require_once '../includes/remember_me.php';
+
+if (tc_patient_attempt_auto_login($conn)) {
+    header('Location: ../router.php?page=dashboard');
+    exit;
+}
 
 $error = '';
 $rememberedEmail = $_COOKIE['telecare_remember_email'] ?? '';
@@ -43,8 +49,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'httponly' => true,
                         'samesite' => 'Lax'
                     ]);
+                    tc_patient_set_remember_cookie($conn, (int)$id);
                 } else {
                     setcookie('telecare_remember_email', '', time() - 3600, '/');
+                    tc_patient_clear_remember_cookie($conn, (int)$id);
                 }
                 header('Location: ../router.php?page=dashboard');
                 exit;

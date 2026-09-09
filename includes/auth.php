@@ -1,6 +1,5 @@
 <?php
 // includes/auth.php
-// includes/auth.php
 // Include at the top of every patient page.
 
 if (session_status() !== PHP_SESSION_ACTIVE) {

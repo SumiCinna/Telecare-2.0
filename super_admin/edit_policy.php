@@ -44,11 +44,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_SESSION['super_admin_id'])) { $errors[] = 'Your session expired. Please log in again.'; }
 
     if (empty($errors)) {
+        $saveOk = true;
+
         if ($isEdit) {
             $targetVer = preg_replace_callback('/(\d+)$/', fn($m) => ((int)$m[1]) + 1, $policy['version']);
             $stmt = safe_prepare($conn, "UPDATE legal_policies SET title=?, type=?, short_desc=?, content=?, version=?, status=?, applicable_to=?, effective_date=?, updated_by=? WHERE id=?");
             $stmt->bind_param("sssssssssi", $title, $type, $shortDesc, $content, $targetVer, $status, $applicable, $effDate, $updated_by, $id);
-            $stmt->execute();
+            $saveOk = $stmt->execute();
             $stmt->close();
             $savedId = $id;
         } else {
@@ -69,19 +71,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $stmt = safe_prepare($conn, "INSERT INTO legal_policies (slug, title, type, short_desc, content, version, status, applicable_to, effective_date, updated_by) VALUES (?,?,?,?,?,?,?,?,?,?)");
             $stmt->bind_param("ssssssssss", $slug, $title, $type, $shortDesc, $content, $targetVer, $status, $applicable, $effDate, $updated_by);
-            $stmt->execute();
+            $saveOk = $stmt->execute();
             $savedId = $stmt->insert_id;
             $stmt->close();
         }
 
-        // Log this save into the version history table.
-        $ins = safe_prepare($conn, "INSERT INTO legal_policy_versions (policy_id, version, content, status, revision_notes, updated_by) VALUES (?,?,?,?,?,?)");
-        $ins->bind_param("isssss", $savedId, $targetVer, $content, $status, $revNotes, $updated_by);
-        $ins->execute();
-        $ins->close();
+        if ($saveOk) {
+            // Log this save into the version history table.
+            $ins = safe_prepare($conn, "INSERT INTO legal_policy_versions (policy_id, version, content, status, revision_notes, updated_by) VALUES (?,?,?,?,?,?)");
+            $ins->bind_param("isssss", $savedId, $targetVer, $content, $status, $revNotes, $updated_by);
+            $ins->execute();
+            $ins->close();
 
-        header('Location: legal_policies.php');
-        exit;
+            $_SESSION['policy_toast'] = [
+                'type'    => 'success',
+                'title'   => $isEdit ? 'Policy updated' : 'Policy created',
+                'message' => '"' . $title . '" was saved successfully as ' . $targetVer . '.',
+            ];
+            header('Location: legal_policies.php');
+            exit;
+        } else {
+            $errors[] = 'Something went wrong while saving to the database. Please try again.';
+        }
     }
 }
 
@@ -120,9 +131,35 @@ $editorContent = $isEdit ? $policy['content'] : '<p>Start writing the policy con
 $applicableTo = $isEdit ? explode(',', $policy['applicable_to'] ?? 'all') : ['all'];
 ?>
 
+<style>
+.notice-banner{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;border-radius:12px;margin-bottom:20px;font-size:13.5px;line-height:1.55;border:1px solid transparent;position:relative;animation:noticeIn .25s ease;}
+.notice-banner.success{background:#f0fdf4;border-color:#bbf7d0;color:#15803d;}
+.notice-banner.error{background:#fef2f2;border-color:#fecaca;color:#b91c1c;}
+.notice-banner .notice-icon{width:20px;height:20px;flex-shrink:0;margin-top:1px;}
+.notice-banner .notice-body{flex:1;}
+.notice-banner .notice-title{font-weight:700;margin-bottom:2px;}
+.notice-banner .notice-list{margin:2px 0 0 0;padding-left:18px;}
+.notice-banner .notice-close{background:none;border:none;cursor:pointer;color:inherit;opacity:.55;padding:2px;flex-shrink:0;line-height:0;}
+.notice-banner .notice-close:hover{opacity:1;}
+@keyframes noticeIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+</style>
+
 <?php if (!empty($errors)): ?>
-<div class="alert alert-error" style="margin-bottom:18px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;padding:12px 16px;border-radius:10px;font-size:13px;">
-	<?php foreach ($errors as $e): ?><div><?= htmlspecialchars($e) ?></div><?php endforeach; ?>
+<div class="notice-banner error" id="policyErrorBanner">
+	<svg class="notice-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v5m0 3.5h.01"/></svg>
+	<div class="notice-body">
+		<div class="notice-title">Policy was not saved</div>
+		<?php if (count($errors) === 1): ?>
+			<?= htmlspecialchars($errors[0]) ?>
+		<?php else: ?>
+			<ul class="notice-list">
+				<?php foreach ($errors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?>
+			</ul>
+		<?php endif; ?>
+	</div>
+	<button type="button" class="notice-close" onclick="this.closest('.notice-banner').remove()">
+		<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+	</button>
 </div>
 <?php endif; ?>
 

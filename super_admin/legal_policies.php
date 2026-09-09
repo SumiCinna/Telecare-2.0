@@ -1,16 +1,30 @@
 <?php
 // super_admin/legal_policies.php
 require_once __DIR__ . '/../database/config.php';
+if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 
 // Handle "Delete policy" (POST from the confirm modal below).
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
-    if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
     if (isset($_SESSION['super_admin_id'])) {
         $del_id = (int)$_POST['delete_id'];
+
+        $nameStmt = safe_prepare($conn, "SELECT title FROM legal_policies WHERE id = ?");
+        $nameStmt->bind_param("i", $del_id);
+        $nameStmt->execute();
+        $delTitle = $nameStmt->get_result()->fetch_assoc()['title'] ?? 'Policy';
+        $nameStmt->close();
+
         $stmt = safe_prepare($conn, "DELETE FROM legal_policies WHERE id = ?");
         $stmt->bind_param("i", $del_id);
-        $stmt->execute();
+        $ok = $stmt->execute();
+        $deleted = $ok && $stmt->affected_rows > 0;
         $stmt->close();
+
+        $_SESSION['policy_toast'] = $deleted
+            ? ['type' => 'success', 'title' => 'Policy deleted', 'message' => '"' . $delTitle . '" and its version history were permanently removed.']
+            : ['type' => 'error',   'title' => 'Delete failed',  'message' => 'The policy could not be deleted. Please try again.'];
+    } else {
+        $_SESSION['policy_toast'] = ['type' => 'error', 'title' => 'Delete failed', 'message' => 'Your session expired. Please log in again.'];
     }
     header('Location: legal_policies.php');
     exit;
@@ -48,7 +62,43 @@ function policy_row_icon(string $type): string {
     if ($type === 'Payments')           { return '<span class="row-icon" style="background:var(--orange-light);color:var(--orange);">PAY</span>'; }
     return '<span class="row-icon" style="background:var(--blue-light);color:var(--blue);"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l3 3v15H6zM9 12h6M9 16h6M9 8h3"/></svg></span>';
 }
+
+// ── Flash message from edit_policy.php save or the delete action above ──
+$policy_toast = $_SESSION['policy_toast'] ?? null;
+unset($_SESSION['policy_toast']);
 ?>
+
+<style>
+.notice-banner{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;border-radius:12px;margin-bottom:20px;font-size:13.5px;line-height:1.55;border:1px solid transparent;position:relative;animation:noticeIn .25s ease;}
+.notice-banner.success{background:#f0fdf4;border-color:#bbf7d0;color:#15803d;}
+.notice-banner.error{background:#fef2f2;border-color:#fecaca;color:#b91c1c;}
+.notice-banner .notice-icon{width:20px;height:20px;flex-shrink:0;margin-top:1px;}
+.notice-banner .notice-body{flex:1;}
+.notice-banner .notice-title{font-weight:700;margin-bottom:2px;}
+.notice-banner .notice-close{background:none;border:none;cursor:pointer;color:inherit;opacity:.55;padding:2px;flex-shrink:0;line-height:0;}
+.notice-banner .notice-close:hover{opacity:1;}
+.notice-banner.fade-out{animation:noticeOut .35s ease forwards;}
+@keyframes noticeIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+@keyframes noticeOut{from{opacity:1;max-height:120px;margin-bottom:20px;}to{opacity:0;max-height:0;margin-bottom:0;padding-top:0;padding-bottom:0;overflow:hidden;}}
+</style>
+
+<?php if ($policy_toast): ?>
+<div class="notice-banner <?= $policy_toast['type'] === 'success' ? 'success' : 'error' ?>" id="policyToastBanner">
+	<?php if ($policy_toast['type'] === 'success'): ?>
+		<svg class="notice-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="m8 12 3 3 5-6"/></svg>
+	<?php else: ?>
+		<svg class="notice-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v5m0 3.5h.01"/></svg>
+	<?php endif; ?>
+	<div class="notice-body">
+		<div class="notice-title"><?= htmlspecialchars($policy_toast['title']) ?></div>
+		<?= htmlspecialchars($policy_toast['message']) ?>
+	</div>
+	<button type="button" class="notice-close" onclick="dismissPolicyToast()">
+		<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+	</button>
+</div>
+<?php endif; ?>
+
 <div class="panel" style="margin-bottom:24px;">
 	<div style="padding:22px 24px 0;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">
 		<div class="tabline" data-target="#policiesTable"><button type="button" class="active" data-filter="all">All Policies</button><button type="button" data-filter="Data &amp; Privacy">Data &amp; Privacy</button><button type="button" data-filter="Terms &amp; Agreements">Terms &amp; Agreements</button><button type="button" data-filter="Payments">Payments</button></div>
@@ -108,5 +158,17 @@ function policy_row_icon(string $type): string {
 			if (idField) { idField.value = btn.getAttribute('data-delete-id'); }
 		}
 	});
+
+	// Auto-dismiss the save/delete result banner after a few seconds; also closable by hand.
+	function dismissPolicyToast() {
+		const el = document.getElementById('policyToastBanner');
+		if (!el) return;
+		el.classList.add('fade-out');
+		setTimeout(() => el.remove(), 350);
+	}
+	(function () {
+		const banner = document.getElementById('policyToastBanner');
+		if (banner) { setTimeout(dismissPolicyToast, 6000); }
+	})();
 </script>
 <?php require_once 'includes/footer.php'; ?>
