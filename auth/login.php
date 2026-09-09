@@ -1,13 +1,16 @@
 <?php
 // auth/login.php
-if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
+if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 require_once '../database/config.php';
+require_once '../includes/legal_policy_helper.php';
 
 $error = '';
+$rememberedEmail = $_COOKIE['telecare_remember_email'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email    = trim($_POST['email'] ?? '');
+    $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
+    $rememberMe = isset($_POST['remember_me']) && $_POST['remember_me'] === '1';
 
     if (empty($email) || empty($password)) {
         $error = 'Please enter your email and password.';
@@ -28,277 +31,163 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif (!$is_verified) {
                 $error = 'account_not_verified';
             } elseif (isset($is_active) && !$is_active) {
-                // Account has been deactivated by admin
                 $error = 'account_deactivated';
             } else {
-                $_SESSION['patient_id']   = $id;
+                $_SESSION['patient_id'] = $id;
                 $_SESSION['patient_name'] = $full_name;
-                header('Location: ../router.php?page=dashboard'); exit;
+                if ($rememberMe) {
+                    setcookie('telecare_remember_email', $email, [
+                        'expires' => time() + (30 * 24 * 60 * 60),
+                        'path' => '/',
+                        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+                        'httponly' => true,
+                        'samesite' => 'Lax'
+                    ]);
+                } else {
+                    setcookie('telecare_remember_email', '', time() - 3600, '/');
+                }
+                header('Location: ../router.php?page=dashboard');
+                exit;
             }
         }
         $stmt->close();
     }
 }
+
+$emailValue = $_POST['email'] ?? $rememberedEmail;
+$rememberChecked = isset($_POST['remember_me']) ? $_POST['remember_me'] === '1' : $rememberedEmail !== '';
+$privacyPolicy = get_legal_policy($conn, 'privacy-policy');
+$dataPolicy = get_legal_policy($conn, 'data-privacy-notice');
+$termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Log In — TELE-CARE</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <title>Log In - TELE-CARE AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet"/>
   <style>
-    :root { --red:#B31118; --red-dark:#8a000b; --ink:#151c27; --teal:#006a61; --teal-light:#0D9488; --bg:#F5F6FA; --white:#FFFFFF; }
+    :root { --red:#bd0f18; --red-dark:#a20c14; --ink:#101827; --line:#efc9c9; --panel:#fff; }
     * { box-sizing:border-box; }
-    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; display:flex; }
-
-    .left-panel {
-      width:45%; background:linear-gradient(160deg,var(--ink) 0%,#0a0e14 100%);
-      display:flex; flex-direction:column; justify-content:center;
-      padding:3rem; position:relative; overflow:hidden;
-    }
-    .left-panel::before {
-      content:''; position:absolute; inset:0;
-      background-image: linear-gradient(rgba(13,148,136,0.08) 1px,transparent 1px),
-                        linear-gradient(90deg,rgba(13,148,136,0.08) 1px,transparent 1px);
-      background-size:44px 44px; animation:gridMove 20s linear infinite;
-    }
-    @keyframes gridMove { from{transform:translateY(0)} to{transform:translateY(44px)} }
-    .orb { position:absolute; border-radius:50%; filter:blur(70px); pointer-events:none; animation:pulse 6s ease-in-out infinite; }
-    @keyframes pulse { 0%,100%{transform:scale(1);opacity:.7} 50%{transform:scale(1.2);opacity:1} }
-    .right-panel { flex:1; display:flex; align-items:center; justify-content:center; padding:2rem; }
-    .login-card  { width:100%; max-width:420px; animation:fadeUp 0.6s ease; }
-    @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
-
-    .field-label { display:block; font-size:0.78rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:rgba(21,28,39,0.55); margin-bottom:0.45rem; }
-    .field-input { width:100%; padding:0.8rem 1rem; border:1.5px solid rgba(21,28,39,0.15); border-radius:8px; font-family:'Inter',sans-serif; font-size:0.95rem; background:var(--white); color:var(--ink); outline:none; transition:border-color 0.25s,box-shadow 0.25s; }
-    .field-input:focus { border-color:var(--teal); box-shadow:0 0 0 3px rgba(0,106,97,0.12); }
-
-    .btn-login { width:100%; padding:0.9rem; border-radius:8px; background:var(--red); color:#fff; font-weight:600; font-size:0.95rem; border:none; cursor:pointer; transition:all 0.3s; box-shadow:0 6px 20px rgba(179,17,24,0.3); margin-top:1.5rem; }
-    .btn-login:hover { background:var(--red-dark); transform:translateY(-2px); box-shadow:0 10px 28px rgba(179,17,24,0.4); }
-
-    .alert-error { background:#FEF2F2; border:1px solid rgba(179,17,24,0.25); color:var(--red); border-radius:12px; padding:0.85rem 1rem; font-size:0.88rem; margin-bottom:1.2rem; }
-
-    /* Unverified banner */
-    .alert-unverified { background:rgba(0,106,97,0.06); border:1px solid rgba(0,106,97,0.2); border-radius:14px; padding:1rem 1.1rem; margin-bottom:1.2rem; }
-    .alert-unverified .uv-title { font-weight:700; color:var(--teal); font-size:0.92rem; margin-bottom:0.35rem; }
-    .alert-unverified .uv-sub   { color:#4a6a67; font-size:0.83rem; line-height:1.65; }
-    .resend-link { color:var(--teal); font-weight:600; background:none; border:none; cursor:pointer; font-family:'Inter',sans-serif; text-decoration:underline; padding:0; font-size:0.83rem; }
-    .resend-link:disabled { color:#9ab0ae; cursor:not-allowed; text-decoration:none; }
-    .spinner-inline { display:inline-block; width:12px; height:12px; border:2px solid rgba(0,106,97,0.3); border-top-color:var(--teal); border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; margin-right:5px; }
-    @keyframes spin { to{transform:rotate(360deg)} }
-
-    /* Deactivated banner */
-    .alert-deactivated { background:#FEF2F2; border:1px solid rgba(179,17,24,0.2); border-radius:14px; padding:1rem 1.1rem; margin-bottom:1.2rem; }
-    .alert-deactivated .dv-title { font-weight:700; color:var(--red); font-size:0.92rem; margin-bottom:0.35rem; }
-    .alert-deactivated .dv-sub   { color:#8a4a55; font-size:0.83rem; line-height:1.65; }
-
-    .divider { display:flex; align-items:center; gap:0.8rem; margin:1.5rem 0; color:#9ab0ae; font-size:0.8rem; }
-    .divider::before,.divider::after { content:''; flex:1; height:1px; background:rgba(21,28,39,0.12); }
-    .pw-wrap { position:relative; }
-    .pw-toggle { position:absolute; right:14px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:#9ab0ae; padding:0; }
-    .pw-toggle:hover { color:var(--ink); }
-
-    @media(max-width:768px){ .left-panel{ display:none; } }
+    body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem 1rem; font-family:'DM Sans',sans-serif; color:var(--ink); background:linear-gradient(125deg,#eef1ff 0%,#faf4f8 52%,#dff8ff 100%); }
+    .page { width:min(100%, 420px); text-align:center; }
+    .brand-mark { width:48px; height:48px; margin:0 auto .65rem; display:grid; place-items:center; border-radius:50%; background:var(--red); color:#fff; font-weight:800; font-size:1.1rem; }
+    .brand-name { margin:0; color:#a70009; font-family:'Plus Jakarta Sans',sans-serif; font-size:1.55rem; letter-spacing:-.03em; }
+    .brand-subtitle { margin:.25rem 0 1.55rem; color:#62353b; font-size:.76rem; }
+    .login-card { overflow:hidden; text-align:left; background:var(--panel); border:1px solid var(--line); border-radius:12px; box-shadow:0 10px 18px rgba(62,32,42,.12); }
+    .card-body { padding:1.55rem 1.45rem 1.4rem; }
+    h1 { margin:0 0 1.4rem; text-align:center; font-size:1.1rem; font-weight:700; }
+    .field { margin-bottom:.85rem; }
+    label { display:block; margin-bottom:.3rem; color:#8d1c25; font-size:.64rem; font-weight:600; }
+    input[type=email], input[type=password] { width:100%; height:32px; padding:0 .75rem; border:1px solid var(--line); border-radius:6px; background:#fbfaff; color:var(--ink); font:inherit; font-size:.72rem; outline:none; }
+    input:focus { border-color:var(--red); box-shadow:0 0 0 3px rgba(189,15,24,.1); }
+    .password-wrap { position:relative; }
+    .password-wrap input { padding-right:2.5rem; }
+    .password-toggle { position:absolute; top:50%; right:.65rem; transform:translateY(-50%); padding:0; border:0; background:none; color:#8c5360; cursor:pointer; }
+    .password-toggle svg { width:15px; height:15px; }
+    .form-options { display:flex; align-items:center; justify-content:space-between; margin:.85rem 0 1.25rem; font-size:.68rem; }
+    .remember { display:flex; align-items:center; gap:.4rem; color:#663d45; cursor:pointer; }
+    .remember input { width:12px; height:12px; margin:0; accent-color:var(--red); }
+    a { color:var(--red); text-decoration:none; }
+    a:hover, button.policy-button:hover { text-decoration:underline; }
+    .btn-login { width:100%; height:31px; border:0; border-radius:6px; background:var(--red); color:#fff; font-size:.68rem; font-weight:700; cursor:pointer; }
+    .btn-login:hover { background:var(--red-dark); }
+    .error { margin-bottom:1rem; padding:.65rem .75rem; border:1px solid #efb7b7; border-radius:6px; background:#fff3f3; color:#a20c14; font-size:.72rem; }
+    .alert { margin-bottom:1rem; padding:.75rem; border-radius:7px; font-size:.72rem; line-height:1.5; }
+    .alert-unverified { border:1px solid #b6ddd8; background:#effaf8; color:#12685f; }
+    .alert-deactivated { border:1px solid #efb7b7; background:#fff3f3; color:#a20c14; }
+    .card-footer { padding:.78rem 1rem; border-top:1px solid #eadada; background:#fcfbff; text-align:center; font-size:.7rem; color:#663d45; }
+    .legal-links { display:flex; justify-content:center; gap:1.35rem; margin-top:1.55rem; font-size:.68rem; }
+    .policy-button { padding:0; border:0; background:none; color:#62353b; font:inherit; cursor:pointer; }
+    .policy-button:hover { color:var(--red); }
+    .modal-backdrop { display:none; position:fixed; inset:0; z-index:10; align-items:center; justify-content:center; padding:1rem; background:rgba(24,22,31,.55); }
+    .modal-backdrop.open { display:flex; }
+    .policy-modal { width:min(100%,680px); max-height:88vh; overflow:hidden; border-radius:12px; background:#fff; box-shadow:0 18px 50px rgba(0,0,0,.25); }
+    .policy-header { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1rem 1.2rem; border-bottom:1px solid #eadada; }
+    .policy-header h2 { margin:0; font-size:1rem; }
+    .policy-close { border:0; background:none; color:#62353b; font-size:1.35rem; cursor:pointer; }
+    .policy-content { max-height:calc(88vh - 68px); overflow:auto; padding:1.2rem 1.35rem; color:#3e4653; font-size:.82rem; line-height:1.65; }
+    .policy-content h1, .policy-content h2, .policy-content h3 { text-align:left; color:var(--ink); }
+    @media (max-width:480px) { body { padding:1.25rem .75rem; } .legal-links { gap:.8rem; } }
   </style>
 </head>
 <body>
+  <main class="page">
+    <div class="brand-mark">TC</div>
+    <p class="brand-name">Tele-Care AI</p>
+    <p class="brand-subtitle">Patient Portal Login</p>
 
-<!-- LEFT PANEL -->
-<div class="left-panel">
-  <div class="orb" style="width:300px;height:300px;background:radial-gradient(circle,rgba(0,106,97,0.25) 0%,transparent 70%);top:-60px;right:-60px;"></div>
-  <div class="orb" style="width:200px;height:200px;background:radial-gradient(circle,rgba(179,17,24,0.2) 0%,transparent 70%);bottom:60px;left:20px;animation-delay:3s;"></div>
-  <div style="position:relative;z-index:2;">
-    <a href="../index.php" style="font-family:'Inter',sans-serif;font-size:1.6rem;font-weight:900;color:#fff;text-decoration:none;letter-spacing:0.02em;">TELE<span style="color:var(--red)">-</span>CARE</a>
-    <div style="margin-top:3.5rem;">
-      <h1 style="font-family:'Inter',sans-serif;font-weight:800;font-size:2.4rem;color:#fff;line-height:1.2;margin-bottom:1rem;">Welcome<br/>Back.</h1>
-      <p style="color:rgba(255,255,255,0.55);font-size:0.95rem;line-height:1.75;">Log in to access your appointments, consultations, and health records.</p>
-    </div>
-    <div style="margin-top:3rem;display:flex;flex-direction:column;gap:0.9rem;">
-      <?php
-      $iconCalendar = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
-      $iconVideo    = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87V15.13a1 1 0 01-1.447.9L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>';
-      $iconRecords  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-3"/><path d="M9 12h6M9 16h6"/></svg>';
-      foreach([[$iconCalendar,'View & manage your appointments'],[$iconVideo,'Join your teleconsultation sessions'],[$iconRecords,'Access your digital health records']] as $p): ?>
-      <div style="display:flex;align-items:center;gap:0.9rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:0.85rem 1rem;">
-        <span style="width:32px;height:32px;flex-shrink:0;border-radius:8px;background:rgba(13,148,136,0.18);color:#4fd1c5;display:flex;align-items:center;justify-content:center;">
-          <span style="width:16px;height:16px;display:block;"><?= $p[0] ?></span>
-        </span>
-        <span style="font-size:0.88rem;color:rgba(255,255,255,0.7);"><?= $p[1] ?></span>
+    <section class="login-card">
+      <div class="card-body">
+        <h1>Welcome Back</h1>
+        <?php if ($error === 'account_not_verified'): ?>
+          <div class="alert alert-unverified">Your account has not been activated yet. Check your inbox for the activation link or <button class="policy-button" id="resendBtn" type="button" onclick="resendVerification()">resend it now</button>.<div id="resendMsg"></div></div>
+        <?php elseif ($error === 'account_deactivated'): ?>
+          <div class="alert alert-deactivated">Your account has been deactivated by an administrator. Please contact your clinic or administrator for assistance.</div>
+        <?php elseif ($error): ?>
+          <div class="error"><?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
+
+        <form method="POST">
+          <div class="field">
+            <label for="email">Email Address or Patient ID</label>
+            <input id="email" type="email" name="email" placeholder="Enter your email or ID" value="<?= htmlspecialchars($emailValue) ?>" required autocomplete="username"/>
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="password-wrap">
+              <input id="password" type="password" name="password" placeholder="Enter your password" required autocomplete="current-password"/>
+              <button class="password-toggle" type="button" onclick="togglePassword()" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+            </div>
+          </div>
+          <div class="form-options">
+            <label class="remember"><input type="checkbox" name="remember_me" value="1" <?= $rememberChecked ? 'checked' : '' ?>/> Remember Me</label>
+            <a href="forgot_password.php">Forgot Password?</a>
+          </div>
+          <button class="btn-login" type="submit">Login</button>
+        </form>
       </div>
-      <?php endforeach ?>
-    </div>
+      <div class="card-footer">New patient? <a href="register.php">Register here</a></div>
+    </section>
+
+    <nav class="legal-links" aria-label="Legal links">
+      <button class="policy-button" type="button" onclick="openPolicy('privacy')">Privacy Policy</button>
+      <button class="policy-button" type="button" onclick="openPolicy('terms')">Terms of Service</button>
+      <button class="policy-button" type="button" onclick="openPolicy('data')">Data Policy</button>
+    </nav>
+  </main>
+
+  <div class="modal-backdrop" id="policyModal" role="dialog" aria-modal="true" aria-labelledby="policyTitle" onclick="closePolicy(event)">
+    <section class="policy-modal">
+      <header class="policy-header"><h2 id="policyTitle"></h2><button class="policy-close" type="button" onclick="closePolicy()" aria-label="Close">&times;</button></header>
+      <div class="policy-content" id="policyContent"></div>
+    </section>
   </div>
-</div>
 
-<!-- RIGHT PANEL -->
-<div class="right-panel">
-  <div class="login-card">
-
-    <div style="margin-bottom:2rem;">
-      <h2 style="font-family:'Inter',sans-serif;font-weight:900;font-size:1.9rem;margin-bottom:0.3rem;">Log In</h2>
-      <p style="color:rgba(21,28,39,0.55);font-size:0.9rem;">Enter your credentials to continue.</p>
-    </div>
+  <script>
+    const policies = {
+      privacy: { title: <?= json_encode($privacyPolicy['title'] ?? 'Privacy Policy') ?>, content: <?= json_encode($privacyPolicy['content'] ?? '<p>This policy is not currently available.</p>') ?> },
+      terms: { title: <?= json_encode($termsPolicy['title'] ?? 'Terms of Service') ?>, content: <?= json_encode($termsPolicy['content'] ?? '<p>This policy is not currently available.</p>') ?> },
+      data: { title: <?= json_encode($dataPolicy['title'] ?? 'Data Policy') ?>, content: <?= json_encode($dataPolicy['content'] ?? '<p>This policy is not currently available.</p>') ?> }
+    };
+    function openPolicy(type) { document.getElementById('policyTitle').textContent = policies[type].title; document.getElementById('policyContent').innerHTML = policies[type].content; document.getElementById('policyModal').classList.add('open'); }
+    function closePolicy(event) { if (!event || event.target === document.getElementById('policyModal')) document.getElementById('policyModal').classList.remove('open'); }
+    function togglePassword() { const field = document.getElementById('password'); field.type = field.type === 'password' ? 'text' : 'password'; }
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closePolicy(); });
 
     <?php if ($error === 'account_not_verified'): ?>
-    <!-- ── UNVERIFIED ACCOUNT BANNER ── -->
-    <div class="alert-unverified">
-      <div class="uv-title" style="display:flex;align-items:center;gap:0.5rem;">
-        <span style="width:18px;height:18px;flex-shrink:0;display:inline-flex;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
-        </span>
-        Email not verified yet
-      </div>
-      <div class="uv-sub">
-        Your account hasn't been activated. Check your inbox for the activation link, or
-        <button class="resend-link" id="resendBtn" onclick="resendVerification()">resend it now</button>.
-        <div id="resendMsg" style="margin-top:0.4rem;min-height:1rem;"></div>
-      </div>
-    </div>
-
-    <script>
-      const EMAILJS_PUBLIC_KEY  = 'm-AvAiAdUDsgBbz6D';
-      const EMAILJS_SERVICE_ID  = 'service_vr6ygvx';
-      const EMAILJS_TEMPLATE_ID = 'template_zhnltnl';
-      const unverifiedEmail     = <?= json_encode($_POST['email'] ?? '') ?>;
-
-      emailjs.init(EMAILJS_PUBLIC_KEY);
-
-      function resendVerification() {
-        const btn = document.getElementById('resendBtn');
-        const msg = document.getElementById('resendMsg');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-inline"></span>Sending...';
-
-        fetch('resend_verification.php', {
-          method: 'POST',
-          headers: {'Content-Type':'application/x-www-form-urlencoded'},
-          body: 'email=' + encodeURIComponent(unverifiedEmail)
-        })
-        .then(r => r.json())
-        .then(data => {
-          if (!data.success) throw new Error(data.message);
-          return emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-            to_email:        data.email,
-            patient_name:    data.name,
-            activation_link: data.link,
-          });
-        })
-        .then(() => {
-          msg.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;"><path d="M5 13l4 4L19 7"/></svg>Activation email sent! Check your inbox.';
-          msg.style.color = 'var(--teal)';
-          let cd = 60;
-          const t = setInterval(() => {
-            cd--;
-            btn.innerHTML = 'Resend in ' + cd + 's';
-            if (cd <= 0) { clearInterval(t); btn.disabled=false; btn.innerHTML='resend it now'; }
-          }, 1000);
-        })
-        .catch(err => {
-          msg.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;"><path d="M6 6l12 12M18 6L6 18"/></svg>' + (err.message || 'Failed to send. Try again.');
-          msg.style.color = 'var(--red)';
-          btn.disabled = false;
-          btn.innerHTML = 'resend it now';
-        });
-      }
-    </script>
-
-    <?php elseif ($error === 'account_deactivated'): ?>
-    <!-- ── DEACTIVATED ACCOUNT BANNER ── -->
-    <div class="alert-deactivated">
-      <div class="dv-title" style="display:flex;align-items:center;gap:0.5rem;">
-        <span style="width:18px;height:18px;flex-shrink:0;display:inline-flex;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.5 5.5l13 13"/></svg>
-        </span>
-        Account Deactivated
-      </div>
-      <div class="dv-sub">
-        Your account has been deactivated by an administrator and you are unable to log in at this time.
-        If you believe this is a mistake, please contact your clinic or administrator for assistance.
-      </div>
-    </div>
-
-    <?php elseif ($error): ?>
-    <div class="alert-error"><?= htmlspecialchars($error) ?></div>
-    <?php endif ?>
-
-    <form method="POST">
-      <div style="margin-bottom:1rem;">
-        <label class="field-label">Email Address</label>
-        <input type="email" name="email" class="field-input" placeholder="you@email.com" required
-               value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"/>
-      </div>
-      <div>
-        <label class="field-label">Password</label>
-        <div class="pw-wrap">
-          <input type="password" name="password" id="pwField" class="field-input" placeholder="Your password" required style="padding-right:2.8rem;"/>
-          <button type="button" class="pw-toggle" onclick="togglePw()">
-            <svg id="eye-show" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-            </svg>
-            <svg id="eye-hide" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none;">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95M6.938 6.938A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-1.395 2.63M6.938 6.938L3 3m3.938 3.938l10.124 10.124M17.062 17.062L21 21"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-      <div style="text-align:right;margin-top:0.5rem;">
-        <a href="forgot_password.php" style="font-size:0.82rem;color:var(--teal);text-decoration:none;font-weight:500;">Forgot password?</a>
-      </div>
-      <button type="submit" class="btn-login">Log In</button>
-    </form>
-
-    <div class="divider">or</div>
-
-    <!-- Google Login Button -->
-    <a href="google-login.php" style="
-        display:flex;align-items:center;justify-content:center;gap:.75rem;
-        width:100%;padding:.85rem 1rem;
-        border:1.5px solid rgba(21,28,39,.18);
-        border-radius:8px;
-        background:#fff;
-        color:#151c27;
-        font-family:'Inter',sans-serif;font-size:.92rem;font-weight:600;
-        text-decoration:none;
-        transition:all .25s;
-        box-shadow:0 2px 8px rgba(0,0,0,.07);
-        margin-bottom:1.25rem;
-    ">
-      <svg width="18" height="18" viewBox="0 0 48 48">
-        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-      </svg>
-      Continue with Google
-    </a>
-
-    <p style="text-align:center;font-size:0.9rem;color:rgba(21,28,39,0.55);">
-      Don't have an account? <a href="register.php" style="color:var(--red);font-weight:600;">Create one</a>
-    </p>
-    <p style="text-align:center;margin-top:2.5rem;font-size:0.78rem;">
-      <a href="../index.php" style="color:#9ab0ae;text-decoration:none;">← Back to home</a>
-    </p>
-
-  </div>
-</div>
-
-<script>
-  function togglePw() {
-    const f = document.getElementById('pwField');
-    const s = document.getElementById('eye-show');
-    const h = document.getElementById('eye-hide');
-    if (f.type === 'password') { f.type='text'; s.style.display='none'; h.style.display='block'; }
-    else { f.type='password'; s.style.display='block'; h.style.display='none'; }
-  }
-</script>
+    function resendVerification() {
+      const button = document.getElementById('resendBtn');
+      const message = document.getElementById('resendMsg');
+      button.disabled = true;
+      button.textContent = 'Sending...';
+      fetch('resend_verification.php', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'email=' + encodeURIComponent(<?= json_encode($_POST['email'] ?? '') ?>) })
+        .then(response => response.json()).then(data => { message.textContent = data.success ? ' Activation email sent. Check your inbox.' : ' ' + data.message; button.textContent = data.success ? 'Sent' : 'resend it now'; button.disabled = data.success; })
+        .catch(() => { message.textContent = ' Unable to send the activation email.'; button.disabled = false; button.textContent = 'resend it now'; });
+    }
+    <?php endif; ?>
+  </script>
 </body>
 </html>
-
-
-
-
-
