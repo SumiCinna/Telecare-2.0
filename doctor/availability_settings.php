@@ -12,10 +12,6 @@ function generateTimeOptions(): array {
     return $options;
 }
 
-function validSetting(int $value,array $allowed): bool {
-    return in_array($value,$allowed,true);
-}
-
 function validateSlots(array $days,array $starts,array $ends): array {
     $slots=[];
     $allowed=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
@@ -58,56 +54,34 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
         $schedDays=$_POST['sched_day']??[];
         $starts=$_POST['sched_start']??[];
         $ends=$_POST['sched_end']??[];
-        $duration=(int)($_POST['consultation_duration']??30);
-        $interval=(int)($_POST['appointment_interval']??5);
-        $breakStart=trim((string)($_POST['break_start']??''));
-        $breakEnd=trim((string)($_POST['break_end']??''));
-        $types=[];
 
-        foreach((array)($_POST['consultation_types']??[]) as $type){
-            $type=trim((string)$type);
-            if($type!==''&&!in_array($type,$types,true)) $types[]=$type;
-        }
+        [$ok,$slots,$message]=validateSlots($schedDays,$starts,$ends);
 
-        if(!validSetting($duration,[15,30,45,60])||!validSetting($interval,[5,10,15,30,60])){
-            $_SESSION['toast_error']='Choose a valid consultation duration and appointment interval.';
-        }elseif(($breakStart!==''||$breakEnd!=='')&&($breakStart===''||$breakEnd===''||$breakStart>=$breakEnd)){
-            $_SESSION['toast_error']='Enter a valid break time range.';
+        if(!$ok){
+            $_SESSION['toast_error']=$message;
         }else{
-            if(!$types)$types=['In-person'];
-            [$ok,$slots,$message]=validateSlots($schedDays,$starts,$ends);
+            try{
+                $conn->begin_transaction();
 
-            if(!$ok){
-                $_SESSION['toast_error']=$message;
-            }else{
-                try{
-                    $conn->begin_transaction();
+                $del=$conn->prepare('DELETE FROM doctor_schedules WHERE doctor_id=?');
+                $del->bind_param('i',$doctor_id);
+                $del->execute();
 
-                    $del=$conn->prepare('DELETE FROM doctor_schedules WHERE doctor_id=?');
-                    $del->bind_param('i',$doctor_id);
-                    $del->execute();
-
-                    if($slots){
-                        $ins=$conn->prepare('INSERT INTO doctor_schedules (doctor_id,day_of_week,start_time,end_time) VALUES (?,?,?,?)');
-                        foreach($slots as $slot){
-                            $start=$slot['start'].':00';
-                            $end=$slot['end'].':00';
-                            $ins->bind_param('isss',$doctor_id,$slot['day'],$start,$end);
-                            $ins->execute();
-                        }
+                if($slots){
+                    $ins=$conn->prepare('INSERT INTO doctor_schedules (doctor_id,day_of_week,start_time,end_time) VALUES (?,?,?,?)');
+                    foreach($slots as $slot){
+                        $start=$slot['start'].':00';
+                        $end=$slot['end'].':00';
+                        $ins->bind_param('isss',$doctor_id,$slot['day'],$start,$end);
+                        $ins->execute();
                     }
-
-                    $typeValue=implode(',',$types);
-                    $stmt=$conn->prepare("INSERT INTO doctor_schedule_settings (doctor_id,consultation_duration,appointment_interval,break_start,break_end,consultation_types) VALUES (?,?,?,NULLIF(?,''),NULLIF(?,''),?) ON DUPLICATE KEY UPDATE consultation_duration=VALUES(consultation_duration),appointment_interval=VALUES(appointment_interval),break_start=VALUES(break_start),break_end=VALUES(break_end),consultation_types=VALUES(consultation_types)");
-                    $stmt->bind_param('iiisss',$doctor_id,$duration,$interval,$breakStart,$breakEnd,$typeValue);
-                    $stmt->execute();
-
-                    $conn->commit();
-                    $_SESSION['toast']='Weekly schedule updated.';
-                }catch(Throwable $e){
-                    $conn->rollback();
-                    $_SESSION['toast_error']='Failed to update schedule. Please try again.';
                 }
+
+                $conn->commit();
+                $_SESSION['toast']='Weekly schedule updated.';
+            }catch(Throwable $e){
+                $conn->rollback();
+                $_SESSION['toast_error']='Failed to update schedule. Please try again.';
             }
         }
 
@@ -122,14 +96,6 @@ $stmt->execute();
 $result=$stmt->get_result();
 while($row=$result->fetch_assoc())$schedules[]=$row;
 
-$settings=['consultation_duration'=>30,'appointment_interval'=>5,'break_start'=>'','break_end'=>'','consultation_types'=>'In-person'];
-$stmt=$conn->prepare('SELECT consultation_duration,appointment_interval,TIME_FORMAT(break_start,"%H:%i") break_start,TIME_FORMAT(break_end,"%H:%i") break_end,consultation_types FROM doctor_schedule_settings WHERE doctor_id=?');
-$stmt->bind_param('i',$doctor_id);
-$stmt->execute();
-$saved=$stmt->get_result()->fetch_assoc();
-if($saved)$settings=array_merge($settings,$saved);
-
-$selectedTypes=array_filter(array_map('trim',explode(',',$settings['consultation_types'])));
 $activeDays=array_unique(array_column($schedules,'day_of_week'));
 $toast=$_SESSION['toast']??null;
 $error=$_SESSION['toast_error']??null;
@@ -161,8 +127,6 @@ require_once 'includes/header.php';
 .add{margin-top:12px;border:0;border-radius:8px;padding:9px 14px;background:var(--secondary-soft);color:var(--secondary-dark);font-size:.72rem;font-weight:700;cursor:pointer}
 .field{margin-bottom:14px}
 .label{display:block;margin-bottom:6px;color:var(--neutral-700);font-size:.7rem;font-weight:700}
-.check{display:flex;align-items:center;gap:7px;margin-top:8px;color:var(--neutral-700);font-size:.72rem}
-.check input{accent-color:var(--primary)}
 .actions{display:flex;gap:8px;margin-top:18px}
 .btn{flex:1;border:0;border-radius:8px;padding:11px;text-align:center;font-size:.72rem;font-weight:700;text-decoration:none;cursor:pointer}
 .btn-primary{background:var(--primary);color:#fff}
@@ -226,45 +190,6 @@ require_once 'includes/header.php';
                 </div>
 
                 <button type="button" class="add" onclick="addRow()">+ Add Row</button>
-
-                <div class="card" style="margin-top:16px;box-shadow:none;background:var(--neutral-50)">
-                    <h2 class="section-title">Consultation Settings</h2>
-
-                    <div class="field">
-                        <label class="label">Consultation Duration</label>
-                        <select class="input" name="consultation_duration">
-                            <?php foreach([15,30,45,60] as $value): ?><option value="<?= $value ?>" <?= (int)$settings['consultation_duration']===$value?'selected':'' ?>><?= $value ?> minutes</option><?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <label class="label">Appointment Interval</label>
-                        <select class="input" name="appointment_interval">
-                            <?php foreach([5,10,15,30,60] as $value): ?><option value="<?= $value ?>" <?= (int)$settings['appointment_interval']===$value?'selected':'' ?>><?= $value ?> minutes</option><?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-                        <div class="field">
-                            <label class="label">Break Start</label>
-                            <select class="input" name="break_start">
-                                <option value="">No break</option>
-                                <?php foreach($timeOptions as $time): ?><option value="<?= $time['val'] ?>" <?= $settings['break_start']===$time['val']?'selected':'' ?>><?= $time['lbl'] ?></option><?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label class="label">Break End</label>
-                            <select class="input" name="break_end">
-                                <option value="">No break</option>
-                                <?php foreach($timeOptions as $time): ?><option value="<?= $time['val'] ?>" <?= $settings['break_end']===$time['val']?'selected':'' ?>><?= $time['lbl'] ?></option><?php endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="label">Consultation Type</div>
-                    <label class="check"><input type="checkbox" name="consultation_types[]" value="Teleconsult" <?= in_array('Teleconsult',$selectedTypes,true)?'checked':'' ?>> Teleconsultation</label>
-                    <label class="check"><input type="checkbox" name="consultation_types[]" value="In-person" <?= in_array('In-person',$selectedTypes,true)?'checked':'' ?>> In-person</label>
-                </div>
 
                 <div class="actions">
                     <button type="submit" class="btn btn-primary">Save Schedule</button>
