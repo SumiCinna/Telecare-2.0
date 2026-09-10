@@ -25,7 +25,7 @@ if(!$patient){
 }
 
 $historyStmt = $conn->prepare("
-    SELECT id,appointment_date,appointment_time,type,status,reason,notes,consultation_summary,completed_at
+    SELECT id,appointment_date,appointment_time,type,status,reason,notes,consultation_summary,summary_pdf_path,completed_at
     FROM appointments
     WHERE patient_id=? AND doctor_id=?
     ORDER BY appointment_date DESC,appointment_time DESC
@@ -283,19 +283,31 @@ function documentType($type){
 
                     <section class="overview-card">
 
-                        <div class="overview-title">
+                        <div class="overview-title" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
 
-                            <svg
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                stroke-width="1.8"
+                            <span style="display:flex;align-items:center;gap:8px;">
+
+                                <svg
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                >
+                                    <path d="M6 3h12v18H6z"/>
+                                    <path d="M9 7h6M9 11h6M9 15h4"/>
+                                </svg>
+
+                                Medical History
+
+                            </span>
+
+                            <a
+                                href="patient-summaries.php?patient_id=<?= (int)$patient_id ?>"
+                                class="upload-button"
+                                style="text-decoration:none;"
                             >
-                                <path d="M6 3h12v18H6z"/>
-                                <path d="M9 7h6M9 11h6M9 15h4"/>
-                            </svg>
-
-                            Medical History
+                                View All Summaries
+                            </a>
 
                         </div>
 
@@ -327,17 +339,32 @@ function documentType($type){
                                             ) ?>
                                         </div>
 
-                                        <?php if (!empty($historyRow['consultation_summary'])): ?>
+                                        <?php if (
+                                            !empty($historyRow['summary_pdf_path'])
+                                            && $historyRow['summary_pdf_path'] !== 'TEXT_CONFIRMED'
+                                        ): ?>
 
                                             <div class="history-summary">
                                                 <span class="history-summary-label">Summarized Notes</span>
-                                                <?= htmlspecialchars(
-                                                    mb_substr(
-                                                        trim(preg_replace('/\s+/', ' ', $historyRow['consultation_summary'])),
-                                                        0,
-                                                        220
+
+                                                <?= date(
+                                                    'M d, Y g:i A',
+                                                    strtotime(
+                                                        $historyRow['appointment_date']
+                                                        . ' '
+                                                        . $historyRow['appointment_time']
                                                     )
                                                 ) ?>
+
+                                                <a
+                                                    class="history-summary-pdf"
+                                                    href="../consultation_summaries/<?= htmlspecialchars($historyRow['summary_pdf_path']) ?>"
+                                                    target="_blank"
+                                                    rel="noopener"
+                                                >
+                                                    View Summary (PDF)
+                                                </a>
+
                                             </div>
 
                                         <?php endif; ?>

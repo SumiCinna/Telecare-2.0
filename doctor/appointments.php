@@ -18,11 +18,37 @@ $page_title='Appointments — TELE-CARE';$page_title_short='Appointments';$activ
 function apptType($v){return stripos((string)$v,'tele')!==false?'Teleconsultation':($v?:'In-person');}
 ?>
 <style>
-.appts-page{width:100%;max-width:1450px;padding:26px;box-sizing:border-box}.appts-head h1{margin:0;color:var(--neutral-900);font-size:1.7rem}.appts-head p{margin:5px 0 20px;color:var(--neutral-500);font-size:.78rem}.filters{display:grid;grid-template-columns:minmax(220px,1fr) 150px 150px 150px;gap:10px;padding:12px;margin-bottom:20px;background:#fff;border:1px solid var(--border-color);border-radius:12px}.control{width:100%;height:40px;padding:0 12px;border:1px solid var(--border-color);border-radius:8px;background:#fff;color:var(--neutral-700);font:inherit;font-size:.72rem}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.appt-card{position:relative;padding:16px;background:#fff;border:1px solid var(--border-color);border-left:3px solid var(--secondary,#0f8f83);border-radius:10px;box-shadow:var(--shadow-sm)}.patient{display:flex;align-items:center;gap:10px}.avatar{width:42px;height:42px;border-radius:50%;overflow:hidden;background:var(--neutral-100);display:grid;place-items:center;font-weight:700}.avatar img{width:100%;height:100%;object-fit:cover}.patient-name{font-size:.9rem;font-weight:800;color:var(--neutral-900)}.patient-id{font-size:.61rem;color:var(--neutral-500);margin-top:2px}.badge{position:absolute;right:14px;top:14px;padding:4px 9px;border-radius:999px;background:#e9fbf4;color:#087b53;border:1px solid #bdebd9;font-size:.58rem;font-weight:700}.info{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;padding:11px;background:#f3f5ff;border-radius:8px}.info-label{font-size:.57rem;font-weight:800;text-transform:uppercase;color:var(--neutral-600)}.info-value{margin-top:3px;font-size:.69rem;color:var(--neutral-900);font-weight:600}.reason-label{font-size:.57rem;font-weight:800;text-transform:uppercase;color:var(--neutral-600)}.reason{min-height:34px;margin:4px 0 14px;color:var(--neutral-700);font-size:.69rem;line-height:1.45}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.btn{display:flex;align-items:center;justify-content:center;min-height:36px;border-radius:7px;font-size:.66rem;font-weight:800;text-decoration:none}.btn-light{border:1px solid var(--border-color);color:var(--neutral-800);background:#fff}.btn-primary{background:var(--primary);color:#fff}.btn-disabled{background:#e4a1a5;color:#fff;pointer-events:none}.empty{grid-column:1/-1;padding:50px;text-align:center;background:#fff;border:1px solid var(--border-color);border-radius:10px;color:var(--neutral-500)}
-@media(max-width:950px){.cards{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}}@media(max-width:600px){.appts-page{padding:15px}.filters{grid-template-columns:1fr}.info{grid-template-columns:1fr}.actions{grid-template-columns:1fr}}
+.appts-page{width:100%;max-width:1450px;padding:26px;box-sizing:border-box}.appts-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}.appts-head h1{margin:0;color:var(--neutral-900);font-size:1.7rem}.appts-head p{margin:5px 0 20px;color:var(--neutral-500);font-size:.78rem}.filters{display:grid;grid-template-columns:minmax(220px,1fr) 150px 150px 150px;gap:10px;padding:12px;margin-bottom:20px;background:#fff;border:1px solid var(--border-color);border-radius:12px}.control{width:100%;height:40px;padding:0 12px;border:1px solid var(--border-color);border-radius:8px;background:#fff;color:var(--neutral-700);font:inherit;font-size:.72rem}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.appt-card{position:relative;padding:16px;background:#fff;border:1px solid var(--border-color);border-left:3px solid var(--secondary,#0f8f83);border-radius:10px;box-shadow:var(--shadow-sm)}.patient{display:flex;align-items:center;gap:10px}.avatar{width:42px;height:42px;border-radius:50%;overflow:hidden;background:var(--neutral-100);display:grid;place-items:center;font-weight:700}.avatar img{width:100%;height:100%;object-fit:cover}.patient-name{font-size:.9rem;font-weight:800;color:var(--neutral-900)}.patient-id{font-size:.61rem;color:var(--neutral-500);margin-top:2px}.badge{position:absolute;right:14px;top:14px;padding:4px 9px;border-radius:999px;background:#e9fbf4;color:#087b53;border:1px solid #bdebd9;font-size:.58rem;font-weight:700}.info{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;padding:11px;background:#f3f5ff;border-radius:8px}.info-label{font-size:.57rem;font-weight:800;text-transform:uppercase;color:var(--neutral-600)}.info-value{margin-top:3px;font-size:.69rem;color:var(--neutral-900);font-weight:600}.reason-label{font-size:.57rem;font-weight:800;text-transform:uppercase;color:var(--neutral-600)}.reason{min-height:34px;margin:4px 0 14px;color:var(--neutral-700);font-size:.69rem;line-height:1.45}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.btn{display:flex;align-items:center;justify-content:center;min-height:36px;border-radius:7px;font-size:.66rem;font-weight:800;text-decoration:none}.btn-light{border:1px solid var(--border-color);color:var(--neutral-800);background:#fff}.btn-primary{background:var(--primary);color:#fff}.btn-disabled{background:#e4a1a5;color:#fff;pointer-events:none}.empty{grid-column:1/-1;padding:50px;text-align:center;background:#fff;border:1px solid var(--border-color);border-radius:10px;color:var(--neutral-500)}
+.instant-call-btn{display:flex;align-items:center;gap:8px;height:42px;padding:0 18px;border:none;border-radius:9px;background:var(--secondary,#0f8f83);color:#fff;font-size:.78rem;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:var(--shadow-sm);flex-shrink:0}
+.instant-call-btn:hover{filter:brightness(1.05)}
+.instant-call-btn svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ic-overlay{position:fixed;inset:0;background:rgba(20,22,30,.5);display:none;align-items:center;justify-content:center;z-index:200;padding:16px}
+.ic-overlay.open{display:flex}
+.ic-modal{width:100%;max-width:420px;max-height:80vh;background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden}
+.ic-modal-head{padding:16px 18px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between}
+.ic-modal-head h2{margin:0;font-size:1rem;color:var(--neutral-900)}
+.ic-modal-head button{background:none;border:none;font-size:1.3rem;line-height:1;color:var(--neutral-500);cursor:pointer;padding:4px}
+.ic-search{padding:12px 18px}
+.ic-search input{width:100%;height:40px;padding:0 12px;border:1px solid var(--border-color);border-radius:8px;font:inherit;font-size:.78rem;box-sizing:border-box}
+.ic-list{flex:1;overflow-y:auto;padding:0 10px 10px}
+.ic-row{display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:9px;cursor:pointer}
+.ic-row:hover{background:#f5f6fa}
+.ic-row .avatar{width:36px;height:36px;font-size:.7rem}
+.ic-row .patient-name{font-size:.8rem}
+.ic-row .call-icon{margin-left:auto;width:32px;height:32px;border-radius:50%;background:var(--secondary,#0f8f83);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ic-row .call-icon svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ic-empty,.ic-loading{padding:30px 10px;text-align:center;color:var(--neutral-500);font-size:.75rem}
+.ic-row.disabled{opacity:.5;pointer-events:none}
+@media(max-width:950px){.cards{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}}@media(max-width:600px){.appts-page{padding:15px}.filters{grid-template-columns:1fr}.info{grid-template-columns:1fr}.actions{grid-template-columns:1fr}.appts-head{flex-direction:column}.instant-call-btn{width:100%;justify-content:center}}
 </style>
 <main class="page appts-page">
-  <div class="appts-head"><h1>Upcoming Appointments</h1><p>View and manage your upcoming patient appointments.</p></div>
+  <div class="appts-head">
+    <div><h1>Upcoming Appointments</h1><p>View and manage your upcoming patient appointments.</p></div>
+    <button type="button" class="instant-call-btn" onclick="openInstantCall()">
+      <svg viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+      Instant Call
+    </button>
+  </div>
   <form class="filters" method="get">
     <input class="control" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Search patient">
     <input class="control" type="date" name="date" value="<?= htmlspecialchars($date) ?>">
@@ -41,5 +67,104 @@ function apptType($v){return stripos((string)$v,'tele')!==false?'Teleconsultatio
     <?php endwhile; else: ?><div class="empty">No upcoming appointments match your filters.</div><?php endif; ?>
   </section>
 </main>
+
+<div class="ic-overlay" id="ic-overlay">
+  <div class="ic-modal">
+    <div class="ic-modal-head">
+      <h2>Start an Instant Call</h2>
+      <button type="button" onclick="closeInstantCall()">&#10005;</button>
+    </div>
+    <div class="ic-search">
+      <input type="text" id="ic-search-input" placeholder="Search your patients..." oninput="icDebouncedSearch()">
+    </div>
+    <div class="ic-list" id="ic-list">
+      <div class="ic-loading">Loading patients…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let icSearchTimer = null;
+let icBusy = false;
+
+function openInstantCall() {
+  document.getElementById('ic-overlay').classList.add('open');
+  document.getElementById('ic-search-input').value = '';
+  icLoadPatients('');
+  setTimeout(() => document.getElementById('ic-search-input').focus(), 100);
+}
+function closeInstantCall() {
+  document.getElementById('ic-overlay').classList.remove('open');
+}
+function icDebouncedSearch() {
+  clearTimeout(icSearchTimer);
+  const val = document.getElementById('ic-search-input').value;
+  icSearchTimer = setTimeout(() => icLoadPatients(val), 300);
+}
+
+async function icLoadPatients(search) {
+  const list = document.getElementById('ic-list');
+  list.innerHTML = '<div class="ic-loading">Loading patients…</div>';
+  try {
+    const res = await fetch('instant_call.php?action=list&search=' + encodeURIComponent(search));
+    const data = await res.json();
+    if (!data.success) { list.innerHTML = '<div class="ic-empty">Could not load patients.</div>'; return; }
+    if (data.patients.length === 0) { list.innerHTML = '<div class="ic-empty">No patients found.</div>'; return; }
+    list.innerHTML = '';
+    data.patients.forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'ic-row';
+      row.onclick = () => icStartCall(p.id, row);
+      const avatarInner = p.profile_photo
+        ? `<img src="../${p.profile_photo}" alt="">`
+        : p.initials;
+      row.innerHTML = `
+        <div class="avatar">${avatarInner}</div>
+        <div class="patient-name">${icEsc(p.full_name)}</div>
+        <div class="call-icon">
+          <svg viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+        </div>`;
+      list.appendChild(row);
+    });
+  } catch (e) {
+    list.innerHTML = '<div class="ic-empty">Something went wrong. Try again.</div>';
+  }
+}
+
+async function icStartCall(patientId, rowEl) {
+  if (icBusy) return;
+  icBusy = true;
+  document.querySelectorAll('.ic-row').forEach(r => r.classList.add('disabled'));
+  if (rowEl) rowEl.style.opacity = '0.6';
+  try {
+    const res = await fetch('instant_call.php?action=start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'patient_id=' + encodeURIComponent(patientId)
+    });
+    const data = await res.json();
+    if (data.success) {
+      window.location.href = 'call.php?appt_id=' + data.appt_id;
+    } else {
+      alert(data.error || 'Could not start the call.');
+      document.querySelectorAll('.ic-row').forEach(r => r.classList.remove('disabled'));
+      icBusy = false;
+    }
+  } catch (e) {
+    alert('Something went wrong starting the call.');
+    document.querySelectorAll('.ic-row').forEach(r => r.classList.remove('disabled'));
+    icBusy = false;
+  }
+}
+
+function icEsc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+document.getElementById('ic-overlay').addEventListener('click', (e) => {
+  if (e.target.id === 'ic-overlay') closeInstantCall();
+});
+</script>
+
 <?php require_once 'includes/nav.php'; ?>
 </body></html>

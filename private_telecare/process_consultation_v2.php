@@ -496,7 +496,7 @@ function buildPDF(array $row, string $summary, string $full_transcript, string $
 }
 
 // Build and save PDF
-$dir = __DIR__ . '/consultation_summaries/';
+$dir = __DIR__ . '/../consultation_summaries/';
 if (!is_dir($dir)) mkdir($dir, 0755, true);
 $filename = "summary_{$appt_id}.pdf";
 
@@ -518,10 +518,6 @@ $stmt2 = $conn->prepare("
 $stmt2->bind_param('ssi', $summary, $filename, $appt_id);
 $stmt2->execute();
 
+debug_log_v2("Saved summary to DB for appt_id={$appt_id}, filename={$filename}, summary_length=" . strlen($summary) . ", affected_rows=" . $stmt2->affected_rows);
+
 debug_log_v2('=== END PROCESS CONSULTATION V2 (GROQ) SUCCESS ===');
-
-
-
-
-
-
