@@ -1,59 +1,3 @@
-<?php
-// doctor/review_summary.php
-date_default_timezone_set('Asia/Manila');
-require_once 'includes/auth.php';
-
-$appt_id = (int)($_GET['appt_id'] ?? $_POST['appt_id'] ?? 0);
-if (!$appt_id) {
-    header('Location: appointments.php');
-    exit;
-}
-
-$success = '';
-$error = '';
-
-$stmt = $conn->prepare("\n    SELECT a.id, a.appointment_date, a.appointment_time, a.status,\n           a.consultation_summary, a.summary_pdf_path,\n           p.full_name AS patient_name\n    FROM appointments a\n    JOIN patients p ON p.id = a.patient_id\n    WHERE a.id = ? AND a.doctor_id = ?\n    LIMIT 1\n");
-$stmt->bind_param('ii', $appt_id, $doctor_id);
-$stmt->execute();
-$appt = $stmt->get_result()->fetch_assoc();
-
-if (!$appt) {
-    header('Location: appointments.php');
-    exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $edited = trim($_POST['summary_text'] ?? '');
-    $action = $_POST['action'] ?? '';
-
-    if ($edited === '') {
-        $error = 'Summary cannot be empty.';
-    } else {
-        if ($action === 'save_draft') {
-            $u = $conn->prepare("UPDATE appointments SET consultation_summary = ?, summary_pdf_path = NULL WHERE id = ? AND doctor_id = ?");
-            $u->bind_param('sii', $edited, $appt_id, $doctor_id);
-            $u->execute();
-            $success = 'Draft updated. You can still edit before publishing.';
-        } elseif ($action === 'publish') {
-            $publishedMarker = 'TEXT_CONFIRMED';
-            $u = $conn->prepare("UPDATE appointments SET consultation_summary = ?, summary_pdf_path = ? WHERE id = ? AND doctor_id = ?");
-            $u->bind_param('ssii', $edited, $publishedMarker, $appt_id, $doctor_id);
-            $u->execute();
-            $_SESSION['toast'] = 'Summary confirmed and published to patient view.';
-            header('Location: appointments.php' . (isset($_GET['filter']) ? '?filter=' . urlencode($_GET['filter']) : ''));
-            exit;
-        }
-
-        $appt['consultation_summary'] = $edited;
-        $appt['summary_pdf_path'] = ($action === 'publish') ? 'TEXT_CONFIRMED' : null;
-    }
-}
-
-$page_title = 'Review Summary — TELE-CARE';
-$page_title_short = 'Review Summary';
-$active_nav = 'consultations';
-require_once 'includes/header.php';
-?>
 
 <div class="page">
   <?php if ($success): ?><div class="alert-success">✓ <?= htmlspecialchars($success) ?></div><?php endif; ?>
@@ -89,6 +33,3 @@ require_once 'includes/header.php';
 <?php require_once 'includes/nav.php'; ?>
 </body>
 </html>
-
-
-

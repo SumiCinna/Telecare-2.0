@@ -81,153 +81,253 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <title>TELE-CARE | Internal Login</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
-    :root {
-      --red: #E05663;
-      --green: #8fd1c9;
-      --blue: #6fa8ff;
-      --bg: #0b1016;
-      --surface: #121923;
-      --surface-2: #182231;
-      --text: #e8f0ff;
-      --muted: #9fb0c9;
-      --line: rgba(159, 176, 201, 0.22);
-    }
+  :root {
+    --primary:#B31118;
+    --primary-dark:#8A000B;
+    --primary-soft:#FCEBED;
+    --secondary:#0F9D95;
+    --secondary-dark:#08756F;
+    --secondary-soft:#E3F6F4;
+    --text:#172033;
+    --muted:#6B7280;
+    --border:#E1E5EC;
+    --bg:#F7F8FA;
+    --white:#FFFFFF;
+    --focus:rgba(179,17,24,.18);
+    --radius:10px;
+    --shadow:0 12px 30px rgba(23,32,51,.14);
+  }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+  * {
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+  }
 
+  body {
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    background:
+      radial-gradient(circle at 10% 10%,rgba(179,17,24,.06),transparent 30%),
+      radial-gradient(circle at 90% 90%,rgba(15,157,149,.07),transparent 32%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+  }
+
+  button,input,select,textarea {
+    font-family:inherit;
+  }
+
+  .card {
+    width:100%;
+    max-width:430px;
+    padding:34px;
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+  }
+
+  /* Brand */
+
+  .brand {
+    margin-bottom:5px;
+    color:var(--text);
+    text-align:center;
+    font-size:27px;
+    font-weight:800;
+    letter-spacing:-.5px;
+  }
+
+  .brand span {
+    color:var(--primary);
+  }
+
+  .subtitle {
+    margin-bottom:16px;
+    color:var(--muted);
+    text-align:center;
+    font-size:13px;
+    font-weight:500;
+  }
+
+  .badge {
+    display:block;
+    width:max-content;
+    margin:0 auto 24px;
+    padding:6px 12px;
+    background:var(--secondary-soft);
+    border:1px solid rgba(15,157,149,.2);
+    border-radius:50px;
+    color:var(--secondary-dark);
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+  }
+
+  /* Alert */
+
+  .alert {
+    margin-bottom:18px;
+    padding:11px 13px;
+    background:var(--primary-soft);
+    border:1px solid rgba(179,17,24,.18);
+    border-radius:var(--radius);
+    color:var(--primary-dark);
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  /* Form */
+
+  .field-label {
+    display:block;
+    margin-bottom:7px;
+    color:#46536A;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+  }
+
+  .field-input {
+    width:100%;
+    padding:11px 13px;
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    color:var(--text);
+    font-size:13px;
+    outline:none;
+    transition:.2s;
+  }
+
+  .field-input:hover {
+    border-color:#C7CDD8;
+  }
+
+  .field-input:focus {
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px var(--focus);
+  }
+
+  .field-input::placeholder {
+    color:#9AA2B1;
+  }
+
+  /* Password */
+
+  .pw-wrap {
+    position:relative;
+  }
+
+  .pw-toggle {
+    position:absolute;
+    right:12px;
+    top:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:28px;
+    height:28px;
+    padding:0;
+    transform:translateY(-50%);
+    background:none;
+    border:0;
+    border-radius:6px;
+    color:var(--muted);
+    cursor:pointer;
+  }
+
+  .pw-toggle:hover {
+    background:var(--primary-soft);
+    color:var(--primary);
+  }
+
+  /* Button */
+
+  .btn {
+    width:100%;
+    margin-top:22px;
+    padding:11px 16px;
+    background:var(--primary);
+    border:0;
+    border-radius:var(--radius);
+    color:#fff;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 12px rgba(179,17,24,.18);
+    transition:.2s;
+  }
+
+  .btn:hover {
+    background:var(--primary-dark);
+    transform:translateY(-1px);
+    box-shadow:0 6px 16px rgba(179,17,24,.22);
+  }
+
+  .btn:active {
+    transform:translateY(0);
+  }
+
+  /* Footer */
+
+  .footer {
+    display:flex;
+    justify-content:center;
+    margin-top:22px;
+    padding-top:17px;
+    border-top:1px solid #E7EAF0;
+  }
+
+  .back-link {
+    color:var(--secondary-dark);
+    text-decoration:none;
+    font-size:12px;
+    font-weight:600;
+  }
+
+  .back-link:hover {
+    color:var(--primary);
+  }
+
+  :focus-visible {
+    outline:3px solid var(--focus);
+    outline-offset:2px;
+  }
+
+  /* Mobile */
+
+  @media(max-width:520px) {
     body {
-      font-family: 'DM Sans', sans-serif;
-      background:
-        radial-gradient(circle at 12% 14%, rgba(224,86,99,0.16), transparent 35%),
-        radial-gradient(circle at 85% 10%, rgba(111,168,255,0.18), transparent 38%),
-        radial-gradient(circle at 65% 78%, rgba(143,209,201,0.10), transparent 42%),
-        var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1.5rem;
+      padding:16px;
     }
 
     .card {
-      width: 100%;
-      max-width: 420px;
-      background: linear-gradient(180deg, var(--surface), var(--surface-2));
-      border-radius: 24px;
-      padding: 2.4rem;
-      border: 1px solid var(--line);
-      box-shadow: 0 16px 50px rgba(0, 0, 0, 0.42);
+      padding:25px 20px;
+      border-radius:12px;
     }
 
     .brand {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.65rem;
-      font-weight: 900;
-      color: var(--text);
-      margin-bottom: 0.2rem;
-      text-align: center;
-    }
-
-    .brand span { color: var(--red); }
-
-    .subtitle {
-      color: var(--muted);
-      font-size: 0.9rem;
-      margin-bottom: 1.6rem;
-      text-align: center;
+      font-size:24px;
     }
 
     .badge {
-      display: block;
-      width: fit-content;
-      margin: 0 auto 1.6rem;
-      background: rgba(111,168,255,0.12);
-      border: 1px solid rgba(111,168,255,0.35);
-      color: var(--blue);
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 0.35rem 0.9rem;
-      border-radius: 50px;
+      font-size:9px;
     }
-
-    .alert {
-      background: rgba(224,86,99,0.12);
-      border: 1px solid rgba(224,86,99,0.35);
-      color: #ffb3ba;
-      border-radius: 12px;
-      padding: 0.75rem 1rem;
-      font-size: 0.86rem;
-      margin-bottom: 1.2rem;
-    }
-
-    .field-label {
-      display: block;
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 0.4rem;
-    }
-
-    .field-input {
-      width: 100%;
-      padding: 0.78rem 1rem;
-      border: 1.5px solid var(--line);
-      border-radius: 12px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.93rem;
-      color: var(--text);
-      background: rgba(11,16,22,0.55);
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .field-input:focus { border-color: var(--blue); }
-    .field-input::placeholder { color: rgba(159,176,201,0.55); }
-
-    .pw-wrap { position: relative; }
-    .pw-toggle {
-      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-      background: none; border: none; cursor: pointer; color: var(--muted); padding: 0;
-    }
-    .pw-toggle:hover { color: var(--text); }
-
-    .btn {
-      width: 100%;
-      padding: 0.9rem;
-      border-radius: 50px;
-      background: var(--red);
-      color: #fff;
-      font-weight: 700;
-      font-size: 0.95rem;
-      border: none;
-      cursor: pointer;
-      transition: all 0.3s;
-      margin-top: 1.6rem;
-      box-shadow: 0 6px 20px rgba(224,86,99,0.28);
-    }
-    .btn:hover { background: #c9424e; transform: translateY(-2px); }
-
-    .footer {
-      display: flex;
-      justify-content: center;
-      margin-top: 1.6rem;
-      padding-top: 1.2rem;
-      border-top: 1px solid var(--line);
-    }
-
-    .back-link { color: var(--blue); text-decoration: none; font-weight: 600; font-size: 0.85rem; }
-  </style>
+  }
+  </style> 
 </head>
 <body>
   <main class="card">
     <div class="brand">TELE<span>-</span>CARE</div>
     <p class="subtitle">Internal staff sign-in</p>
-    <span class="badge"> Super Admin · Admin · Staff</span>
-
     <?php if ($error): ?><div class="alert"><?= htmlspecialchars($error) ?></div><?php endif; ?>
 
     <form method="POST">
