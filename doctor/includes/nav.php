@@ -13,6 +13,7 @@
 
     .page.sidebar-closed {
       margin-left: 80px;
+      max-width: calc(100% - 80px);
     }
 
     .sidebar-nav {
@@ -51,9 +52,9 @@
     }
 
     .sidebar-nav .logo-section a {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Inter', sans-serif;
       font-size: 1.2rem;
-      font-weight: 900;
+      font-weight: 700;
       color: var(--green);
       text-decoration: none;
       letter-spacing: 0.04em;
@@ -136,44 +137,8 @@
       stroke: var(--green);
     }
 
-    .sidebar-nav .logout-section {
-      margin-top: auto;
-      padding-top: 1rem;
-      border-top: 1px solid var(--border);
-      padding: 1rem;
-      transition: all 0.3s;
-      background: transparent;
-    }
-
-    .sidebar-nav.mobile-open .logout-section {
-      padding: 0.5rem;
-    }
-
-    .nav-item.logout {
-      color: var(--red);
-      justify-content: center;
-      text-align: center;
-    }
-
-    .sidebar-nav.mobile-open .nav-item.logout {
-      padding: 0.8rem 0.5rem;
-      font-size: 0;
-    }
-
-    .sidebar-nav.mobile-open .nav-item.logout span {
-      display: none;
-    }
-
-    .nav-item.logout:hover {
-      background: rgba(195, 54, 67, 0.08);
-    }
-
     .sidebar-overlay {
       display: none !important;
-    }
-
-    .bottom-nav {
-      display: none;
     }
   }
 
@@ -219,10 +184,6 @@
       transition: none;
     }
 
-    .sidebar-nav.mobile-open {
-      transform: translateY(0);
-    }
-
     .sidebar-nav .logo-section {
       display: none;
     }
@@ -232,6 +193,7 @@
       flex-direction: row;
       width: 100%;
       gap: 0;
+      overflow-x: auto;
     }
 
     .nav-item {
@@ -252,6 +214,7 @@
       border-left: none;
       text-align: center;
       min-height: 70px;
+      min-width: 82px;
     }
 
     .nav-item svg {
@@ -275,17 +238,6 @@
       stroke: var(--green);
     }
 
-    .sidebar-nav .logout-section {
-      display: none;
-    }
-
-    .nav-item.logout {
-      display: none;
-    }
-
-    .bottom-nav {
-      display: flex;
-    }
   }
 
 </style>
@@ -304,14 +256,7 @@
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
       </svg>
-      <span>Home</span>
-    </a>
-
-    <a href="patients.php" class="nav-item <?= ($active_nav ?? '') === 'patients' ? 'active' : '' ?>">
-      <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-      <span>Patients</span>
+      <span>Dashboard</span>
     </a>
 
     <a href="appointments.php" class="nav-item <?= ($active_nav ?? '') === 'appointments' ? 'active' : '' ?>">
@@ -321,11 +266,32 @@
       <span>Schedule</span>
     </a>
 
+    <a href="patients.php" class="nav-item <?= ($active_nav ?? '') === 'patients' ? 'active' : '' ?>">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+      <span>Patients</span>
+    </a>
+
     <a href="availability.php" class="nav-item <?= ($active_nav ?? '') === 'availability' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      <span>Fees &amp; Hours</span>
+      <span>Schedule</span>
+    </a>
+
+    <a href="review_summary.php" class="nav-item <?= ($active_nav ?? '') === 'consultations' ? 'active' : '' ?>">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h8M8 14h5m7-2a8 8 0 11-16 0c0 1.3.31 2.53.87 3.62L4 20l4.38-1.87A8 8 0 0120 12z" />
+      </svg>
+      <span>Consultations</span>
+    </a>
+
+    <a href="patient-records.php" class="nav-item <?= ($active_nav ?? '') === 'records' ? 'active' : '' ?>">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 4h12a2 2 0 012 2v14H4V6a2 2 0 012-2Zm3 0v4h6V4M8 13h8M8 17h5" />
+      </svg>
+      <span>Medical Records</span>
     </a>
 
     <a href="credentials.php" class="nav-item <?= ($active_nav ?? '') === 'credentials' ? 'active' : '' ?>">
@@ -343,15 +309,6 @@
     </a>
   </div>
 
-  <div class="logout-section">
-    <a href="logout.php" class="nav-item logout">
-      <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-      </svg>
-      <span>Sign Out</span>
-    </a>
-  </div>
-</nav>
 
 <script>
 // Sidebar toggle for hamburger button (desktop collapse + mobile bottom nav)

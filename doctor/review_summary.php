@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $page_title = 'Review Summary — TELE-CARE';
 $page_title_short = 'Review Summary';
-$active_nav = 'appointments';
+$active_nav = 'consultations';
 require_once 'includes/header.php';
 ?>
 

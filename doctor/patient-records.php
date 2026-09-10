@@ -101,7 +101,7 @@ function formatOcrText(string $text, string $type): string {
 
 $page_title       = htmlspecialchars($patient['full_name']) . ' — Records — TELE-CARE';
 $page_title_short = 'Patient Records';
-$active_nav       = 'patients';
+$active_nav       = 'records';
 require_once 'includes/header.php';
 ?>
 

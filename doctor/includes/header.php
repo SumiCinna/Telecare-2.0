@@ -5,19 +5,12 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
   <title><?= $page_title ?? 'Doctor — TELE-CARE' ?></title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="includes/design-system.css" rel="stylesheet"/>
   <style>
-    :root {
-      --green:#244441; --green-dark:#1a3330;
-      --red:#C33643;
-      --blue:#3F82E3; --blue-dark:#2563C4;
-      --bg:#F0F4F8; --white:#FFFFFF;
-      --muted:#9ab0ae;
-      --border:rgba(36,68,65,0.1);
-    }
     * { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--green); min-height:100vh; }
-    h1,h2,h3 { font-family:'Playfair Display',serif; }
+    body { min-height:100vh; }
+    h1,h2,h3 { font-family:'Inter',sans-serif; }
 
     /* TOP HEADER */
     .top-header {
@@ -40,7 +33,7 @@
     @media (min-width: 768px) {
       .hamburger-btn { display:flex; }
     }
-    .header-brand { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:900; color:var(--green); }
+    .header-brand { font-family:'Inter',sans-serif; font-size:1.1rem; font-weight:700; color:var(--green); }
     .header-brand span { color:var(--red); }
     .header-avatar {
       width:38px; height:38px; border-radius:10px;
@@ -50,11 +43,23 @@
     }
     .header-avatar img { width:100%; height:100%; object-fit:cover; }
     .header-center { font-size:0.95rem; font-weight:700; }
+    .header-profile { position:relative; }
+    .header-profile-trigger { align-items:center; background:none; border:0; color:var(--green); cursor:pointer; display:flex; gap:.55rem; padding:0; text-align:left; }
+    .header-profile-copy { display:flex; flex-direction:column; line-height:1.2; }
+    .header-profile-name { font-size:.72rem; font-weight:700; }
+    .header-profile-role { color:var(--muted); font-size:.62rem; margin-top:.15rem; }
+    .header-profile-chevron { height:14px; width:14px; }
+    .profile-menu { background:#fff; border:1px solid var(--border); border-radius:10px; box-shadow:0 12px 30px rgba(19,36,59,.14); display:none; min-width:180px; padding:.4rem; position:absolute; right:0; top:calc(100% + .7rem); z-index:120; }
+    .profile-menu.open { display:block; }
+    .profile-menu a { align-items:center; border-radius:7px; color:var(--green); display:flex; font-size:.78rem; gap:.55rem; padding:.65rem .7rem; text-decoration:none; }
+    .profile-menu a:hover { background:#f1f4ff; }
+    .profile-menu a:last-child { color:var(--red); }
+    .profile-menu svg { height:16px; width:16px; }
+    @media (max-width:767px) { .header-profile-copy,.header-profile-chevron { display:none; } .header-profile-trigger { gap:0; } }
 
     /* PAGE - Responsive layout */
     @media (min-width: 768px) {
       .page { padding:1.5rem; max-width:calc(100% - 240px); margin-left:240px; }
-      .sidebar-overlay { display:none !important; }
     }
     @media (max-width: 767px) {
       .page { padding:1rem; max-width:100%; margin:0 auto; padding-bottom:100px; }
@@ -76,16 +81,7 @@
     .badge-blue   { background:rgba(63,130,227,0.1); color:var(--blue); }
     .badge-gray   { background:rgba(0,0,0,0.06);     color:#888; }
 
-    /* APPOINTMENT ITEM */
-    .appt-item { display:flex; align-items:center; gap:0.8rem; padding:0.7rem 0; border-bottom:1px solid var(--border); }
-    .appt-item:last-child { border-bottom:none; padding-bottom:0; }
-    .appt-date-box { background:rgba(63,130,227,0.08); border-radius:10px; padding:0.4rem 0.6rem; text-align:center; min-width:44px; }
-    .appt-date-box .day { font-family:'Playfair Display',serif; font-size:1.2rem; font-weight:900; color:var(--blue); line-height:1; }
-    .appt-date-box .mon { font-size:0.6rem; font-weight:700; text-transform:uppercase; color:var(--muted); }
-
-    /* PATIENT ITEM */
-    .patient-item { display:flex; align-items:center; gap:0.9rem; padding:0.7rem 0; border-bottom:1px solid var(--border); }
-    .patient-item:last-child { border-bottom:none; }
+    /* PATIENT AVATAR */
     .pat-avatar { width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#e8f4f3,#c8e6e3); color:var(--green); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0; overflow:hidden; }
     .pat-avatar img { width:100%; height:100%; object-fit:cover; }
 
@@ -102,12 +98,12 @@
 
     /* FORM */
     .field-label { display:block; font-size:0.7rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); margin-bottom:0.35rem; }
-    .field-input { width:100%; padding:0.75rem 0.9rem; border:1.5px solid var(--border); border-radius:12px; font-family:'DM Sans',sans-serif; font-size:0.9rem; color:var(--green); outline:none; transition:border-color 0.2s; background:var(--white); }
+    .field-input { width:100%; padding:0.75rem 0.9rem; border:1.5px solid var(--border); border-radius:12px; font-family:inherit; font-size:0.9rem; color:var(--green); outline:none; transition:border-color 0.2s; background:var(--white); }
     .field-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(63,130,227,0.1); }
     textarea.field-input { resize:vertical; min-height:80px; }
     select.field-input { cursor:pointer; }
     .form-field { margin-bottom:0.85rem; }
-    .btn-submit { width:100%; padding:0.85rem; border-radius:50px; background:var(--green); color:#fff; font-weight:700; font-size:0.93rem; border:none; cursor:pointer; transition:all 0.25s; font-family:'DM Sans',sans-serif; }
+    .btn-submit { width:100%; padding:0.85rem; border-radius:50px; background:var(--green); color:#fff; font-weight:700; font-size:0.93rem; border:none; cursor:pointer; transition:all 0.25s; font-family:inherit; }
     .btn-submit:hover { background:var(--green-dark); }
     .btn-red-submit { background:var(--red); }
     .btn-red-submit:hover { background:#a82d38; }
@@ -125,13 +121,42 @@
     <div class="header-brand">TELE<span>-</span>CARE</div>
   </div>
   <div class="header-center"><?= $page_title_short ?? '' ?></div>
-    <a href="profile.php" class="header-avatar">
+  <div class="header-profile">
+    <button class="header-profile-trigger" id="profileMenuToggle" type="button" aria-expanded="false" aria-controls="profileMenu">
+      <span class="header-avatar">
     <?php if (!empty($doc['profile_photo'])): ?>
       <img src="../../<?= htmlspecialchars($doc['profile_photo']) ?>" alt="photo"/>
     <?php else: ?>
       <?= strtoupper(substr($doc['full_name'], 0, 2)) ?>
     <?php endif; ?>
-  </a>
+      </span>
+      <span class="header-profile-copy"><span class="header-profile-name">Dr. <?= htmlspecialchars($doc['full_name']) ?></span><span class="header-profile-role"><?= htmlspecialchars($doc['specialty'] ?? 'Doctor') ?></span></span>
+      <svg class="header-profile-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div class="profile-menu" id="profileMenu">
+      <a href="profile.php"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19a6 6 0 0 0-6 0m3-8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8 1a8 8 0 0 1-16 0 8 8 0 0 1 16 0Z"/></svg>Profile Settings</a>
+      <a href="logout.php"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12H3m0 0 4-4m-4 4 4 4m8-10V5a2 2 0 0 0-2-2H9"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 19v-1a2 2 0 0 0-2 2"/></svg>Sign Out</a>
+    </div>
+  </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const toggle = document.getElementById('profileMenuToggle');
+  const menu = document.getElementById('profileMenu');
+  if (!toggle || !menu) return;
+  toggle.addEventListener('click', function(event) {
+    event.stopPropagation();
+    const open = menu.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('click', function(event) {
+    if (!menu.contains(event.target) && !toggle.contains(event.target)) {
+      menu.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+});
+</script>
 
 

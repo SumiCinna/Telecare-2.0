@@ -132,6 +132,18 @@ $call_patients = $conn->query("
     ORDER BY p.full_name ASC
 ");
 
+  $viewer_schedules = [];
+  $viewer_schedule_stmt = $conn->prepare("SELECT day_of_week, TIME_FORMAT(start_time, '%H:%i') AS start_time, TIME_FORMAT(end_time, '%H:%i') AS end_time FROM doctor_schedules WHERE doctor_id=? ORDER BY FIELD(day_of_week,'Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'), start_time");
+  $viewer_schedule_stmt->bind_param('i', $doctor_id);
+  $viewer_schedule_stmt->execute();
+  $viewer_schedules = $viewer_schedule_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+  $viewer_appointments = [];
+  $viewer_appointment_stmt = $conn->prepare("SELECT a.id, a.patient_id, a.appointment_date, TIME_FORMAT(a.appointment_time, '%H:%i') AS appointment_time, a.type, a.status, p.full_name AS patient_name FROM appointments a JOIN patients p ON p.id=a.patient_id WHERE a.doctor_id=? AND a.appointment_date >= CURDATE() ORDER BY a.appointment_date, a.appointment_time");
+  $viewer_appointment_stmt->bind_param('i', $doctor_id);
+  $viewer_appointment_stmt->execute();
+  $viewer_appointments = $viewer_appointment_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
 $toast = $_SESSION['toast'] ?? null;
 unset($_SESSION['toast']);
 
@@ -142,34 +154,42 @@ require_once 'includes/header.php';
 ?>
 
 <style>
-  .join-call-btn{display:inline-flex;align-items:center;gap:0.45rem;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;padding:0.55rem 1rem;border-radius:50px;font-size:0.78rem;font-weight:700;text-decoration:none;box-shadow:0 4px 14px rgba(22,163,74,0.35);animation:callPulse 2s ease-in-out infinite;}
-  @keyframes callPulse{0%,100%{box-shadow:0 4px 14px rgba(22,163,74,0.35)}50%{box-shadow:0 4px 20px rgba(22,163,74,0.6)}}
-  .call-soon{font-size:0.72rem;color:#d97706;font-weight:600;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:50px;padding:0.2rem 0.6rem;}
-  .appt-card{background:#fff;border-radius:16px;margin-bottom:0.75rem;overflow:hidden;border:1.5px solid rgba(36,68,65,0.07);box-shadow:0 2px 8px rgba(0,0,0,0.04);transition:transform 0.15s,box-shadow 0.15s;}
-  .appt-card:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,0.08);}
-  .appt-card.pending-card{border-left:3px solid #f59e0b;}
-  .appt-card.doctor-approved-card{border-left:3px solid #3F82E3;}
-  .appt-card.confirmed-card{border-left:3px solid #16a34a;}
-  .appt-card.completed-card{border-left:3px solid #3F82E3;}
-  .appt-card.cancelled-card{border-left:3px solid #C33643;}
-  .appt-card-body{padding:0.9rem 1rem;}
-  .appt-time-strip{background:rgba(36,68,65,0.03);padding:0.45rem 1rem;display:flex;align-items:center;gap:0.5rem;font-size:0.73rem;font-weight:700;color:var(--muted);border-bottom:1px solid rgba(36,68,65,0.05);}
-  .action-row{display:flex;gap:0.5rem;padding:0.7rem 1rem;border-top:1px solid rgba(36,68,65,0.05);background:rgba(36,68,65,0.015);}
-  .act-btn{flex:1;padding:0.55rem;border-radius:10px;font-size:0.78rem;font-weight:700;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:0.3rem;}
-  .act-btn-accept{background:rgba(34,197,94,0.1);color:#16a34a;}
-  .act-btn-accept:hover{background:rgba(34,197,94,0.2);}
-  .act-btn-done{background:rgba(63,130,227,0.1);color:var(--blue);}
-  .act-btn-done:hover{background:rgba(63,130,227,0.2);}
-  .act-btn-cancel{background:rgba(195,54,67,0.08);color:#C33643;}
-  .act-btn-cancel:hover{background:rgba(195,54,67,0.18);}
-  .notes-pill{background:rgba(245,158,11,0.08);border-radius:10px;padding:0.5rem 0.7rem;font-size:0.78rem;color:#92400e;margin:0.6rem 0 0;display:flex;align-items:flex-start;gap:0.4rem;line-height:1.45;}
-  .reason-pill{background:rgba(63,130,227,0.08);border-radius:10px;padding:0.5rem 0.7rem;font-size:0.78rem;color:#244441;margin:0.6rem 0 0;display:flex;align-items:flex-start;gap:0.4rem;line-height:1.45;}
-  .pill-label{font-weight:700;margin-right:0.3rem;}
-  .patient-docs{margin-top:0.7rem;}
-  .patient-docs-label{font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:0.4rem;}
-  .patient-docs-grid{display:flex;gap:0.5rem;flex-wrap:wrap;}
-  .patient-doc-thumb{width:64px;height:64px;border-radius:10px;overflow:hidden;border:1.5px solid rgba(36,68,65,0.12);display:block;flex-shrink:0;cursor:zoom-in;background:#f8fafc;padding:0;}
-  .patient-doc-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .schedule-viewer{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(260px,.8fr);gap:1rem;align-items:start;}
+  .schedule-viewer-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1rem;}
+  .schedule-viewer-title{color:var(--neutral-900);font-size:clamp(1.3rem,2vw,1.8rem);margin-bottom:.25rem;}
+  .schedule-viewer-subtitle{color:var(--neutral-500);font-size:.78rem;}
+  .schedule-viewer-action{align-items:center;background:var(--primary);border-radius:var(--radius-md);color:#fff;display:inline-flex;font-size:.75rem;font-weight:700;gap:.4rem;padding:.7rem 1rem;text-decoration:none;white-space:nowrap;}
+  .schedule-viewer-action:hover{background:var(--primary-dark);}
+  .schedule-card,.today-card{background:var(--surface);border:1px solid var(--border-color);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);}
+  .schedule-card{padding:1rem;}
+  .calendar-toolbar{align-items:center;display:flex;justify-content:space-between;margin-bottom:.75rem;}
+  .calendar-toolbar strong{color:var(--neutral-900);font-size:.95rem;}
+  .calendar-nav{background:var(--neutral-100);border:0;border-radius:var(--radius-sm);color:var(--neutral-700);cursor:pointer;font-size:1rem;height:30px;width:30px;}
+  .calendar-nav:hover{background:var(--primary-soft);color:var(--primary);}
+  .calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));overflow:hidden;border:1px solid var(--border-color);border-radius:var(--radius-sm);}
+  .calendar-day-name{background:var(--neutral-100);border-right:1px solid var(--border-color);color:var(--neutral-500);font-size:.62rem;font-weight:700;padding:.55rem .35rem;text-align:center;text-transform:uppercase;}
+  .calendar-cell{border-right:1px solid var(--border-color);border-top:1px solid var(--border-color);min-height:112px;padding:.45rem;position:relative;}
+  .calendar-cell:nth-child(7n){border-right:0;}
+  .calendar-number{color:var(--neutral-700);font-size:.7rem;font-weight:700;}
+  .calendar-cell.today{background:var(--primary-soft);}
+  .calendar-cell.today .calendar-number{background:var(--primary);border-radius:50%;color:#fff;display:grid;height:22px;place-items:center;width:22px;}
+  .calendar-cell.past{background:var(--neutral-50);}
+  .calendar-event{background:var(--secondary-soft);border-left:3px solid var(--secondary);border-radius:4px;color:var(--secondary-dark);font-size:.59rem;margin-top:.4rem;overflow:hidden;padding:.3rem;}
+  .calendar-event.pending{background:#fff5df;border-left-color:#d97706;color:#9a5b00;}
+  .calendar-event.cancelled{background:var(--primary-soft);border-left-color:var(--primary);color:var(--primary-dark);text-decoration:line-through;}
+  .calendar-event strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .today-card{padding:1rem;}
+  .today-card h2{color:var(--neutral-900);font-size:.95rem;margin-bottom:.2rem;}
+  .today-date{color:var(--neutral-500);font-size:.68rem;margin-bottom:1rem;}
+  .today-item{border-left:2px solid var(--secondary);margin-left:.35rem;padding:0 0 .9rem 1rem;position:relative;}
+  .today-item::before{background:var(--surface);border:3px solid var(--secondary);border-radius:50%;content:'';height:8px;left:-6px;position:absolute;top:1px;width:8px;}
+  .today-time{color:var(--secondary-dark);font-size:.68rem;font-weight:700;}
+  .today-patient{color:var(--neutral-900);font-size:.78rem;font-weight:700;margin-top:.25rem;}
+  .today-type{color:var(--neutral-500);font-size:.67rem;margin-top:.15rem;}
+  .schedule-empty{color:var(--neutral-500);font-size:.78rem;padding:2rem 1rem;text-align:center;}
+  .legacy-appointment-ui{display:none;}
+  @media(max-width:900px){.schedule-viewer{grid-template-columns:1fr;}.today-card{order:-1;}.calendar-cell{min-height:88px;}}
+  @media(max-width:600px){.schedule-viewer-header{align-items:stretch;flex-direction:column;}.schedule-viewer-action{justify-content:center;}.calendar-cell{min-height:72px;padding:.3rem;}.calendar-event{font-size:.52rem;padding:.2rem;}.calendar-event:not(:first-of-type){display:none;}}
   .document-modal-content{position:relative;width:min(92vw,900px);height:min(88vh,760px);border-radius:16px;background:#fff;padding:3.4rem 1rem 1rem;box-shadow:0 20px 60px rgba(0,0,0,0.28);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.5rem;}
   .document-modal-viewport{width:100%;height:100%;overflow:auto;display:flex;align-items:center;justify-content:center;padding:0.25rem;}
   .document-modal-content img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:8px;transform-origin:center center;transition:transform 0.15s ease;}
@@ -181,15 +201,6 @@ require_once 'includes/header.php';
   .toast-bar{position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);z-index:400;padding:0.75rem 1.4rem;border-radius:50px;font-size:0.85rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.15);white-space:nowrap;background:var(--green);color:#fff;animation:toastIn 0.3s ease,toastOut 0.4s 3s ease forwards;}
   @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
   @keyframes toastOut{from{opacity:1}to{opacity:0;pointer-events:none}}
-  .pending-badge-dot{background:#f59e0b;color:#fff;border-radius:50%;width:18px;height:18px;font-size:0.65rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;margin-left:0.35rem;vertical-align:middle;}
-
-  /* Start Call Now */
-  .instant-call-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:0.55rem;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;padding:0.85rem 1.2rem;border-radius:16px;font-size:0.9rem;font-weight:800;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 6px 18px rgba(220,38,38,0.3);margin-bottom:1rem;animation:instantPulse 2.2s ease-in-out infinite;}
-  .instant-call-btn:hover{box-shadow:0 8px 22px rgba(220,38,38,0.42);}
-  @keyframes instantPulse{0%,100%{box-shadow:0 6px 18px rgba(220,38,38,0.3)}50%{box-shadow:0 6px 24px rgba(220,38,38,0.55)}}
-  .instant-call-dot{width:9px;height:9px;border-radius:50%;background:#fff;animation:blinkDot 1.2s ease-in-out infinite;}
-  @keyframes blinkDot{0%,100%{opacity:1}50%{opacity:0.3}}
-
   #modal-instant-call .modal{width:100%;max-width:460px;max-height:88vh;overflow:hidden;border-radius:20px;background:#fff;padding:0;display:flex;flex-direction:column;}
   .ic-header{background:linear-gradient(135deg,#244441,#1a3533);padding:1.2rem 1.4rem;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
   .ic-header-title{font-size:1.05rem;font-weight:800;}
@@ -331,6 +342,95 @@ require_once 'includes/header.php';
 <div id="toast-js" style="display:none;position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);z-index:400;padding:0.75rem 1.4rem;border-radius:50px;font-size:0.85rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.15);white-space:nowrap;background:var(--green);color:#fff;"></div>
 
 <div class="page">
+
+  <div class="schedule-viewer-header">
+    <div>
+      <h1 class="schedule-viewer-title">My Schedule</h1>
+      <p class="schedule-viewer-subtitle">View your availability and scheduled appointments.</p>
+    </div>
+    <a class="schedule-viewer-action" href="availability.php">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14"/></svg>
+      Set Schedule
+    </a>
+  </div>
+
+  <div class="schedule-viewer">
+    <section class="schedule-card" aria-label="Doctor schedule calendar">
+      <div class="calendar-toolbar">
+        <button type="button" class="calendar-nav" id="schedule-prev" aria-label="Previous month">&#8249;</button>
+        <strong id="schedule-month-label"></strong>
+        <button type="button" class="calendar-nav" id="schedule-next" aria-label="Next month">&#8250;</button>
+      </div>
+      <div class="calendar-grid" id="schedule-calendar"></div>
+      <?php if (!$viewer_schedules): ?><div class="schedule-empty">No schedule configured yet. <a href="availability.php" style="color:var(--primary);font-weight:700;">Set your availability</a> to open appointment times.</div><?php endif; ?>
+    </section>
+
+    <aside class="today-card">
+      <h2>Today's Schedule</h2>
+      <div class="today-date"><?= date('F j, Y') ?></div>
+      <div id="today-schedule-list"></div>
+    </aside>
+  </div>
+
+  <script>
+    const VIEWER_SCHEDULES = <?= json_encode($viewer_schedules, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP) ?>;
+    const VIEWER_APPOINTMENTS = <?= json_encode($viewer_appointments, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP) ?>;
+    const VIEWER_DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    let viewerDate = new Date();
+
+    function viewerDateKey(date) {
+      return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+    }
+    function viewerTime(time) {
+      const [hours, minutes] = time.split(':').map(Number);
+      return (hours % 12 || 12) + ':' + String(minutes).padStart(2, '0') + ' ' + (hours >= 12 ? 'PM' : 'AM');
+    }
+    function viewerText(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character]));
+    }
+    function renderScheduleCalendar() {
+      const year = viewerDate.getFullYear();
+      const month = viewerDate.getMonth();
+      document.getElementById('schedule-month-label').textContent = viewerDate.toLocaleDateString('en-US', {month:'long', year:'numeric'});
+      const grid = document.getElementById('schedule-calendar');
+      const names = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      grid.innerHTML = names.map(name => `<div class="calendar-day-name">${name}</div>`).join('');
+      const firstDay = new Date(year, month, 1).getDay();
+      const days = new Date(year, month + 1, 0).getDate();
+      for (let i = 0; i < firstDay; i++) grid.innerHTML += '<div class="calendar-cell past"></div>';
+      for (let day = 1; day <= days; day++) {
+        const current = new Date(year, month, day);
+        const key = viewerDateKey(current);
+        const dayName = VIEWER_DAY_NAMES[current.getDay()];
+        const events = VIEWER_APPOINTMENTS.filter(item => item.appointment_date === key);
+        const isToday = key === viewerDateKey(new Date());
+        const hasSchedule = VIEWER_SCHEDULES.some(schedule => schedule.day_of_week === dayName);
+        let html = `<div class="calendar-cell ${isToday ? 'today' : ''} ${hasSchedule ? '' : 'past'}"><span class="calendar-number">${day}</span>`;
+        events.slice(0, 3).forEach(event => {
+          const status = String(event.status || '').toLowerCase();
+          html += `<div class="calendar-event ${status}" title="${viewerText(event.patient_name)} - ${viewerText(event.status)}"><strong>${viewerTime(event.appointment_time)}</strong>${viewerText(event.patient_name)}</div>`;
+        });
+        html += '</div>';
+        grid.innerHTML += html;
+      }
+    }
+    function renderTodaySchedule() {
+      const today = viewerDateKey(new Date());
+      const list = document.getElementById('today-schedule-list');
+      const appointments = VIEWER_APPOINTMENTS.filter(item => item.appointment_date === today);
+      if (!appointments.length) {
+        list.innerHTML = '<div class="schedule-empty">No appointments scheduled for today.</div>';
+        return;
+      }
+      list.innerHTML = appointments.map(item => `<div class="today-item"><div class="today-time">${viewerTime(item.appointment_time)}</div><div class="today-patient">${viewerText(item.patient_name)}</div><div class="today-type">${viewerText(item.type || 'Consultation')} · ${viewerText(item.status)}</div></div>`).join('');
+    }
+    document.getElementById('schedule-prev').addEventListener('click', () => { viewerDate.setMonth(viewerDate.getMonth() - 1); renderScheduleCalendar(); });
+    document.getElementById('schedule-next').addEventListener('click', () => { viewerDate.setMonth(viewerDate.getMonth() + 1); renderScheduleCalendar(); });
+    renderScheduleCalendar();
+    renderTodaySchedule();
+  </script>
+
+  <div class="legacy-appointment-ui">
 
   <button type="button" class="instant-call-btn" onclick="openInstantCallModal()">
     <span class="instant-call-dot"></span>
@@ -595,6 +695,7 @@ require_once 'includes/header.php';
   </div></div>
   <?php endif; ?>
 
+</div>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════

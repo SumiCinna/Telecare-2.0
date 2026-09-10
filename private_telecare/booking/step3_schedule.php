@@ -18,6 +18,31 @@ $sres->bind_param("i", $doctor_id);
 $sres->execute();
 $schedules = $sres->get_result()->fetch_all(MYSQLI_ASSOC);
 
+$conn->query("CREATE TABLE IF NOT EXISTS doctor_schedule_settings (
+  doctor_id INT NOT NULL,
+  consultation_duration SMALLINT UNSIGNED NOT NULL DEFAULT 30,
+  appointment_interval SMALLINT UNSIGNED NOT NULL DEFAULT 5,
+  break_start TIME NULL,
+  break_end TIME NULL,
+  consultation_types VARCHAR(255) NOT NULL DEFAULT 'Teleconsult,In-person',
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (doctor_id),
+  CONSTRAINT doctor_schedule_settings_doctor_fk FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+$scheduleSettings = [
+  'consultation_duration' => 30,
+  'appointment_interval' => 5,
+  'break_start' => null,
+  'break_end' => null,
+];
+$settingsStmt = $conn->prepare('SELECT consultation_duration, appointment_interval, break_start, break_end FROM doctor_schedule_settings WHERE doctor_id=?');
+$settingsStmt->bind_param('i', $doctor_id);
+$settingsStmt->execute();
+if ($savedSettings = $settingsStmt->get_result()->fetch_assoc()) {
+  $scheduleSettings = array_merge($scheduleSettings, $savedSettings);
+}
+
 $bres = $conn->prepare("SELECT appointment_date, appointment_time FROM appointments WHERE doctor_id=? AND status NOT IN ('Cancelled') AND appointment_date >= CURDATE()");
 $bres->bind_param("i", $doctor_id);
 $bres->execute();
@@ -37,7 +62,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($dateValid && $timeValid && $dateObj->format('Y-m-d') >= date('Y-m-d')) {
       foreach ($schedules as $schedule) {
-        if ($schedule['day_of_week'] === $dayName && $timeValue >= substr($schedule['start_time'], 0, 5) && $timeValue < substr($schedule['end_time'], 0, 5)) {
+        $slotStart = strtotime($date . ' ' . $timeValue);
+        $slotEnd = $slotStart + ((int)$scheduleSettings['consultation_duration'] * 60);
+        $scheduleEnd = strtotime($date . ' ' . substr($schedule['end_time'], 0, 5));
+        $breakStart = $scheduleSettings['break_start'] ? strtotime($date . ' ' . substr($scheduleSettings['break_start'], 0, 5)) : null;
+        $breakEnd = $scheduleSettings['break_end'] ? strtotime($date . ' ' . substr($scheduleSettings['break_end'], 0, 5)) : null;
+        $inBreak = $breakStart && $breakEnd && $slotStart < $breakEnd && $slotEnd > $breakStart;
+        if ($schedule['day_of_week'] === $dayName && $timeValue >= substr($schedule['start_time'], 0, 5) && $slotEnd <= $scheduleEnd && !$inBreak) {
           $slotValid = true;
           break;
         }
@@ -151,6 +182,7 @@ echo booking_wizard_css();
 
 <script>
 const SCHEDULES = <?= json_encode($schedules, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP) ?>;
+const SCHEDULE_SETTINGS = <?= json_encode($scheduleSettings, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP) ?>;
 const BOOKED    = <?= json_encode($booked, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP) ?>;
 const DAY_NAMES_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const DAY_NAMES_LONG  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -161,8 +193,8 @@ let calYear, calMonth, selDate = null, selTime = null;
 (function init(){ const n = new Date(); calYear = n.getFullYear(); calMonth = n.getMonth(); renderCalendar(); })();
 
 function fmt12h(t){ const [h,m]=t.split(':').map(Number); const ap=h>=12?'PM':'AM'; const hr=h%12||12; return hr+':'+String(m||0).padStart(2,'0')+' '+ap; }
-function generateSlots(start,end){ const slots=[]; let [sh,sm]=start.split(':').map(Number); const [eh,em]=end.split(':').map(Number); const endMins=eh*60+em;
-  while(sh*60+sm<endMins){ slots.push(String(sh).padStart(2,'0')+':'+String(sm).padStart(2,'0')); sm+=30; if(sm>=60){sh++;sm-=60;} if(sh>=24) break; } return slots; }
+function generateSlots(start,end){ const slots=[]; let [sh,sm]=start.split(':').map(Number); const [eh,em]=end.split(':').map(Number); const endMins=eh*60+em; const step=Number(SCHEDULE_SETTINGS.appointment_interval)||5;
+  while(sh*60+sm<endMins){ slots.push(String(sh).padStart(2,'0')+':'+String(sm).padStart(2,'0')); sm+=step; while(sm>=60){sh++;sm-=60;} if(sh>=24) break; } return slots; }
 
 function calNav(dir){ calMonth+=dir; if(calMonth>11){calMonth=0;calYear++;} else if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
 
@@ -208,7 +240,9 @@ function renderTimeSlots(){
   if(!scheds.length){ grid.innerHTML = `<div style="grid-column:1/-1;color:var(--muted);font-size:0.82rem;">No schedule for this day.</div>`; return; }
   let allSlots = [...new Set(scheds.flatMap(s=>generateSlots(s.start_time,s.end_time)))].sort();
   const rawBooked = BOOKED.filter(b=>b.appointment_date===selDate).map(b=>b.appointment_time.slice(0,5));
-  const DUR = 60;
+  const DUR = Number(SCHEDULE_SETTINGS.consultation_duration) || 30;
+  const breakStart = SCHEDULE_SETTINGS.break_start ? SCHEDULE_SETTINGS.break_start.slice(0,5) : '';
+  const breakEnd = SCHEDULE_SETTINGS.break_end ? SCHEDULE_SETTINGS.break_end.slice(0,5) : '';
   const bookedSlots = allSlots.filter(slot=>{
     const [sh,sm]=slot.split(':').map(Number); const slotMins=sh*60+sm;
     return rawBooked.some(b=>{const [bh,bm]=b.split(':').map(Number); const bm2=bh*60+bm; return slotMins>=bm2 && slotMins<bm2+DUR;});
@@ -217,13 +251,17 @@ function renderTimeSlots(){
   let html=''; let any=false;
   allSlots.forEach(t=>{
     const [h,m]=t.split(':').map(Number); const slotMins=h*60+m;
-    const disabled = (isToday && slotMins<=nowMins) || bookedSlots.includes(t);
+    const overlapsBreak = breakStart && breakEnd && t < breakEnd && fmtMinutes(t) + DUR > fmtMinutes(breakStart);
+    const disabled = (isToday && slotMins<=nowMins) || bookedSlots.includes(t) || overlapsBreak || fmtMinutes(t) + DUR > scheduleEndMinutes(dayName, t);
     const isSel = selTime===t;
     if(!disabled) any=true;
     html += `<div class="time-slot ${disabled?'booked':''} ${isSel?'selected':''}" ${!disabled?`onclick="pickTime('${t}')"`:''}>${fmt12h(t)}</div>`;
   });
   grid.innerHTML = any ? html : `<div style="grid-column:1/-1;color:var(--muted);font-size:0.82rem;">No times available for this date.</div>`;
 }
+
+function fmtMinutes(t){ const [h,m]=t.split(':').map(Number); return h*60+m; }
+function scheduleEndMinutes(dayName, time){ const current=fmtMinutes(time); const match=SCHEDULES.find(s=>s.day_of_week===dayName && current>=fmtMinutes(s.start_time.slice(0,5)) && current<fmtMinutes(s.end_time.slice(0,5))); return match ? fmtMinutes(match.end_time.slice(0,5)) : current; }
 
 function pickTime(t){ selTime = t; renderTimeSlots(); updateSummary(); updateContinue(); }
 function updateSummary(){
