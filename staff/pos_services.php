@@ -193,40 +193,6 @@ if ($last_sale_id) {
 require_once 'includes/header.php';
 ?>
 
-<style>
-  .pos-layout{display:grid;grid-template-columns:1fr 340px;gap:1.2rem;align-items:start}
-  .pos-controls{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem}
-  .pos-filter-tabs{display:flex;gap:.4rem;flex-wrap:wrap}
-  .pos-filter-tab{padding:.4rem .85rem;border-radius:50px;font-size:.76rem;font-weight:700;border:1.5px solid rgba(36,68,65,.12);background:#fff;color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
-  .pos-filter-tab.active{background:var(--green);border-color:var(--green);color:#fff}
-  .pos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem}
-  .pos-tile{background:#fff;border-radius:16px;padding:1.1rem;border:1px solid rgba(36,68,65,.07);box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;flex-direction:column;gap:.5rem}
-  .pos-tile-top{display:flex;justify-content:space-between;align-items:center}
-  .pos-tile-price{font-family:'Playfair Display',serif;font-weight:900;font-size:1.05rem;color:var(--green)}
-  .pos-tile-name{font-weight:700;font-size:.92rem;line-height:1.25}
-  .pos-tile-reqs{font-size:.72rem;color:var(--muted);line-height:1.4;min-height:1.4em}
-  .pos-add-btn{margin-top:auto}
-
-  .cart-panel{background:#fff;border-radius:16px;padding:1.2rem;border:1px solid rgba(36,68,65,.07);box-shadow:0 2px 8px rgba(0,0,0,.04);position:sticky;top:80px}
-  .cart-panel h3{font-size:1rem;margin-bottom:.9rem}
-  .cart-items{max-height:42vh;overflow-y:auto;margin-bottom:.8rem}
-  .cart-line{display:grid;grid-template-columns:1fr auto auto auto;gap:.5rem;align-items:center;padding:.6rem 0;border-bottom:1px solid rgba(36,68,65,.06)}
-  .cart-line:last-child{border-bottom:none}
-  .cart-line-name{font-weight:700;font-size:.82rem}
-  .cart-line-price{font-size:.7rem;color:var(--muted)}
-  .cart-line-qty{display:flex;align-items:center;gap:.4rem}
-  .cart-line-qty button{width:22px;height:22px;border-radius:50%;border:1px solid rgba(36,68,65,.15);background:#fff;cursor:pointer;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;font-size:.8rem}
-  .cart-line-qty span{min-width:16px;text-align:center;font-weight:700;font-size:.82rem}
-  .cart-line-sub{font-weight:700;font-size:.82rem;white-space:nowrap}
-  .cart-line-remove{background:none;border:none;color:var(--red);cursor:pointer;font-size:.9rem;padding:0 .2rem}
-  .cart-total-row{display:flex;justify-content:space-between;align-items:center;padding-top:.7rem;border-top:1.5px solid rgba(36,68,65,.1);margin-bottom:.9rem}
-  .cart-total-label{font-size:.8rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
-  .cart-total-value{font-family:'Playfair Display',serif;font-weight:900;font-size:1.3rem;color:var(--green)}
-
-  .receipt-line{display:flex;justify-content:space-between;font-size:.85rem;padding:.35rem 0}
-
-  @media(max-width:960px){.pos-layout{grid-template-columns:1fr}.cart-panel{position:relative;top:0}}
-</style>
 
 <div class="sec-head">
   <h2>Services POS</h2>

@@ -154,59 +154,6 @@ if ($sched_rows) {
 require_once 'includes/header.php';
 ?>
 
-<style>
-/* ── Custom Calendar Picker ── */
-.cal-wrap{background:rgba(36,68,65,.04);border:1px solid rgba(36,68,65,.12);border-radius:12px;padding:.75rem .9rem .9rem;margin:.3rem 0 .8rem;user-select:none;}
-.cal-wrap.cal-disabled{opacity:.5;pointer-events:none;}
-.cal-placeholder{text-align:center;color:var(--muted,#9ab0ae);font-size:.8rem;padding:.6rem 0 .3rem;}
-.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.55rem;}
-.cal-header span{font-weight:700;font-size:.82rem;color:var(--text);}
-.cal-nav{background:none;border:none;cursor:pointer;color:var(--text);font-size:1.1rem;padding:0 .35rem;border-radius:6px;line-height:1;transition:background .15s;}
-.cal-nav:hover{background:rgba(36,68,65,.1);}
-.cal-nav:disabled{opacity:.25;cursor:default;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
-.cal-day-name{text-align:center;font-size:.67rem;font-weight:700;color:#9ab0ae;padding:.15rem 0 .35rem;letter-spacing:.04em;}
-.cal-cell{text-align:center;padding:.32rem .1rem;border-radius:7px;font-size:.8rem;line-height:1.3;cursor:pointer;color:var(--text);transition:background .12s,color .12s;}
-.cal-cell.empty{cursor:default;}
-.cal-cell.past{color:#ccc;cursor:not-allowed;background:transparent!important;}
-.cal-cell.blocked{color:#d0d8d8;cursor:not-allowed;background:transparent!important;text-decoration:line-through;text-decoration-color:#dde;}
-.cal-cell.available:hover{background:rgba(36,68,65,.12);}
-.cal-cell.today:not(.selected){font-weight:700;color:var(--blue,#2a5c9a);}
-.cal-cell.selected{background:var(--blue,#2a7a6e)!important;color:#fff!important;font-weight:700;}
-.cal-legend{margin-top:.55rem;padding-top:.5rem;border-top:1px solid rgba(36,68,65,.1);font-size:.72rem;color:#7a9a97;line-height:1.8;}
-.cal-legend-title{font-weight:700;font-size:.67rem;text-transform:uppercase;letter-spacing:.06em;color:#9ab0ae;margin-bottom:.15rem;}
-
-/* ── Doctor-approved highlight row ── */
-tr.row-doctor-approved{background:rgba(63,130,227,0.05);}
-tr.row-doctor-approved td:first-child{border-left:3px solid #3F82E3;}
-
-/* ── Receipt action btn ── */
-.btn-receipt-sm{background:rgba(34,197,94,0.09);color:#15803d;border:1px solid rgba(34,197,94,0.2);border-radius:6px;padding:0.3rem 0.7rem;font-size:0.73rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;}
-.btn-receipt-sm:hover{background:rgba(34,197,94,0.18);}
-
-/* ── Appt ID badge ── */
-.appt-id-badge{display:inline-block;background:rgba(36,68,65,0.07);color:var(--muted);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:700;font-family:'DM Mono',monospace,sans-serif;letter-spacing:0.03em;}
-
-/* ── Pagination ── */
-.pagination-wrap{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0.2rem 0.2rem;flex-wrap:wrap;gap:0.5rem;}
-.pagination-info{font-size:0.78rem;color:var(--muted);}
-.pagination-btns{display:flex;gap:0.3rem;align-items:center;flex-wrap:wrap;}
-.pg-btn{background:rgba(36,68,65,.07);border:none;border-radius:8px;padding:0.3rem 0.65rem;font-size:0.78rem;font-weight:600;cursor:pointer;color:var(--text);transition:background .15s,color .15s;font-family:'DM Sans',sans-serif;}
-.pg-btn:hover:not(:disabled){background:rgba(36,68,65,.15);}
-.pg-btn.active{background:var(--blue);color:#fff;}
-.pg-btn:disabled{opacity:0.35;cursor:default;}
-.pg-ellipsis{font-size:0.82rem;color:var(--muted);padding:0 0.2rem;}
-
-/* ── Receipt Modal specific styles ── */
-.receipt-modal-header{background:linear-gradient(135deg,#244441,#1a3533);padding:1.4rem 1.4rem 1.2rem;color:#fff;position:relative;}
-.receipt-modal-header::after{content:'';position:absolute;bottom:-10px;left:0;right:0;height:20px;
-  background:repeating-linear-gradient(-45deg,#fff 0,#fff 7px,transparent 7px,transparent 14px),
-             repeating-linear-gradient(45deg,#fff 0,#fff 7px,transparent 7px,transparent 14px);
-  background-size:20px 20px;background-position:0 0,10px 0;z-index:1;}
-.receipt-detail-row{display:flex;justify-content:space-between;align-items:flex-start;padding:0.32rem 0;font-size:0.82rem;}
-.receipt-detail-label{color:var(--muted);font-weight:600;flex-shrink:0;}
-.receipt-detail-val{color:var(--green);font-weight:700;text-align:right;max-width:60%;}
-</style>
 
 <div class="sec-head">
   <h2>Appointment Management</h2>
@@ -867,42 +814,7 @@ function printReceipt() {
 <head>
   <title>Payment Receipt</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'DM Sans',sans-serif;background:#fff;display:flex;justify-content:center;padding:20px;}
-    .card{width:420px;border-radius:20px;overflow:hidden;border:1px solid #e5e7eb;}
-    .hdr{background:linear-gradient(135deg,#244441,#1a3533);padding:1.4rem;color:#fff;position:relative;}
-    .hdr::after{content:'';position:absolute;bottom:-10px;left:0;right:0;height:20px;
-      background:repeating-linear-gradient(-45deg,#fff 0,#fff 7px,transparent 7px,transparent 14px),
-                 repeating-linear-gradient(45deg,#fff 0,#fff 7px,transparent 7px,transparent 14px);
-      background-size:20px 20px;background-position:0 0,10px 0;z-index:1;}
-    .hdr .brand{font-size:.7rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:.4rem;}
-    .hdr .title{font-size:1.5rem;font-weight:800;margin-bottom:.2rem;}
-    .hdr .sub{font-size:.75rem;opacity:.75;}
-    .body{padding:1.8rem 1.4rem 0;margin-top:10px;}
-    .success-bar{display:flex;align-items:center;gap:.6rem;background:rgba(34,197,94,.08);border:1.5px solid rgba(34,197,94,.25);border-radius:14px;padding:.7rem 1rem;margin-bottom:1.1rem;}
-    .success-icon{width:34px;height:34px;background:linear-gradient(135deg,#16a34a,#15803d);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .success-title{font-weight:700;font-size:.88rem;color:#15803d;}
-    .success-date{font-size:.72rem;color:#16a34a;opacity:.85;}
-    .rcpt-no-wrap{text-align:center;margin-bottom:1rem;}
-    .rcpt-no-label{font-size:.63rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#7a9a97;margin-bottom:.2rem;}
-    .rcpt-no-val{font-size:1.1rem;font-weight:800;color:#244441;letter-spacing:.05em;font-family:monospace;}
-    hr.dashed{border:none;border-top:1.5px dashed rgba(36,68,65,.12);margin:.8rem 0;}
-    .detail-row{display:flex;justify-content:space-between;align-items:flex-start;padding:.32rem 0;font-size:.82rem;}
-    .detail-label{color:#7a9a97;font-weight:600;flex-shrink:0;}
-    .detail-val{color:#244441;font-weight:700;text-align:right;max-width:60%;}
-    .amount-box{background:rgba(36,68,65,.04);border-radius:14px;padding:1rem;text-align:center;margin:1rem 0;}
-    .amount-label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7a9a97;margin-bottom:.3rem;}
-    .amount-val{font-size:2rem;font-weight:800;color:#244441;}
-    .paid-badge{display:inline-flex;align-items:center;gap:.3rem;background:#16a34a;color:#fff;border-radius:50px;padding:.2rem .8rem;font-size:.7rem;font-weight:700;margin-top:.4rem;}
-    .meta-row{display:flex;justify-content:space-between;font-size:.73rem;padding:.25rem 0;}
-    .meta-label{color:#7a9a97;font-weight:600;}
-    .meta-val{color:#244441;font-weight:700;}
-    .footer{border-top:1.5px dashed rgba(36,68,65,.12);margin:0 1.4rem;}
-    .footer-inner{padding:.9rem 1.4rem 1.4rem;text-align:center;}
-    .footer-text{font-size:.7rem;color:#7a9a97;line-height:1.7;}
-    @media print{body{padding:0;}.card{border:none;width:100%;}}
-  </style>
+  
 </head>
 <body>
 <div class="card">

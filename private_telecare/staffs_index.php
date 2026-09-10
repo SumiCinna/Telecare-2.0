@@ -350,7 +350,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 
     <div class="footer">
-      <a class="back-link" href="../index.php">← Back to Home</a>
+      <a class="back-link" href="../index.php"> Back to Home</a>
     </div>
   </main>
 
