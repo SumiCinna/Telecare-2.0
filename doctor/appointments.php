@@ -174,14 +174,14 @@ require_once 'includes/header.php';
   .calendar-cell.today{background:var(--primary-soft);}
   .calendar-cell.today .calendar-number{background:var(--primary);border-radius:50%;color:#fff;display:grid;height:22px;place-items:center;width:22px;}
   .calendar-cell.past{background:var(--neutral-50);}
-  .calendar-event{background:var(--secondary-soft);border-left:3px solid var(--secondary);border-radius:4px;color:var(--secondary-dark);font-size:.59rem;margin-top:.4rem;overflow:hidden;padding:.3rem;}
+  .calendar-event{background:var(--secondary-soft);border-left:3px solid var(--secondary);border-radius:4px;color:var(--secondary-dark);display:block;font-size:.59rem;margin-top:.4rem;overflow:hidden;padding:.3rem;text-decoration:none;}
   .calendar-event.pending{background:#fff5df;border-left-color:#d97706;color:#9a5b00;}
   .calendar-event.cancelled{background:var(--primary-soft);border-left-color:var(--primary);color:var(--primary-dark);text-decoration:line-through;}
   .calendar-event strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .today-card{padding:1rem;}
   .today-card h2{color:var(--neutral-900);font-size:.95rem;margin-bottom:.2rem;}
   .today-date{color:var(--neutral-500);font-size:.68rem;margin-bottom:1rem;}
-  .today-item{border-left:2px solid var(--secondary);margin-left:.35rem;padding:0 0 .9rem 1rem;position:relative;}
+  .today-item{border-left:2px solid var(--secondary);display:block;margin-left:.35rem;padding:0 0 .9rem 1rem;position:relative;text-decoration:none;}
   .today-item::before{background:var(--surface);border:3px solid var(--secondary);border-radius:50%;content:'';height:8px;left:-6px;position:absolute;top:1px;width:8px;}
   .today-time{color:var(--secondary-dark);font-size:.68rem;font-weight:700;}
   .today-patient{color:var(--neutral-900);font-size:.78rem;font-weight:700;margin-top:.25rem;}
@@ -408,7 +408,7 @@ require_once 'includes/header.php';
         let html = `<div class="calendar-cell ${isToday ? 'today' : ''} ${hasSchedule ? '' : 'past'}"><span class="calendar-number">${day}</span>`;
         events.slice(0, 3).forEach(event => {
           const status = String(event.status || '').toLowerCase();
-          html += `<div class="calendar-event ${status}" title="${viewerText(event.patient_name)} - ${viewerText(event.status)}"><strong>${viewerTime(event.appointment_time)}</strong>${viewerText(event.patient_name)}</div>`;
+          html += `<a class="calendar-event ${status}" href="appointment-details.php?appt_id=${Number(event.id)}" title="View details for ${viewerText(event.patient_name)}"><strong>${viewerTime(event.appointment_time)}</strong>${viewerText(event.patient_name)}</a>`;
         });
         html += '</div>';
         grid.innerHTML += html;
@@ -422,7 +422,7 @@ require_once 'includes/header.php';
         list.innerHTML = '<div class="schedule-empty">No appointments scheduled for today.</div>';
         return;
       }
-      list.innerHTML = appointments.map(item => `<div class="today-item"><div class="today-time">${viewerTime(item.appointment_time)}</div><div class="today-patient">${viewerText(item.patient_name)}</div><div class="today-type">${viewerText(item.type || 'Consultation')} · ${viewerText(item.status)}</div></div>`).join('');
+      list.innerHTML = appointments.map(item => `<a class="today-item" href="appointment-details.php?appt_id=${Number(item.id)}"><div class="today-time">${viewerTime(item.appointment_time)}</div><div class="today-patient">${viewerText(item.patient_name)}</div><div class="today-type">${viewerText(item.type || 'Consultation')} · ${viewerText(item.status)}</div></a>`).join('');
     }
     document.getElementById('schedule-prev').addEventListener('click', () => { viewerDate.setMonth(viewerDate.getMonth() - 1); renderScheduleCalendar(); });
     document.getElementById('schedule-next').addEventListener('click', () => { viewerDate.setMonth(viewerDate.getMonth() + 1); renderScheduleCalendar(); });

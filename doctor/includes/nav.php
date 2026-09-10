@@ -273,13 +273,6 @@
       <span>Patients</span>
     </a>
 
-    <a href="availability.php" class="nav-item <?= ($active_nav ?? '') === 'availability' ? 'active' : '' ?>">
-      <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <span>Schedule</span>
-    </a>
-
     <a href="review_summary.php" class="nav-item <?= ($active_nav ?? '') === 'consultations' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h8M8 14h5m7-2a8 8 0 11-16 0c0 1.3.31 2.53.87 3.62L4 20l4.38-1.87A8 8 0 0120 12z" />

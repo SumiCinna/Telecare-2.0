@@ -42,8 +42,8 @@ $my_patients = $conn->query("
 $messages      = [];
 $selected_pat  = null;
 if ($selected_patient_id) {
-    $sp = $conn->prepare("SELECT * FROM patients WHERE id=? LIMIT 1");
-    $sp->bind_param("i", $selected_patient_id);
+  $sp = $conn->prepare("SELECT p.* FROM patients p WHERE p.id=? AND EXISTS (SELECT 1 FROM appointments WHERE patient_id=p.id AND doctor_id=?) LIMIT 1");
+  $sp->bind_param("ii", $selected_patient_id, $doctor_id);
     $sp->execute();
     $selected_pat = $sp->get_result()->fetch_assoc();
 
