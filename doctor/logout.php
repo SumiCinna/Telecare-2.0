@@ -5,7 +5,7 @@ header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 
 if (!isset($_SESSION['doctor_id'])) {
-  header('Location: index.php');
+  header('Location: ../auth/login.php');
     exit;
 }
 
@@ -20,7 +20,7 @@ if (isset($_POST['confirm_logout'])) {
             $params["secure"], $params["httponly"]
         );
     }
-    header('Location: index.php');
+    header('Location: ../auth/login.php');
     exit;
 }
 
@@ -69,6 +69,3 @@ $doctor_name = $_SESSION['doctor_name'] ?? 'Doctor';
   </div>
 </body>
 </html>
-
-
-

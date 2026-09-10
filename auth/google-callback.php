@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // auth/google-callback.php
 require_once '../database/config.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
@@ -51,7 +51,28 @@ if (!$google_email) {
     exit;
 }
 
-// Look up patient by email
+// Auto-detect account type: check the doctors table first, since a doctor's
+// email will never also exist as a patient email.
+$docStmt = $conn->prepare("SELECT id, full_name, status FROM doctors WHERE email = ? LIMIT 1");
+$docStmt->bind_param("s", $google_email);
+$docStmt->execute();
+$doctor = $docStmt->get_result()->fetch_assoc();
+$docStmt->close();
+
+if ($doctor) {
+    if ($doctor['status'] !== 'active') {
+        header('Location: login.php?error=account_deactivated&email=' . urlencode($google_email));
+        exit;
+    }
+
+    $_SESSION['doctor_id']   = $doctor['id'];
+    $_SESSION['doctor_name'] = $doctor['full_name'];
+
+    header('Location: ../doctor/dashboard.php');
+    exit;
+}
+
+// Not a doctor - look up patient by email
 $stmt = $conn->prepare("SELECT id, full_name, is_verified FROM patients WHERE email = ?");
 $stmt->bind_param("s", $google_email);
 $stmt->execute();
@@ -78,8 +99,3 @@ $_SESSION['patient_email']= $google_email;
 
 header('Location: ../router.php?page=dashboard');
 exit;
-
-
-
-
-

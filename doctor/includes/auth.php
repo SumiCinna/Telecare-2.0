@@ -5,7 +5,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 require_once '../database/config.php';
 
 if (!isset($_SESSION['doctor_id'])) {
-    header('Location: ../login.php'); exit;
+    header('Location: ../auth/login.php'); exit;
 }
 
 $doctor_id = $_SESSION['doctor_id'];
@@ -20,8 +20,5 @@ $stmt->close();
 
 if (!$doc) {
     session_destroy();
-    header('Location: ../login.php'); exit;
+    header('Location: ../auth/login.php'); exit;
 }
-
-
-

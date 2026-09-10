@@ -21,44 +21,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($email) || empty($password)) {
         $error = 'Please enter your email and password.';
     } else {
-        $stmt = $conn->prepare("SELECT id, full_name, password, is_verified, is_active FROM patients WHERE email = ?");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $stmt->store_result();
+        // Auto-detect account type: check the doctors table first, since a
+        // doctor's email will never also exist as a patient email.
+        $docStmt = $conn->prepare("SELECT id, full_name, password, status FROM doctors WHERE email = ? LIMIT 1");
+        $docStmt->bind_param("s", $email);
+        $docStmt->execute();
+        $doctor = $docStmt->get_result()->fetch_assoc();
+        $docStmt->close();
 
-        if ($stmt->num_rows === 0) {
-            $error = 'No account found with that email.';
-        } else {
-            $stmt->bind_result($id, $full_name, $hashed, $is_verified, $is_active);
-            $stmt->fetch();
-
-            if (!password_verify($password, $hashed)) {
+        if ($doctor) {
+            // This is a doctor account - authenticate against the doctors table.
+            if (!password_verify($password, $doctor['password'] ?? '')) {
                 $error = 'Incorrect password. Please try again.';
-            } elseif (!$is_verified) {
-                $error = 'account_not_verified';
-            } elseif (isset($is_active) && !$is_active) {
+            } elseif ($doctor['status'] !== 'active') {
                 $error = 'account_deactivated';
             } else {
-                $_SESSION['patient_id'] = $id;
-                $_SESSION['patient_name'] = $full_name;
-                if ($rememberMe) {
-                    setcookie('telecare_remember_email', $email, [
-                        'expires' => time() + (30 * 24 * 60 * 60),
-                        'path' => '/',
-                        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
-                        'httponly' => true,
-                        'samesite' => 'Lax'
-                    ]);
-                    tc_patient_set_remember_cookie($conn, (int)$id);
-                } else {
-                    setcookie('telecare_remember_email', '', time() - 3600, '/');
-                    tc_patient_clear_remember_cookie($conn, (int)$id);
-                }
-                header('Location: ../router.php?page=dashboard');
+                $_SESSION['doctor_id'] = $doctor['id'];
+                $_SESSION['doctor_name'] = $doctor['full_name'];
+                header('Location: ../doctor/dashboard.php');
                 exit;
             }
+        } else {
+            // Not a doctor - fall back to the normal patient login flow.
+            $stmt = $conn->prepare("SELECT id, full_name, password, is_verified, is_active FROM patients WHERE email = ?");
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $stmt->store_result();
+
+            if ($stmt->num_rows === 0) {
+                $error = 'No account found with that email.';
+            } else {
+                $stmt->bind_result($id, $full_name, $hashed, $is_verified, $is_active);
+                $stmt->fetch();
+
+                if (!password_verify($password, $hashed)) {
+                    $error = 'Incorrect password. Please try again.';
+                } elseif (!$is_verified) {
+                    $error = 'account_not_verified';
+                } elseif (isset($is_active) && !$is_active) {
+                    $error = 'account_deactivated';
+                } else {
+                    $_SESSION['patient_id'] = $id;
+                    $_SESSION['patient_name'] = $full_name;
+                    if ($rememberMe) {
+                        setcookie('telecare_remember_email', $email, [
+                            'expires' => time() + (30 * 24 * 60 * 60),
+                            'path' => '/',
+                            'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+                            'httponly' => true,
+                            'samesite' => 'Lax'
+                        ]);
+                        tc_patient_set_remember_cookie($conn, (int)$id);
+                    } else {
+                        setcookie('telecare_remember_email', '', time() - 3600, '/');
+                        tc_patient_clear_remember_cookie($conn, (int)$id);
+                    }
+                    header('Location: ../router.php?page=dashboard');
+                    exit;
+                }
+            }
+            $stmt->close();
         }
-        $stmt->close();
     }
 }
 
@@ -112,6 +135,9 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
     .alert-unverified { border:1px solid #b6ddd8; background:#effaf8; color:#12685f; }
     .alert-deactivated { border:1px solid #efb7b7; background:#fff3f3; color:#a20c14; }
     .card-footer { padding:.95rem 1rem; border-top:1px solid #eadada; background:#fcfbff; text-align:center; font-size:.78rem; color:#663d45; }
+    .back-home { display:inline-flex; align-items:center; gap:.35rem; margin-bottom:1.4rem; color:#663d45; font-size:.8rem; font-weight:600; text-decoration:none; }
+    .back-home:hover { color:var(--red); text-decoration:underline; }
+    .back-home svg { width:15px; height:15px; }
     .legal-links { display:flex; justify-content:center; gap:1.5rem; margin-top:1.8rem; font-size:.76rem; }
     .policy-button { padding:0; border:0; background:none; color:#62353b; font:inherit; cursor:pointer; }
     .policy-button:hover { color:var(--red); }
@@ -128,6 +154,10 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
 </head>
 <body>
   <main class="page">
+    <a class="back-home" href="../index.php">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      Back to Homepage
+    </a>
     <div class="brand-mark">TC</div>
     <p class="brand-name">Tele-Care AI</p>
     <p class="brand-subtitle">Patient Portal Login</p>
