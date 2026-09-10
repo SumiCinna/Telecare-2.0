@@ -1,232 +1,636 @@
 <?php
-// doctor/patient-records.php
 require_once 'includes/auth.php';
 
 $patient_id = (int)($_GET['patient_id'] ?? 0);
 
-// Verify this doctor has access to this patient
-$check = $conn->query("
-    SELECT p.* FROM patients p
-    WHERE p.id=$patient_id
-    AND EXISTS (SELECT 1 FROM appointments WHERE patient_id=p.id AND doctor_id=$doctor_id)
+$stmt = $conn->prepare("
+    SELECT p.*,
+        (SELECT COUNT(*) FROM appointments WHERE patient_id=p.id AND doctor_id=?) total_visits,
+        (SELECT appointment_date FROM appointments WHERE patient_id=p.id AND doctor_id=? ORDER BY appointment_date DESC LIMIT 1) last_visit
+    FROM patients p
+    WHERE p.id=? AND EXISTS(
+        SELECT 1 FROM appointments a
+        WHERE a.patient_id=p.id AND a.doctor_id=?
+    )
     LIMIT 1
-")->fetch_assoc();
+");
 
-if (!$check) {
+$stmt->bind_param('iiii',$doctor_id,$doctor_id,$patient_id,$doctor_id);
+$stmt->execute();
+$patient = $stmt->get_result()->fetch_assoc();
+
+if(!$patient){
     header('Location: patients.php');
     exit;
 }
 
-$patient = $check;
+$historyStmt = $conn->prepare("
+    SELECT appointment_date,appointment_time,type,status,reason,notes
+    FROM appointments
+    WHERE patient_id=? AND doctor_id=?
+    ORDER BY appointment_date DESC,appointment_time DESC
+");
 
-// Get all lab results and prescriptions
-$records = $conn->query("
-    SELECT * FROM lab_results
-    WHERE patient_id=$patient_id
+$historyStmt->bind_param('ii',$patient_id,$doctor_id);
+$historyStmt->execute();
+$history = $historyStmt->get_result();
+
+$recordsStmt = $conn->prepare("
+    SELECT *
+    FROM lab_results
+    WHERE patient_id=?
     ORDER BY uploaded_at DESC
 ");
 
-// Function to highlight important keywords in extracted text
-function formatOcrText(string $text, string $type): string {
-    if (!$text) return '<span style="color:#9ab0ae;font-style:italic;">No text could be extracted.</span>';
+$recordsStmt->bind_param('i',$patient_id);
+$recordsStmt->execute();
+$records = $recordsStmt->get_result();
 
-    $text = htmlspecialchars($text);
+$historyRows=[];
 
-    // Hardcoded common medicine names
-    $medicines = ['amoxicillin','metformin','losartan','paracetamol','ibuprofen','aspirin',
-                  'amlodipine','atorvastatin','omeprazole','cetirizine','azithromycin',
-                  'ciprofloxacin','mefenamic','salbutamol','montelukast','prednisone',
-                  'furosemide','lisinopril','hydrochlorothiazide','clopidogrel','insulin',
-                  'azithromycin','salbutamol'];
-    foreach ($medicines as $med) {
-        $text = preg_replace('/\b('.preg_quote($med, '/').')\b/i',
-            '<mark style="background:rgba(63,130,227,0.15);color:#1a4fa8;border-radius:4px;padding:0 3px;font-weight:700;">$1</mark>', $text);
-    }
-
-    // Dynamic — capitalized word before a dosage
-    $text = preg_replace(
-        '/\b([A-Z][a-zA-Z\-]{2,})(?=\s+\d+\.?\d*\s*(?:mg|ml|mcg|g\b|iu|units?))/i',
-        '<mark style="background:rgba(63,130,227,0.15);color:#1a4fa8;border-radius:4px;padding:0 3px;font-weight:700;">$1</mark>',
-        $text
-    );
-
-    // Numbered drug list
-    $text = preg_replace(
-        '/(\d+\.\s+)([A-Z][a-zA-Z\-]{2,})(\s+(?:Tablet|Capsule|Cap|Tab|Syrup|Solution|Drops|Cream|Injection)s?)?/i',
-        '$1<mark style="background:rgba(63,130,227,0.15);color:#1a4fa8;border-radius:4px;padding:0 3px;font-weight:700;">$2</mark>$3',
-        $text
-    );
-
-    // Capitalized word directly before Tablet/Capsule/Cap/Tab
-    $text = preg_replace(
-        '/\b([A-Z][a-zA-Z\-]{2,})\s+(Tablet|Capsule|Cap|Tab)s?\b/i',
-        '<mark style="background:rgba(63,130,227,0.15);color:#1a4fa8;border-radius:4px;padding:0 3px;font-weight:700;">$1</mark> $2',
-        $text
-    );
-
-    // Dosage: numbers + mg/ml/mcg/units
-    $text = preg_replace('/\b(\d+\.?\d*\s*(?:mg|ml|mcg|units?|g\b|iu))\b/i',
-        '<mark style="background:rgba(244,132,95,0.15);color:#c05621;border-radius:4px;padding:0 3px;font-weight:700;">$1</mark>', $text);
-
-    // Frequencies & timing
-    $freqs = ['once daily','twice daily','three times daily','four times daily',
-              'every 4 hours','every 6 hours','every 8 hours','every 12 hours',
-              'morning','bedtime','evening','at night','with meals','after meals','before meals',
-              'od','bid','tid','qid','prn','sos','take \d+','sig:','dispense:','refills?:\s*\d+'];
-    foreach ($freqs as $f) {
-        $text = preg_replace('/\b('.$f.')\b/i',
-            '<mark style="background:rgba(244,132,95,0.15);color:#c05621;border-radius:4px;padding:0 3px;font-weight:600;">$1</mark>', $text);
-    }
-
-    // Lab keywords
-    $labs = ['hemoglobin','hematocrit','wbc','rbc','platelet','glucose','cholesterol',
-             'creatinine','uric acid','sodium','potassium','normal range','reference range',
-             'high','low','abnormal','result','reactive','non-reactive'];
-    foreach ($labs as $lab) {
-        $text = preg_replace('/\b('.preg_quote($lab, '/').')\b/i',
-            '<mark style="background:rgba(34,197,94,0.12);color:#15803d;border-radius:4px;padding:0 3px;font-weight:700;">$1</mark>', $text);
-    }
-
-    // Important warnings
-    $warns = ['warning','caution','allergy','allergic','do not','avoid','contraindicated',
-              'emergency','urgent','immediately','refill','expired','expiry'];
-    foreach ($warns as $w) {
-        $text = preg_replace('/\b('.preg_quote($w, '/').')\b/i',
-            '<mark style="background:rgba(168,85,247,0.12);color:#6d28d9;border-radius:4px;padding:0 3px;font-weight:700;">$1</mark>', $text);
-    }
-
-    $text = nl2br($text);
-    return $text;
+while($row=$history->fetch_assoc()){
+    $historyRows[]=$row;
 }
 
-$page_title       = htmlspecialchars($patient['full_name']) . ' — Records — TELE-CARE';
-$page_title_short = 'Patient Records';
-$active_nav       = 'records';
-require_once 'includes/header.php';
+$documentRows=[];
+
+while($row=$records->fetch_assoc()){
+    $documentRows[]=$row;
+}
+
+function ageFromDob($dob){
+    if(!$dob) return '—';
+
+    try{
+        return date_diff(
+            new DateTime($dob),
+            new DateTime()
+        )->y;
+    }catch(Throwable $e){
+        return '—';
+    }
+}
+
+function initials($name){
+    $parts=preg_split('/\s+/',trim($name));
+
+    return strtoupper(
+        substr($parts[0]??'P',0,1).
+        substr(end($parts)?:'',0,1)
+    );
+}
+
+function documentType($type){
+    return [
+        'lab_result'=>'Laboratory Result',
+        'prescription'=>'Prescription',
+        'lab_request'=>'Laboratory Request',
+        'med_cert'=>'Medical Certificate'
+    ][$type]??'Medical Document';
+}
 ?>
 
-<div class="page">
+<link rel="stylesheet" href="includes/patient-records.css">
 
-  <!-- Patient Header -->
-  <div class="card" style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
-    <div class="pat-avatar" style="width:60px;height:60px;font-size:1.2rem;">
-      <?php if (!empty($patient['profile_photo'])): ?>
-        <img src="../<?= htmlspecialchars($patient['profile_photo']) ?>" style="width:60px;height:60px;border-radius:50%;object-fit:cover;"/>
-      <?php else: ?>
-        <?= strtoupper(substr($patient['full_name'], 0, 2)) ?>
-      <?php endif; ?>
+
+<main class="page records-page">
+
+    <div class="records-breadcrumb">
+        <a href="patients.php">Patients</a>
+        <span>›</span>
+        <strong><?= htmlspecialchars($patient['full_name']) ?></strong>
     </div>
-    <div style="flex:1;">
-      <div style="font-weight:700;font-size:1rem;"><?= htmlspecialchars($patient['full_name']) ?></div>
-      <div style="font-size:0.78rem;color:var(--muted);"><?= htmlspecialchars($patient['email']) ?></div>
-      <div style="font-size:0.75rem;color:var(--muted);margin-top:0.3rem;">
-        DOB: <?= $patient['date_of_birth'] ? date('M d, Y', strtotime($patient['date_of_birth'])) : 'Not set' ?>
-        · Gender: <?= ucfirst($patient['gender'] ?? 'Not set') ?>
-      </div>
-    </div>
-    <a href="patients.php" style="background:rgba(36,68,65,0.1);color:var(--green);border:none;border-radius:10px;padding:0.5rem 1rem;font-size:0.85rem;font-weight:600;text-decoration:none;">
-      ← Back
-    </a>
-  </div>
 
-  <!-- Records -->
-  <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:1rem;padding:0 0.2rem;">
-    Medical Records
-  </div>
-
-  <?php if ($records && $records->num_rows > 0): ?>
-    <?php while ($rec = $records->fetch_assoc()): ?>
-      <?php
-        $type_info = [
-          'lab_result' => ['label' => 'Lab Result', 'color' => '#3F82E3', 'bg' => 'rgba(63,130,227,0.1)', 'icon' => '🧪'],
-          'prescription' => ['label' => 'Prescription', 'color' => '#f4845f', 'bg' => 'rgba(244,132,95,0.1)', 'icon' => '💊'],
-          'lab_request' => ['label' => 'Lab Request', 'color' => '#3F82E3', 'bg' => 'rgba(63,130,227,0.1)', 'icon' => '🧾'],
-          'med_cert' => ['label' => 'Medical Certificate', 'color' => '#16a34a', 'bg' => 'rgba(34,197,94,0.1)', 'icon' => '📄'],
-          'unknown' => ['label' => 'Document', 'color' => '#9ab0ae', 'bg' => 'rgba(154,176,174,0.1)', 'icon' => '📄'],
-        ];
-        $info = $type_info[$rec['doc_type']] ?? $type_info['unknown'];
-      ?>
-      <div class="card" style="margin-bottom:1rem;cursor:pointer;transition:all 0.2s;" onclick="toggleRecord(<?= $rec['id'] ?>)">
-        <div style="display:flex;align-items:flex-start;gap:1rem;margin-bottom:0.8rem;">
-          <div style="font-size:2rem;"><?= $info['icon'] ?></div>
-          <div style="flex:1;">
-            <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.3rem;">
-              <div style="font-weight:700;font-size:0.95rem;"><?= !empty($rec['doc_label']) ? htmlspecialchars($rec['doc_label']) : 'Untitled' ?></div>
-              <span style="background:<?= $info['bg'] ?>;color:<?= $info['color'] ?>;padding:0.2rem 0.6rem;border-radius:50px;font-size:0.68rem;font-weight:700;">
-                <?= $info['label'] ?>
-              </span>
-            </div>
-            <div style="font-size:0.75rem;color:var(--muted);">
-              Uploaded: <?= date('M d, Y · g:i A', strtotime($rec['uploaded_at'])) ?>
-              · <?= number_format(strlen($rec['extracted_text'] ?? '') / 1024, 1) ?> KB
-            </div>
-          </div>
-          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="color:var(--blue);transition:transform 0.3s,color 0.3s;flex-shrink:0;margin-top:0.2rem;" class="toggle-arrow">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
-          </svg>
+    <header class="records-header">
+        <div>
+            <h1>Patient Records</h1>
+            <p>View and manage individual patient medical information.</p>
         </div>
 
-        <!-- Record Preview (Hidden by default) -->
-        <div id="record-<?= $rec['id'] ?>" style="display:none;margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(36,68,65,0.06);">
-          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.7rem;">
-            Extracted Text
-          </div>
-          <div style="background:rgba(36,68,65,0.03);border:1px solid rgba(63,130,227,0.1);border-radius:12px;padding:1rem;font-size:0.84rem;line-height:1.8;color:var(--green);max-height:350px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;">
-            <?= formatOcrText($rec['extracted_text'] ?? '', $rec['doc_type']) ?>
-          </div>
-          <div style="display:flex;gap:0.8rem;margin-top:0.8rem;flex-wrap:wrap;">
-            <span style="font-size:0.68rem;background:rgba(63,130,227,0.12);color:var(--blue);padding:0.2rem 0.6rem;border-radius:50px;font-weight:700;">💊 Medicine</span>
-            <span style="font-size:0.68rem;background:rgba(244,132,95,0.12);color:#f4845f;padding:0.2rem 0.6rem;border-radius:50px;font-weight:700;">⚡ Dosage/Freq</span>
-            <span style="font-size:0.68rem;background:rgba(34,197,94,0.1);color:#16a34a;padding:0.2rem 0.6rem;border-radius:50px;font-weight:700;">🧪 Lab Value</span>
-            <span style="font-size:0.68rem;background:rgba(168,85,247,0.1);color:#7c3aed;padding:0.2rem 0.6rem;border-radius:50px;font-weight:700;">⚠️ Important</span>
-          </div>
-          <div style="display:flex;gap:0.8rem;margin-top:0.8rem;">
-            <a href="../<?= htmlspecialchars($rec['file_path'] ?? '') ?>" target="_blank" style="flex:1;padding:0.6rem;border-radius:12px;background:var(--blue);color:#fff;text-align:center;font-weight:700;font-size:0.82rem;text-decoration:none;">
-              📥 View Original
-            </a>
-            <button onclick="copyRecordText(<?= $rec['id'] ?>)" style="flex:1;padding:0.6rem;border-radius:12px;background:rgba(36,68,65,0.1);color:var(--green);border:none;font-weight:700;font-size:0.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;">
-              📋 Copy Text
-            </button>
-          </div>
-        </div>
-      </div>
-    <?php endwhile; ?>
-  <?php else: ?>
-    <div class="card">
-      <div class="empty-state">
-        <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-        </svg>
-        No medical records yet.
-      </div>
-    </div>
-  <?php endif; ?>
+        <input
+            class="patient-search"
+            type="text"
+            placeholder="Search Patient Name or ID..."
+            value="<?= htmlspecialchars($patient['full_name']) ?>"
+        >
+    </header>
 
-</div>
+    <div class="records-layout">
+
+        <div class="left-column">
+
+            <section class="record-card patient-profile">
+
+                <div class="profile-avatar">
+
+                    <?php if(!empty($patient['profile_photo'])): ?>
+
+                        <img
+                            src="../<?= htmlspecialchars($patient['profile_photo']) ?>"
+                            alt=""
+                        >
+
+                    <?php else: ?>
+
+                        <?= initials($patient['full_name']) ?>
+
+                    <?php endif; ?>
+
+                </div>
+
+                <div class="profile-name">
+                    <?= htmlspecialchars($patient['full_name']) ?>
+                </div>
+
+                <div class="profile-id">
+                    #PT-<?= str_pad((string)$patient['id'],4,'0',STR_PAD_LEFT) ?>
+                </div>
+
+                <div class="patient-details">
+
+                    <div class="patient-detail">
+                        <label>DOB</label>
+                        <span>
+                            <?= !empty($patient['date_of_birth'])
+                                ? date('d M Y',strtotime($patient['date_of_birth']))
+                                . ' (' . ageFromDob($patient['date_of_birth']) . 'y)'
+                                : 'Not provided'
+                            ?>
+                        </span>
+                    </div>
+
+                    <div class="patient-detail">
+                        <label>Sex</label>
+                        <span>
+                            <?= htmlspecialchars($patient['gender'] ?: 'Not provided') ?>
+                        </span>
+                    </div>
+
+                    <div class="patient-detail">
+                        <label>Contact</label>
+                        <span>
+                            <?= htmlspecialchars($patient['phone_number'] ?: 'Not provided') ?>
+                        </span>
+                    </div>
+
+                    <div class="patient-detail">
+                        <label>Email</label>
+                        <span>
+                            <?= htmlspecialchars($patient['email'] ?: 'Not provided') ?>
+                        </span>
+                    </div>
+
+                    <div class="patient-detail">
+                        <label>Address</label>
+                        <span>
+                            <?= htmlspecialchars(
+                                trim(
+                                    implode(', ',array_filter([
+                                        $patient['address'] ?? '',
+                                        $patient['home_address'] ?? '',
+                                        $patient['city'] ?? ''
+                                    ]))
+                                ) ?: 'Not provided'
+                            ) ?>
+                        </span>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="record-card">
+
+                <div class="section-heading">
+                    <h2>Reason for Check-up</h2>
+                </div>
+
+                <?php
+                $latestReason=$historyRows[0]['reason']??'';
+                $latestNotes=$historyRows[0]['notes']??'';
+                ?>
+
+                <div class="reason-label">
+                    Chief Complaint
+                </div>
+
+                <div class="reason-box">
+                    <?= htmlspecialchars(
+                        $latestReason ?: 'No recent chief complaint recorded.'
+                    ) ?>
+                </div>
+
+                <div class="reason-label">
+                    Recent Visit
+                </div>
+
+                <div class="visit-chips">
+
+                    <span class="visit-chip">
+                        <?= (int)$patient['total_visits'] ?>
+                        visit<?= (int)$patient['total_visits']===1?'':'s' ?>
+                    </span>
+
+                    <?php if(!empty($patient['last_visit'])): ?>
+
+                        <span class="visit-chip">
+                            <?= date('M d, Y',strtotime($patient['last_visit'])) ?>
+                        </span>
+
+                    <?php endif; ?>
+
+                </div>
+
+                <?php if($latestNotes): ?>
+
+                    <div class="reason-label">
+                        Patient Intake Notes
+                    </div>
+
+                    <div class="intake-box">
+                        <?= htmlspecialchars($latestNotes) ?>
+                    </div>
+
+                <?php endif; ?>
+
+            </section>
+
+        </div>
+
+        <div class="right-column">
+
+            <div class="record-tabs">
+
+                <button
+                    class="record-tab active"
+                    type="button"
+                    data-tab="overview"
+                >
+                    Overview
+                </button>
+
+                <button
+                    class="record-tab"
+                    type="button"
+                    data-tab="documents"
+                >
+                    Documents
+                </button>
+
+            </div>
+
+            <section id="overview" class="tab-content">
+
+                <div class="overview-grid">
+
+                    <section class="overview-card">
+
+                        <div class="overview-title">
+
+                            <svg
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                            >
+                                <path d="M6 3h12v18H6z"/>
+                                <path d="M9 7h6M9 11h6M9 15h4"/>
+                            </svg>
+
+                            Medical History
+
+                        </div>
+
+                        <?php if($historyRows): ?>
+
+                            <div class="history-list">
+
+                                <?php foreach(array_slice($historyRows,0,5) as $historyRow): ?>
+
+                                    <div class="history-row">
+
+                                        <div class="history-date">
+                                            <?= date(
+                                                'M d, Y',
+                                                strtotime($historyRow['appointment_date'])
+                                            ) ?>
+                                        </div>
+
+                                        <div class="history-type">
+                                            <?= htmlspecialchars(
+                                                $historyRow['type'] ?: 'Consultation'
+                                            ) ?>
+                                        </div>
+
+                                        <div class="history-reason">
+                                            <?= htmlspecialchars(
+                                                $historyRow['reason']
+                                                ?: 'No reason recorded.'
+                                            ) ?>
+                                        </div>
+
+                                    </div>
+
+                                <?php endforeach; ?>
+
+                            </div>
+
+                        <?php else: ?>
+
+                            <span class="muted">
+                                No consultation history recorded.
+                            </span>
+
+                        <?php endif; ?>
+
+                    </section>
+
+                    <section class="overview-card">
+
+                        <div class="overview-title">
+
+                            <svg
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                            >
+                                <rect x="5" y="4" width="14" height="17" rx="2"/>
+                                <path d="M9 4V2h6v2M8 9h8M8 13h6"/>
+                            </svg>
+
+                            Current Medications
+
+                        </div>
+
+                        <?php
+                        $medications=[];
+
+                        $medStmt=$conn->prepare("
+                            SELECT doc_label,extracted_text,uploaded_at
+                            FROM lab_results
+                            WHERE patient_id=?
+                            AND doc_type='prescription'
+                            ORDER BY uploaded_at DESC
+                            LIMIT 5
+                        ");
+
+                        $medStmt->bind_param('i',$patient_id);
+                        $medStmt->execute();
+
+                        $medResult=$medStmt->get_result();
+
+                        while($med=$medResult->fetch_assoc()){
+                            $medications[]=$med;
+                        }
+                        ?>
+
+                        <?php if($medications): ?>
+
+                            <?php foreach($medications as $med): ?>
+
+                                <div class="medication-row">
+
+                                    <div>
+
+                                        <div class="medication-name">
+                                            <?= htmlspecialchars(
+                                                $med['doc_label']
+                                                ?: 'Prescription'
+                                            ) ?>
+                                        </div>
+
+                                        <div class="medication-text">
+                                            <?= htmlspecialchars(
+                                                mb_substr(
+                                                    trim(
+                                                        preg_replace(
+                                                            '/\s+/',
+                                                            ' ',
+                                                            $med['extracted_text'] ?? ''
+                                                        )
+                                                    ),
+                                                    0,
+                                                    150
+                                                )
+                                            ) ?>
+                                        </div>
+
+                                    </div>
+
+                                    <span class="status-badge">
+                                        Recorded
+                                    </span>
+
+                                </div>
+
+                            <?php endforeach; ?>
+
+                        <?php else: ?>
+
+                            <span class="muted">
+                                No prescription records available.
+                            </span>
+
+                        <?php endif; ?>
+
+                    </section>
+
+                </div>
+
+            </section>
+
+            <section
+                id="documents"
+                class="tab-content"
+                style="display:none"
+            >
+
+                <div class="documents-section">
+
+                    <div class="documents-header">
+
+                        <div class="documents-title">
+
+                            <h2>
+                                Optical Character Recognition (OCR) Documents
+                            </h2>
+
+                            <p>
+                                Digitized paperwork and extracted information from patient documents.
+                            </p>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            class="upload-button"
+                            onclick="alert('Connect this button to your existing OCR upload workflow.')"
+                        >
+                            + Upload New Scan
+                        </button>
+
+                    </div>
+
+                    <?php if($documentRows): ?>
+
+                        <div class="document-grid">
+
+                            <?php foreach($documentRows as $document): ?>
+
+                                <article class="document-card">
+
+                                    <div class="document-top">
+
+                                        <div class="document-icon">
+
+                                            <svg
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                                stroke-width="1.8"
+                                            >
+                                                <path d="M6 3h9l3 3v15H6z"/>
+                                                <path d="M14 3v4h4M9 12h6M9 16h6"/>
+                                            </svg>
+
+                                        </div>
+
+                                        <div>
+
+                                            <div class="document-name">
+                                                <?= htmlspecialchars(
+                                                    $document['doc_label']
+                                                    ?: documentType($document['doc_type'])
+                                                ) ?>
+                                            </div>
+
+                                            <div class="document-type">
+                                                <?= htmlspecialchars(
+                                                    documentType($document['doc_type'])
+                                                ) ?>
+
+                                                <?php if(!empty($document['uploaded_at'])): ?>
+
+                                                    ·
+                                                    <?= date(
+                                                        'M d, Y',
+                                                        strtotime($document['uploaded_at'])
+                                                    ) ?>
+
+                                                <?php endif; ?>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="ocr-box">
+
+                                        <div class="ocr-title">
+                                            EXTRACTED TEXT
+                                        </div>
+
+                                        <div class="ocr-text">
+                                            <?= htmlspecialchars(
+                                                $document['extracted_text']
+                                                ?: 'No OCR text available.'
+                                            ) ?>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="document-actions">
+
+                                        <?php if(!empty($document['file_path'])): ?>
+
+                                            <a
+                                                href="../<?= htmlspecialchars($document['file_path']) ?>"
+                                                target="_blank"
+                                                rel="noopener"
+                                            >
+                                                View Scanned File
+                                            </a>
+
+                                        <?php endif; ?>
+
+                                        <button
+                                            type="button"
+                                            onclick="copyOCR(this)"
+                                        >
+                                            Copy OCR
+                                        </button>
+
+                                    </div>
+
+                                    <textarea hidden><?= htmlspecialchars(
+                                        $document['extracted_text'] ?? ''
+                                    ) ?></textarea>
+
+                                </article>
+
+                            <?php endforeach; ?>
+
+                        </div>
+
+                    <?php else: ?>
+
+                        <div class="empty-records">
+                            No OCR documents or medical documents are available.
+                        </div>
+
+                    <?php endif; ?>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </div>
+
+</main>
 
 <script>
-function toggleRecord(id) {
-  const el = document.getElementById('record-' + id);
-  const arrow = el.previousElementSibling.querySelector('.toggle-arrow');
-  const isOpen = el.style.display !== 'none';
-  el.style.display = isOpen ? 'none' : 'block';
-  arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
-}
+document.querySelectorAll('.record-tab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+        document.querySelectorAll('.record-tab').forEach(item=>{
+            item.classList.remove('active');
+        });
 
-function copyRecordText(id) {
-  const textEl = document.querySelector('#record-' + id + ' div:nth-child(2)');
-  const text = textEl.textContent;
-  navigator.clipboard.writeText(text);
-  const btn = event.target;
-  const original = btn.textContent;
-  btn.textContent = '✓ Copied!';
-  setTimeout(() => btn.textContent = original, 2000);
+        document.querySelectorAll('.tab-content').forEach(panel=>{
+            panel.style.display='none';
+        });
+
+        tab.classList.add('active');
+
+        const panel=document.getElementById(tab.dataset.tab);
+
+        if(panel){
+            panel.style.display='block';
+        }
+    });
+});
+
+function copyOCR(button){
+    const text=button
+        .closest('.document-card')
+        .querySelector('textarea')
+        .value;
+
+    navigator.clipboard.writeText(text).then(()=>{
+        const original=button.textContent;
+
+        button.textContent='Copied';
+
+        setTimeout(()=>{
+            button.textContent=original;
+        },1500);
+    });
 }
 </script>
 
 <?php require_once 'includes/nav.php'; ?>
 </body>
 </html>
-
-
-
