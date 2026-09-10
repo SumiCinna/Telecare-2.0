@@ -25,7 +25,7 @@ if(!$patient){
 }
 
 $historyStmt = $conn->prepare("
-    SELECT appointment_date,appointment_time,type,status,reason,notes
+    SELECT id,appointment_date,appointment_time,type,status,reason,notes,consultation_summary,completed_at
     FROM appointments
     WHERE patient_id=? AND doctor_id=?
     ORDER BY appointment_date DESC,appointment_time DESC
@@ -57,6 +57,11 @@ $documentRows=[];
 while($row=$records->fetch_assoc()){
     $documentRows[]=$row;
 }
+
+$sendableAppointments = array_values(array_filter($historyRows, function($row) {
+    return !empty($row['completed_at'])
+        && strtotime($row['completed_at']) >= (time() - 3600);
+}));
 
 function ageFromDob($dob){
     if(!$dob) return '—';
@@ -106,13 +111,6 @@ function documentType($type){
             <h1>Patient Records</h1>
             <p>View and manage individual patient medical information.</p>
         </div>
-
-        <input
-            class="patient-search"
-            type="text"
-            placeholder="Search Patient Name or ID..."
-            value="<?= htmlspecialchars($patient['full_name']) ?>"
-        >
     </header>
 
     <div class="records-layout">
@@ -329,6 +327,21 @@ function documentType($type){
                                             ) ?>
                                         </div>
 
+                                        <?php if (!empty($historyRow['consultation_summary'])): ?>
+
+                                            <div class="history-summary">
+                                                <span class="history-summary-label">Summarized Notes</span>
+                                                <?= htmlspecialchars(
+                                                    mb_substr(
+                                                        trim(preg_replace('/\s+/', ' ', $historyRow['consultation_summary'])),
+                                                        0,
+                                                        220
+                                                    )
+                                                ) ?>
+                                            </div>
+
+                                        <?php endif; ?>
+
                                     </div>
 
                                 <?php endforeach; ?>
@@ -465,9 +478,9 @@ function documentType($type){
                         <button
                             type="button"
                             class="upload-button"
-                            onclick="alert('Connect this button to your existing OCR upload workflow.')"
+                            onclick="openSendDocumentModal()"
                         >
-                            + Upload New Scan
+                            + Send Document
                         </button>
 
                     </div>
@@ -592,6 +605,67 @@ function documentType($type){
 
 </main>
 
+<div id="sendDocumentModal" class="modal-overlay" onclick="if(event.target===this) closeSendDocumentModal()">
+    <div class="modal-box">
+
+        <div class="modal-head">
+            <h3>Send Document</h3>
+            <button type="button" class="modal-close" onclick="closeSendDocumentModal()">&times;</button>
+        </div>
+
+        <?php if ($sendableAppointments): ?>
+
+            <?php if (count($sendableAppointments) > 1): ?>
+
+                <label class="modal-label">Which consultation is this for?</label>
+
+                <div class="modal-appt-list">
+                    <?php foreach ($sendableAppointments as $i => $sendAppt): ?>
+                        <label class="modal-appt-option">
+                            <input
+                                type="radio"
+                                name="send_doc_appt"
+                                value="<?= (int)$sendAppt['id'] ?>"
+                                <?= $i === 0 ? 'checked' : '' ?>
+                            >
+                            <span>
+                                <?= date('M d, Y', strtotime($sendAppt['appointment_date'])) ?>
+                                · <?= htmlspecialchars($sendAppt['type'] ?: 'Consultation') ?>
+                            </span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+
+            <?php else: ?>
+
+                <input type="hidden" id="soleSendApptId" value="<?= (int)$sendableAppointments[0]['id'] ?>">
+
+                <p class="modal-hint">
+                    For the <?= date('M d, Y', strtotime($sendableAppointments[0]['appointment_date'])) ?> consultation.
+                </p>
+
+            <?php endif; ?>
+
+            <label class="modal-label" style="margin-top:14px;">Document type</label>
+
+            <div class="modal-doctype-grid">
+                <button type="button" class="doctype-btn" onclick="sendDocument('prescription')">💊 Prescription</button>
+                <button type="button" class="doctype-btn" onclick="sendDocument('lab_request')">🧪 Lab Request</button>
+                <button type="button" class="doctype-btn" onclick="sendDocument('med_cert')">📄 Medical Certificate</button>
+            </div>
+
+        <?php else: ?>
+
+            <p class="modal-hint">
+                Documents can only be sent within 1 hour after a teleconsultation is completed.
+                There's no eligible consultation for this patient right now.
+            </p>
+
+        <?php endif; ?>
+
+    </div>
+</div>
+
 <script>
 document.querySelectorAll('.record-tab').forEach(tab=>{
     tab.addEventListener('click',()=>{
@@ -628,6 +702,32 @@ function copyOCR(button){
             button.textContent=original;
         },1500);
     });
+}
+
+function openSendDocumentModal(){
+    document.getElementById('sendDocumentModal').classList.add('open');
+}
+
+function closeSendDocumentModal(){
+    document.getElementById('sendDocumentModal').classList.remove('open');
+}
+
+function sendDocument(docType){
+    const radios = document.getElementsByName('send_doc_appt');
+    let apptId = null;
+
+    if (radios.length) {
+        const checked = Array.from(radios).find(r => r.checked);
+        apptId = checked ? checked.value : null;
+    } else {
+        const sole = document.getElementById('soleSendApptId');
+        apptId = sole ? sole.value : null;
+    }
+
+    if (!apptId) return;
+
+    window.location.href = 'send_document.php?appt_id=' + encodeURIComponent(apptId)
+        + '&doc_type=' + encodeURIComponent(docType);
 }
 </script>
 

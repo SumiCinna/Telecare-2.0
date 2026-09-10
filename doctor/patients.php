@@ -88,9 +88,6 @@ function patientStatus($lastVisit) {
 .patient-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}
 .patient-heading h1{margin:0;color:var(--neutral-900);font-size:1.55rem}
 .patient-heading p{margin:5px 0 0;color:var(--neutral-500);font-size:.75rem}
-.heading-actions{display:flex;gap:8px}
-.top-btn{height:38px;padding:0 13px;border:1px solid var(--border-color);border-radius:7px;background:#fff;color:var(--neutral-800);font-size:.65rem;font-weight:800;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
-.top-btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
 .filters{display:grid;grid-template-columns:minmax(260px,1fr) 150px 150px 42px;gap:9px;padding:11px;margin-bottom:18px;border:1px solid var(--border-color);border-radius:10px;background:#fff}
 .control{width:100%;height:38px;box-sizing:border-box;border:1px solid var(--border-color);border-radius:7px;background:#fff;color:var(--neutral-800);font:inherit;font-size:.67rem;padding:0 11px}
 .search{position:relative}
@@ -133,8 +130,6 @@ function patientStatus($lastVisit) {
 @media(max-width:620px){
 .patient-page{padding:14px 12px 90px}
 .patient-heading{flex-direction:column}
-.heading-actions{width:100%}
-.top-btn{flex:1}
 .patient-grid{grid-template-columns:1fr}
 .filters{grid-template-columns:1fr}
 .search{grid-column:auto}
@@ -149,10 +144,6 @@ function patientStatus($lastVisit) {
         <p>View and manage your assigned patients.</p>
     </div>
 
-    <div class="heading-actions">
-        <button type="button" class="top-btn" onclick="window.print()">↓ Export</button>
-        <button type="button" class="top-btn primary" onclick="alert('New patient registration is handled through the patient registration workflow.')">＋ New Patient</button>
-    </div>
 </header>
 
 <form method="GET" class="filters">
