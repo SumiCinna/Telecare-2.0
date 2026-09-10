@@ -12,6 +12,18 @@ $department = $b['department'];
 $date       = $b['appt_date'];
 $time       = $b['appt_time'];
 
+$conn->query("CREATE TABLE IF NOT EXISTS doctor_schedule_settings (
+    doctor_id INT NOT NULL,
+    consultation_duration SMALLINT UNSIGNED NOT NULL DEFAULT 30,
+    appointment_interval SMALLINT UNSIGNED NOT NULL DEFAULT 5,
+    break_start TIME NULL,
+    break_end TIME NULL,
+    consultation_types VARCHAR(255) NOT NULL DEFAULT 'In-person',
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (doctor_id),
+    CONSTRAINT doctor_schedule_settings_doctor_fk FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
 $reason = implode(', ', $b['reasons'] ?? []);
 $notes  = trim($b['reason_other'] ?? '');
 
@@ -44,6 +56,13 @@ if (!$doc_chk->get_result()->fetch_assoc()) {
 
 $date_obj = DateTime::createFromFormat('!Y-m-d', $date);
 $time_value = substr($time, 0, 5);
+$scheduleSettings = ['consultation_duration' => 30, 'break_start' => null, 'break_end' => null];
+$settingsStmt = $conn->prepare('SELECT consultation_duration, break_start, break_end FROM doctor_schedule_settings WHERE doctor_id=?');
+$settingsStmt->bind_param('i', $doctor_id);
+$settingsStmt->execute();
+if ($savedSettings = $settingsStmt->get_result()->fetch_assoc()) {
+    $scheduleSettings = array_merge($scheduleSettings, $savedSettings);
+}
 $schedule_ok = $date_obj && $date_obj->format('Y-m-d') === $date && preg_match('/^\d{2}:\d{2}$/', $time_value) === 1;
 if ($schedule_ok) {
     $day_name = $date_obj->format('l');
@@ -53,7 +72,13 @@ if ($schedule_ok) {
     $schedule_result = $schedule_stmt->get_result();
     $schedule_ok = false;
     while ($schedule = $schedule_result->fetch_assoc()) {
-        if ($time_value >= substr($schedule['start_time'], 0, 5) && $time_value < substr($schedule['end_time'], 0, 5)) {
+        $slotStart = strtotime($date . ' ' . $time_value);
+        $slotEnd = $slotStart + ((int)$scheduleSettings['consultation_duration'] * 60);
+        $scheduleEnd = strtotime($date . ' ' . substr($schedule['end_time'], 0, 5));
+        $breakStart = $scheduleSettings['break_start'] ? strtotime($date . ' ' . substr($scheduleSettings['break_start'], 0, 5)) : null;
+        $breakEnd = $scheduleSettings['break_end'] ? strtotime($date . ' ' . substr($scheduleSettings['break_end'], 0, 5)) : null;
+        $inBreak = $breakStart && $breakEnd && $slotStart < $breakEnd && $slotEnd > $breakStart;
+        if ($time_value >= substr($schedule['start_time'], 0, 5) && $slotEnd <= $scheduleEnd && !$inBreak) {
             $schedule_ok = true;
             break;
         }
