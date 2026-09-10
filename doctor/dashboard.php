@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once 'includes/auth.php';
 
 $patient_result = $conn->query("SELECT COUNT(DISTINCT patient_id) c FROM appointments WHERE doctor_id=$doctor_id");
@@ -520,7 +520,7 @@ $greeting = $hour < 12 ? 'Morning' : ($hour < 18 ? 'Afternoon' : 'Evening');
 
                 <div class="quick-grid">
 
-                    <a class="quick-action" href="appointments.php">
+                    <a class="quick-action" href="availability.php">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                             <rect x="4" y="5" width="16" height="15" rx="2"/>
                             <path d="M8 3v4m8-4v4M4 10h16"/>
@@ -528,7 +528,7 @@ $greeting = $hour < 12 ? 'Morning' : ($hour < 18 ? 'Afternoon' : 'Evening');
                         View Schedule
                     </a>
 
-                    <a class="quick-action" href="availability.php">
+                    <a class="quick-action" href="availability_settings.php">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                             <rect x="4" y="4" width="16" height="16" rx="2"/>
                             <path d="M8 2v4m8-4v4M7 10h10M8 14h3m2 0h3"/>

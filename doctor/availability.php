@@ -21,7 +21,7 @@ unset($_SESSION['toast'], $_SESSION['toast_error']);
 
 $page_title = 'Schedule — TELE-CARE';
 $page_title_short = 'Schedule';
-$active_nav = 'appointments';
+$active_nav = 'schedule';
 require_once 'includes/header.php';
 ?>
 

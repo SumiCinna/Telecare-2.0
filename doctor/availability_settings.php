@@ -137,7 +137,7 @@ unset($_SESSION['toast'],$_SESSION['toast_error']);
 
 $page_title='Schedule Settings — TELE-CARE';
 $page_title_short='Schedule Settings';
-$active_nav='appointments';
+$active_nav='schedule';
 require_once 'includes/header.php';
 ?>
 
