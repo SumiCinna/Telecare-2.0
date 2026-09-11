@@ -410,6 +410,16 @@ $greeting = $hour < 12 ? 'Morning' : ($hour < 18 ? 'Afternoon' : 'Evening');
             <div class="kpi-label">Completed Consultations</div>
         </article>
 
+        <article class="kpi-card" style="cursor:pointer" onclick="location.href='reviews.php'">
+            <div class="kpi-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m12 3 2.6 5.3 5.9.8-4.3 4.1 1 5.8L12 16.9 6.8 19l1-5.8-4.3-4.1 5.9-.8L12 3Z"/>
+                </svg>
+            </div>
+            <div class="kpi-value"><?= ((int)($doc['rating_count'] ?? 0)) ? number_format((float)$doc['rating'], 1) : '—' ?></div>
+            <div class="kpi-label">Avg. Rating (<?= (int)($doc['rating_count'] ?? 0) ?> review<?= (int)($doc['rating_count'] ?? 0) === 1 ? '' : 's' ?>)</div>
+        </article>
+
     </section>
 
     <div class="dashboard-columns">

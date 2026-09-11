@@ -368,6 +368,23 @@ function isCallActive(string $date, string $time): bool {
 .btn-pill.outline-neutral:hover{ background: rgba(36,68,65,0.05); }
 .btn-pill.outline-red{ background:#fff; border-color: rgba(195,54,67,0.3); color:#C33643; }
 .btn-pill.outline-red:hover{ background: rgba(195,54,67,0.06); }
+.btn-pill.outline-gold{ background:#fff; border-color: rgba(202,138,4,0.35); color:#ca8a04; }
+.btn-pill.outline-gold:hover{ background: rgba(202,138,4,0.08); }
+
+/* ── RATE DOCTOR MODAL ── */
+.rate-modal-backdrop{display:none;position:fixed;inset:0;background:rgba(15,25,24,.55);z-index:1000;align-items:center;justify-content:center;padding:1rem}
+.rate-modal-backdrop.open{display:flex}
+.rate-modal{background:#fff;border-radius:14px;max-width:420px;width:100%;padding:1.3rem 1.4rem}
+.rate-modal h3{font-family:'DM Sans',sans-serif;color:var(--green);margin:0 0 .2rem;font-size:1.02rem;display:flex;justify-content:space-between;align-items:center}
+.rate-modal h3 button{background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--muted)}
+.rate-modal .rate-sub{font-size:.75rem;color:var(--muted);margin-bottom:1rem}
+.star-input{display:flex;gap:.35rem;justify-content:center;font-size:2rem;margin:.4rem 0 1rem;cursor:pointer;user-select:none}
+.star-input span{color:#ddd;transition:color .1s}
+.star-input span.filled{color:#ca8a04}
+.rate-modal textarea{width:100%;box-sizing:border-box;border:1px solid rgba(36,68,65,.15);border-radius:8px;padding:.6rem .7rem;font:inherit;font-size:.8rem;resize:vertical;min-height:80px;margin-bottom:.9rem}
+.rate-modal-actions{display:flex;gap:.6rem;justify-content:flex-end}
+.rate-modal-error{color:#C33643;font-size:.74rem;margin-bottom:.6rem;display:none}
+.rate-modal-success{color:#15803d;font-size:.74rem;margin-bottom:.6rem;display:none}
 
 @keyframes callPulse {
   0%,100% { box-shadow: 0 4px 14px rgba(22,163,74,0.32); }
@@ -769,6 +786,12 @@ function isCallActive(string $date, string $time): bool {
               Generating
             </span>
             <?php endif; ?>
+            <?php if (in_array($a['status'], ['Completed','Confirmed'], true)): ?>
+            <button type="button" class="btn-pill outline-gold" onclick="openRateModal(<?= (int)$a['doctor_id'] ?>, <?= htmlspecialchars(json_encode('Dr. ' . $a['doctor_name']), ENT_QUOTES) ?>)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+              Rate Doctor
+            </button>
+            <?php endif; ?>
           </div>
         </div>
       </div>
@@ -833,6 +856,125 @@ document.querySelectorAll('.toast-bar.error').forEach(t => { t.style.cursor='poi
   tick();
   const timer = setInterval(tick, 1000);
 })();
+</script>
+
+<!-- ══ Rate Doctor modal ══ -->
+<div class="rate-modal-backdrop" id="rateBackdrop" onclick="if(event.target===this) closeRateModal()">
+  <div class="rate-modal">
+    <h3><span id="rateDoctorName">Rate Doctor</span> <button type="button" onclick="closeRateModal()">&times;</button></h3>
+    <div class="rate-sub">Your rating helps other patients choose the right doctor. You can change it any time.</div>
+    <div class="rate-modal-error" id="rateError"></div>
+    <div class="rate-modal-success" id="rateSuccess"></div>
+    <div class="star-input" id="starInput">
+      <span data-star="1">&#9733;</span>
+      <span data-star="2">&#9733;</span>
+      <span data-star="3">&#9733;</span>
+      <span data-star="4">&#9733;</span>
+      <span data-star="5">&#9733;</span>
+    </div>
+    <textarea id="rateComment" placeholder="Optional — share your experience with this doctor…" maxlength="1000"></textarea>
+    <div class="rate-modal-actions">
+      <button type="button" class="btn-pill outline-neutral" onclick="closeRateModal()">Cancel</button>
+      <button type="button" class="btn-pill solid-purple" id="rateSubmitBtn" onclick="submitRating()">Submit Rating</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentRateDoctorId = null;
+let currentRateStars = 0;
+
+function paintStars(n) {
+  document.querySelectorAll('#starInput span').forEach(s => {
+    s.classList.toggle('filled', parseInt(s.dataset.star, 10) <= n);
+  });
+}
+
+document.querySelectorAll('#starInput span').forEach(s => {
+  s.addEventListener('mouseenter', () => paintStars(parseInt(s.dataset.star, 10)));
+  s.addEventListener('mouseleave', () => paintStars(currentRateStars));
+  s.addEventListener('click', () => {
+    currentRateStars = parseInt(s.dataset.star, 10);
+    paintStars(currentRateStars);
+  });
+});
+
+function openRateModal(doctorId, doctorName) {
+  currentRateDoctorId = doctorId;
+  currentRateStars = 0;
+  paintStars(0);
+  document.getElementById('rateDoctorName').textContent = doctorName;
+  document.getElementById('rateComment').value = '';
+  document.getElementById('rateError').style.display = 'none';
+  document.getElementById('rateSuccess').style.display = 'none';
+  document.getElementById('rateBackdrop').classList.add('open');
+
+  fetch('router.php?page=rate_doctor&doctor_id=' + doctorId)
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok && data.eligible && data.rating) {
+        currentRateStars = data.rating;
+        paintStars(currentRateStars);
+        document.getElementById('rateComment').value = data.comment || '';
+      }
+    })
+    .catch(() => {});
+}
+
+function closeRateModal() {
+  document.getElementById('rateBackdrop').classList.remove('open');
+}
+
+function submitRating() {
+  const errEl = document.getElementById('rateError');
+  const okEl  = document.getElementById('rateSuccess');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+
+  if (!currentRateStars) {
+    errEl.textContent = 'Please select a star rating.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('rateSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  const body = new URLSearchParams();
+  body.set('doctor_id', currentRateDoctorId);
+  body.set('rating', currentRateStars);
+  body.set('comment', document.getElementById('rateComment').value);
+
+  fetch('router.php?page=rate_doctor', { method: 'POST', body })
+    .then(r => r.text().then(text => {
+      let data;
+      try { data = JSON.parse(text); }
+      catch (e) {
+        console.error('rate_doctor.php did not return valid JSON:', text);
+        throw new Error('Server returned an unexpected response. Check the browser console / PHP error log for details.');
+      }
+      return data;
+    }))
+    .then(data => {
+      btn.disabled = false;
+      btn.textContent = 'Submit Rating';
+      if (!data.ok) {
+        errEl.textContent = data.error || 'Could not save your rating.';
+        errEl.style.display = 'block';
+        return;
+      }
+      okEl.textContent = 'Thanks! Your rating has been saved.';
+      okEl.style.display = 'block';
+      setTimeout(closeRateModal, 1200);
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.textContent = 'Submit Rating';
+      errEl.textContent = err.message || 'Network error — please try again.';
+      errEl.style.display = 'block';
+    });
+}
 </script>
 
 <?php require_once __DIR__ . '/../includes/nav.php'; ?>
