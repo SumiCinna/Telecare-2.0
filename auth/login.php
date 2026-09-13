@@ -112,12 +112,12 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
     h1 { margin:0 0 1.6rem; text-align:center; font-size:1.3rem; font-weight:700; }
     .field { margin-bottom:1rem; }
     label { display:block; margin-bottom:.4rem; color:#8d1c25; font-size:.75rem; font-weight:600; }
-    input[type=email], input[type=password] { width:100%; height:40px; padding:0 .85rem; border:1px solid var(--line); border-radius:6px; background:#fbfaff; color:var(--ink); font:inherit; font-size:.85rem; outline:none; }
-    input:focus { border-color:var(--red); box-shadow:0 0 0 3px rgba(189,15,24,.1); }
+    .form-input { width:100%; height:40px; padding:0 .85rem; border:1px solid var(--line); border-radius:6px; background:#fbfaff; color:var(--ink); font:inherit; font-size:.85rem; outline:none; }
+    .form-input:focus { border-color:var(--red); box-shadow:0 0 0 3px rgba(189,15,24,.1); }
     .password-wrap { position:relative; }
     .password-wrap input { padding-right:2.5rem; }
-    .password-toggle { position:absolute; top:50%; right:.65rem; transform:translateY(-50%); padding:0; border:0; background:none; color:#8c5360; cursor:pointer; }
-    .password-toggle svg { width:17px; height:17px; }
+    .password-toggle { position:absolute; top:50%; right:.65rem; transform:translateY(-50%); padding:0; border:0; background:none; color:#8c5360; cursor:pointer; line-height:0; }
+    .password-toggle svg { width:17px; height:17px; pointer-events:none; }
     .form-options { display:flex; align-items:center; justify-content:space-between; margin:1rem 0 1.45rem; font-size:.78rem; }
     .remember { display:flex; align-items:center; gap:.4rem; color:#663d45; cursor:pointer; }
     .remember input { width:12px; height:12px; margin:0; accent-color:var(--red); }
@@ -184,16 +184,18 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
         </a>
         <div class="login-divider" aria-hidden="true">or continue with email</div>
 
-        <form method="POST">
+        <form method="POST" novalidate>
           <div class="field">
             <label for="email">Email Address or Patient ID</label>
-            <input id="email" type="email" name="email" placeholder="Enter your email or ID" value="<?= htmlspecialchars($emailValue) ?>" required autocomplete="username"/>
+            <input id="email" class="form-input" type="email" name="email" placeholder="Enter your email or ID" value="<?= htmlspecialchars($emailValue) ?>" required autocomplete="username"/>
           </div>
           <div class="field">
             <label for="password">Password</label>
             <div class="password-wrap">
-              <input id="password" type="password" name="password" placeholder="Enter your password" required autocomplete="current-password"/>
-              <button class="password-toggle" type="button" onclick="togglePassword()" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+              <input id="password" class="form-input" type="password" name="password" placeholder="Enter your password" required autocomplete="current-password"/>
+              <button class="password-toggle" type="button" onclick="togglePassword(event)" aria-label="Show password" aria-pressed="false">
+                <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+              </button>
             </div>
           </div>
           <div class="form-options">
@@ -228,8 +230,32 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
     };
     function openPolicy(type) { document.getElementById('policyTitle').textContent = policies[type].title; document.getElementById('policyContent').innerHTML = policies[type].content; document.getElementById('policyModal').classList.add('open'); }
     function closePolicy(event) { if (!event || event.target === document.getElementById('policyModal')) document.getElementById('policyModal').classList.remove('open'); }
-    function togglePassword() { const field = document.getElementById('password'); field.type = field.type === 'password' ? 'text' : 'password'; }
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') closePolicy(); });
+
+    // Fixed password toggle:
+    // - preventDefault() stops any default/bubbling behavior on the click
+    // - focus({preventScroll:true}) keeps the input focused instead of losing focus,
+    //   which is what was causing the layout/keyboard to jump around
+    // - selection range restores the caret to where it was (end of text) instead of
+    //   the browser resetting it to the start when the input type changes
+    const EYE_OPEN = '<path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/>';
+    const EYE_CLOSED = '<path d="M3 3l18 18"/><path d="M10.6 5.2A10.6 10.6 0 0 1 12 5c6 0 9.5 6 9.5 6a17.4 17.4 0 0 1-3.15 4.15M6.5 6.8C3.85 8.55 2.5 11 2.5 11s3.5 6 9.5 6c1.28 0 2.45-.27 3.5-.72"/><path d="M9.9 9.9a2.5 2.5 0 0 0 3.53 3.53"/>';
+
+    function togglePassword(event) {
+      if (event) event.preventDefault();
+      const field = document.getElementById('password');
+      const toggleBtn = event ? event.currentTarget : document.querySelector('.password-toggle');
+      const icon = document.getElementById('eyeIcon');
+      const isHidden = field.type === 'password';
+
+      field.type = isHidden ? 'text' : 'password';
+      icon.innerHTML = isHidden ? EYE_CLOSED : EYE_OPEN;
+      toggleBtn.setAttribute('aria-pressed', isHidden ? 'true' : 'false');
+      toggleBtn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+
+      field.focus({ preventScroll: true });
+      const len = field.value.length;
+      field.setSelectionRange(len, len);
+    }
 
     <?php if ($error === 'account_not_verified'): ?>
     function resendVerification() {
