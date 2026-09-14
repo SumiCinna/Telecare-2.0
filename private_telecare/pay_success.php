@@ -2,9 +2,11 @@
 // private_telecare/pay_success.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/emailjs.php';
 
 // pay_success.php — PayMongo redirects here after payment
-// Verifies the payment server-side, marks appointment Paid + Confirmed, redirects to receipt.
+// Verifies the payment server-side, marks appointment Paid + Confirmed,
+// emails the patient a confirmation, then redirects to the receipt.
 
 $paymongoSecretKey = $_ENV['PAYMONGO_SECRET_KEY'] ?? ($_SERVER['PAYMONGO_SECRET_KEY'] ?? getenv('PAYMONGO_SECRET_KEY') ?: '');
 define('PAYMONGO_SECRET_KEY', $paymongoSecretKey);
@@ -163,6 +165,10 @@ if ($verified) {
     } else {
         $conn->query("UPDATE appointments SET payment_status='Paid', status='Confirmed' WHERE id=$appt_id");
     }
+
+    // Notify the patient by email. Best-effort — a failed send is logged
+    // (see includes/emailjs.php) but never blocks the payment flow.
+    send_appointment_confirmation_email($appt, $receipt_no);
 
     $_SESSION['toast'] = "Payment successful! Your appointment is confirmed.";
     header('Location: router.php?page=booking/success&appt_id=' . $appt_id);

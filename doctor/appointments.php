@@ -4,21 +4,38 @@ require_once 'includes/auth.php';
 
 $search=trim($_GET['search']??'');
 $date=$_GET['date']??'';
-$type=$_GET['type']??'';
 $status=$_GET['status']??'';
-$sql="SELECT a.*,p.full_name patient_name,p.profile_photo patient_photo FROM appointments a JOIN patients p ON p.id=a.patient_id WHERE a.doctor_id=? AND a.appointment_date>=CURDATE()";
+$view=($_GET['view']??'upcoming')==='past'?'past':'upcoming';
+$per_page=10;
+$page=max(1,(int)($_GET['page']??1));
+
+$where=" WHERE a.doctor_id=?";
 $params=[$doctor_id];$types='i';
-if($search!==''){$sql.=" AND p.full_name LIKE ?";$params[]="%$search%";$types.='s';}
-if($date!==''){$sql.=" AND a.appointment_date=?";$params[]=$date;$types.='s';}
-if($type!==''){$sql.=" AND a.type=?";$params[]=$type;$types.='s';}
-if($status!==''){$sql.=" AND a.status=?";$params[]=$status;$types.='s';}
-$sql.=" ORDER BY a.appointment_date,a.appointment_time";
-$stmt=$conn->prepare($sql);$stmt->bind_param($types,...$params);$stmt->execute();$appointments=$stmt->get_result();
-$page_title='Appointments — TELE-CARE';$page_title_short='Appointments';$active_nav='appointments';require_once 'includes/header.php';
+if($view==='past'){$where.=" AND a.appointment_date<CURDATE()";}else{$where.=" AND a.appointment_date>=CURDATE()";}
+if($search!==''){$where.=" AND p.full_name LIKE ?";$params[]="%$search%";$types.='s';}
+if($date!==''){$where.=" AND a.appointment_date=?";$params[]=$date;$types.='s';}
+if($status!==''){$where.=" AND a.status=?";$params[]=$status;$types.='s';}
+
+$countSql="SELECT COUNT(*) total FROM appointments a JOIN patients p ON p.id=a.patient_id".$where;
+$countStmt=$conn->prepare($countSql);$countStmt->bind_param($types,...$params);$countStmt->execute();
+$total=(int)$countStmt->get_result()->fetch_assoc()['total'];$countStmt->close();
+$total_pages=max(1,(int)ceil($total/$per_page));
+if($page>$total_pages)$page=$total_pages;
+$offset=($page-1)*$per_page;
+
+$orderSql=$view==='past'?" ORDER BY a.appointment_date DESC,a.appointment_time DESC":" ORDER BY a.appointment_date,a.appointment_time";
+$sql="SELECT a.*,p.full_name patient_name,p.profile_photo patient_photo FROM appointments a JOIN patients p ON p.id=a.patient_id".$where.$orderSql." LIMIT ? OFFSET ?";
+$dataTypes=$types.'ii';$dataParams=array_merge($params,[$per_page,$offset]);
+$stmt=$conn->prepare($sql);$stmt->bind_param($dataTypes,...$dataParams);$stmt->execute();$appointments=$stmt->get_result();
+$page_title=($view==='past'?'Past':'Upcoming').' Appointments — TELE-CARE';$page_title_short='Appointments';$active_nav='appointments';require_once 'includes/header.php';
 function apptType($v){return stripos((string)$v,'tele')!==false?'Teleconsultation':($v?:'In-person');}
+function apptPageUrl($p){$q=$_GET;$q['page']=$p;return '?'.http_build_query($q);}
 ?>
 <style>
-.appts-page{width:100%;max-width:1450px;padding:26px;box-sizing:border-box}.appts-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}.appts-head h1{margin:0;color:var(--neutral-900);font-size:1.7rem}.appts-head p{margin:5px 0 20px;color:var(--neutral-500);font-size:.78rem}.filters{display:grid;grid-template-columns:minmax(220px,1fr) 150px 150px 150px;gap:10px;padding:12px;margin-bottom:20px;background:#fff;border:1px solid var(--border-color);border-radius:12px}.control{width:100%;height:40px;padding:0 12px;border:1px solid var(--border-color);border-radius:8px;background:#fff;color:var(--neutral-700);font:inherit;font-size:.72rem}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.appt-card{position:relative;padding:16px;background:#fff;border:1px solid var(--border-color);border-left:3px solid var(--secondary,#0f8f83);border-radius:10px;box-shadow:var(--shadow-sm)}.patient{display:flex;align-items:center;gap:10px}.avatar{width:42px;height:42px;border-radius:50%;overflow:hidden;background:var(--neutral-100);display:grid;place-items:center;font-weight:700}.avatar img{width:100%;height:100%;object-fit:cover}.patient-name{font-size:.9rem;font-weight:800;color:var(--neutral-900)}.patient-id{font-size:.61rem;color:var(--neutral-500);margin-top:2px}.badge{position:absolute;right:14px;top:14px;padding:4px 9px;border-radius:999px;background:#e9fbf4;color:#087b53;border:1px solid #bdebd9;font-size:.58rem;font-weight:700}.info{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;padding:11px;background:#f3f5ff;border-radius:8px}.info-label{font-size:.57rem;font-weight:800;text-transform:uppercase;color:var(--neutral-600)}.info-value{margin-top:3px;font-size:.69rem;color:var(--neutral-900);font-weight:600}.reason-label{font-size:.57rem;font-weight:800;text-transform:uppercase;color:var(--neutral-600)}.reason{min-height:34px;margin:4px 0 14px;color:var(--neutral-700);font-size:.69rem;line-height:1.45}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.btn{display:flex;align-items:center;justify-content:center;min-height:36px;border-radius:7px;font-size:.66rem;font-weight:800;text-decoration:none}.btn-light{border:1px solid var(--border-color);color:var(--neutral-800);background:#fff}.btn-primary{background:var(--primary);color:#fff}.btn-disabled{background:#e4a1a5;color:#fff;pointer-events:none}.empty{grid-column:1/-1;padding:50px;text-align:center;background:#fff;border:1px solid var(--border-color);border-radius:10px;color:var(--neutral-500)}
+.appts-page{width:100%;max-width:1450px;padding:26px;box-sizing:border-box}.appts-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}.appts-head h1{margin:0;color:var(--neutral-900);font-size:1.7rem}.appts-head p{margin:5px 0 20px;color:var(--neutral-500);font-size:.78rem}
+.view-tabs{display:flex;gap:6px;margin-bottom:14px}.view-tab{padding:8px 16px;border-radius:8px;border:1px solid var(--border-color);background:#fff;color:var(--neutral-700);font-size:.75rem;font-weight:700;text-decoration:none}.view-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}.view-tab:hover{text-decoration:none}
+.pagination{display:flex;align-items:center;gap:6px;justify-content:center;margin-top:22px;flex-wrap:wrap}.pagination a,.pagination span{min-width:34px;height:34px;padding:0 6px;display:flex;align-items:center;justify-content:center;border-radius:7px;border:1px solid var(--border-color);background:#fff;color:var(--neutral-700);font-size:.72rem;font-weight:700;text-decoration:none}.pagination a:hover{background:#f5f6fa;text-decoration:none}.pagination .current{background:var(--primary);color:#fff;border-color:var(--primary)}.pagination .disabled{opacity:.4;pointer-events:none}.pagination span:not(.current){border:none;background:none;color:var(--neutral-500)}
+.filters{display:grid;grid-template-columns:minmax(220px,1fr) 150px 150px;gap:10px;padding:12px;margin-bottom:20px;background:#fff;border:1px solid var(--border-color);border-radius:12px}.control{width:100%;height:40px;padding:0 12px;border:1px solid var(--border-color);border-radius:8px;background:#fff;color:var(--neutral-700);font:inherit;font-size:.72rem}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.appt-card{position:relative;padding:16px;background:#fff;border:1px solid var(--border-color);border-left:3px solid var(--secondary,#0f8f83);border-radius:10px;box-shadow:var(--shadow-sm)}.patient{display:flex;align-items:center;gap:10px}.avatar{width:42px;height:42px;border-radius:50%;overflow:hidden;background:var(--neutral-100);display:grid;place-items:center;font-weight:700}.avatar img{width:100%;height:100%;object-fit:cover}.patient-name{font-size:.9rem;font-weight:800;color:var(--neutral-900)}.patient-id{font-size:.61rem;color:var(--neutral-500);margin-top:2px}.badge{position:absolute;right:14px;top:14px;padding:4px 9px;border-radius:999px;background:#e9fbf4;color:#087b53;border:1px solid #bdebd9;font-size:.58rem;font-weight:700}.info{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;padding:11px;background:#f3f5ff;border-radius:8px}.info-label{font-size:.57rem;font-weight:800;text-transform:uppercase;color:var(--neutral-600)}.info-value{margin-top:3px;font-size:.69rem;color:var(--neutral-900);font-weight:600}.reason-label{font-size:.57rem;font-weight:800;text-transform:uppercase;color:var(--neutral-600)}.reason{min-height:34px;margin:4px 0 14px;color:var(--neutral-700);font-size:.69rem;line-height:1.45}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.btn{display:flex;align-items:center;justify-content:center;min-height:36px;border-radius:7px;font-size:.66rem;font-weight:800;text-decoration:none}.btn-light{border:1px solid var(--border-color);color:var(--neutral-800);background:#fff}.btn-primary{background:var(--primary);color:#fff}.btn-disabled{background:#e4a1a5;color:#fff;pointer-events:none}.empty{grid-column:1/-1;padding:50px;text-align:center;background:#fff;border:1px solid var(--border-color);border-radius:10px;color:var(--neutral-500)}
 .instant-call-btn{display:flex;align-items:center;gap:8px;height:42px;padding:0 18px;border:none;border-radius:9px;background:var(--secondary,#0f8f83);color:#fff;font-size:.78rem;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:var(--shadow-sm);flex-shrink:0}
 .instant-call-btn:hover{filter:brightness(1.05)}
 .instant-call-btn svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -39,21 +56,25 @@ function apptType($v){return stripos((string)$v,'tele')!==false?'Teleconsultatio
 .ic-row .call-icon svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .ic-empty,.ic-loading{padding:30px 10px;text-align:center;color:var(--neutral-500);font-size:.75rem}
 .ic-row.disabled{opacity:.5;pointer-events:none}
-@media(max-width:950px){.cards{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}}@media(max-width:600px){.appts-page{padding:15px}.filters{grid-template-columns:1fr}.info{grid-template-columns:1fr}.actions{grid-template-columns:1fr}.appts-head{flex-direction:column}.instant-call-btn{width:100%;justify-content:center}}
+@media(max-width:950px){.cards{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}}@media(max-width:600px){.appts-page{padding:15px}.filters{grid-template-columns:1fr}.info{grid-template-columns:1fr}.actions{grid-template-columns:1fr}.appts-head{flex-direction:column}.instant-call-btn{width:100%;justify-content:center}.pagination a,.pagination span{min-width:30px;height:30px;font-size:.68rem}}
 </style>
 <main class="page appts-page">
   <div class="appts-head">
-    <div><h1>Upcoming Appointments</h1><p>View and manage your upcoming patient appointments.</p></div>
+    <div><h1><?= $view==='past'?'Past Appointments':'Upcoming Appointments' ?></h1><p><?= $view==='past'?'Review your past patient consultations.':'View and manage your upcoming patient appointments.' ?></p></div>
     <button type="button" class="instant-call-btn" onclick="openInstantCall()">
       <svg viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
       Instant Call
     </button>
   </div>
+  <div class="view-tabs">
+    <a class="view-tab <?= $view==='upcoming'?'active':'' ?>" href="?<?= htmlspecialchars(http_build_query(array_merge($_GET,['view'=>'upcoming','page'=>1]))) ?>">Upcoming</a>
+    <a class="view-tab <?= $view==='past'?'active':'' ?>" href="?<?= htmlspecialchars(http_build_query(array_merge($_GET,['view'=>'past','page'=>1]))) ?>">Past</a>
+  </div>
   <form class="filters" method="get">
+    <input type="hidden" name="view" value="<?= htmlspecialchars($view) ?>">
     <input class="control" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Search patient">
     <input class="control" type="date" name="date" value="<?= htmlspecialchars($date) ?>">
-    <select class="control" name="type"><option value="">All Types</option><option value="Teleconsult" <?= $type==='Teleconsult'?'selected':'' ?>>Teleconsultation</option><option value="In-person" <?= $type==='In-person'?'selected':'' ?>>In-person</option></select>
-    <select class="control" name="status" onchange="this.form.submit()"><option value="">All Statuses</option><?php foreach(['Pending','DoctorApproved','Confirmed','Completed'] as $s): ?><option value="<?= $s ?>" <?= $status===$s?'selected':'' ?>><?= $s ?></option><?php endforeach; ?></select>
+    <select class="control" name="status" onchange="this.form.submit()"><option value="">All Statuses</option><?php foreach(['Pending', 'Confirmed','Completed'] as $s): ?><option value="<?= $s ?>" <?= $status===$s?'selected':'' ?>><?= $s ?></option><?php endforeach; ?></select>
   </form>
   <section class="cards">
     <?php if($appointments->num_rows): while($a=$appointments->fetch_assoc()): $tele=stripos((string)$a['type'],'tele')!==false; ?>
@@ -62,10 +83,34 @@ function apptType($v){return stripos((string)$v,'tele')!==false?'Teleconsultatio
       <div class="patient"><div class="avatar"><?php if(!empty($a['patient_photo'])): ?><img src="../<?= htmlspecialchars($a['patient_photo']) ?>" alt=""><?php else: ?><?= htmlspecialchars(strtoupper(substr($a['patient_name'],0,2))) ?><?php endif; ?></div><div><div class="patient-name"><?= htmlspecialchars($a['patient_name']) ?></div><div class="patient-id">ID: #PT-<?= str_pad((string)$a['patient_id'],4,'0',STR_PAD_LEFT) ?></div></div></div>
       <div class="info"><div><div class="info-label">Date &amp; Time</div><div class="info-value"><?= date('M d, Y',strtotime($a['appointment_date'])) ?><br><?= date('h:i A',strtotime($a['appointment_time'])) ?></div></div><div><div class="info-label">Type</div><div class="info-value"><?= htmlspecialchars(apptType($a['type'])) ?><?= !$tele&&!empty($a['department'])?'<br>'.htmlspecialchars($a['department']):'' ?></div></div></div>
       <div class="reason-label">Reason for Consultation</div><div class="reason"><?= htmlspecialchars($a['reason']?:'No reason provided.') ?></div>
-      <div class="actions"><a class="btn btn-light" href="appointment-details.php?appt_id=<?= (int)$a['id'] ?>">View Details</a><?php if($tele&&$a['status']==='Confirmed'): ?><a class="btn btn-primary" href="call.php?appt_id=<?= (int)$a['id'] ?>">Start Consult</a><?php else: ?><span class="btn btn-disabled"><?= $tele?'Waiting':'Check In' ?></span><?php endif; ?></div>
+      <div class="actions">
+        <a class="btn btn-light" href="appointment-details.php?appt_id=<?= (int)$a['id'] ?>" <?= $view==='past'?'style="grid-column:1/-1"':'' ?>>View Details</a>
+        <?php if($view==='upcoming'): ?>
+          <?php if($tele&&$a['status']==='Confirmed'): ?><a class="btn btn-primary" href="call.php?appt_id=<?= (int)$a['id'] ?>">Start Consult</a><?php else: ?><span class="btn btn-disabled">Waiting</span><?php endif; ?>
+        <?php endif; ?>
+      </div>
     </article>
-    <?php endwhile; else: ?><div class="empty">No upcoming appointments match your filters.</div><?php endif; ?>
+    <?php endwhile; else: ?><div class="empty">No <?= $view==='past'?'past':'upcoming' ?> appointments match your filters.</div><?php endif; ?>
   </section>
+
+  <?php if($total_pages>1): ?>
+  <nav class="pagination" aria-label="Appointments pagination">
+    <a class="<?= $page<=1?'disabled':'' ?>" href="<?= $page<=1?'#':apptPageUrl($page-1) ?>" aria-label="Previous page">&#8249;</a>
+    <?php
+      $window=2;
+      for($i=1;$i<=$total_pages;$i++):
+        if($i===1||$i===$total_pages||($i>=$page-$window&&$i<=$page+$window)):
+    ?>
+      <?php if($i===$page): ?><span class="current"><?= $i ?></span>
+      <?php else: ?><a href="<?= apptPageUrl($i) ?>"><?= $i ?></a><?php endif; ?>
+    <?php
+        elseif($i===$page-$window-1||$i===$page+$window+1):
+    ?>
+      <span>…</span>
+    <?php endif; endfor; ?>
+    <a class="<?= $page>=$total_pages?'disabled':'' ?>" href="<?= $page>=$total_pages?'#':apptPageUrl($page+1) ?>" aria-label="Next page">&#8250;</a>
+  </nav>
+  <?php endif; ?>
 </main>
 
 <div class="ic-overlay" id="ic-overlay">
