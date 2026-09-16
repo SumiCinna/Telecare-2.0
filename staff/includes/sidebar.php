@@ -6,6 +6,12 @@
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sb-logo">
+    <div class="sb-logo-mark" aria-hidden="true">
+      <svg viewBox="0 0 32 32" fill="none">
+        <rect x="1" y="1" width="30" height="30" rx="9" fill="#fff"/>
+        <path d="M16 8v16M8 16h16" stroke="var(--primary)" stroke-width="3.4" stroke-linecap="round"/>
+      </svg>
+    </div>
     <div class="sb-logo-text">
       <div class="sb-logo-title">TELE<b>CARE</b></div>
       <div class="sb-logo-sub">Staff Portal</div>
@@ -15,15 +21,30 @@
   <nav class="sb-nav">
     <?php
     $nav = [
-      ['dashboard.php',   'dashboard',    'Dashboard',    '<path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>'],
-      ['pos_services.php','pos',          'Services POS', '<path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m-10 0a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z"/>'],
-      ['appointments.php','appointments', 'Appointments', '<path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>'],
-      ['doctors.php',     'doctors',      'Doctors',      '<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 9.5c0 5.302-7.5 10.5-7.5 10.5S4.5 14.802 4.5 9.5a7.5 7.5 0 1115 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5m-2.5-2.5h5"/>'],
-      ['patients.php',    'patients',     'Patients',     '<path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>'],
+      // Dashboard — grid / panels
+      ['dashboard.php',   'dashboard',    'Dashboard',
+        '<path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h5a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM13 5a1 1 0 011-1h5a1 1 0 011 1v3a1 1 0 01-1 1h-5a1 1 0 01-1-1V5zM13 14a1 1 0 011-1h5a1 1 0 011 1v5a1 1 0 01-1 1h-5a1 1 0 01-1-1v-5zM4 16a1 1 0 011-1h5a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3z"/>'],
+
+      // Services POS — receipt with lines
+      ['pos_services.php','pos',          'Services POS',
+        '<path stroke-linecap="round" stroke-linejoin="round" d="M6 3h12a1 1 0 011 1v16.2a.8.8 0 01-1.2.7L15 19.3l-2.4 1.5a1 1 0 01-1.1 0L9 19.3l-2.8 1.6A.8.8 0 015 20.2V4a1 1 0 011-1z"/><path stroke-linecap="round" d="M9 8h6M9 12h6"/>'],
+
+      // Appointments — calendar
+      ['appointments.php','appointments', 'Appointments',
+        '<path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>'],
+
+      // Doctors — stethoscope
+      ['doctors.php',     'doctors',      'Doctors',
+        '<path stroke-linecap="round" stroke-linejoin="round" d="M6 3v5a4 4 0 008 0V3"/><path stroke-linecap="round" d="M6 3H4.5M14 3h1.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 12v2a5 5 0 0010 0v-1"/><circle cx="20" cy="10" r="2"/>'],
+
+      // Patients — two people
+      ['patients.php',    'patients',     'Patients',
+        '<path stroke-linecap="round" stroke-linejoin="round" d="M14 8a3.5 3.5 0 11-7 0 3.5 3.5 0 017 0zM3.5 20a7 7 0 0114 0"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 8.5a2.5 2.5 0 100-5M18 14.5a5.5 5.5 0 013 4.9"/>'],
     ];
     foreach ($nav as [$href, $key, $label, $icon]): ?>
     <a href="<?= $href ?>" class="sb-link <?= $active_page === $key ? 'active' : '' ?>">
-      <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><?= $icon ?></svg>
+      <svg class="sb-link-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1.8" aria-hidden="true"><?= $icon ?></svg>
       <span class="sb-link-label"><?= $label ?></span>
     </a>
     <?php endforeach ?>

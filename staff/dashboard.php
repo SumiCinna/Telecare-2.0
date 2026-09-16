@@ -255,18 +255,11 @@ require_once 'includes/header.php';
   </div>
 </div>
 
-<?php if ($toast): ?>
-<div class="toast-bar success">✓ <?= htmlspecialchars($toast) ?></div>
-<?php endif; ?>
-<?php if ($toast_error): ?>
-<div class="toast-bar error">✕ <?= htmlspecialchars($toast_error) ?></div>
-<?php endif; ?>
-
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem;">
 
   <div class="card">
     <div class="sec-head" style="margin-bottom:.8rem">
-      <h2 style="font-size:1rem">💰 Daily Collections (Consults + POS)</h2>
+      <h2 style="font-size:1rem">Daily Collections (Consults + POS)</h2>
       <span class="badge bg-blue"><?= htmlspecialchars($range_label) ?></span>
     </div>
     <div style="position:relative;width:100%;height:220px;">
@@ -279,7 +272,7 @@ require_once 'includes/header.php';
 
   <div class="card">
     <div class="sec-head" style="margin-bottom:.8rem">
-      <h2 style="font-size:1rem">📊 Appointments by Status</h2>
+      <h2 style="font-size:1rem">Appointments by Status</h2>
       <span class="badge bg-blue"><?= htmlspecialchars($range_label) ?></span>
     </div>
     <div style="display:flex;align-items:center;gap:1.2rem;">
@@ -299,7 +292,7 @@ require_once 'includes/header.php';
 
   <div class="card">
     <div class="sec-head" style="margin-bottom:.8rem">
-      <h2 style="font-size:1rem">📋 Today's Queue</h2>
+      <h2 style="font-size:1rem">Today's Queue</h2>
       <span class="badge bg-blue"><?= date('M j') ?></span>
     </div>
     <?php
@@ -328,7 +321,7 @@ require_once 'includes/header.php';
 
   <div class="card">
     <div class="sec-head" style="margin-bottom:.8rem">
-      <h2 style="font-size:1rem">⚡ Awaiting Your Confirmation</h2>
+      <h2 style="font-size:1rem">Awaiting Your Confirmation</h2>
       <?php if ($stat_doctor_approved > 0): ?>
         <span class="badge bg-blue"><?= $stat_doctor_approved ?></span>
       <?php endif ?>
@@ -351,7 +344,7 @@ require_once 'includes/header.php';
         </div>
       </div>
       <div style="display:flex;gap:.4rem">
-        <button class="btn-green btn-sm" style="font-weight:800;" onclick="quickAction(<?= $a['id'] ?>, 'approve')">✓ Confirm</button>
+        <button class="btn-green btn-sm" style="font-weight:800;display:inline-flex;align-items:center;gap:4px;" onclick="quickAction(<?= $a['id'] ?>, 'approve')"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Confirm</button>
         <button class="btn-red   btn-sm" onclick="quickAction(<?= $a['id'] ?>, 'reject')">Reject</button>
       </div>
     </div>
@@ -364,7 +357,7 @@ require_once 'includes/header.php';
 
 <div class="card">
   <div class="sec-head" style="margin-bottom:.8rem">
-    <h2 style="font-size:1rem">🧾 Recent POS Sales</h2>
+    <h2 style="font-size:1rem">Recent POS Sales</h2>
     <a href="pos_services.php" class="badge bg-blue" style="text-decoration:none;">Go to POS →</a>
   </div>
   <?php if (!empty($recent_pos_sales)): ?>

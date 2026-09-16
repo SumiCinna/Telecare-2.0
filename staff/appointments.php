@@ -245,7 +245,7 @@ require_once 'includes/header.php';
           <?= $a['status'] === 'DoctorApproved' ? 'Dr. Approved' : $a['status'] ?>
         </span>
         <?php if ($a['status'] === 'DoctorApproved'): ?>
-        <div style="font-size:0.67rem;color:#3b82f6;font-weight:600;margin-top:0.2rem;">⚡ Needs your confirmation</div>
+        <div style="font-size:0.67rem;color:#3b82f6;font-weight:600;margin-top:0.2rem;">Needs your confirmation</div>
         <?php endif; ?>
       </td>
       <td>
@@ -262,18 +262,18 @@ require_once 'includes/header.php';
           data-receipt="<?= htmlspecialchars($receipt_no, ENT_QUOTES) ?>"
           data-paid-at="<?= htmlspecialchars($paid_at_val, ENT_QUOTES) ?>"
           onclick="handleReceiptClick(this)">
-          📄 Receipt
+          <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" style="vertical-align:-1px;margin-right:3px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6M9 8h1M7 21h10a2 2 0 002-2V7.414a1 1 0 00-.293-.707l-4.414-4.414A1 1 0 0013.586 2H7a2 2 0 00-2 2v15a2 2 0 002 2z"/></svg>Receipt
         </button>
         <?php endif; ?>
       </td>
       <td>
         <div style="display:flex;gap:.35rem;flex-wrap:wrap">
           <?php if ($a['status'] === 'DoctorApproved'): ?>
-          <button class="btn-green btn-sm" style="font-weight:800;" onclick="quickAction(<?= $a['id'] ?>, 'approve')">✓ Confirm</button>
+          <button class="btn-green btn-sm" style="font-weight:800;display:inline-flex;align-items:center;gap:4px;" onclick="quickAction(<?= $a['id'] ?>, 'approve')"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Confirm</button>
           <button class="btn-red btn-sm" onclick="quickAction(<?= $a['id'] ?>, 'reject')">Reject</button>
 
           <?php elseif ($a['status'] === 'Pending'): ?>
-          <span style="font-size:0.72rem;color:#3b82f6;font-weight:600;">⏳ Awaiting doctor</span>
+          <span style="font-size:0.72rem;color:#3b82f6;font-weight:600;display:inline-flex;align-items:center;gap:4px;"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 3"/></svg>Awaiting doctor</span>
 
           <?php elseif ($a['status'] === 'Confirmed'): ?>
           <button class="btn-orange btn-sm"
@@ -314,7 +314,7 @@ require_once 'includes/header.php';
   <div class="modal">
     <h3>Create Appointment</h3>
     <?php if ($ca_error): ?>
-    <div style="background:rgba(195,54,67,.08);border:1px solid rgba(195,54,67,.2);color:#c33643;border-radius:10px;padding:.65rem .9rem;font-size:.82rem;margin-bottom:.9rem">⚠ <?= htmlspecialchars($ca_error) ?></div>
+    <div style="background:rgba(195,54,67,.08);border:1px solid rgba(195,54,67,.2);color:#c33643;border-radius:10px;padding:.65rem .9rem;font-size:.82rem;margin-bottom:.9rem;display:flex;align-items:center;gap:7px;"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#c33643" stroke-width="2.4" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg><?= htmlspecialchars($ca_error) ?></div>
     <?php endif ?>
     <form method="POST" id="ca-form">
       <label class="f-label">Patient</label>
@@ -351,7 +351,7 @@ require_once 'includes/header.php';
   <div class="modal">
     <h3>Reschedule Appointment</h3>
     <?php if ($rs_error): ?>
-    <div id="rs-server-error" style="background:rgba(195,54,67,.08);border:1px solid rgba(195,54,67,.2);color:#c33643;border-radius:10px;padding:.65rem .9rem;font-size:.82rem;margin-bottom:.9rem">⚠ <?= htmlspecialchars($rs_error) ?></div>
+    <div id="rs-server-error" style="background:rgba(195,54,67,.08);border:1px solid rgba(195,54,67,.2);color:#c33643;border-radius:10px;padding:.65rem .9rem;font-size:.82rem;margin-bottom:.9rem;display:flex;align-items:center;gap:7px;"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#c33643" stroke-width="2.4" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg><?= htmlspecialchars($rs_error) ?></div>
     <?php endif ?>
     <form method="POST" id="rs-form">
       <input type="hidden" name="reschedule" value="1"/>
@@ -375,8 +375,13 @@ require_once 'includes/header.php';
   <div class="modal" style="min-width:550px;max-width:700px;padding:0;overflow-y:auto;border-radius:20px;background:#fff;max-height:90vh;">
     <div class="receipt-modal-header">
       <button onclick="closeModal('modal-receipt')"
-              style="position:absolute;top:0.9rem;right:0.9rem;background:rgba(255,255,255,0.15);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;z-index:2;line-height:1;">✕</button>
-      <div style="font-size:0.7rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;opacity:0.7;margin-bottom:0.4rem;">🏥 Tele-Care</div>
+              style="position:absolute;top:0.9rem;right:0.9rem;background:rgba(255,255,255,0.15);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;line-height:1;">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+      <div style="font-size:0.7rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;opacity:0.7;margin-bottom:0.4rem;display:flex;align-items:center;justify-content:center;gap:5px;">
+        <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="1" y="1" width="30" height="30" rx="9" fill="currentColor"/><path d="M16 8v16M8 16h16" stroke="#B31118" stroke-width="3.4" stroke-linecap="round"/></svg>
+        Tele-Care
+      </div>
       <div style="font-family:'Playfair Display',Georgia,serif;font-size:1.5rem;font-weight:800;margin-bottom:0.2rem;">Payment Receipt</div>
       <div style="font-size:0.75rem;opacity:0.75;">Official Consultation Receipt</div>
     </div>
@@ -819,7 +824,7 @@ function printReceipt() {
 <body>
 <div class="card">
   <div class="hdr">
-    <div class="brand">🏥 Tele-Care</div>
+    <div class="brand" style="display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 32 32" fill="none"><rect x="1" y="1" width="30" height="30" rx="9" fill="currentColor"/><path d="M16 8v16M8 16h16" stroke="#B31118" stroke-width="3.4" stroke-linecap="round"/></svg>Tele-Care</div>
     <div class="title">Payment Receipt</div>
     <div class="sub">Official Consultation Receipt</div>
   </div>

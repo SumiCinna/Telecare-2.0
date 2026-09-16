@@ -524,7 +524,7 @@ const APPT_TS  = <?= $appt_ts ?>;
 const END_TS   = <?= $end_ts ?>;
 const APPT_ID  = <?= $appt_id ?>;
 const MY_NAME  = <?= json_encode('Dr. ' . $doc['full_name']) ?>;
-const WS_URL = `wss://mortgage-incredible-treatment-headed.trycloudflare.com/ws/${ROOM_ID}/${ROLE}`;
+const WS_URL = `wss://telecare-signaling.onrender.com/ws/${ROOM_ID}/${ROLE}`;
 const ICE = {
   iceServers: [
     { urls: "stun:stun.relay.metered.ca:80" },

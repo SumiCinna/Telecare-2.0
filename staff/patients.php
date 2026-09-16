@@ -81,13 +81,6 @@ require_once 'includes/header.php';
   <input class="search-bar" placeholder="Search patient…" oninput="filterTable('patients-tbody', this.value)"/>
 </div>
 
-<?php if ($toast): ?>
-<div class="toast-bar success">✓ <?= htmlspecialchars($toast) ?></div>
-<?php endif; ?>
-<?php if ($toast_error): ?>
-<div class="toast-bar error">✕ <?= htmlspecialchars($toast_error) ?></div>
-<?php endif; ?>
-
 <div class="tbl-wrap">
   <table>
     <thead>

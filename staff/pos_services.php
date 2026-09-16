@@ -249,7 +249,7 @@ require_once 'includes/header.php';
 <!-- Receipt (auto-shown once after a completed sale) -->
 <div class="modal-overlay" id="modal-receipt">
   <div class="modal">
-    <h3>✓ Sale Completed</h3>
+    <h3 style="display:flex;align-items:center;gap:8px;"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Sale Completed</h3>
     <div style="font-size:.78rem;color:var(--muted);margin-bottom:.8rem;">
       Receipt #<?= (int)$receipt['id'] ?> · <?= date('M j, Y g:i A', strtotime($receipt['created_at'])) ?>
       <?php if (!empty($receipt['patient_name'])): ?> · <?= htmlspecialchars($receipt['patient_name']) ?><?php endif; ?>
@@ -368,7 +368,7 @@ function renderCart() {
         <button type="button" onclick="addToCart(${id})">+</button>
       </div>
       <div class="cart-line-sub">${money(sub)}</div>
-      <button type="button" class="cart-line-remove" onclick="removeFromCart(${id})" title="Remove">✕</button>
+      <button type="button" class="cart-line-remove" onclick="removeFromCart(${id})" title="Remove"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>`;
   }).join('');
 
