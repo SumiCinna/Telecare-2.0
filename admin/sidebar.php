@@ -59,13 +59,13 @@ aside.sidebar .logout-btn svg{ flex-shrink:0; }
 (function() {
   var icon = document.createElement('link');
   icon.rel = 'icon';
-  icon.type = 'image/jpeg';
+  icon.type = 'image/png';
   icon.href = '/telecarelogo.png';
   document.head.appendChild(icon);
 
   var shortcutIcon = document.createElement('link');
   shortcutIcon.rel = 'shortcut icon';
-  shortcutIcon.type = 'image/jpeg';
+  shortcutIcon.type = 'image/png';
   shortcutIcon.href = '/telecarelogo.png';
   document.head.appendChild(shortcutIcon);
 })();

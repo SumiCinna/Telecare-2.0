@@ -1,10 +1,11 @@
-
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
   <title><?= $page_title ?? 'Doctor — TELE-CARE' ?></title>
+  <link rel="icon" type="image/png" href="/telecarelogo.png">
+  <link rel="apple-touch-icon" href="/telecarelogo.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="includes/design-system.css" rel="stylesheet"/>
   <style>
@@ -158,5 +159,3 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
-
-
