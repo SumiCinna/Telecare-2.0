@@ -1,8 +1,6 @@
 <?php
 // database/config.php
 
-define('BASE_URL', $_ENV['BASE_URL'] ?? getenv('BASE_URL') ?: 'http://localhost:3000');
-
 // Load key=value pairs from project .env so $_ENV/getenv are available in Apache/XAMPP.
 if (!function_exists('telecare_load_env')) {
     function telecare_load_env(string $envPath): void
@@ -56,7 +54,11 @@ if (!function_exists('telecare_load_env')) {
     }
 }
 
+// IMPORTANT: load .env BEFORE any define() that reads from $_ENV/getenv,
+// otherwise those constants always fall back to their hardcoded defaults.
 telecare_load_env(__DIR__ . '/../.env');
+
+define('BASE_URL', $_ENV['BASE_URL'] ?? getenv('BASE_URL') ?: 'http://localhost:3000');
 
 // ── Database Connection ──
 define('DB_HOST', $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?: 'localhost');
@@ -78,6 +80,9 @@ if (DB_SSL_CA && is_file(DB_SSL_CA)) {
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+
+$conn->set_charset("utf8mb4");
+$conn->query("SET time_zone = '+08:00'");
 
 if (!function_exists('safe_prepare')) {
     /**
@@ -107,6 +112,3 @@ if (!function_exists('safe_prepare')) {
         return $stmt;
     }
 }
-?>
-
-

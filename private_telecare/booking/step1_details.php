@@ -5,14 +5,33 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/booking_helpers.php';
 require_once __DIR__ . '/../../ocr/ocr_api.php';
 
-// Reason stays put even if the patient changes department later — it
-// describes the patient's symptoms, not which department handles them.
+const MAX_MEDICAL_DOCS = 5;
+
+function get_available_departments(mysqli $conn): array {
+    $with_doctors = [];
+    $res = $conn->query("SELECT DISTINCT department FROM doctors WHERE status='active' AND department IS NOT NULL AND department <> ''");
+    while ($row = $res->fetch_assoc()) {
+        $with_doctors[] = $row['department'];
+    }
+
+    return array_filter(BOOKING_DEPARTMENTS, function ($info, $name) use ($with_doctors) {
+        return in_array($name, $with_doctors, true);
+    }, ARRAY_FILTER_USE_BOTH);
+}
+
+$available_departments = get_available_departments($conn);
+
 $sel_department = $_SESSION['booking']['department']   ?? '';
 $sel_reasons    = $_SESSION['booking']['reasons']       ?? [];
 $sel_other      = $_SESSION['booking']['reason_other']  ?? '';
 
+if ($sel_department !== '' && !array_key_exists($sel_department, $available_departments)) {
+    $sel_department = '';
+    $sel_reasons    = [];
+    unset($_SESSION['booking']['department'], $_SESSION['booking']['reasons']);
+}
+
 $error = null;
-const MAX_MEDICAL_DOCS = 5;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $dept    = trim($_POST['department'] ?? '');
@@ -21,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $valid_reasons = BOOKING_REASONS_BY_DEPT[$dept] ?? null;
 
-    if (!array_key_exists($dept, BOOKING_DEPARTMENTS)) {
+    if (!array_key_exists($dept, $available_departments)) {
         $error = 'Please select a department.';
     } elseif (empty($reasons) && $other === '') {
         $error = 'Please select at least one reason for consultation.';
@@ -30,10 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['booking']['reasons']      = array_values(array_intersect($reasons, $valid_reasons ?? []));
         $_SESSION['booking']['reason_other'] = $other;
 
-        // ── Optional: scan uploaded past medical documents (images only, up to 5) ──
-        // Scanned text/type per file is stashed in session now and written to the
-        // appointment row in process_booking.php. Where the patient/doctor
-        // later *view* these documents is a separate feature — out of scope here.
         if (!empty($_FILES['medical_doc']['name'][0])) {
             $allowed_ext  = ['jpg', 'jpeg', 'png', 'webp'];
             $allowed_mime = ['image/jpeg', 'image/png', 'image/webp'];
@@ -104,6 +119,7 @@ echo booking_wizard_css();
 .dept-desc{font-size:0.76rem;color:var(--muted);margin-top:0.15rem}
 .dept-check{position:absolute;top:0.6rem;right:0.6rem;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;display:none;align-items:center;justify-content:center;font-size:0.7rem}
 .dept-card.selected .dept-check{display:flex}
+.dept-empty{font-size:0.85rem;color:var(--muted);padding:0.4rem 0}
 .reason-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.7rem}
 .reason-placeholder{font-size:0.85rem;color:var(--muted);padding:0.4rem 0;}
 .reason-opt{display:flex;align-items:center;gap:0.6rem;border:1.5px solid rgba(36,68,65,0.1);border-radius:12px;padding:0.7rem 0.9rem;cursor:pointer;font-size:0.85rem;color:var(--green)}
@@ -116,6 +132,7 @@ echo booking_wizard_css();
 .file-item .fname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .file-item .fremove{cursor:pointer;color:var(--red);font-weight:800;flex-shrink:0;padding:0 0.2rem}
 .upload-warn{color:var(--red);font-weight:700;font-size:0.78rem;margin-top:0.6rem}
+.wiz-btn:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:700px){.dept-grid,.reason-grid{grid-template-columns:1fr}}
 </style>
 
@@ -130,8 +147,11 @@ echo booking_wizard_css();
   <form method="POST" enctype="multipart/form-data" id="step1-form">
     <div class="wiz-card">
       <h3>1. Select Department</h3>
+      <?php if (empty($available_departments)): ?>
+      <p class="dept-empty">No departments are available for booking right now. Please check back later.</p>
+      <?php else: ?>
       <div class="dept-grid">
-        <?php foreach (BOOKING_DEPARTMENTS as $name => $info): ?>
+        <?php foreach ($available_departments as $name => $info): ?>
         <div class="dept-card <?= $sel_department === $name ? 'selected' : '' ?>" data-dept="<?= htmlspecialchars($name) ?>" onclick="pickDept(this)">
           <div class="dept-check">&#10003;</div>
           <div class="dept-icon"><?= dept_icon($info['icon']) ?></div>
@@ -140,6 +160,7 @@ echo booking_wizard_css();
         </div>
         <?php endforeach; ?>
       </div>
+      <?php endif; ?>
       <input type="hidden" name="department" id="department-input" value="<?= htmlspecialchars($sel_department) ?>"/>
     </div>
 
@@ -147,6 +168,7 @@ echo booking_wizard_css();
       <h3>2. Reason for Consultation</h3>
       <p id="reason-placeholder" class="reason-placeholder" style="<?= $sel_department ? 'display:none;' : '' ?>">Select a department above to see relevant consultation reasons.</p>
       <?php foreach (BOOKING_REASONS_BY_DEPT as $dept_name => $dept_reasons): ?>
+      <?php if (!array_key_exists($dept_name, $available_departments)) continue; ?>
       <div class="reason-grid" data-reason-group="<?= htmlspecialchars($dept_name) ?>" style="<?= $sel_department === $dept_name ? '' : 'display:none;' ?>">
         <?php foreach ($dept_reasons as $r): ?>
         <label class="reason-opt">
@@ -171,8 +193,8 @@ echo booking_wizard_css();
     </div>
 
     <div class="wiz-actions">
-            <a href="../router.php?page=visits" class="wiz-btn ghost">Cancel</a>
-      <button type="submit" class="wiz-btn primary">Continue to Doctor Selection</button>
+      <a href="../router.php?page=visits" class="wiz-btn ghost">Cancel</a>
+      <button type="submit" class="wiz-btn primary" <?= empty($available_departments) ? 'disabled' : '' ?>>Continue to Doctor Selection</button>
     </div>
   </form>
 </div>
@@ -200,15 +222,13 @@ const docInput = document.getElementById('medical-doc-input');
 const fileList  = document.getElementById('file-list');
 const MAX_FILES = 5;
 
-let selectedFiles = []; // persists across multiple picker openings
+let selectedFiles = [];
 
 function fileKey(f) {
   return f.name + '|' + f.size + '|' + f.lastModified;
 }
 
 function syncInputFiles() {
-  // Browsers won't let us append directly to input.files, so we rebuild
-  // it from our own tracked array. This is also what actually submits.
   const dt = new DataTransfer();
   selectedFiles.forEach(f => dt.items.add(f));
   docInput.files = dt.files;

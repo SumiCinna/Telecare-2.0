@@ -44,8 +44,9 @@ if (time() < $appt_ts) {
 }
 
 // Mark as Completed
-$upd = $conn->prepare("UPDATE appointments SET status='Completed' WHERE id=? AND status='Confirmed'");
+// Mark as Completed
+$upd = $conn->prepare("UPDATE appointments SET status='Completed', completed_at=NOW() WHERE id=? AND status='Confirmed'");
 $upd->bind_param("i", $appt_id);
 $upd->execute();
 
-echo json_encode(['ok'=>true,'msg'=>'Appointment marked as Completed','affected'=>$upd->affected_rows])
+echo json_encode(['ok'=>true,'msg'=>'Appointment marked as Completed','affected'=>$upd->affected_rows]);

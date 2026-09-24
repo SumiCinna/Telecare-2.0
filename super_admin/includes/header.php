@@ -17,6 +17,7 @@ $super_admin_name = $_SESSION['super_admin_name'] ?? 'Super Admin';
 //   $heading_pill     string  optional raw HTML for a pill next to the H1 (e.g. "Active v1.3")
 //   $subtitle         string  supporting copy under the H1
 //   $header_actions   string  optional raw HTML for buttons in the top-right of the page heading
+//   $page_styles      string  optional raw CSS injected into <head> for this page only
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -27,7 +28,10 @@ $super_admin_name = $_SESSION['super_admin_name'] ?? 'Super Admin';
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-	<link rel="stylesheet" href="assets/js/css/style.css">
+	<link rel="stylesheet" href="assets/js/css/style.css?v=<?= @filemtime(__DIR__ . '/../assets/js/css/style.css') ?: time() ?>">
+	<?php if (!empty($page_styles)): ?>
+	<style><?= $page_styles ?></style>
+	<?php endif; ?>
 </head>
 <body>
 <div class="admin-shell">
@@ -47,10 +51,26 @@ $super_admin_name = $_SESSION['super_admin_name'] ?? 'Super Admin';
 					}
 					$sa_initials = substr($sa_initials, 0, 2) ?: 'SA';
 				?>
-				<a href="logout.php" class="icon-action" title="Log out" style="color:#91a0b1;text-decoration:none;">
-					<svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-				</a>
-				<div class="profile"><span class="profile-avatar"><?= htmlspecialchars($sa_initials) ?></span><div><strong><?= htmlspecialchars($super_admin_name) ?></strong><small>System Administrator</small></div></div>
+				<div class="profile-menu" id="profileMenu">
+					<button type="button" class="profile-trigger" id="profileBtn" aria-haspopup="true" aria-expanded="false">
+						<span class="profile-avatar"><?= htmlspecialchars($sa_initials) ?></span>
+						<div class="profile-trigger-text">
+							<div class="profile-trigger-name"><?= htmlspecialchars($super_admin_name) ?></div>
+							<div class="profile-trigger-role">System Administrator</div>
+						</div>
+						<svg class="profile-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+					</button>
+					<div class="profile-dropdown" role="menu" aria-label="Profile options">
+						<button type="button" class="profile-option" role="menuitem" data-open-modal="changePasswordModal">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+							Change Password
+						</button>
+						<a class="profile-option logout" role="menuitem" href="logout.php">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+							Log Out
+						</a>
+					</div>
+				</div>
 			</div>
 		</header>
 		<section class="content">

@@ -31,9 +31,39 @@ function formatOcrText(string $text, string $type): string {
     return nl2br($text);
 }
 
-  function scanFileUrl(string $filePath): string {
+function scanFileUrl(string $filePath): string {
     return '../' . ltrim($filePath, '/');
-  }
+}
+
+function recordsUrl(array $params, string $anchor = ''): string {
+    return 'router.php?' . http_build_query(array_merge(['page' => 'records'], $params)) . $anchor;
+}
+
+function renderPager(int $current, int $total, string $param, array $keep, string $anchor): void {
+    if ($total <= 1) return;
+
+    $url = function (int $p) use ($param, $keep, $anchor) {
+        return recordsUrl(array_merge($keep, [$param => $p]), $anchor);
+    };
+
+    $pages = array_unique(array_merge([1, $total], range(max(1, $current - 2), min($total, $current + 2))));
+    sort($pages);
+
+    echo '<div class="pager">';
+    if ($current > 1) {
+        echo '<a href="' . htmlspecialchars($url($current - 1)) . '">Prev</a>';
+    }
+    $last = 0;
+    foreach ($pages as $p) {
+        if ($p - $last > 1) echo '<span class="pager-gap">&hellip;</span>';
+        echo '<a href="' . htmlspecialchars($url($p)) . '"' . ($p === $current ? ' class="active"' : '') . '>' . $p . '</a>';
+        $last = $p;
+    }
+    if ($current < $total) {
+        echo '<a href="' . htmlspecialchars($url($current + 1)) . '">Next</a>';
+    }
+    echo '</div>';
+}
 
 $notice = '';
 $error  = '';
@@ -118,9 +148,10 @@ if ($meds_res) { while ($row = $meds_res->fetch_assoc()) $meds[] = $row; }
 $meds_count       = count($meds);
 $refill_needed_ct = count(array_filter($meds, fn($m) => (int)$m['refills_remaining'] === 0));
 
-// Scanned prescriptions from OCR
+$hist_per_page = 5;
+$hist_page     = max(1, (int)($_GET['hist_page'] ?? 1));
 $scan_per_page = 5;
-$scan_page = max(1, (int)($_GET['scan_page'] ?? 1));
+$scan_page     = max(1, (int)($_GET['scan_page'] ?? 1));
 
 $scan_filter = "
     patient_id=$patient_id
@@ -140,10 +171,19 @@ $scanned = $conn->query("
     LIMIT $scan_per_page OFFSET $scan_offset
 ");
 
-$history_stmt = $conn->prepare("SELECT a.appointment_date, a.status, a.reason, d.full_name AS doctor_name, d.specialty
+$hist_count_stmt = $conn->prepare("SELECT COUNT(*) AS total FROM appointments a JOIN doctors d ON d.id = a.doctor_id WHERE a.patient_id = ?");
+$hist_count_stmt->bind_param('i', $patient_id);
+$hist_count_stmt->execute();
+$hist_total = (int)($hist_count_stmt->get_result()->fetch_assoc()['total'] ?? 0);
+$hist_count_stmt->close();
+$hist_total_pages = max(1, (int)ceil($hist_total / $hist_per_page));
+$hist_page   = min($hist_page, $hist_total_pages);
+$hist_offset = ($hist_page - 1) * $hist_per_page;
+
+$history_stmt = $conn->prepare("SELECT a.id, a.appointment_date, a.status, a.reason, a.summary_pdf_path, d.full_name AS doctor_name, d.specialty
   FROM appointments a JOIN doctors d ON d.id = a.doctor_id
-  WHERE a.patient_id = ? ORDER BY a.appointment_date DESC, a.appointment_time DESC LIMIT 5");
-$history_stmt->bind_param('i', $patient_id);
+  WHERE a.patient_id = ? ORDER BY a.appointment_date DESC, a.appointment_time DESC LIMIT ? OFFSET ?");
+$history_stmt->bind_param('iii', $patient_id, $hist_per_page, $hist_offset);
 $history_stmt->execute();
 $history = $history_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $history_stmt->close();
@@ -158,10 +198,6 @@ require_once __DIR__ . '/../includes/header.php';
 .rx-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.2rem}
 .rx-title{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:900;color:#244441;line-height:1}
 .rx-sub{font-size:0.85rem;color:#9ab0ae;margin-top:0.4rem}
-.rx-header-tools{display:flex;align-items:center;gap:0.5rem}
-.rx-icon-btn{width:38px;height:38px;border-radius:50%;border:1px solid rgba(36,68,65,0.12);background:#fff;color:#244441;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
-.rx-icon-btn:hover{background:rgba(195,54,67,0.06);border-color:rgba(195,54,67,0.25);color:#C33643}
-.rx-icon-btn svg{width:16px;height:16px}
 
 .record-profile{display:flex;align-items:center;justify-content:space-between;gap:1rem;background:#fff;border:1px solid rgba(36,68,65,.08);border-radius:16px;padding:1.1rem 1.3rem;margin-bottom:1rem;box-shadow:0 2px 10px rgba(0,0,0,0.03)}
 .record-profile-main{display:flex;align-items:center;gap:.9rem;min-width:0}
@@ -209,8 +245,12 @@ require_once __DIR__ . '/../includes/header.php';
 .hist-status.confirmed{background:rgba(63,130,227,.1);color:#2563eb}
 .hist-status.archived{background:rgba(154,176,174,.15);color:#6b8886}
 .hist-status.cancelled{background:rgba(195,54,67,.1);color:#C33643}
-.hist-view{font-size:.72rem;font-weight:700;color:#3F82E3;text-decoration:none;margin-top:.4rem;display:inline-flex;align-items:center;gap:.25rem;cursor:pointer;background:none;border:none;padding:0;font-family:'DM Sans',sans-serif}
+.hist-actions{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;margin-top:.5rem}
+.hist-view{font-size:.72rem;font-weight:700;color:#3F82E3;text-decoration:none;display:inline-flex;align-items:center;gap:.25rem;cursor:pointer;background:none;border:none;padding:0;font-family:'DM Sans',sans-serif}
 .hist-view:hover{text-decoration:underline}
+.hist-summary{display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;border-radius:50px;border:1.5px solid rgba(63,130,227,.3);background:#fff;color:#2563eb;font-size:.7rem;font-weight:700;text-decoration:none;font-family:'DM Sans',sans-serif;transition:background .2s}
+.hist-summary:hover{background:rgba(63,130,227,.08)}
+.hist-summary svg{width:12px;height:12px;flex-shrink:0}
 .hist-detail-panel{display:none;margin-top:.6rem;background:rgba(63,130,227,0.04);border:1px solid rgba(63,130,227,0.1);border-radius:10px;padding:.7rem .9rem;font-size:.78rem;color:#244441}
 .hist-detail-panel.open{display:block}
 
@@ -259,8 +299,11 @@ require_once __DIR__ . '/../includes/header.php';
 
 .legend-chip{display:inline-flex;align-items:center;gap:.25rem;font-size:0.65rem;padding:0.15rem 0.5rem;border-radius:50px;font-weight:700}
 .legend-chip .record-inline-icon{width:12px;height:12px}
-.pager{display:flex;justify-content:flex-end;gap:0.45rem;flex-wrap:wrap;margin-top:0.9rem}
-.pager a{padding:0.35rem 0.7rem;border-radius:8px;font-size:0.76rem;font-weight:700;text-decoration:none}
+.pager{display:flex;justify-content:flex-end;align-items:center;gap:0.45rem;flex-wrap:wrap;margin-top:0.9rem}
+.pager a{padding:0.35rem 0.7rem;border-radius:8px;font-size:0.76rem;font-weight:700;text-decoration:none;background:rgba(63,130,227,0.08);color:#3F82E3;transition:background .2s}
+.pager a:hover{background:rgba(63,130,227,0.16)}
+.pager a.active{background:#3F82E3;color:#fff}
+.pager-gap{color:#9ab0ae;font-size:0.76rem}
 
 .upl-overlay{position:fixed;inset:0;background:rgba(15,30,28,0.55);z-index:1000;align-items:center;justify-content:center;padding:1rem}
 .original-overlay{position:fixed;inset:0;z-index:1100;display:none;align-items:center;justify-content:center;padding:1rem;background:rgba(15,30,28,.72);backdrop-filter:blur(4px)}
@@ -310,14 +353,6 @@ require_once __DIR__ . '/../includes/header.php';
     <div>
       <div class="rx-title">Medical Records</div>
       <div class="rx-sub">View and manage your personal medical information and health history.</div>
-    </div>
-    <div class="rx-header-tools">
-      <button type="button" class="rx-icon-btn" onclick="window.print()" title="Print">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9V4h12v5M6 18h12v-6H6v6zM6 14H4a1 1 0 01-1-1v-3a2 2 0 012-2h14a2 2 0 012 2v3a1 1 0 01-1 1h-2"/></svg>
-      </button>
-      <button type="button" class="rx-icon-btn" title="Download">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-      </button>
     </div>
   </div>
 
@@ -369,7 +404,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div>
 
       <!-- ── MEDICAL HISTORY ── -->
-      <div class="rx-section">
+      <div class="rx-section" id="history">
         <div class="rx-section-head">
           <div class="rx-section-title">
             <div class="rx-section-icon">
@@ -377,7 +412,6 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
             Medical History
           </div>
-          <a href="router.php?page=visits" class="rx-section-link">View All</a>
         </div>
 
         <?php if ($history): ?>
@@ -400,16 +434,27 @@ require_once __DIR__ . '/../includes/header.php';
               </div>
               <span class="hist-status <?= $badge_class ?>"><?= htmlspecialchars($visit['status']) ?></span>
             </div>
-            <button type="button" class="hist-view" onclick="toggleHist(<?= $i ?>)">
-              View Details
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6l6 6-6 6"/></svg>
-            </button>
+            <div class="hist-actions">
+              <button type="button" class="hist-view" onclick="toggleHist(<?= $i ?>)">
+                View Details
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6l6 6-6 6"/></svg>
+              </button>
+              <?php if (!empty($visit['summary_pdf_path'])): ?>
+              <a href="router.php?page=download_summary&appt_id=<?= (int)$visit['id'] ?>" target="_blank" class="hist-summary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                PDF Summary
+              </a>
+              <?php endif; ?>
+            </div>
             <div class="hist-detail-panel" id="hist-panel-<?= $i ?>">
               <?= htmlspecialchars($visit['specialty'] ?: 'General Consultation') ?><?= !empty($visit['reason']) ? ' — ' . htmlspecialchars($visit['reason']) : '' ?>
             </div>
           </div>
           <?php endforeach; ?>
         </div>
+
+        <?php renderPager($hist_page, $hist_total_pages, 'hist_page', ['scan_page' => $scan_page], '#history'); ?>
+
         <?php else: ?>
         <div class="rx-empty">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -419,7 +464,7 @@ require_once __DIR__ . '/../includes/header.php';
       </div>
 
       <!-- ── SCANNED DOCUMENTS ── -->
-      <div class="rx-section">
+      <div class="rx-section" id="scanned">
         <div class="rx-section-head">
           <div class="rx-section-title">
             <div class="rx-section-icon">
@@ -516,19 +561,7 @@ require_once __DIR__ . '/../includes/header.php';
           </tbody>
         </table>
 
-        <?php if ($scan_total_pages > 1): ?>
-        <div class="pager">
-          <?php if ($scan_page > 1): ?>
-            <a href="?scan_page=<?= $scan_page - 1 ?>" style="background:rgba(63,130,227,0.08);color:#3F82E3;">Prev</a>
-          <?php endif; ?>
-          <?php for ($i = 1; $i <= $scan_total_pages; $i++): ?>
-            <a href="?scan_page=<?= $i ?>" style="<?= $i === $scan_page ? 'background:#3F82E3;color:#fff;' : 'background:rgba(63,130,227,0.08);color:#3F82E3;' ?>"><?= $i ?></a>
-          <?php endfor; ?>
-          <?php if ($scan_page < $scan_total_pages): ?>
-            <a href="?scan_page=<?= $scan_page + 1 ?>" style="background:rgba(63,130,227,0.08);color:#3F82E3;">Next</a>
-          <?php endif; ?>
-        </div>
-        <?php endif; ?>
+        <?php renderPager($scan_page, $scan_total_pages, 'scan_page', ['hist_page' => $hist_page], '#scanned'); ?>
 
         <?php else: ?>
         <div class="rx-empty">
@@ -613,9 +646,6 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="upl-title">Scan a Document</div>
     <div class="upl-sub">Upload a photo of your lab result or prescription — we'll extract the text automatically.</div>
 
-    <?php if ($notice && $modal_open === false && isset($_POST['doc_file'])): ?>
-      <!-- unreachable branch guard, kept intentionally empty -->
-    <?php endif; ?>
     <?php if ($error && isset($_FILES['doc_file'])): ?>
       <div class="upl-alert-error"><svg class="record-inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3z"/><path d="M12 9v5M12 17h.01"/></svg><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>

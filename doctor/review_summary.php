@@ -1,3 +1,73 @@
+<?php
+// doctor/review_summary.php
+date_default_timezone_set('Asia/Manila');
+require_once 'includes/auth.php';
+
+$appt_id = (int)($_GET['appt_id'] ?? $_POST['appt_id'] ?? 0);
+$success = null;
+$error   = null;
+
+if (!$appt_id) { header('Location: appointments.php'); exit; }
+
+// ── Handle Save Draft / Confirm & Publish ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action       = $_POST['action'] ?? '';
+    $summary_text = trim($_POST['summary_text'] ?? '');
+
+    if ($summary_text === '') {
+        $error = 'Summary text cannot be empty.';
+    } else {
+        // Confirm the doctor owns this appointment before writing to it
+        $chk = $conn->prepare("SELECT id FROM appointments WHERE id = ? AND doctor_id = ?");
+        $chk->bind_param('ii', $appt_id, $doctor_id);
+        $chk->execute();
+        $owns = $chk->get_result()->fetch_assoc();
+
+        if (!$owns) {
+            $error = 'Appointment not found.';
+        } elseif ($action === 'publish') {
+            $stmt = $conn->prepare("
+                UPDATE appointments
+                SET consultation_summary = ?,
+                    summary_edited       = 1,
+                    summary_reviewed_at  = NOW()
+                WHERE id = ? AND doctor_id = ?
+            ");
+            $stmt->bind_param('sii', $summary_text, $appt_id, $doctor_id);
+            $stmt->execute();
+            $success = 'Summary published — the patient can now view it.';
+        } elseif ($action === 'save_draft') {
+            $stmt = $conn->prepare("
+                UPDATE appointments
+                SET consultation_summary = ?,
+                    summary_edited       = 1
+                WHERE id = ? AND doctor_id = ?
+            ");
+            $stmt->bind_param('sii', $summary_text, $appt_id, $doctor_id);
+            $stmt->execute();
+            $success = 'Draft saved.';
+        }
+    }
+}
+
+// ── Fetch current appointment + summary ──
+$stmt = $conn->prepare("
+    SELECT a.*, p.full_name AS patient_name
+    FROM appointments a
+    JOIN patients p ON p.id = a.patient_id
+    WHERE a.id = ? AND a.doctor_id = ?
+    LIMIT 1
+");
+$stmt->bind_param('ii', $appt_id, $doctor_id);
+$stmt->execute();
+$appt = $stmt->get_result()->fetch_assoc();
+
+if (!$appt) { header('Location: appointments.php'); exit; }
+
+$page_title = 'Review Summary — TELE-CARE';
+$active_nav = 'appointments';
+require_once 'includes/header.php';
+?>
 
 <div class="page">
   <?php if ($success): ?><div class="alert-success">✓ <?= htmlspecialchars($success) ?></div><?php endif; ?>

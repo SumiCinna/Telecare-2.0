@@ -14,6 +14,16 @@ function debug_log_v2($msg) {
     file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ' . $msg . "\n", FILE_APPEND);
 }
 
+// Safety net: if the script dies from a fatal error we didn't catch (out-of-memory,
+// timeout, a non-Throwable-catchable fatal, or the host killing the process), this
+// still gets a chance to run and tells us why instead of the log just stopping cold.
+register_shutdown_function(function () {
+    $err = error_get_last();
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        debug_log_v2("FATAL SHUTDOWN: {$err['message']} in {$err['file']}:{$err['line']}");
+    }
+});
+
 debug_log_v2('=== START PROCESS CONSULTATION V2 (GROQ) ===');
 
 // ── CONFIG ────────────────────────────────────────────────────────────────
@@ -75,50 +85,70 @@ $is_same_session = ($row['existing_session_key'] === $session_key);
 $session_changed = ($row['existing_session_key'] !== $session_key);
 
 // ── 3. Transcribe with Groq Whisper ──────────────────────────────────────
-$new_transcript = '';
-
-if (!empty($_FILES['audio']) && $_FILES['audio']['error'] === UPLOAD_ERR_OK) {
-    $tmp = sys_get_temp_dir() . "/consult_{$appt_id}_" . time() . ".webm";
-
-    if (move_uploaded_file($_FILES['audio']['tmp_name'], $tmp)) {
-        debug_log_v2("Sending audio to Groq Whisper...");
-
-        $ch = curl_init('https://api.groq.com/openai/v1/audio/transcriptions');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_HTTPHEADER     => [
-                'Authorization: Bearer ' . $GROQ_API_KEY,
-            ],
-            CURLOPT_POSTFIELDS     => [
-                'file'            => new CURLFile($tmp, 'audio/webm', 'consultation.webm'),
-                'model'           => 'whisper-large-v3-turbo',
-                'response_format' => 'json',
-                'language'        => 'en',
-                'temperature'     => '0',
-            ],
-            CURLOPT_TIMEOUT        => 120,
-            CURLOPT_CONNECTTIMEOUT => 15,
-        ]);
-
-        $resp      = curl_exec($ch);
-        $curlError = curl_error($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        debug_log_v2("Groq Whisper HTTP: $http_code, curl_error: $curlError");
-
-        if (!$curlError && $http_code === 200 && $resp) {
-            $decoded        = json_decode($resp, true);
-            $new_transcript = trim($decoded['text'] ?? '');
-            debug_log_v2("Transcribed " . strlen($new_transcript) . " chars");
-        } else {
-            debug_log_v2("Groq Whisper failed: HTTP $http_code — " . substr($resp ?? '', 0, 200));
-        }
+function groq_transcribe_v2(string $tmpPath, string $GROQ_API_KEY): string {
+    $ch = curl_init('https://api.groq.com/openai/v1/audio/transcriptions');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $GROQ_API_KEY],
+        CURLOPT_POSTFIELDS     => [
+            'file'            => new CURLFile($tmpPath, 'audio/webm', 'audio.webm'),
+            'model'           => 'whisper-large-v3-turbo',
+            'response_format' => 'json',
+            'language'        => 'en',
+            'temperature'     => '0',
+        ],
+        CURLOPT_TIMEOUT        => 120,
+        CURLOPT_CONNECTTIMEOUT => 15,
+    ]);
+    $resp      = curl_exec($ch);
+    $curlError = curl_error($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    debug_log_v2("Groq Whisper HTTP: $http_code, curl_error: $curlError, file=" . basename($tmpPath));
+    if (!$curlError && $http_code === 200 && $resp) {
+        $decoded = json_decode($resp, true);
+        return trim($decoded['text'] ?? '');
     }
-
-    if (isset($tmp) && file_exists($tmp)) unlink($tmp);
+    debug_log_v2("Groq Whisper failed: HTTP $http_code — " . substr($resp ?? '', 0, 200));
+    return '';
 }
+
+$doctor_text  = '';
+$patient_text = '';
+
+if (!empty($_FILES['audio_doctor']) && $_FILES['audio_doctor']['error'] === UPLOAD_ERR_OK) {
+    $tmp = sys_get_temp_dir() . "/consult_{$appt_id}_doc_" . time() . ".webm";
+    if (move_uploaded_file($_FILES['audio_doctor']['tmp_name'], $tmp)) {
+        debug_log_v2("Transcribing doctor audio...");
+        $doctor_text = groq_transcribe_v2($tmp, $GROQ_API_KEY);
+        unlink($tmp);
+    }
+}
+
+if (!empty($_FILES['audio_patient']) && $_FILES['audio_patient']['error'] === UPLOAD_ERR_OK) {
+    $tmp = sys_get_temp_dir() . "/consult_{$appt_id}_pat_" . time() . ".webm";
+    if (move_uploaded_file($_FILES['audio_patient']['tmp_name'], $tmp)) {
+        debug_log_v2("Transcribing patient audio...");
+        $patient_text = groq_transcribe_v2($tmp, $GROQ_API_KEY);
+        unlink($tmp);
+    }
+}
+
+// Backward compat for any old single-file upload (unlabeled — treat as doctor mic).
+if ($doctor_text === '' && $patient_text === '' && !empty($_FILES['audio']) && $_FILES['audio']['error'] === UPLOAD_ERR_OK) {
+    $tmp = sys_get_temp_dir() . "/consult_{$appt_id}_" . time() . ".webm";
+    if (move_uploaded_file($_FILES['audio']['tmp_name'], $tmp)) {
+        $doctor_text = groq_transcribe_v2($tmp, $GROQ_API_KEY);
+        unlink($tmp);
+    }
+}
+
+$new_transcript = '';
+if ($doctor_text !== '')  $new_transcript .= "DOCTOR SAID:\n" . $doctor_text . "\n\n";
+if ($patient_text !== '') $new_transcript .= "PATIENT SAID:\n" . $patient_text;
+$new_transcript = trim($new_transcript);
+debug_log_v2("Labeled transcript built, length=" . strlen($new_transcript));
 
 // ── 4. Merge transcripts & chat ───────────────────────────────────────────
 $sep_same = "\n";
@@ -157,9 +187,22 @@ $stmt->bind_param('sssi', $full_chat, $full_transcript, $session_key, $appt_id);
 $stmt->execute();
 
 // ── 6. Decide if we should regenerate summary ─────────────────────────────
+$existing_summary = trim($row['consultation_summary'] ?? '');
+if ($existing_summary !== ''
+    && (strpos($existing_summary, 'No consultation content was captured') !== false
+        || strpos($existing_summary, 'Summary generation failed') !== false
+        || strpos($existing_summary, "generated by doctor's session") !== false)) {
+    $existing_summary = '';
+}
+
 $contextParts = [];
-if ($full_transcript) $contextParts[] = "VOICE TRANSCRIPT:\n$full_transcript";
-if ($full_chat)       $contextParts[] = "CHAT LOG:\n$full_chat";
+if ($existing_summary !== '') {
+    if ($new_transcript) $contextParts[] = "VOICE TRANSCRIPT:\n" . trim($new_transcript);
+    if ($new_chat)       $contextParts[] = "CHAT LOG:\n" . trim($new_chat);
+} else {
+    if ($full_transcript) $contextParts[] = "VOICE TRANSCRIPT:\n$full_transcript";
+    if ($full_chat)       $contextParts[] = "CHAT LOG:\n$full_chat";
+}
 
 $has_new_content   = (!empty($new_transcript)) || (!empty($new_chat));
 $should_regenerate = $has_new_content || ($session_changed && !empty($contextParts));
@@ -187,6 +230,8 @@ Time: " . date('g:i A', strtotime($row['appointment_time'])) . "
 --- CONSULTATION CONTENT ---
 $context
 --- END OF CONSULTATION CONTENT ---
+
+The voice transcript is pre-labeled by speaker (\"DOCTOR SAID:\" / \"PATIENT SAID:\"). Trust these labels exactly — never reassign a line to the other speaker. If the doctor gave an instruction, dosage, or recommendation, that belongs in the doctor's assessment or treatment plan, NOT in the patient's chief complaint or history, even if it describes something the patient will do.
 
 INSTRUCTIONS:
 You MUST write a complete structured medical summary covering ALL 6 sections below. Do NOT stop early. Do NOT truncate. Every section must be present and filled in.
@@ -217,6 +262,7 @@ RULES:
 - Do NOT use markdown formatting. No ##, ###, **, *, or any special symbols.
 - Write in plain text only. Section titles should be written exactly as shown above (e.g. '1. Chief Complaint').
 - Be concise but thorough. Do not invent information not present in the consultation.
+- Write every section in English first. Directly below it, add one line that starts with Filipino: followed by a natural Filipino translation of the English text you just wrote. Keep drug names, doses, numbers, and dates exactly as written in English. If a section is Not discussed, the Filipino line is Filipino: Hindi napag-usapan. Do not add or remove any information in the Filipino line.
 - If there are multiple sessions separated by '[--- Rejoined Session ---]', consolidate all sessions into one unified summary.";
 
         debug_log_v2("Calling Groq LLM for summary...");
@@ -235,12 +281,12 @@ RULES:
                     'Content-Type: application/json',
                 ],
                 CURLOPT_POSTFIELDS     => json_encode([
-                    'model'       => 'llama-3.3-70b-versatile',
+                    'model'       => 'openai/gpt-oss-120b',
                     'messages'    => [
                         ['role' => 'user', 'content' => $prompt]
                     ],
                     'temperature' => 0.2,
-                    'max_tokens'  => 2048,
+                    'max_tokens'  => 4096,
                     'top_p'       => 0.8,
                 ]),
                 CURLOPT_TIMEOUT        => 90,
@@ -288,23 +334,61 @@ RULES:
     $summary = 'No consultation content was captured for this session yet. A full summary will be generated once the consultation is completed.';
 }
 
+// ── 7a. Save the summary text IMMEDIATELY, before anything that could crash ──
+// This is the row the doctor's review banner reads. Everything after this point
+// (document drafts, PDF rendering) is a nice-to-have on top of it, not a
+// prerequisite for it — so a crash in those steps must never take the summary
+// itself down with it.
+$final_summary = $existing_summary;
+
+if ($role === 'doctor') {
+    $marker = '[#session:' . $session_key . ']';
+    $block  = $summary;
+    $pos    = ($existing_summary === '') ? false : strpos($existing_summary, $marker);
+
+    if ($pos !== false) {
+        $head = rtrim(substr($existing_summary, 0, $pos));
+        $final_summary = ($head === '') ? $block : $head . "\n\n" . $block;
+    } elseif ($existing_summary !== '') {
+        $final_summary = $existing_summary . "\n\n" . $block;
+    } else {
+        $final_summary = $block;
+    }
+
+    $stmtSummaryOnly = $conn->prepare("
+        UPDATE appointments
+        SET consultation_summary = ?,
+            summary_edited       = 0
+        WHERE id = ?
+    ");
+    $stmtSummaryOnly->bind_param('si', $final_summary, $appt_id);
+    $stmtSummaryOnly->execute();
+    debug_log_v2("Saved summary for appt_id={$appt_id}, length=" . strlen($final_summary) . ", affected_rows=" . $stmtSummaryOnly->affected_rows);
+} else {
+    debug_log_v2("role={$role} — skipping summary write entirely (doctor owns the summary)");
+}
+
 // ── 7b. Build doctor-review drafts for any document types suggested by the summary ──
 if ($role === 'doctor' && !empty($summary) && strpos($summary, 'No consultation content was captured') === false) {
-    $suggestedTypes = telecare_document_suggest_types($summary);
-    if (!empty($suggestedTypes)) {
-        foreach ($suggestedTypes as $docType) {
-            $template = telecare_get_document_template($conn, $docType);
-            $draftText = telecare_document_draft_text(
-                $docType,
-                $patientRow,
-                [
-                    'full_name' => $row['doctor_name'],
-                ],
-                $template,
-                $summary
-            );
-            telecare_store_document_draft($conn, $appt_id, $docType, $draftText, $summary, 'groq');
+    try {
+        $suggestedTypes = telecare_document_suggest_types($summary);
+        if (!empty($suggestedTypes)) {
+            foreach ($suggestedTypes as $docType) {
+                $template = telecare_get_document_template($conn, $docType);
+                $draftText = telecare_document_draft_text(
+                    $docType,
+                    $patientRow,
+                    [
+                        'full_name' => $row['doctor_name'],
+                    ],
+                    $template,
+                    $summary
+                );
+                telecare_store_document_draft($conn, $appt_id, $docType, $draftText, $summary, 'groq');
+            }
         }
+    } catch (\Throwable $e) {
+        debug_log_v2("ERROR in document draft step (non-fatal, summary already saved): " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
     }
 }
 
@@ -326,26 +410,28 @@ function enc_v2(string $s): string {
 }
 
 function buildPDF(array $row, string $summary, string $full_transcript, string $full_chat): string {
-    class ConsultationPDFV2 extends FPDF {
-        function Header() {
-            $this->SetFillColor(36, 68, 65);
-            $this->Rect(0, 0, 210, 28, 'F');
-            $this->SetTextColor(255, 255, 255);
-            $this->SetFont('Arial', 'B', 16);
-            $this->SetY(7);
-            $this->Cell(0, 8, 'TELE-CARE', 0, 1, 'C');
-            $this->SetFont('Arial', '', 9);
-            $this->Cell(0, 6, 'Teleconsultation Summary Report', 0, 1, 'C');
-            $this->SetTextColor(0, 0, 0);
-            $this->SetY(34);
-        }
-        function Footer() {
-            $this->SetY(-15);
-            $this->SetFont('Arial', 'I', 7);
-            $this->SetTextColor(150, 150, 150);
-            $this->Cell(0, 10,
-                'AI-generated summary — reviewed and confirmed by attending physician. Page ' . $this->PageNo(),
-                0, 0, 'C');
+    if (!class_exists('ConsultationPDFV2')) {
+        class ConsultationPDFV2 extends FPDF {
+            function Header() {
+                $this->SetFillColor(36, 68, 65);
+                $this->Rect(0, 0, 210, 28, 'F');
+                $this->SetTextColor(255, 255, 255);
+                $this->SetFont('Arial', 'B', 16);
+                $this->SetY(7);
+                $this->Cell(0, 8, 'TELE-CARE', 0, 1, 'C');
+                $this->SetFont('Arial', '', 9);
+                $this->Cell(0, 6, 'Teleconsultation Summary Report', 0, 1, 'C');
+                $this->SetTextColor(0, 0, 0);
+                $this->SetY(34);
+            }
+            function Footer() {
+                $this->SetY(-15);
+                $this->SetFont('Arial', 'I', 7);
+                $this->SetTextColor(150, 150, 150);
+                $this->Cell(0, 10,
+                    'AI-generated summary — reviewed and confirmed by attending physician. Page ' . $this->PageNo(),
+                    0, 0, 'C');
+            }
         }
     }
 
@@ -417,7 +503,20 @@ function buildPDF(array $row, string $summary, string $full_transcript, string $
 
             $pdf->SetFont('Arial', '', 9);
             $pdf->SetTextColor(60, 60, 60);
-            $pdf->MultiCell(0, 5, enc_v2($body), 0, 'L');
+            foreach (explode("\n", $body) as $bl) {
+                $bl = trim($bl);
+                if ($bl === '') { $pdf->Ln(5); continue; }
+                if (preg_match('/^Filipino:/i', $bl)) {
+                    $pdf->SetFont('Arial', 'I', 9);
+                    $pdf->SetTextColor(30, 90, 150);
+                    $pdf->SetX(25);
+                    $pdf->MultiCell(0, 5, enc_v2($bl), 0, 'L');
+                } else {
+                    $pdf->SetFont('Arial', '', 9);
+                    $pdf->SetTextColor(60, 60, 60);
+                    $pdf->MultiCell(0, 5, enc_v2($bl), 0, 'L');
+                }
+            }
             $pdf->Ln(1);
         } else {
             $pdf->SetFont('Arial', '', 9);
@@ -495,29 +594,32 @@ function buildPDF(array $row, string $summary, string $full_transcript, string $
     return $pdf->Output('S'); // Return as string
 }
 
-// Build and save PDF
-$dir = __DIR__ . '/../consultation_summaries/';
-if (!is_dir($dir)) mkdir($dir, 0755, true);
-$filename = "summary_{$appt_id}.pdf";
+// Build and save PDF — wrapped so a PDF failure can never wipe out the summary
+// that's already been saved to the DB in step 7a.
+try {
+    $dir = __DIR__ . '/../consultation_summaries/';
+    if (!is_dir($dir)) mkdir($dir, 0755, true);
+    $filename = "summary_{$appt_id}.pdf";
 
-if ($session_changed && file_exists($dir . $filename)) {
-    @unlink($dir . $filename);
+    if ($session_changed && file_exists($dir . $filename)) {
+        @unlink($dir . $filename);
+    }
+
+        $pdfContent = buildPDF($row, $final_summary, $full_transcript, $full_chat);
+    file_put_contents($dir . $filename, $pdfContent);
+
+    // ── 9. Save PDF path to DB ─────────────────────────────────────────────
+    $stmt2 = $conn->prepare("
+        UPDATE appointments
+        SET summary_pdf_path = ?
+        WHERE id = ?
+    ");
+    $stmt2->bind_param('si', $filename, $appt_id);
+    $stmt2->execute();
+
+    debug_log_v2("Saved PDF path to DB for appt_id={$appt_id}, filename={$filename}, affected_rows=" . $stmt2->affected_rows);
+} catch (\Throwable $e) {
+    debug_log_v2("ERROR in PDF generation step (non-fatal, summary text already saved): " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
 }
-
-$pdfContent = buildPDF($row, $summary, $full_transcript, $full_chat);
-file_put_contents($dir . $filename, $pdfContent);
-
-// ── 9. Save summary + PDF path to DB ─────────────────────────────────────
-$stmt2 = $conn->prepare("
-    UPDATE appointments
-    SET consultation_summary = ?,
-        summary_pdf_path     = ?,
-        summary_edited       = 0
-    WHERE id = ?
-");
-$stmt2->bind_param('ssi', $summary, $filename, $appt_id);
-$stmt2->execute();
-
-debug_log_v2("Saved summary to DB for appt_id={$appt_id}, filename={$filename}, summary_length=" . strlen($summary) . ", affected_rows=" . $stmt2->affected_rows);
 
 debug_log_v2('=== END PROCESS CONSULTATION V2 (GROQ) SUCCESS ===');

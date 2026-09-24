@@ -20,7 +20,7 @@ if (isset($_POST['confirm_logout'])) {
             $params["secure"], $params["httponly"]
         );
     }
-    header('Location: ../auth/login.php');
+    header('Location: https://telecare.website/router.php?page=staffs_index');
     exit;
 }
 
@@ -69,7 +69,3 @@ $admin_name = $_SESSION['admin_name'] ?? 'Admin';
   </div>
 </body>
 </html>
-
-
-
-

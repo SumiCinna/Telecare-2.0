@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,?,?)
             ");
             $auth_provider = 'google';
-            $insert->bind_param("sssssssssssssssssssssss",
+            $insert->bind_param("ssssssssssssssssssssss",
                 $full_name, $date_of_birth, $gender, $email, $phone_number, $photo_path,
                 $emergency_name, $emergency_relationship, $emergency_number,
                 $hashed_pw, $security_question, $hashed_answer,

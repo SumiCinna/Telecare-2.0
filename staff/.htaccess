@@ -7,8 +7,9 @@ Options -Indexes
     # Block access to includes/ directory entirely
     RewriteRule ^includes/ - [F,L]
 
-    # Only allow PHP files — block everything else
+    # Only allow PHP files — block everything else (except CSS/JS assets)
     RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} !\.(css|js)$
     RewriteCond %{THE_REQUEST} \s.+\.(?!php)[a-z]+\s [NC]
     RewriteRule . - [F,L]
 </IfModule>

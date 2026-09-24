@@ -31,8 +31,8 @@ $conn->query("CREATE TABLE IF NOT EXISTS doctor_schedule_settings (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
 $scheduleSettings = [
-  'consultation_duration' => 30,
-  'appointment_interval' => 5,
+  'consultation_duration' => 60,
+  'appointment_interval' => 30,
   'break_start' => null,
   'break_end' => null,
 ];
@@ -193,7 +193,7 @@ let calYear, calMonth, selDate = null, selTime = null;
 (function init(){ const n = new Date(); calYear = n.getFullYear(); calMonth = n.getMonth(); renderCalendar(); })();
 
 function fmt12h(t){ const [h,m]=t.split(':').map(Number); const ap=h>=12?'PM':'AM'; const hr=h%12||12; return hr+':'+String(m||0).padStart(2,'0')+' '+ap; }
-function generateSlots(start,end){ const slots=[]; let [sh,sm]=start.split(':').map(Number); const [eh,em]=end.split(':').map(Number); const endMins=eh*60+em; const step=Number(SCHEDULE_SETTINGS.appointment_interval)||5;
+function generateSlots(start,end){ const slots=[]; let [sh,sm]=start.split(':').map(Number); const [eh,em]=end.split(':').map(Number); const endMins=eh*60+em; const step=Number(SCHEDULE_SETTINGS.appointment_interval)||30;
   while(sh*60+sm<endMins){ slots.push(String(sh).padStart(2,'0')+':'+String(sm).padStart(2,'0')); sm+=step; while(sm>=60){sh++;sm-=60;} if(sh>=24) break; } return slots; }
 
 function calNav(dir){ calMonth+=dir; if(calMonth>11){calMonth=0;calYear++;} else if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }

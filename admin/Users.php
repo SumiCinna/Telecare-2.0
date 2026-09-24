@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_doctor'])) {
 
     if (!$fn || !$em || !array_key_exists($dept, BOOKING_DEPARTMENTS)) {
         $_SESSION['toast_error'] = 'Full name, email, and a valid department are required.';
-        header('Location: users.php'); exit;
+        header('Location: Users.php'); exit;
     }
 
     $chk = $conn->prepare("SELECT id FROM doctors WHERE email=?");
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_doctor'])) {
     $chk->execute();
     if ($chk->get_result()->num_rows > 0) {
         $_SESSION['toast_error'] = 'A doctor with that email already exists.';
-        header('Location: users.php'); exit;
+        header('Location: Users.php'); exit;
     }
 
     // No password is set yet — the doctor authenticates via the emailed setup
@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_doctor'])) {
     $_SESSION['invite_link']  = BASE_URL . '/doctor/setup.php?token=' . $token;
     $_SESSION['invite_email'] = $em;
     $_SESSION['invite_name']  = $fn;
-    header('Location: users.php'); exit;
+    header('Location: Users.php'); exit;
 }
 
 // ── Resend a doctor's setup link (regenerates the token) ──
@@ -105,7 +105,7 @@ if (isset($_GET['resend_invite'])) {
         $_SESSION['invite_email'] = $d['email'];
         $_SESSION['invite_name']  = $d['full_name'];
     }
-    header('Location: users.php'); exit;
+    header('Location: Users.php'); exit;
 }
 
 // ── Toggle doctor active/inactive ──
@@ -116,7 +116,7 @@ if (isset($_GET['toggle_doctor'])) {
     $newStatus = $oldStatus === 'active' ? 'inactive' : 'active';
     $conn->query("UPDATE doctors SET status = IF(status='active','inactive','active'), is_available = IF(status='inactive',1,0) WHERE id=$did");
     log_audit($conn, $admin_id, 'toggle', 'doctor', $did, ['status'=>$oldStatus], ['status'=>$newStatus]);
-    header('Location: users.php'); exit;
+    header('Location: Users.php'); exit;
 }
 
 // ── Toggle patient active/inactive ──
@@ -127,7 +127,7 @@ if (isset($_GET['toggle_patient'])) {
     $conn->query("UPDATE patients SET is_active=$new WHERE id=$pid");
     log_audit($conn, $admin_id, 'toggle', 'patient', $pid, ['is_active'=>$cur], ['is_active'=>$new]);
     $_SESSION['toast'] = $new ? 'Account activated.' : 'Account deactivated.';
-    header('Location: users.php'); exit;
+    header('Location: Users.php'); exit;
 }
 
 // ── Toggle staff active/inactive ──
@@ -139,7 +139,7 @@ if (isset($_GET['toggle_staff'])) {
     $conn->query("UPDATE staff_accounts SET status = IF(status='active','inactive','active') WHERE id=$sid");
     log_audit($conn, $admin_id, 'toggle', 'staff', $sid, ['status'=>$oldStatus], ['status'=>$newStatus]);
     $_SESSION['toast'] = 'Staff account updated.';
-    header('Location: users.php'); exit;
+    header('Location: Users.php'); exit;
 }
 
 // ── Create staff account ──
@@ -150,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_staff'])) {
 
     if (!$fn || !$em || strlen($pw) < 8) {
         $_SESSION['toast_error'] = 'Please fill in all staff fields (password must be at least 8 characters).';
-        header('Location: users.php'); exit;
+        header('Location: Users.php'); exit;
     }
 
     $chk = $conn->prepare("SELECT id FROM staff_accounts WHERE email=?");
@@ -158,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_staff'])) {
     $chk->execute();
     if ($chk->get_result()->num_rows > 0) {
         $_SESSION['toast_error'] = 'A staff account with that email already exists.';
-        header('Location: users.php'); exit;
+        header('Location: Users.php'); exit;
     }
 
     $hash = password_hash($pw, PASSWORD_DEFAULT);
@@ -169,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_staff'])) {
     log_audit($conn, $admin_id, 'create', 'staff', $new_id, null, ['full_name'=>$fn,'email'=>$em]);
 
     $_SESSION['toast'] = 'Staff account created.';
-    header('Location: users.php'); exit;
+    header('Location: Users.php'); exit;
 }
 
 // ── Verify doctor ──
@@ -180,11 +180,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_doctor'])) {
 
     if (!preg_match('/^[A-Z0-9][A-Z0-9\-\/]{4,24}$/', $license)) {
         $_SESSION['toast_error'] = 'Invalid license number format. Use 5-25 chars: letters, numbers, dash or slash only.';
-        header('Location: users.php'); exit;
+        header('Location: Users.php'); exit;
     }
     if (!preg_match('/^[A-Za-z][A-Za-z .,&()\-]{2,59}$/', $board)) {
         $_SESSION['toast_error'] = 'Invalid issuing board format. Use letters and basic punctuation only (3-60 chars).';
-        header('Location: users.php'); exit;
+        header('Location: Users.php'); exit;
     }
 
     $now     = date('Y-m-d H:i:s');
@@ -200,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_doctor'])) {
 
             if (!in_array($ext, $allowed_ext, true)) {
                 $_SESSION['toast_error'] = 'Only PDF or image files (JPG, JPEG, PNG, WEBP) are allowed.';
-                header('Location: users.php'); exit;
+                header('Location: Users.php'); exit;
             }
 
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
@@ -209,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_doctor'])) {
 
             if (!in_array($mime, $allowed_mime, true)) {
                 $_SESSION['toast_error'] = 'Invalid file content detected. Please upload a real PDF or image file.';
-                header('Location: users.php'); exit;
+                header('Location: Users.php'); exit;
             }
 
             $fname = uniqid("doc_{$did}_") . '.' . $ext;
@@ -221,7 +221,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_doctor'])) {
     $stmt->execute();
     $_SESSION['toast'] = "Doctor verified successfully.";
     log_audit($conn, $admin_id, 'verify', 'doctor', $did, null, ['license_number'=>$license,'issuing_board'=>$board,'has_license_file'=>!empty($license_file),'has_cert_file'=>!empty($cert_file)]);
-    header('Location: users.php'); exit;
+    header('Location: Users.php'); exit;
 }
 
 // ── Update doctor ──
@@ -260,7 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_doctor'])) {
     } else {
         $_SESSION['toast_error'] = implode(', ', $errors);
     }
-    header('Location: users.php'); exit;
+    header('Location: Users.php'); exit;
 }
 
 // ── Update patient ──
@@ -298,7 +298,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_patient'])) {
     } else {
         $_SESSION['toast_error'] = implode(', ', $errors);
     }
-    header('Location: users.php'); exit;
+    header('Location: Users.php'); exit;
 }
 
 // ── Update staff ──
@@ -327,7 +327,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_staff'])) {
     } else {
         $_SESSION['toast_error'] = implode(', ', $errors);
     }
-    header('Location: users.php'); exit;
+    header('Location: Users.php'); exit;
 }
 
 $toast        = $_SESSION['toast'] ?? null;

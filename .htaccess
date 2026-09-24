@@ -59,7 +59,8 @@ Options -Indexes
     # ── OCR / TOOLS ──────────────────────────────────────────────────
     RewriteRule ^scan/?$               ocr/scan.php [L]
 
-    # ── BLOCK DIRECT .php ACCESS IN PRIVATE FOLDER ──────────────────
+        # ── BLOCK DIRECT .php ACCESS IN PRIVATE FOLDER (except allowed endpoints) ──
+    RewriteCond %{REQUEST_URI} !^/private_telecare/(check_summary|process_consultation_v2|call_patient|auto_complete_appt)\.php$
     RewriteRule ^private_telecare/.*\.php$ - [F,L]
 
     # Block access to hidden files

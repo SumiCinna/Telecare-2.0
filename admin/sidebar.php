@@ -1,11 +1,84 @@
-﻿<?php
+<?php
 // admin/sidebar.php
 
 $activeNav = $activeNav ?? '';
 ?>
+<style>
+aside.sidebar{
+  --tc-red:#B31118; --tc-ink:#151c27; --tc-line:rgba(21,28,39,0.08); --tc-muted:rgba(21,28,39,0.5);
+  position:fixed; top:0; left:0; bottom:0; width:240px; z-index:150;
+  background:#f1f3fc; border-right:1px solid #dce1ef;
+  display:flex; flex-direction:column; padding:1.2rem .85rem;
+  font-family:'Inter',sans-serif; overflow-y:auto; box-sizing:border-box;
+}
+aside.sidebar .sidebar-logo{
+  display:flex; align-items:center; gap:.65rem; padding:0 .3rem; margin-bottom:1.2rem;
+  font-size:inherit; letter-spacing:0; color:inherit;
+}
+aside.sidebar .sidebar-logo-mark{
+  width:36px; height:36px; border-radius:8px; overflow:hidden; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+aside.sidebar .sidebar-logo-mark img{ width:100%; height:100%; object-fit:contain; display:block; }
+aside.sidebar .sidebar-logo-name{ font-weight:800; font-size:.86rem; color:var(--tc-ink); line-height:1.15; white-space:nowrap; }
+aside.sidebar .sidebar-logo-sub{ font-size:.6rem; color:var(--tc-muted); margin-top:.1rem; font-weight:500; }
+
+aside.sidebar .sidebar-admin{
+  background:#fff; border:1px solid var(--tc-line); border-radius:8px;
+  padding:.6rem .75rem; margin-bottom:1.2rem; font-size:.62rem; color:var(--tc-muted); line-height:1.5;
+}
+aside.sidebar .sidebar-admin strong{ display:block; font-size:.8rem; color:var(--tc-ink); font-weight:700; }
+
+aside.sidebar .nav-links{ display:flex; flex-direction:column; gap:.3rem; flex:1; }
+aside.sidebar .nav-section-label{
+  font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+  color:var(--tc-muted); padding:.9rem .7rem .3rem;
+}
+aside.sidebar .nav-link{
+  display:flex; align-items:center; gap:.55rem;
+  padding:.65rem .7rem; border-radius:7px;
+  color:var(--tc-muted); font-size:.78rem; font-weight:600;
+  text-decoration:none; transition:all .2s; white-space:nowrap;
+  background:none; border:none;
+}
+aside.sidebar .nav-link svg{ width:18px; height:18px; flex-shrink:0; stroke:currentColor; }
+aside.sidebar .nav-link:hover{ background:rgba(21,28,39,0.05); color:var(--tc-ink); }
+aside.sidebar .nav-link.active{ background:var(--tc-red); color:#fff; box-shadow:0 3px 9px rgba(179,17,24,0.22); }
+
+aside.sidebar .sidebar-logout{ border-top:1px solid var(--tc-line); padding-top:.6rem; margin-top:.6rem; }
+aside.sidebar .logout-btn{
+  display:flex; align-items:center; gap:.55rem; width:100%; box-sizing:border-box;
+  padding:.65rem .7rem; border-radius:7px; background:none; border:none;
+  color:var(--tc-muted); font-size:.78rem; font-weight:600; text-decoration:none;
+  font-family:'Inter',sans-serif; cursor:pointer; transition:all .2s;
+}
+aside.sidebar .logout-btn:hover{ background:rgba(179,17,24,0.08); color:var(--tc-red); }
+aside.sidebar .logout-btn svg{ flex-shrink:0; }
+</style>
+<script>
+(function() {
+  var icon = document.createElement('link');
+  icon.rel = 'icon';
+  icon.type = 'image/jpeg';
+  icon.href = '/telecarelogo.jpg';
+  document.head.appendChild(icon);
+
+  var shortcutIcon = document.createElement('link');
+  shortcutIcon.rel = 'shortcut icon';
+  shortcutIcon.type = 'image/jpeg';
+  shortcutIcon.href = '/telecarelogo.jpg';
+  document.head.appendChild(shortcutIcon);
+})();
+</script>
 <aside class="sidebar">
-  <div class="sidebar-logo">TELE<span>-</span>CARE</div>
-  <div class="sidebar-admin">Admin Portal<br/><strong><?= htmlspecialchars($_SESSION['admin_name'] ?? 'Admin') ?></strong></div>
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-mark"><img src="/telecarelogo.jpg" alt="TELE-CARE"/></div>
+    <div>
+      <div class="sidebar-logo-name">TELE-CARE</div>
+      <div class="sidebar-logo-sub">Admin Portal</div>
+    </div>
+  </div>
+  <div class="sidebar-admin">Signed in as<strong><?= htmlspecialchars($_SESSION['admin_name'] ?? 'Admin') ?></strong></div>
   <nav class="nav-links">
     <a href="dashboard.php" class="nav-link <?= $activeNav === 'dashboard' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
@@ -15,7 +88,7 @@ $activeNav = $activeNav ?? '';
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       User Management
     </a>
-     <a href="assignments.php" class="nav-link <?= $activeNav === 'assignments' ? 'active' : '' ?>">
+    <a href="assignments.php" class="nav-link <?= $activeNav === 'assignments' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
       Assignments
     </a>
@@ -24,23 +97,23 @@ $activeNav = $activeNav ?? '';
       Templates
     </a>
     <div class="nav-section-label">POS Management</div>
-    <a href="Inventory.php" class="nav-link <?= $activeNav === 'pos-products' ? 'active' : '' ?>">
+    <a href="inventory.php" class="nav-link <?= $activeNav === 'pos-products' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
       Inventory
     </a>
-    <a href="Services.php" class="nav-link <?= $activeNav === 'pos-services' ? 'active' : '' ?>">
+    <a href="services.php" class="nav-link <?= $activeNav === 'pos-services' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M5 8h14M6 8v10a2 2 0 002 2h8a2 2 0 002-2V8"/></svg>
       Services
     </a>
-    <a href="Discounts.php" class="nav-link <?= $activeNav === 'pos-discounts' ? 'active' : '' ?>">
+    <a href="discounts.php" class="nav-link <?= $activeNav === 'pos-discounts' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5l-8 8m0-8l8 8M5 5h.01M19 19h.01"/></svg>
       Discounts
     </a>
     <a href="prices.php" class="nav-link <?= $activeNav === 'pos-prices' ? 'active' : '' ?>">
-  <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v20m5-17H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-  Prices
-</a>
-    <a href="HMO.php" class="nav-link <?= $activeNav === 'pos-hmo' ? 'active' : '' ?>">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v20m5-17H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      Prices
+    </a>
+    <a href="hmo.php" class="nav-link <?= $activeNav === 'pos-hmo' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
       HMO
     </a>
@@ -48,7 +121,6 @@ $activeNav = $activeNav ?? '';
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
       Receipt Config
     </a>
-
   </nav>
   <div class="sidebar-logout">
     <a href="logout.php" class="logout-btn">
@@ -57,4 +129,3 @@ $activeNav = $activeNav ?? '';
     </a>
   </div>
 </aside>
-

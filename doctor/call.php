@@ -82,24 +82,12 @@ $pat_photo     = $appt['patient_photo'] ?? '';
     .dot.live{background:var(--gm-green);animation:blink 2s infinite;}
     @keyframes blink{0%,100%{opacity:1}50%{opacity:0.4}}
 
-    .video-area{
-      flex:1;
-      min-height:0;
-      position:relative;
-      overflow:hidden;
-      background:#111;
-    }
-
-    .remote-tile{
-      position:absolute;
-      inset:0;
-    }
-    #remote-video{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
+        .video-area{flex:1;min-height:0;position:relative;overflow:hidden;background:#111;
+      display:flex;gap:0.5rem;padding:0.5rem;box-sizing:border-box;}
+    .video-grid{display:flex;gap:0.5rem;width:100%;height:100%;}
+    @media(max-width:700px){.video-grid{flex-direction:column;}}
+    .remote-tile{position:relative;flex:1;min-width:0;border-radius:14px;overflow:hidden;background:#2a2b2d;}
+    #remote-video{width:100%;height:100%;object-fit:cover;display:block;}
     .cam-off-overlay{
       position:absolute;inset:0;background:#1c1c1f;
       display:none;flex-direction:column;align-items:center;justify-content:center;gap:0.8rem;z-index:2;
@@ -146,21 +134,14 @@ $pat_photo     = $appt['patient_photo'] ?? '';
     .start-call-btn:disabled{background:var(--gm-surface);cursor:not-allowed;opacity:0.6;}
 
     /* ── Self tile: bigger + draggable ── */
-    .self-tile{
-      position:absolute;
-      bottom:0.9rem;
-      right:0.9rem;
-      width:150px;
-      height:200px;
-      border-radius:12px;
+       .self-tile{
+      position:relative;
+      flex:1;
+      min-width:0;
+      border-radius:14px;
       overflow:hidden;
       background:#2a2b2d;
-      z-index:20;
-      box-shadow:0 6px 24px rgba(0,0,0,0.75);
-      border:2px solid rgba(255,255,255,0.18);
-      cursor:grab;
-      touch-action:none;
-      user-select:none;
+      box-shadow:0 4px 18px rgba(0,0,0,0.4);
     }
     .self-tile:active{cursor:grabbing;}
     @media(max-width:600px){
@@ -189,14 +170,14 @@ $pat_photo     = $appt['patient_photo'] ?? '';
       font-size:0.65rem;color:var(--gm-muted);text-align:center;z-index:5;pointer-events:none;
     }
 
-    .controls{
+      .controls{
       height:var(--ctrl-h);
       min-height:var(--ctrl-h);
       background:var(--gm-bg);
       display:flex;
       align-items:center;
-      justify-content:space-around;
-      gap:0;
+      justify-content:center;
+      gap:0.9rem;
       flex-shrink:0;
       border-top:1px solid rgba(255,255,255,0.08);
       padding:0 0.3rem;
@@ -355,8 +336,9 @@ $pat_photo     = $appt['patient_photo'] ?? '';
     <div class="tb-logo">TELE<span>-</span>CARE</div>
     <span style="font-size:0.68rem;color:var(--gm-muted);"><?= date('g:i A', $appt_ts) ?> · Teleconsult</span>
   </div>
-  <div style="display:flex;align-items:center;gap:0.5rem;">
-    <div class="conn-dot"><div class="dot" id="conn-dot"></div><span id="conn-lbl">Connecting…</span></div>
+    <div style="display:flex;align-items:center;gap:0.5rem;">
+    <div class="conn-dot"><div class="dot" id="conn-dot"></div><span id="conn-lbl">Connecting...</span></div>
+    <div class="timer-pill" id="people-pill">1 Person</div>
     <div class="timer-pill" id="timer">--:--</div>
   </div>
 </div>
@@ -368,6 +350,7 @@ $pat_photo     = $appt['patient_photo'] ?? '';
     Note: AI transcription and summarization accuracy may be reduced if there is significant background noise during the call.
   </div>
 
+  <div class="video-grid">
   <div class="remote-tile">
     <video id="remote-video" autoplay playsinline></video>
     <div class="cam-off-overlay" id="remote-cam-off">
@@ -402,8 +385,9 @@ $pat_photo     = $appt['patient_photo'] ?? '';
         <?php if ($doc_photo): ?><img src="../<?= htmlspecialchars($doc_photo) ?>" alt=""/><?php else: echo $doc_initials; endif; ?>
       </div>
     </div>
-    <div class="seg-loading" id="seg-loading">Cam</div>
+        <div class="seg-loading" id="seg-loading">Cam</div>
     <div class="self-name-tag">You (Dr.)</div>
+  </div>
   </div>
 </div>
 
@@ -536,6 +520,38 @@ const ICE = {
 };
 
 let ws, pc, rawStream, segInterval, selfieSegmentation, processedStream;
+let localRecorder = null, remoteRecorder = null;
+let localChunks = [], remoteChunks = [];
+
+function pickMime() {
+  return MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' :
+         MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' :
+         MediaRecorder.isTypeSupported('audio/ogg') ? 'audio/ogg' : '';
+}
+
+function startLocalRecording() {
+  if (localRecorder || !rawStream) return;
+  try {
+    const audioOnly = new MediaStream(rawStream.getAudioTracks());
+    const mimeType = pickMime();
+    localRecorder = new MediaRecorder(audioOnly, mimeType ? { mimeType } : {});
+    localChunks = [];
+    localRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) localChunks.push(e.data); };
+    localRecorder.start(5000);
+  } catch(e) { console.warn('Local recording failed:', e); }
+}
+
+function startRemoteRecording(stream) {
+  if (remoteRecorder || !stream || stream.getAudioTracks().length === 0) return;
+  try {
+    const audioOnly = new MediaStream(stream.getAudioTracks());
+    const mimeType = pickMime();
+    remoteRecorder = new MediaRecorder(audioOnly, mimeType ? { mimeType } : {});
+    remoteChunks = [];
+    remoteRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) remoteChunks.push(e.data); };
+    remoteRecorder.start(5000);
+  } catch(e) { console.warn('Remote recording failed:', e); }
+}
 let mediaRecorder = null;
 let audioChunks   = [];
 let chatMessages  = [];
@@ -553,64 +569,8 @@ const canvas = document.getElementById('local-canvas');
 const ctx    = canvas.getContext('2d');
 canvas.width = 640; canvas.height = 480;
 
-// ── Draggable self-tile ───────────────────────────────────────────────────
-(function(){
-  const tile = document.getElementById('self-tile');
-  let dragging = false, startX, startY, origLeft, origBottom;
 
-  function getPos() {
-    const rect = tile.getBoundingClientRect();
-    const parent = tile.parentElement.getBoundingClientRect();
-    return {
-      left: rect.left - parent.left,
-      top:  rect.top  - parent.top,
-    };
-  }
 
-  function startDrag(cx, cy) {
-    dragging = true;
-    const pos = getPos();
-    tile.style.right  = 'auto';
-    tile.style.bottom = 'auto';
-    tile.style.left   = pos.left + 'px';
-    tile.style.top    = pos.top  + 'px';
-    startX = cx; startY = cy;
-    origLeft = pos.left; origLeft; // stored via closure below
-  }
-
-  tile.addEventListener('mousedown', e => {
-    startDrag(e.clientX, e.clientY);
-    e.preventDefault();
-  });
-  tile.addEventListener('touchstart', e => {
-    startDrag(e.touches[0].clientX, e.touches[0].clientY);
-  }, { passive: true });
-
-  document.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    const dx = e.clientX - startX, dy = e.clientY - startY;
-    const pos = getPos();
-    const parent = tile.parentElement.getBoundingClientRect();
-    const newLeft = Math.max(0, Math.min(parent.width - tile.offsetWidth,  parseFloat(tile.style.left) + dx));
-    const newTop  = Math.max(0, Math.min(parent.height - tile.offsetHeight, parseFloat(tile.style.top)  + dy));
-    tile.style.left = newLeft + 'px';
-    tile.style.top  = newTop  + 'px';
-    startX = e.clientX; startY = e.clientY;
-  });
-  document.addEventListener('touchmove', e => {
-    if (!dragging) return;
-    const dx = e.touches[0].clientX - startX, dy = e.touches[0].clientY - startY;
-    const parent = tile.parentElement.getBoundingClientRect();
-    const newLeft = Math.max(0, Math.min(parent.width - tile.offsetWidth,  parseFloat(tile.style.left) + dx));
-    const newTop  = Math.max(0, Math.min(parent.height - tile.offsetHeight, parseFloat(tile.style.top)  + dy));
-    tile.style.left = newLeft + 'px';
-    tile.style.top  = newTop  + 'px';
-    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
-  }, { passive: true });
-
-  document.addEventListener('mouseup',  () => { dragging = false; });
-  document.addEventListener('touchend', () => { dragging = false; });
-})();
 
 // ── Noise notice auto-hide after 8 s ─────────────────────────────────────
 setTimeout(() => {
@@ -618,6 +578,19 @@ setTimeout(() => {
   if (n) { n.style.transition = 'opacity 1s'; n.style.opacity = '0'; setTimeout(() => n.remove(), 1100); }
 }, 8000);
 
+function tuneSenders() {
+  if (!pc) return;
+  pc.getSenders().forEach(s => {
+    if (!s.track || s.track.kind !== 'video') return;
+    try { s.track.contentHint = 'motion'; } catch(e) {}
+    const p = s.getParameters();
+    if (!p.encodings || !p.encodings.length) p.encodings = [{}];
+    p.encodings[0].maxBitrate = 1500000;
+    p.encodings[0].maxFramerate = 30;
+    p.degradationPreference = 'maintain-framerate';
+    s.setParameters(p).catch(() => {});
+  });
+}
 function isSafariOrIOS() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome') && !navigator.userAgent.includes('Firefox'));
@@ -625,8 +598,8 @@ function isSafariOrIOS() {
 
 async function init() {
   try {
-    rawStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: true });
-    document.getElementById('local-video-raw').srcObject = rawStream;
+    rawStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 30 } }, audio: true });
+            document.getElementById('local-video-raw').srcObject = rawStream;
   } catch(e) {
     const overlay = document.getElementById('waiting-overlay');
     overlay.style.display = 'flex';
@@ -665,8 +638,13 @@ function initSegmentation() {
     document.getElementById('seg-loading').style.display = 'none';
     processedStream = canvas.captureStream(30);
     rawStream.getAudioTracks().forEach(t => processedStream.addTrack(t));
+    let segBusy = false;
     segInterval = setInterval(async () => {
-      if (vid.readyState >= 2) await selfieSegmentation.send({ image: vid });
+      if (vid.readyState < 2 || segBusy) return;
+      if (bgMode === 'none') { ctx.drawImage(vid, 0, 0, 640, 480); return; }
+      segBusy = true;
+      try { await selfieSegmentation.send({ image: vid }); } catch(e) {}
+      segBusy = false;
     }, 33);
   }).catch(() => { document.getElementById('seg-loading').style.display = 'none'; });
 }
@@ -791,8 +769,9 @@ async function startCall() {
     document.getElementById('waiting-overlay').style.display = 'none';
     callWasConnected = true; setConn(true, 'Connected'); toast('Call connected!');
     const now = new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-    chatMessages.push(`[${now}] System: Call connected`);
-    startRecording();
+            chatMessages.push(`[${now}] System: Call connected`);
+    startLocalRecording();
+    startRemoteRecording(pc._remoteStream);
   };
   pc.onicecandidate = e => {
     if (e.candidate && ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type: 'ice', candidate: e.candidate })); }
@@ -810,13 +789,13 @@ async function startCall() {
     offer = new RTCSessionDescription({
       type: offer.type,
       sdp: offer.sdp.replace(/m=video (\d+) UDP\/TLS\/RTP\/SAVPF ([\d ]+)/g, (match, port, payloads) => {
-        const h264 = ['126','97','120','123'];
+        const h264 = [];
         const arr = payloads.split(' ');
         const preferred = [...h264.filter(p => arr.includes(p)), ...arr.filter(p => !h264.includes(p))];
         return `m=video ${port} UDP/TLS/RTP/SAVPF ${preferred.join(' ')}`;
       })
     });
-    await pc.setLocalDescription(offer);
+    await pc.setLocalDescription(offer); tuneSenders();
     if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error('WS closed');
     ws.send(JSON.stringify({ type: 'offer', sdp: offer }));
     toast('Calling patient…');
@@ -833,36 +812,33 @@ function resetStartBtn() {
   if (sb) { sb.disabled = false; sb.textContent = 'Retry Call'; }
 }
 
-function startRecording() {
-  if (!rawStream) return;
-  try {
-    const audioOnly = new MediaStream(rawStream.getAudioTracks());
-    const mimeType =
-      MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' :
-      MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' :
-      MediaRecorder.isTypeSupported('audio/ogg') ? 'audio/ogg' : '';
-    const options = mimeType ? { mimeType } : {};
-    mediaRecorder = new MediaRecorder(audioOnly, options);
-    audioChunks = [];
-    mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) audioChunks.push(e.data); };
-    mediaRecorder.start(5000);
-  } catch(e) { console.warn('Recording failed:', e); }
-}
 
 async function endCall(auto = false) {
   if (!auto && !confirm('Leave the call?')) return;
   isDestroyed = true;
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    await Promise.race([
-      new Promise(resolve => { mediaRecorder.onstop = resolve; mediaRecorder.stop(); }),
-      new Promise(resolve => setTimeout(resolve, 1000))
-    ]);
-  }
+    await Promise.all([
+    (localRecorder && localRecorder.state !== 'inactive')
+      ? Promise.race([new Promise(r => { localRecorder.onstop = r; localRecorder.stop(); }), new Promise(r => setTimeout(r, 1000))])
+      : Promise.resolve(),
+    (remoteRecorder && remoteRecorder.state !== 'inactive')
+      ? Promise.race([new Promise(r => { remoteRecorder.onstop = r; remoteRecorder.stop(); }), new Promise(r => setTimeout(r, 1000))])
+      : Promise.resolve()
+  ]);
   clearInterval(segInterval);
   try { selfieSegmentation?.close(); } catch(e) {}
   try { ws?.close(); } catch(e) {}
   try { pc?.close(); } catch(e) {}
   rawStream?.getTracks().forEach(t => t.stop());
+
+  // Mark the appointment Completed the moment someone leaves — don't wait for the 60-min timer.
+  try {
+    await fetch('../private_telecare/auto_complete_appt.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `appt_id=${APPT_ID}&role=doctor`
+    });
+  } catch (e) {}
+
   if (callWasConnected) {
     document.getElementById('leaving-overlay').style.display = 'flex';
     const now = new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
@@ -870,26 +846,34 @@ async function endCall(auto = false) {
     const fd = new FormData();
     fd.append('appt_id', APPT_ID); fd.append('role', ROLE);
     fd.append('chat_log', chatMessages.join('\n'));
-    if (audioChunks.length > 0) {
-      const blob = new Blob(audioChunks, { type: mediaRecorder?.mimeType || 'audio/webm' });
+        if (localChunks.length > 0) {
+      const blob = new Blob(localChunks, { type: localRecorder?.mimeType || 'audio/webm' });
       if (blob.size > 1000) {
-        const ext = (mediaRecorder?.mimeType || '').includes('mp4') ? 'mp4' :
-                    (mediaRecorder?.mimeType || '').includes('ogg') ? 'ogg' : 'webm';
-        fd.append('audio', blob, `consultation.${ext}`);
+        const ext = (localRecorder?.mimeType || '').includes('mp4') ? 'mp4' :
+                    (localRecorder?.mimeType || '').includes('ogg') ? 'ogg' : 'webm';
+        fd.append('audio_doctor', blob, `doctor.${ext}`);
+      }
+    }
+    if (remoteChunks.length > 0) {
+      const blob = new Blob(remoteChunks, { type: remoteRecorder?.mimeType || 'audio/webm' });
+      if (blob.size > 1000) {
+        const ext = (remoteRecorder?.mimeType || '').includes('mp4') ? 'mp4' :
+                    (remoteRecorder?.mimeType || '').includes('ogg') ? 'ogg' : 'webm';
+        fd.append('audio_patient', blob, `patient.${ext}`);
       }
     }
     try {
       const startTime = Date.now(); const maxWait = 120000;
       const checkSummary = async () => {
         try {
-          const response = await fetch(`/check_summary?appt_id=${APPT_ID}`);
+          const response = await fetch(`../private_telecare/check_summary.php?appt_id=${APPT_ID}`);
           const data = await response.json();
           if (data.done) { window.location.href = 'appointments.php'; }
           else if (Date.now() - startTime > maxWait) { window.location.href = 'appointments.php'; }
           else { setTimeout(checkSummary, 2000); }
         } catch(e) { setTimeout(checkSummary, 5000); }
       };
-      await fetch('process_consultation.php_v2', { method: 'POST', body: fd });
+      await fetch('../private_telecare/process_consultation_v2.php', { method: 'POST', body: fd });
       setTimeout(checkSummary, 2000);
     } catch(e) { setTimeout(() => { window.location.href = 'appointments.php'; }, 5000); }
   } else {
@@ -899,7 +883,7 @@ async function endCall(auto = false) {
 
 function autoCompleteAppt() {
   if (Date.now() / 1000 < APPT_TS) return;
-  fetch('auto_complete_appt.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `appt_id=${APPT_ID}&role=doctor` }).catch(() => {});
+  fetch('../private_telecare/auto_complete_appt.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `appt_id=${APPT_ID}&role=doctor` }).catch(() => {});
 }
 
 function startTimer() {
@@ -1023,6 +1007,8 @@ function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(e
 function setConn(live, label) {
   document.getElementById('conn-dot').className = 'dot' + (live ? ' live' : '');
   document.getElementById('conn-lbl').textContent = label;
+  const pp = document.getElementById('people-pill');
+  if (pp) pp.textContent = live ? '2 People' : '1 Person';
 }
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 let tT;
@@ -1045,7 +1031,3 @@ init();
 </script>
 </body>
 </html>
-
-
-
-

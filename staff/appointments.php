@@ -154,13 +154,138 @@ if ($sched_rows) {
 require_once 'includes/header.php';
 ?>
 
+<style>
+/* ── Appointments page refresh (scoped additions, doesn't touch style.css) ── */
+.ap-page-head{margin-bottom:1.4rem}
+.sec-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.1rem}
+.sec-head h2{font-family:'Playfair Display',serif;font-size:1.55rem;font-weight:800;color:var(--text,#1a1a1a);margin:0}
+.search-bar{border:1.5px solid var(--border,#e5e7eb);border-radius:12px;padding:.6rem 1rem;font-family:'DM Sans',sans-serif;font-size:.85rem;min-width:260px;outline:none;transition:border-color .2s,box-shadow .2s;background:#fff}
+.search-bar:focus{border-color:var(--red,#8B1E2B);box-shadow:0 0 0 3px rgba(139,30,43,.1)}
 
+.ap-tabs{display:flex;gap:.5rem;margin-bottom:1.2rem;flex-wrap:wrap}
+.ap-tab{border:1.5px solid var(--border,#e5e7eb);background:#fff;color:var(--muted,#6b7280);border-radius:50px;padding:.5rem 1.1rem;font-size:.82rem;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:.4rem}
+.ap-tab:hover{border-color:var(--red,#8B1E2B);color:var(--red,#8B1E2B)}
+.ap-tab.active{background:var(--red,#8B1E2B);border-color:var(--red,#8B1E2B);color:#fff;box-shadow:0 4px 14px rgba(139,30,43,.25)}
+.ap-tab .cnt{background:rgba(255,255,255,.25);border-radius:50%;min-width:19px;height:19px;font-size:.68rem;display:inline-flex;align-items:center;justify-content:center;padding:0 .3rem}
+.ap-tab:not(.active) .cnt{background:var(--blue,#3F82E3);color:#fff}
+
+.tbl-wrap{background:#fff;border:1.5px solid var(--border,#e5e7eb);border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.03)}
+.tbl-wrap table{width:100%;border-collapse:collapse}
+.tbl-wrap thead th{text-align:left;font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#6b7280);padding:.85rem 1rem;background:#fafafa;border-bottom:1.5px solid var(--border,#e5e7eb)}
+.tbl-wrap tbody td{padding:.9rem 1rem;font-size:.86rem;border-bottom:1px solid var(--border,#f0f0f0);vertical-align:top}
+.tbl-wrap tbody tr:last-child td{border-bottom:none}
+.tbl-wrap tbody tr:hover{background:#fafafa}
+.tbl-wrap tbody tr.row-doctor-approved{background:rgba(63,130,227,.045)}
+
+.appt-id-badge{font-weight:800;color:var(--muted,#6b7280);font-size:.8rem}
+
+.badge{display:inline-block;padding:.28rem .7rem;border-radius:50px;font-size:.72rem;font-weight:700}
+.bg-green{background:rgba(34,197,94,.12);color:#15803d}
+.bg-orange{background:rgba(245,158,11,.12);color:#b45309}
+.bg-blue{background:rgba(63,130,227,.12);color:#1d4ed8}
+.bg-red{background:rgba(239,68,68,.12);color:#b91c1c}
+
+.btn-sm{border:none;border-radius:50px;padding:.42rem .85rem;font-size:.76rem;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:transform .15s,opacity .15s}
+.btn-sm:hover{transform:translateY(-1px)}
+.btn-green{background:#16a34a;color:#fff}
+.btn-red{background:#ef4444;color:#fff}
+.btn-orange{background:#f59e0b;color:#fff}
+.btn-primary{background:var(--red,#8B1E2B);color:#fff;border:none;border-radius:50px;padding:.65rem 1.3rem;font-size:.85rem;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(139,30,43,.28);transition:transform .15s}
+.btn-primary:hover{transform:translateY(-1px)}
+
+.btn-receipt-sm{background:#fff;border:1.5px solid var(--border,#e5e7eb);color:var(--text,#1a1a1a);border-radius:8px;padding:.3rem .6rem;font-size:.72rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center}
+.btn-receipt-sm:hover{border-color:var(--red,#8B1E2B);color:var(--red,#8B1E2B)}
+
+.pagination-wrap{display:flex;align-items:center;justify-content:space-between;margin-top:1rem;flex-wrap:wrap;gap:.6rem}
+.pagination-info{font-size:.8rem;color:var(--muted,#6b7280)}
+.pagination-btns{display:flex;align-items:center;gap:.3rem}
+.pg-btn{border:1.5px solid var(--border,#e5e7eb);background:#fff;border-radius:8px;min-width:32px;height:32px;font-size:.78rem;font-weight:600;cursor:pointer;color:var(--text,#1a1a1a)}
+.pg-btn:hover:not(:disabled){border-color:var(--red,#8B1E2B);color:var(--red,#8B1E2B)}
+.pg-btn.active{background:var(--red,#8B1E2B);border-color:var(--red,#8B1E2B);color:#fff}
+.pg-btn:disabled{opacity:.4;cursor:not-allowed}
+.pg-ellipsis{color:var(--muted,#6b7280);padding:0 .2rem}
+.empty-row{text-align:center;padding:2.5rem 1rem;color:var(--muted,#6b7280);font-size:.88rem}
+
+/* ── Modals ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,20,20,.5);z-index:9998;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:18px;padding:1.6rem;max-width:480px;width:92%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal h3{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:800;margin:0 0 1rem}
+.f-label{display:block;font-size:.75rem;font-weight:700;color:var(--muted,#6b7280);margin:.8rem 0 .35rem;text-transform:uppercase;letter-spacing:.04em}
+.f-input{width:100%;padding:.65rem .85rem;border:1.5px solid var(--border,#e5e7eb);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none}
+.f-input:focus{border-color:var(--red,#8B1E2B);box-shadow:0 0 0 3px rgba(139,30,43,.1)}
+.btn-submit{width:100%;background:var(--red,#8B1E2B);color:#fff;border:none;border-radius:50px;padding:.75rem;font-weight:700;font-size:.88rem;cursor:pointer;margin-top:1.1rem}
+.btn-cancel-modal{width:100%;background:transparent;border:1.5px solid var(--border,#e5e7eb);border-radius:50px;padding:.7rem;font-weight:700;font-size:.85rem;cursor:pointer;margin-top:.55rem;color:var(--muted,#6b7280)}
+
+/* ── Calendar picker ── */
+.cal-wrap{border:1.5px solid var(--border,#e5e7eb);border-radius:12px;padding:.8rem;margin-top:.3rem}
+.cal-wrap.cal-disabled{opacity:.5;pointer-events:none}
+.cal-placeholder{text-align:center;color:var(--muted,#6b7280);font-size:.82rem;padding:1rem 0}
+.cal-header{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:.85rem;margin-bottom:.5rem}
+.cal-nav{background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--muted,#6b7280);width:26px;height:26px;border-radius:50%}
+.cal-nav:hover:not(:disabled){background:#f3f4f6}
+.cal-nav:disabled{opacity:.3;cursor:not-allowed}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.cal-day-name{font-size:.65rem;font-weight:700;color:var(--muted,#6b7280);padding:.3rem 0}
+.cal-cell{font-size:.78rem;padding:.45rem 0;border-radius:8px;cursor:default}
+.cal-cell.empty{visibility:hidden}
+.cal-cell.past{color:#d1d5db}
+.cal-cell.blocked{color:#d1d5db;text-decoration:line-through}
+.cal-cell.available{cursor:pointer;color:var(--text,#1a1a1a);font-weight:600}
+.cal-cell.available:hover{background:rgba(139,30,43,.08)}
+.cal-cell.today{box-shadow:inset 0 0 0 1.5px var(--blue,#3F82E3)}
+.cal-cell.selected{background:var(--red,#8B1E2B);color:#fff}
+.cal-legend{margin-top:.6rem;padding-top:.6rem;border-top:1px dashed var(--border,#e5e7eb);font-size:.72rem;color:var(--muted,#6b7280);line-height:1.7}
+.cal-legend-title{font-weight:700;color:var(--text,#1a1a1a);margin-bottom:.2rem}
+
+/* ══════════════ RECEIPT — redesigned ══════════════ */
+.rcpt-modal{padding:0 !important;border-radius:22px !important;overflow-y:auto !important;overflow-x:hidden;max-height:90vh}
+.rcpt-hero{background:linear-gradient(135deg,var(--red,#8B1E2B) 0%,#5c131c 100%);padding:1.9rem 1.6rem 1.6rem;text-align:center;position:relative;color:#fff}
+.rcpt-hero-close{position:absolute;top:.9rem;right:.9rem;background:rgba(255,255,255,.18);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.rcpt-hero-close:hover{background:rgba(255,255,255,.3)}
+.rcpt-brand{font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.8;margin-bottom:.5rem;display:flex;align-items:center;justify-content:center;gap:.35rem}
+.rcpt-title{font-family:'Playfair Display',serif;font-size:1.55rem;font-weight:800;margin-bottom:.2rem}
+.rcpt-sub{font-size:.76rem;opacity:.8}
+
+.rcpt-body{padding:1.7rem 1.5rem 0}
+.rcpt-status-bar{display:flex;align-items:center;gap:.7rem;background:rgba(34,197,94,.08);border:1.5px solid rgba(34,197,94,.25);border-radius:14px;padding:.75rem 1rem;margin-bottom:1.2rem}
+.rcpt-status-icon{width:34px;height:34px;background:linear-gradient(135deg,#16a34a,#15803d);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rcpt-status-title{font-weight:700;font-size:.88rem;color:#15803d}
+.rcpt-status-date{font-size:.72rem;color:#16a34a;opacity:.85}
+
+.rcpt-no-wrap{text-align:center;margin-bottom:1rem}
+.rcpt-no-label{font-size:.63rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted,#6b7280)}
+.rcpt-no-val{font-size:1.1rem;font-weight:800;color:var(--red,#8B1E2B);letter-spacing:.04em}
+
+.rcpt-divider{border:none;border-top:1.5px dashed var(--border,#e5e7eb);margin:.9rem 0}
+
+.rcpt-detail-row{display:flex;justify-content:space-between;gap:1rem;font-size:.83rem;padding:.4rem 0}
+.rcpt-detail-label{color:var(--muted,#6b7280);font-weight:600}
+.rcpt-detail-val{font-weight:700;color:var(--text,#1a1a1a);text-align:right}
+
+.rcpt-amount-box{background:#faf5f5;border:1.5px solid rgba(139,30,43,.12);border-radius:16px;padding:1.1rem;text-align:center;margin:1.1rem 0}
+.rcpt-amount-label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#6b7280);margin-bottom:.3rem}
+.rcpt-amount-val{font-size:2.1rem;font-weight:800;color:var(--red,#8B1E2B)}
+.rcpt-paid-pill{display:inline-flex;align-items:center;gap:.3rem;background:#16a34a;color:#fff;border-radius:50px;padding:.22rem .85rem;font-size:.7rem;font-weight:700;margin-top:.5rem}
+
+.rcpt-meta-row{display:flex;justify-content:space-between;font-size:.75rem;padding:.28rem 0}
+.rcpt-meta-label{color:var(--muted,#6b7280);font-weight:600}
+.rcpt-meta-val{color:var(--red,#8B1E2B);font-weight:700}
+
+.rcpt-footer{border-top:1.5px dashed var(--border,#e5e7eb);margin-top:1rem;padding:1rem 1.5rem 1.5rem;text-align:center}
+.rcpt-footer-text{font-size:.72rem;color:var(--muted,#6b7280);line-height:1.7}
+.rcpt-print-btn{display:inline-flex;align-items:center;gap:.4rem;background:var(--red,#8B1E2B);color:#fff;padding:.65rem 1.5rem;border-radius:50px;font-size:.82rem;font-weight:700;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:.9rem}
+.rcpt-print-btn:hover{background:#5c131c}
+</style>
+
+<div class="ap-page-head">
 <div class="sec-head">
   <h2>Appointment Management</h2>
   <div style="display:flex;gap:.6rem">
     <input class="search-bar" id="appt-search" placeholder="Search ID, patient or doctor…" oninput="onSearchInput(this.value)"/>
     <button class="btn-primary" onclick="openModal('modal-create')">+ Create Appointment</button>
   </div>
+</div>
 </div>
 
 <?php if ($stat_doctor_approved > 0): ?>
@@ -178,7 +303,7 @@ require_once 'includes/header.php';
 </div>
 <?php endif; ?>
 
-<div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
+<div class="ap-tabs">
   <?php
   $filter_tabs = [
       'All'           => ['label' => 'All',              'count' => null],
@@ -189,11 +314,9 @@ require_once 'includes/header.php';
       'Cancelled'     => ['label' => 'Cancelled',        'count' => null],
   ];
   foreach ($filter_tabs as $fk => $fv): ?>
-  <button class="btn-sm" id="filter-<?= $fk ?>"
-          style="background:rgba(36,68,65,.07);color:var(--text);display:inline-flex;align-items:center;gap:0.35rem;"
-          onclick="filterStatus('<?= $fk ?>')">
+  <button class="ap-tab" id="filter-<?= $fk ?>" onclick="filterStatus('<?= $fk ?>')">
     <?= $fv['label'] ?>
-    <?php if ($fv['count']): ?><span style="background:var(--blue);color:#fff;border-radius:50%;width:17px;height:17px;font-size:0.65rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;"><?= $fv['count'] ?></span><?php endif; ?>
+    <?php if ($fv['count']): ?><span class="cnt"><?= $fv['count'] ?></span><?php endif; ?>
   </button>
   <?php endforeach; ?>
 </div>
@@ -370,64 +493,60 @@ require_once 'includes/header.php';
   </div>
 </div>
 
-<!-- Modal: Receipt Preview -->
+<!-- Modal: Receipt Preview (redesigned) -->
 <div class="modal-overlay" id="modal-receipt">
-  <div class="modal" style="min-width:550px;max-width:700px;padding:0;overflow-y:auto;border-radius:20px;background:#fff;max-height:90vh;">
-    <div class="receipt-modal-header">
-      <button onclick="closeModal('modal-receipt')"
-              style="position:absolute;top:0.9rem;right:0.9rem;background:rgba(255,255,255,0.15);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;line-height:1;">
+  <div class="modal rcpt-modal" style="width:92%;max-width:560px;">
+
+    <div class="rcpt-hero">
+      <button class="rcpt-hero-close" onclick="closeModal('modal-receipt')">
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
-      <div style="font-size:0.7rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;opacity:0.7;margin-bottom:0.4rem;display:flex;align-items:center;justify-content:center;gap:5px;">
-        <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="1" y="1" width="30" height="30" rx="9" fill="currentColor"/><path d="M16 8v16M8 16h16" stroke="#B31118" stroke-width="3.4" stroke-linecap="round"/></svg>
+      <div class="rcpt-brand">
+        <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="1" y="1" width="30" height="30" rx="9" fill="#fff"/><path d="M16 8v16M8 16h16" stroke="var(--red,#8B1E2B)" stroke-width="3.4" stroke-linecap="round"/></svg>
         Tele-Care
       </div>
-      <div style="font-family:'Playfair Display',Georgia,serif;font-size:1.5rem;font-weight:800;margin-bottom:0.2rem;">Payment Receipt</div>
-      <div style="font-size:0.75rem;opacity:0.75;">Official Consultation Receipt</div>
+      <div class="rcpt-title">Payment Receipt</div>
+      <div class="rcpt-sub">Official Consultation Receipt</div>
     </div>
-    <div style="padding:1.8rem 1.4rem 0;margin-top:10px;">
-      <div style="display:flex;align-items:center;gap:0.6rem;background:rgba(34,197,94,0.08);border:1.5px solid rgba(34,197,94,0.25);border-radius:14px;padding:0.7rem 1rem;margin-bottom:1.1rem;">
-        <div style="width:34px;height:34px;background:linear-gradient(135deg,#16a34a,#15803d);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+
+    <div class="rcpt-body">
+      <div class="rcpt-status-bar">
+        <div class="rcpt-status-icon">
           <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
         </div>
         <div>
-          <div style="font-weight:700;font-size:0.88rem;color:#15803d;">Payment Successful</div>
-          <div id="rm-paid-at" style="font-size:0.72rem;color:#16a34a;opacity:0.85;"></div>
+          <div class="rcpt-status-title">Payment Successful</div>
+          <div id="rm-paid-at" class="rcpt-status-date"></div>
         </div>
       </div>
-      <div style="text-align:center;margin-bottom:1rem;">
-        <div style="font-size:0.63rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.2rem;">Receipt No.</div>
-        <div id="rm-receipt-no" style="font-size:1.1rem;font-weight:800;color:var(--green);letter-spacing:0.05em;font-family:'DM Mono',monospace,sans-serif;"></div>
+
+      <div class="rcpt-no-wrap">
+        <div class="rcpt-no-label">Receipt No.</div>
+        <div id="rm-receipt-no" class="rcpt-no-val"></div>
       </div>
-      <hr style="border:none;border-top:1.5px dashed rgba(36,68,65,0.12);margin:0.8rem 0;"/>
+
+      <hr class="rcpt-divider"/>
       <div id="rm-rows"></div>
-      <div style="background:rgba(36,68,65,0.04);border-radius:14px;padding:1rem;text-align:center;margin:1rem 0;">
-        <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.3rem;">Total Amount Paid</div>
-        <div id="rm-amount" style="font-size:2rem;font-weight:800;color:var(--green);"></div>
-        <div style="margin-top:0.4rem;">
-          <span style="display:inline-flex;align-items:center;gap:0.3rem;background:#16a34a;color:#fff;border-radius:50px;padding:0.2rem 0.8rem;font-size:0.7rem;font-weight:700;">
-            <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-            PAID
-          </span>
-        </div>
+
+      <div class="rcpt-amount-box">
+        <div class="rcpt-amount-label">Total Amount Paid</div>
+        <div id="rm-amount" class="rcpt-amount-val"></div>
+        <div><span class="rcpt-paid-pill">
+          <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          PAID
+        </span></div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:0.73rem;padding:0.25rem 0;">
-        <span style="color:var(--muted);font-weight:600;">Payment via</span>
-        <span style="color:var(--green);font-weight:700;">PayMongo (GCash / Card)</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;font-size:0.73rem;padding:0.25rem 0 0.5rem;">
-        <span style="color:var(--muted);font-weight:600;">Appointment ID</span>
-        <span id="rm-appt-id" style="color:var(--green);font-weight:700;"></span>
-      </div>
+
+      <div class="rcpt-meta-row"><span class="rcpt-meta-label">Payment via</span><span class="rcpt-meta-val">PayMongo (GCash / Card)</span></div>
+      <div class="rcpt-meta-row" style="padding-bottom:.5rem"><span class="rcpt-meta-label">Appointment ID</span><span id="rm-appt-id" class="rcpt-meta-val"></span></div>
     </div>
-    <div style="border-top:1.5px dashed rgba(36,68,65,0.12);margin:0 1.4rem;"></div>
-    <div style="padding:0.9rem 1.4rem 1.4rem;text-align:center;">
-      <div style="font-size:0.7rem;color:var(--muted);line-height:1.7;">
+
+    <div class="rcpt-footer">
+      <div class="rcpt-footer-text">
         Thank you for choosing TELE-CARE.<br/>
         <strong>This serves as official proof of payment.</strong>
       </div>
-      <button onclick="printReceipt()"
-              style="display:inline-flex;align-items:center;gap:0.4rem;background:var(--green);color:#fff;padding:0.6rem 1.4rem;border-radius:50px;font-size:0.8rem;font-weight:700;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:0.85rem;">
+      <button onclick="printReceipt()" class="rcpt-print-btn">
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
         Print / Save PDF
       </button>
@@ -558,9 +677,7 @@ function filterStatus(status) {
   _activeTab   = status;
   _currentPage = 1;
   document.querySelectorAll('[id^=filter-]').forEach(b => {
-    const active = b.id === 'filter-' + status;
-    b.style.background = active ? 'var(--blue)' : 'rgba(36,68,65,.07)';
-    b.style.color      = active ? '#fff'        : 'var(--text)';
+    b.classList.toggle('active', b.id === 'filter-' + status);
   });
   renderTable();
 }
@@ -776,6 +893,20 @@ function quickAction(id, action) {
   document.getElementById('quick-form').submit();
 }
 
+// ── Modal open/close (in case not already defined globally in style.css/sidebar.php) ──
+if (typeof openModal !== 'function') {
+  window.openModal = function(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('open');
+  };
+}
+if (typeof closeModal !== 'function') {
+  window.closeModal = function(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('open');
+  };
+}
+
 // ── Receipt ───────────────────────────────────────────────────────────────────
 function openReceiptModal(apptId, patient, doctor, specialty, apptDate, apptTime, amount, receiptNo, paidAt) {
   document.getElementById('rm-receipt-no').textContent = receiptNo;
@@ -799,9 +930,9 @@ function openReceiptModal(apptId, patient, doctor, specialty, apptDate, apptTime
     ['Appointment', apptDateFmt + ' · ' + timeFmt],
   ];
   document.getElementById('rm-rows').innerHTML = rows.map(([label, val]) => `
-    <div class="receipt-detail-row">
-      <span class="receipt-detail-label">${label}</span>
-      <span class="receipt-detail-val">${val}</span>
+    <div class="rcpt-detail-row">
+      <span class="rcpt-detail-label">${label}</span>
+      <span class="rcpt-detail-val">${val}</span>
     </div>
   `).join('');
   openModal('modal-receipt');
@@ -813,67 +944,93 @@ function printReceipt() {
   const apptId     = document.getElementById('rm-appt-id').textContent;
   const amount     = document.getElementById('rm-amount').textContent;
   const rowsHTML   = document.getElementById('rm-rows').innerHTML;
+
   const printWindow = window.open('', '_blank', 'width=500,height=780');
-  printWindow.document.write(`<!DOCTYPE html>
-<html>
-<head>
-  <title>Payment Receipt</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-  
-</head>
-<body>
-<div class="card">
-  <div class="hdr">
-    <div class="brand" style="display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 32 32" fill="none"><rect x="1" y="1" width="30" height="30" rx="9" fill="currentColor"/><path d="M16 8v16M8 16h16" stroke="#B31118" stroke-width="3.4" stroke-linecap="round"/></svg>Tele-Care</div>
-    <div class="title">Payment Receipt</div>
-    <div class="sub">Official Consultation Receipt</div>
-  </div>
-  <div class="body">
-    <div class="success-bar">
-      <div class="success-icon">
-        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-      </div>
-      <div>
-        <div class="success-title">Payment Successful</div>
-        <div class="success-date">${paidAt}</div>
-      </div>
-    </div>
-    <div class="rcpt-no-wrap">
-      <div class="rcpt-no-label">Receipt No.</div>
-      <div class="rcpt-no-val">${receiptNo}</div>
-    </div>
-    <hr class="dashed"/>
-    <div id="detail-rows"></div>
-    <div class="amount-box">
-      <div class="amount-label">Total Amount Paid</div>
-      <div class="amount-val">${amount}</div>
-      <div><span class="paid-badge"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>PAID</span></div>
-    </div>
-    <div class="meta-row"><span class="meta-label">Payment via</span><span class="meta-val">PayMongo (GCash / Card)</span></div>
-    <div class="meta-row" style="margin-bottom:.5rem"><span class="meta-label">Appointment ID</span><span class="meta-val">${apptId}</span></div>
-  </div>
-  <div class="footer">
-    <div class="footer-inner">
-      <div class="footer-text">Thank you for choosing TELE-CARE.<br/><strong>This serves as official proof of payment.</strong></div>
-    </div>
-  </div>
-</div>
-<script>
-  const tmp = document.createElement('div');
-  tmp.innerHTML = \`${rowsHTML.replace(/`/g, '\\`')}\`;
-  tmp.querySelectorAll('.receipt-detail-row').forEach(row => {
+
+  printWindow.document.write('<!DOCTYPE html><html><head>' +
+    '<title>Payment Receipt</title>' +
+    '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">' +
+    '<style>' +
+    '*{box-sizing:border-box;}' +
+    'body{font-family:"DM Sans",sans-serif;margin:0;padding:20px;background:#f4f4f4;color:#1a1a1a;}' +
+    '.card{max-width:440px;margin:0 auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.08);}' +
+    '.hdr{background:linear-gradient(135deg,#8B1E2B,#5c131c);color:#fff;text-align:center;padding:1.7rem 1.2rem 1.3rem;}' +
+    '.brand{font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.8;margin-bottom:.5rem;}' +
+    '.title{font-family:"Playfair Display",Georgia,serif;font-size:1.5rem;font-weight:800;margin-bottom:.2rem;}' +
+    '.sub{font-size:.76rem;opacity:.8;}' +
+    '.body{padding:1.5rem 1.3rem 0;}' +
+    '.success-bar{display:flex;align-items:center;gap:.7rem;background:rgba(34,197,94,.08);border:1.5px solid rgba(34,197,94,.25);border-radius:14px;padding:.75rem 1rem;margin-bottom:1.2rem;}' +
+    '.success-icon{width:32px;height:32px;background:linear-gradient(135deg,#16a34a,#15803d);border-radius:50%;flex-shrink:0;}' +
+    '.success-title{font-weight:700;font-size:.88rem;color:#15803d;}' +
+    '.success-date{font-size:.72rem;color:#16a34a;opacity:.85;}' +
+    '.rcpt-no-wrap{text-align:center;margin-bottom:1rem;}' +
+    '.rcpt-no-label{font-size:.63rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6b7280;}' +
+    '.rcpt-no-val{font-size:1.1rem;font-weight:800;color:#8B1E2B;letter-spacing:.04em;}' +
+    '.dashed{border:none;border-top:1.5px dashed #e5e7eb;margin:.9rem 0;}' +
+    '.detail-row{display:flex;justify-content:space-between;font-size:.82rem;padding:.4rem 0;}' +
+    '.detail-label{color:#6b7280;font-weight:600;}' +
+    '.detail-val{font-weight:700;text-align:right;}' +
+    '.amount-box{background:#faf5f5;border:1.5px solid rgba(139,30,43,.12);border-radius:16px;padding:1.1rem;text-align:center;margin:1.1rem 0;}' +
+    '.amount-label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:.3rem;}' +
+    '.amount-val{font-size:2rem;font-weight:800;color:#8B1E2B;}' +
+    '.paid-badge{display:inline-flex;align-items:center;gap:.3rem;background:#16a34a;color:#fff;border-radius:50px;padding:.22rem .85rem;font-size:.7rem;font-weight:700;margin-top:.5rem;}' +
+    '.meta-row{display:flex;justify-content:space-between;font-size:.75rem;padding:.28rem 0;}' +
+    '.meta-label{color:#6b7280;font-weight:600;}' +
+    '.meta-val{color:#8B1E2B;font-weight:700;}' +
+    '.footer{border-top:1.5px dashed #e5e7eb;margin-top:.9rem;padding:1rem 1.3rem 1.5rem;text-align:center;font-size:.72rem;color:#6b7280;line-height:1.7;}' +
+    '@media print{body{background:#fff;padding:0;}.card{box-shadow:none;}}' +
+    '</style></head><body>' +
+    '<div class="card">' +
+      '<div class="hdr">' +
+        '<div class="brand">Tele-Care</div>' +
+        '<div class="title">Payment Receipt</div>' +
+        '<div class="sub">Official Consultation Receipt</div>' +
+      '</div>' +
+      '<div class="body">' +
+        '<div class="success-bar">' +
+          '<div class="success-icon"></div>' +
+          '<div>' +
+            '<div class="success-title">Payment Successful</div>' +
+            '<div class="success-date" id="pw-paid-at"></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="rcpt-no-wrap">' +
+          '<div class="rcpt-no-label">Receipt No.</div>' +
+          '<div class="rcpt-no-val" id="pw-receipt-no"></div>' +
+        '</div>' +
+        '<hr class="dashed"/>' +
+        '<div id="detail-rows"></div>' +
+        '<div class="amount-box">' +
+          '<div class="amount-label">Total Amount Paid</div>' +
+          '<div class="amount-val" id="pw-amount"></div>' +
+          '<div><span class="paid-badge">PAID</span></div>' +
+        '</div>' +
+        '<div class="meta-row"><span class="meta-label">Payment via</span><span class="meta-val">PayMongo (GCash / Card)</span></div>' +
+        '<div class="meta-row" style="margin-bottom:.5rem"><span class="meta-label">Appointment ID</span><span class="meta-val" id="pw-appt-id"></span></div>' +
+      '</div>' +
+      '<div class="footer">Thank you for choosing TELE-CARE.<br/><strong>This serves as official proof of payment.</strong></div>' +
+    '</div>' +
+    '<' + '/body>' + '<' + '/html>');
+  printWindow.document.close();
+
+  printWindow.document.getElementById('pw-receipt-no').textContent = receiptNo;
+  printWindow.document.getElementById('pw-paid-at').textContent    = paidAt;
+  printWindow.document.getElementById('pw-amount').textContent     = amount;
+  printWindow.document.getElementById('pw-appt-id').textContent    = apptId;
+
+  const rowsEl = printWindow.document.getElementById('detail-rows');
+  rowsEl.innerHTML = rowsHTML;
+  rowsEl.querySelectorAll('.rcpt-detail-row').forEach(function (row) {
     row.className = 'detail-row';
-    const label = row.querySelector('.receipt-detail-label');
-    const val   = row.querySelector('.receipt-detail-val');
+    const label = row.querySelector('.rcpt-detail-label');
+    const val   = row.querySelector('.rcpt-detail-val');
     if (label) label.className = 'detail-label';
     if (val)   val.className   = 'detail-val';
   });
-  document.getElementById('detail-rows').innerHTML = tmp.innerHTML;
-  window.onload = function() { setTimeout(() => { window.print(); window.close(); }, 300); };
-<\/script>
-</body>
-</html>`);
-  printWindow.document.close();
+
+  printWindow.onload = function () {
+    setTimeout(function () { printWindow.print(); printWindow.close(); }, 300);
+  };
 }
 
 function handleReceiptClick(btn) {
@@ -892,5 +1049,3 @@ filterStatus(_activeTab);  // sets tab highlight + calls renderTable()
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
-
-

@@ -1,6 +1,14 @@
-﻿<?php
+<?php
+// doctor/appointments.php
 date_default_timezone_set('Asia/Manila');
 require_once 'includes/auth.php';
+
+$now = (new DateTime('now', new DateTimeZone('Asia/Manila')))->format('Y-m-d H:i:s');
+
+$autoComplete = $conn->prepare("UPDATE appointments SET status='Completed' WHERE doctor_id=? AND status IN ('Confirmed','Pending') AND DATE_ADD(CONCAT(appointment_date,' ',appointment_time), INTERVAL 1 HOUR) <= ?");
+$autoComplete->bind_param('is', $doctor_id, $now);
+$autoComplete->execute();
+$autoComplete->close();
 
 $search=trim($_GET['search']??'');
 $date=$_GET['date']??'';
@@ -11,7 +19,13 @@ $page=max(1,(int)($_GET['page']??1));
 
 $where=" WHERE a.doctor_id=?";
 $params=[$doctor_id];$types='i';
-if($view==='past'){$where.=" AND a.appointment_date<CURDATE()";}else{$where.=" AND a.appointment_date>=CURDATE()";}
+if($view==='past'){
+    $where.=" AND DATE_ADD(CONCAT(a.appointment_date,' ',a.appointment_time), INTERVAL 1 HOUR) <= ?";
+    $params[]=$now;$types.='s';
+}else{
+    $where.=" AND DATE_ADD(CONCAT(a.appointment_date,' ',a.appointment_time), INTERVAL 1 HOUR) > ?";
+    $params[]=$now;$types.='s';
+}
 if($search!==''){$where.=" AND p.full_name LIKE ?";$params[]="%$search%";$types.='s';}
 if($date!==''){$where.=" AND a.appointment_date=?";$params[]=$date;$types.='s';}
 if($status!==''){$where.=" AND a.status=?";$params[]=$status;$types.='s';}
@@ -77,17 +91,41 @@ function apptPageUrl($p){$q=$_GET;$q['page']=$p;return '?'.http_build_query($q);
     <select class="control" name="status" onchange="this.form.submit()"><option value="">All Statuses</option><?php foreach(['Pending', 'Confirmed','Completed'] as $s): ?><option value="<?= $s ?>" <?= $status===$s?'selected':'' ?>><?= $s ?></option><?php endforeach; ?></select>
   </form>
   <section class="cards">
-    <?php if($appointments->num_rows): while($a=$appointments->fetch_assoc()): $tele=stripos((string)$a['type'],'tele')!==false; ?>
+    <?php if($appointments->num_rows): while($a=$appointments->fetch_assoc()): $tele=stripos((string)$a['type'],'tele')!==false;
+    $a_ts = strtotime($a['appointment_date'].' '.$a['appointment_time']);
+    $now_ts = time();
+    $call_window_open = ($now_ts >= $a_ts - 900 && $now_ts <= $a_ts + 3600);
+    $call_expired = $now_ts > $a_ts + 3600;
+?>
     <article class="appt-card">
       <span class="badge"><?= htmlspecialchars($a['status']) ?></span>
       <div class="patient"><div class="avatar"><?php if(!empty($a['patient_photo'])): ?><img src="../<?= htmlspecialchars($a['patient_photo']) ?>" alt=""><?php else: ?><?= htmlspecialchars(strtoupper(substr($a['patient_name'],0,2))) ?><?php endif; ?></div><div><div class="patient-name"><?= htmlspecialchars($a['patient_name']) ?></div><div class="patient-id">ID: #PT-<?= str_pad((string)$a['patient_id'],4,'0',STR_PAD_LEFT) ?></div></div></div>
       <div class="info"><div><div class="info-label">Date &amp; Time</div><div class="info-value"><?= date('M d, Y',strtotime($a['appointment_date'])) ?><br><?= date('h:i A',strtotime($a['appointment_time'])) ?></div></div><div><div class="info-label">Type</div><div class="info-value"><?= htmlspecialchars(apptType($a['type'])) ?><?= !$tele&&!empty($a['department'])?'<br>'.htmlspecialchars($a['department']):'' ?></div></div></div>
       <div class="reason-label">Reason for Consultation</div><div class="reason"><?= htmlspecialchars($a['reason']?:'No reason provided.') ?></div>
+<?php if(!empty($a['consultation_summary']) && strpos($a['consultation_summary'],'No consultation content was captured')===false): ?>
+  <?php if(!empty($a['summary_reviewed_at'])): ?>
+  <div style="margin:8px 0;padding:8px 10px;background:#e9fbf4;border:1px solid #bdebd9;border-radius:7px;font-size:.65rem;font-weight:700;color:#087b53;display:flex;align-items:center;gap:6px;">
+    ✓ Summary published to patient
+    <?php if(!empty($a['summary_pdf_path'])): ?>
+    <a href="../consultation_summaries/<?= htmlspecialchars($a['summary_pdf_path']) ?>" target="_blank" style="margin-left:auto;color:#087b53;text-decoration:underline;">View PDF</a>
+    <?php endif; ?>
+  </div>
+  <?php else: ?>
+  <div style="margin:8px 0;padding:8px 10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:7px;font-size:.65rem;font-weight:700;color:#c2410c;display:flex;align-items:center;gap:6px;">
+    ⚠ Summary needs your review
+    <a href="review_summary.php?appt_id=<?= (int)$a['id'] ?>" style="margin-left:auto;color:#c2410c;text-decoration:underline;">Review & Publish</a>
+  </div>
+  <?php endif; ?>
+<?php endif; ?>
       <div class="actions">
-        <a class="btn btn-light" href="appointment-details.php?appt_id=<?= (int)$a['id'] ?>" <?= $view==='past'?'style="grid-column:1/-1"':'' ?>>View Details</a>
-        <?php if($view==='upcoming'): ?>
-          <?php if($tele&&$a['status']==='Confirmed'): ?><a class="btn btn-primary" href="call.php?appt_id=<?= (int)$a['id'] ?>">Start Consult</a><?php else: ?><span class="btn btn-disabled">Waiting</span><?php endif; ?>
-        <?php endif; ?>
+       <a class="btn btn-light" href="appointment-details.php?appt_id=<?= (int)$a['id'] ?>" <?= ($view==='past'||$call_expired)?'style="grid-column:1/-1"':'' ?>>View Details</a>
+<?php if($view==='upcoming' && !$call_expired): ?>
+    <?php if($tele && in_array($a['status'], ['Confirmed','Completed'], true) && $call_window_open): ?>
+    <a class="btn btn-primary" href="call.php?appt_id=<?= (int)$a['id'] ?>">Start Consult</a>
+  <?php else: ?>
+    <span class="btn btn-disabled">Waiting</span>
+  <?php endif; ?>
+<?php endif; ?>
       </div>
     </article>
     <?php endwhile; else: ?><div class="empty">No <?= $view==='past'?'past':'upcoming' ?> appointments match your filters.</div><?php endif; ?>

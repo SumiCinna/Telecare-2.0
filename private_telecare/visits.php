@@ -78,7 +78,7 @@ $visits_upcoming = $conn->query("
     FROM appointments a JOIN doctors d ON d.id = a.doctor_id
     WHERE a.patient_id=$patient_id
       AND a.appointment_date >= CURDATE()
-      AND a.status='Confirmed' AND a.payment_status='Paid'
+      AND a.status IN ('Confirmed','Completed') AND a.payment_status='Paid'
     ORDER BY a.appointment_date ASC
 ");
 
@@ -88,7 +88,11 @@ $visits_past = $conn->query("
     SELECT a.*, d.full_name AS doctor_name, d.specialty
     FROM appointments a JOIN doctors d ON d.id = a.doctor_id
     WHERE a.patient_id=$patient_id
-      AND (a.appointment_date < CURDATE() OR a.status = 'Completed' OR a.status = 'Cancelled')
+      AND (
+            a.appointment_date < CURDATE()
+            OR a.status = 'Cancelled'
+            OR (a.status = 'Completed' AND NOT (a.appointment_date >= CURDATE() AND a.payment_status = 'Paid'))
+          )
     ORDER BY a.appointment_date DESC, a.appointment_time DESC
 ");
 
@@ -643,7 +647,7 @@ function isCallActive(string $date, string $time): bool {
         $active   = $now >= ($apptTs - 900) && $now <= ($apptTs + 3600);
         $early    = $active && $now < $apptTs;
         $soon     = !$active && $now >= ($apptTs - 3600);
-        $hasSummary  = !empty($a['summary_pdf_path']);
+        $hasSummary  = !empty($a['summary_pdf_path']) && !empty($a['summary_reviewed_at']);
         $hasContent  = !empty($a['chat_log']) || !empty($a['consultation_transcript']);
         $initials = strtoupper(substr($a['doctor_name'],0,1) . (strpos($a['doctor_name'],' ')!==false ? substr($a['doctor_name'],strpos($a['doctor_name'],' ')+1,1) : ''));
     ?>
@@ -652,8 +656,8 @@ function isCallActive(string $date, string $time): bool {
         <div class="appt-avatar"><?= $initials ?></div>
         <div class="appt-main-info">
           <div class="appt-name-row">
-            <span class="appt-doctor-name">Dr. <?= htmlspecialchars($a['doctor_name']) ?></span>
-            <span class="badge badge-green">Confirmed</span>
+                        <span class="appt-doctor-name">Dr. <?= htmlspecialchars($a['doctor_name']) ?></span>
+            <span class="badge badge-green"><?= htmlspecialchars($a['status']) ?></span>
             <span class="badge badge-green">Paid</span>
           </div>
           <div class="appt-sub">

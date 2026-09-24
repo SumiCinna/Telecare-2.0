@@ -85,6 +85,35 @@ document.addEventListener('DOMContentLoaded', function () {
 		document.querySelectorAll('.dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); });
 	});
 
+	// Profile menu (topbar) — same open/close pattern as the patient-side header
+	var profileMenu = document.getElementById('profileMenu');
+	var profileBtn = document.getElementById('profileBtn');
+	if (profileMenu && profileBtn) {
+		profileBtn.addEventListener('click', function (e) {
+			e.stopPropagation();
+			var isOpen = profileMenu.classList.toggle('open');
+			profileBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+		});
+		profileMenu.querySelectorAll('.profile-option').forEach(function (opt) {
+			opt.addEventListener('click', function () {
+				profileMenu.classList.remove('open');
+				profileBtn.setAttribute('aria-expanded', 'false');
+			});
+		});
+		document.addEventListener('click', function (e) {
+			if (!profileMenu.contains(e.target)) {
+				profileMenu.classList.remove('open');
+				profileBtn.setAttribute('aria-expanded', 'false');
+			}
+		});
+		document.addEventListener('keydown', function (e) {
+			if (e.key === 'Escape') {
+				profileMenu.classList.remove('open');
+				profileBtn.setAttribute('aria-expanded', 'false');
+			}
+		});
+	}
+
 	// Rich text editor toolbar
 	document.querySelectorAll('.editor-toolbar button[data-cmd]').forEach(function (btn) {
 		btn.addEventListener('click', function () {
@@ -113,5 +142,130 @@ document.addEventListener('DOMContentLoaded', function () {
 		function syncDot() { if (dot) dot.style.background = colors[statusSelect.value] || '#10b981'; }
 		statusSelect.addEventListener('change', syncDot);
 		syncDot();
+	}
+
+	// ── Change Password modal: live validation + submit ────────────────
+	var cpForm = document.getElementById('changePasswordForm');
+	if (cpForm) {
+		// Show/hide eye toggle for each password field
+		document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
+			btn.addEventListener('click', function () {
+				var input = document.getElementById(btn.getAttribute('data-toggle-password'));
+				var eyeIcon = btn.querySelector('.icon-eye');
+				var eyeOffIcon = btn.querySelector('.icon-eye-off');
+				var showing = input.type === 'text';
+				input.type = showing ? 'password' : 'text';
+				eyeIcon.style.display = showing ? 'block' : 'none';
+				eyeOffIcon.style.display = showing ? 'none' : 'block';
+				btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+			});
+		});
+
+		var oldPwInput = document.getElementById('cpOldPassword');
+		var newPwInput = document.getElementById('cpNewPassword');
+		var confirmPwInput = document.getElementById('cpConfirmPassword');
+		var submitBtn = document.getElementById('cpSubmitBtn');
+		var reqList = document.getElementById('pwRequirements');
+		var matchHint = document.getElementById('pwMatchHint');
+		var formError = document.getElementById('cpFormError');
+
+		function checkRequirements(pw) {
+			return {
+				length: pw.length >= 8,
+				upper: /[A-Z]/.test(pw),
+				lower: /[a-z]/.test(pw),
+				number: /[0-9]/.test(pw)
+			};
+		}
+
+		function updateValidationState() {
+			var pw = newPwInput.value;
+			var confirm = confirmPwInput.value;
+			var results = checkRequirements(pw);
+			var allPassed = true;
+
+			reqList.querySelectorAll('li').forEach(function (li) {
+				var rule = li.getAttribute('data-rule');
+				var passed = !!results[rule];
+				li.classList.toggle('pw-ok', passed);
+				if (!passed) allPassed = false;
+			});
+
+			var matches = confirm.length > 0 && pw === confirm;
+			if (confirm.length === 0) {
+				matchHint.style.display = 'none';
+			} else {
+				matchHint.style.display = 'block';
+				matchHint.textContent = matches ? 'Passwords match.' : 'Passwords do not match.';
+				matchHint.style.color = matches ? 'var(--green)' : 'var(--red)';
+			}
+
+			var oldFilled = oldPwInput.value.length > 0;
+			submitBtn.disabled = !(allPassed && matches && oldFilled);
+			formError.style.display = 'none';
+			return allPassed && matches && oldFilled;
+		}
+
+		[oldPwInput, newPwInput, confirmPwInput].forEach(function (input) {
+			input.addEventListener('input', updateValidationState);
+		});
+
+		// Reset the form whenever the modal is opened
+		document.querySelectorAll('[data-open-modal="changePasswordModal"]').forEach(function (btn) {
+			btn.addEventListener('click', function () {
+				cpForm.reset();
+				reqList.querySelectorAll('li').forEach(function (li) { li.classList.remove('pw-ok'); });
+				matchHint.style.display = 'none';
+				formError.style.display = 'none';
+				submitBtn.disabled = true;
+				document.querySelectorAll('[data-toggle-password]').forEach(function (toggleBtn) {
+					var input = document.getElementById(toggleBtn.getAttribute('data-toggle-password'));
+					input.type = 'password';
+					toggleBtn.querySelector('.icon-eye').style.display = 'block';
+					toggleBtn.querySelector('.icon-eye-off').style.display = 'none';
+					toggleBtn.setAttribute('aria-label', 'Show password');
+				});
+			});
+		});
+
+		cpForm.addEventListener('submit', function (e) {
+			e.preventDefault();
+			if (!updateValidationState()) return;
+
+			submitBtn.disabled = true;
+			submitBtn.textContent = 'Updating...';
+			formError.style.display = 'none';
+
+			var payload = new URLSearchParams({
+				old_password: oldPwInput.value,
+				new_password: newPwInput.value,
+				confirm_password: confirmPwInput.value
+			});
+
+			fetch('change_password.php', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: payload.toString()
+			})
+				.then(function (res) { return res.json(); })
+				.then(function (data) {
+					if (data.success) {
+						closeModal('changePasswordModal');
+						showToast(data.message || 'Password updated successfully.');
+					} else {
+						formError.textContent = data.message || 'Something went wrong. Please try again.';
+						formError.style.display = 'block';
+					}
+				})
+				.catch(function () {
+					formError.textContent = 'Could not reach the server. Please try again.';
+					formError.style.display = 'block';
+				})
+				.finally(function () {
+					submitBtn.disabled = false;
+					submitBtn.textContent = 'Update Password';
+					updateValidationState();
+				});
+		});
 	}
 });

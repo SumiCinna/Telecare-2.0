@@ -1,6 +1,6 @@
 <?php
 require_once 'includes/auth.php';
-
+// doctor/patient-records.php
 $patient_id = (int)($_GET['patient_id'] ?? 0);
 
 $stmt = $conn->prepare("
@@ -59,8 +59,7 @@ while($row=$records->fetch_assoc()){
 }
 
 $sendableAppointments = array_values(array_filter($historyRows, function($row) {
-    return !empty($row['completed_at'])
-        && strtotime($row['completed_at']) >= (time() - 3600);
+    return !empty($row['completed_at']) || ($row['status'] ?? '') === 'Completed';
 }));
 
 function ageFromDob($dob){
@@ -676,16 +675,15 @@ function documentType($type){
             <label class="modal-label" style="margin-top:14px;">Document type</label>
 
             <div class="modal-doctype-grid">
-                <button type="button" class="doctype-btn" onclick="sendDocument('prescription')">💊 Prescription</button>
-                <button type="button" class="doctype-btn" onclick="sendDocument('lab_request')">🧪 Lab Request</button>
-                <button type="button" class="doctype-btn" onclick="sendDocument('med_cert')">📄 Medical Certificate</button>
+                <button type="button" class="doctype-btn" onclick="sendDocument('prescription')"> Prescription</button>
+                <button type="button" class="doctype-btn" onclick="sendDocument('lab_request')">Lab Request</button>
+                <button type="button" class="doctype-btn" onclick="sendDocument('med_cert')">Medical Certificate</button>
             </div>
 
         <?php else: ?>
 
-            <p class="modal-hint">
-                Documents can only be sent within 1 hour after a teleconsultation is completed.
-                There's no eligible consultation for this patient right now.
+                        <p class="modal-hint">
+                No completed consultation found for this patient yet. Documents can be sent once a teleconsultation is completed.
             </p>
 
         <?php endif; ?>

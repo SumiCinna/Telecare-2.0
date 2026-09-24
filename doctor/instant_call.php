@@ -8,12 +8,13 @@ $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 if ($action === 'list') {
     $search = trim($_GET['search'] ?? '');
-    $sql = "SELECT DISTINCT p.id, p.full_name, p.profile_photo
-            FROM appointments a
-            JOIN patients p ON p.id = a.patient_id
-            WHERE a.doctor_id = ?";
-    $params = [$doctor_id];
-    $types = 'i';
+    // Pull from the full patients table so the doctor can instant-call
+    // any patient in the system, not just ones they've had appointments with.
+    $sql = "SELECT p.id, p.full_name, p.profile_photo
+            FROM patients p
+            WHERE 1=1";
+    $params = [];
+    $types = '';
     if ($search !== '') {
         $sql .= " AND p.full_name LIKE ?";
         $params[] = "%$search%";
@@ -21,7 +22,9 @@ if ($action === 'list') {
     }
     $sql .= " ORDER BY p.full_name LIMIT 25";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param($types, ...$params);
+    if ($types !== '') {
+        $stmt->bind_param($types, ...$params);
+    }
     $stmt->execute();
     $res = $stmt->get_result();
     $patients = [];
@@ -45,13 +48,13 @@ if ($action === 'start' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Confirm this doctor actually has a relationship with this patient
-    $check = $conn->prepare("SELECT id FROM appointments WHERE doctor_id = ? AND patient_id = ? LIMIT 1");
-    $check->bind_param("ii", $doctor_id, $patient_id);
+    // Confirm the patient exists (doctor no longer needs prior appointment history)
+    $check = $conn->prepare("SELECT id FROM patients WHERE id = ? LIMIT 1");
+    $check->bind_param("i", $patient_id);
     $check->execute();
     if (!$check->get_result()->fetch_assoc()) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'error' => 'Not one of your patients']);
+        http_response_code(404);
+        echo json_encode(['success' => false, 'error' => 'Patient not found']);
         exit;
     }
 

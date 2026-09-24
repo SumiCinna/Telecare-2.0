@@ -7,10 +7,7 @@
 <aside class="sidebar">
   <div class="sb-logo">
     <div class="sb-logo-mark" aria-hidden="true">
-      <svg viewBox="0 0 32 32" fill="none">
-        <rect x="1" y="1" width="30" height="30" rx="9" fill="#fff"/>
-        <path d="M16 8v16M8 16h16" stroke="var(--primary)" stroke-width="3.4" stroke-linecap="round"/>
-      </svg>
+      <img src="/telecarelogo.jpg" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;display:block;"/>
     </div>
     <div class="sb-logo-text">
       <div class="sb-logo-title">TELE<b>CARE</b></div>

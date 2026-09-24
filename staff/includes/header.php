@@ -9,7 +9,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title><?= ucfirst($active_page) ?> — TELE-CARE</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="includes/style.css"/>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="icon" type="image/jpeg" href="/telecarelogo.jpg">
+<link rel="shortcut icon" type="image/jpeg" href="/telecarelogo.jpg">
 </head>
 <body>
 

@@ -3,14 +3,17 @@ $active_nav = $active_nav ?? '';
 ?>
 <style>
 :root{--sidebar-width:240px}
-@media(min-width:768px){.page{margin-left:var(--sidebar-width)}.sidebar-nav{position:fixed;inset:0 auto 0 0;width:var(--sidebar-width);background:var(--surface,#fff);border-right:1px solid var(--border-color,#e5e7eb);z-index:100;padding:22px 0}.logo-section{padding:0 18px 22px;border-bottom:1px solid var(--border-color,#e5e7eb);margin-bottom:16px}.logo-section a{font-size:1.15rem;font-weight:800;color:var(--primary,#c1121f);text-decoration:none;letter-spacing:.03em}.nav-items-container{display:grid;gap:4px}.nav-item{display:flex;align-items:center;gap:12px;padding:13px 18px;border-left:3px solid transparent;color:var(--neutral-600,#667085);font-size:.84rem;font-weight:600;text-decoration:none}.nav-item svg{width:19px;height:19px;stroke:currentColor}.nav-item:hover{background:var(--neutral-50,#f8fafc);color:var(--primary,#c1121f)}.nav-item.active{background:var(--primary-soft,#fff1f2);border-left-color:var(--primary,#c1121f);color:var(--primary,#c1121f)}}
+@media(min-width:768px){.page{margin-left:var(--sidebar-width)}.sidebar-nav{position:fixed;inset:0 auto 0 0;width:var(--sidebar-width);background:var(--surface,#fff);border-right:1px solid var(--border-color,#e5e7eb);z-index:100;padding:22px 0}.logo-section{padding:0 18px 22px;border-bottom:1px solid var(--border-color,#e5e7eb);margin-bottom:16px}.logo-section a{display:flex;align-items:center;gap:10px;font-size:1.15rem;font-weight:800;color:var(--primary,#c1121f);text-decoration:none;letter-spacing:.03em}.logo-section img{width:36px;height:36px;object-fit:contain;border-radius:8px;flex-shrink:0}.nav-items-container{display:grid;gap:4px}.nav-item{display:flex;align-items:center;gap:12px;padding:13px 18px;border-left:3px solid transparent;color:var(--neutral-600,#667085);font-size:.84rem;font-weight:600;text-decoration:none}.nav-item svg{width:19px;height:19px;stroke:currentColor}.nav-item:hover{background:var(--neutral-50,#f8fafc);color:var(--primary,#c1121f)}.nav-item.active{background:var(--primary-soft,#fff1f2);border-left-color:var(--primary,#c1121f);color:var(--primary,#c1121f)}}
 @media(max-width:767px){.page{margin-left:0;padding-bottom:82px!important}.sidebar-nav{position:fixed;inset:auto 0 0 0;background:#fff;border-top:1px solid var(--border-color,#e5e7eb);z-index:100}.logo-section{display:none}.nav-items-container{display:grid;grid-template-columns:repeat(6,1fr)}.nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:66px;color:var(--neutral-500,#667085);font-size:.62rem;font-weight:700;text-decoration:none}.nav-item svg{width:21px;height:21px;stroke:currentColor}.nav-item.active{color:var(--primary,#c1121f)}}
 </style>
 
 <nav class="sidebar-nav">
 
   <div class="logo-section">
-    <a href="dashboard.php">TELE-CARE</a>
+    <a href="dashboard.php">
+      <img src="/telecarelogo.jpg" alt="TELE-CARE"/>
+      <span>TELE-CARE</span>
+    </a>
   </div>
 
   <div class="nav-items-container">

@@ -3,29 +3,77 @@
 require_once 'includes/auth.php';
 require_once 'includes/functions.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['appt_id'])) {
-    $aid    = (int)$_POST['appt_id'];
-    $action = $_POST['action'];
-    $notes  = trim($_POST['action_notes'] ?? '');
-    $map    = ['approve' => 'Confirmed', 'reject' => 'Cancelled'];
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
-    if (isset($map[$action])) {
-        $chk = $conn->prepare("SELECT status FROM appointments WHERE id=?");
-        $chk->bind_param("i", $aid);
-        $chk->execute();
-        $cur = $chk->get_result()->fetch_assoc();
-
-        if (!$cur || $cur['status'] !== 'DoctorApproved') {
-            $_SESSION['toast_error'] = "Cannot act on this appointment — waiting for doctor's acceptance first.";
-        } else {
-            $new_status = $map[$action];
-            $conn->query("UPDATE appointments SET status='$new_status' WHERE id=$aid");
-            logAction($conn, $aid, $staff_id, ucfirst($action) . 'd', $notes);
-            $_SESSION['toast'] = "Appointment " . $new_status . " successfully.";
-        }
+if (!function_exists('fmt12Time')) {
+    function fmt12Time(string $t): string {
+        [$h, $m] = explode(':', $t);
+        $h = (int)$h;
+        $ap = $h >= 12 ? 'PM' : 'AM';
+        $hr = $h % 12 ?: 12;
+        return $hr . ':' . str_pad((string)$m, 2, '0', STR_PAD_LEFT) . ' ' . $ap;
     }
-    header('Location: dashboard.php');
-    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+
+    if ($action === 'approve_schedule_request') {
+        $reqId = (int)($_POST['request_id'] ?? 0);
+        $rstmt = $conn->prepare("SELECT * FROM doctor_schedule_requests WHERE id=? AND status='Pending'");
+        $rstmt->bind_param('i', $reqId);
+        $rstmt->execute();
+        $reqRow = $rstmt->get_result()->fetch_assoc();
+        $rstmt->close();
+
+        if ($reqRow) {
+            $slots = json_decode($reqRow['slots_json'], true) ?: [];
+            try {
+                $conn->begin_transaction();
+
+                $del = $conn->prepare("DELETE FROM doctor_schedules WHERE doctor_id=?");
+                $del->bind_param('i', $reqRow['doctor_id']);
+                $del->execute();
+
+                if ($slots) {
+                    $ins = $conn->prepare("INSERT INTO doctor_schedules (doctor_id, day_of_week, start_time, end_time) VALUES (?, ?, ?, ?)");
+                    foreach ($slots as $slot) {
+                        $start = $slot['start'] . ':00';
+                        $end   = $slot['end'] . ':00';
+                        $ins->bind_param('isss', $reqRow['doctor_id'], $slot['day'], $start, $end);
+                        $ins->execute();
+                    }
+                }
+
+                $upd = $conn->prepare("UPDATE doctor_schedule_requests SET status='Approved', reviewed_at=NOW(), reviewed_by=?, doctor_seen=0 WHERE id=?");
+                $upd->bind_param('ii', $staff_id, $reqId);
+                $upd->execute();
+
+                $conn->commit();
+                $_SESSION['toast'] = 'Schedule change approved and applied.';
+            } catch (Throwable $e) {
+                $conn->rollback();
+                $_SESSION['toast_error'] = 'Failed to apply schedule change. Please try again.';
+            }
+        } else {
+            $_SESSION['toast_error'] = 'This request is no longer pending.';
+        }
+
+        header('Location: dashboard.php');
+        exit;
+    }
+
+    if ($action === 'reject_schedule_request') {
+        $reqId = (int)($_POST['request_id'] ?? 0);
+        $note  = trim((string)($_POST['staff_note'] ?? ''));
+        $upd = $conn->prepare("UPDATE doctor_schedule_requests SET status='Rejected', reviewed_at=NOW(), reviewed_by=?, staff_note=?, doctor_seen=0 WHERE id=? AND status='Pending'");
+        $upd->bind_param('isi', $staff_id, $note, $reqId);
+        $upd->execute();
+        $_SESSION['toast'] = $upd->affected_rows ? 'Schedule change rejected.' : 'Nothing to reject.';
+        header('Location: dashboard.php');
+        exit;
+    }
 }
 
 $toast       = $_SESSION['toast']       ?? null;
@@ -45,25 +93,27 @@ $today_appts = $conn->query("
     ORDER BY a.appointment_time ASC
 ");
 
-$pending_appts = $conn->query("
-    SELECT a.*, p.full_name AS patient_name,
-           d.full_name AS doctor_name
-    FROM appointments a
-    JOIN patients p ON p.id = a.patient_id
-    JOIN doctors  d ON d.id = a.doctor_id
-    WHERE a.status = 'DoctorApproved'
-    ORDER BY a.appointment_date ASC, a.appointment_time ASC
+$pendingScheduleRequests = [];
+$psrRows = $conn->query("
+    SELECT r.id, r.doctor_id, r.slots_json, r.submitted_at, d.full_name AS doctor_name
+    FROM doctor_schedule_requests r
+    JOIN doctors d ON d.id = r.doctor_id
+    WHERE r.status = 'Pending'
+    ORDER BY r.submitted_at ASC
 ");
+if ($psrRows) {
+    while ($row = $psrRows->fetch_assoc()) {
+        $row['slots'] = json_decode($row['slots_json'], true) ?: [];
+        $pendingScheduleRequests[] = $row;
+    }
+}
 
-$stat_today           = $today_appts   ? $today_appts->num_rows   : 0;
-$stat_doctor_approved = $pending_appts ? $pending_appts->num_rows : 0;
-$stat_patients        = $conn->query("SELECT COUNT(*) c FROM patients")->fetch_assoc()['c'];
-$stat_doctors         = $conn->query("SELECT COUNT(*) c FROM doctors WHERE status='active'")->fetch_assoc()['c'];
-$stat_pending         = (int)$conn->query("SELECT COUNT(*) c FROM appointments WHERE status='Pending'")->fetch_assoc()['c'];
+$stat_today            = $today_appts ? $today_appts->num_rows : 0;
+$stat_schedule_pending = count($pendingScheduleRequests);
+$stat_patients         = $conn->query("SELECT COUNT(*) c FROM patients")->fetch_assoc()['c'];
+$stat_doctors          = $conn->query("SELECT COUNT(*) c FROM doctors WHERE status='active'")->fetch_assoc()['c'];
+$stat_pending          = (int)$conn->query("SELECT COUNT(*) c FROM appointments WHERE status='Pending'")->fetch_assoc()['c'];
 
-/* ══════════════════════════════════════════════
-   Revenue = Paid consultation fees + POS sales
-   ══════════════════════════════════════════════ */
 $result = $conn->query("
     SELECT COALESCE(SUM(d.consultation_fee), 0) AS total
     FROM appointments a
@@ -113,7 +163,6 @@ if ($range === 'week') {
   $bucket_key_format = 'Y-m';
 }
 
-// Consultation fees per bucket
 $daily_raw = $conn->query("
   SELECT {$bucket_expr} AS bucket,
        COALESCE(SUM(d.consultation_fee), 0) AS total
@@ -126,7 +175,6 @@ $daily_raw = $conn->query("
   ORDER BY bucket ASC
 ");
 
-// POS sales per bucket (same range, keyed off created_at instead of appointment_date)
 $pos_bucket_expr = $range === 'year' ? "DATE_FORMAT(created_at, '%Y-%m')" : "DATE(created_at)";
 $pos_daily_raw = $conn->query("
   SELECT {$pos_bucket_expr} AS bucket,
@@ -199,9 +247,6 @@ if ($status_counts_raw) {
 $donut_labels = array_keys($status_map);
 $donut_values = array_values($status_map);
 
-/* ══════════════════════════════════════════════
-   Recent POS sales (for the dashboard panel)
-   ══════════════════════════════════════════════ */
 $recent_pos_sales = [];
 $rps = $conn->query("
     SELECT s.id, s.patient_name, s.total_amount, s.created_at,
@@ -234,8 +279,8 @@ require_once 'includes/header.php';
     <div class="stat-lbl">Today's Appointments</div>
   </div>
   <div class="stat-card">
-    <div class="stat-num" style="color:#d97706"><?= $stat_doctor_approved ?></div>
-    <div class="stat-lbl">Awaiting Your Confirmation</div>
+    <div class="stat-num" style="color:#d97706"><?= $stat_schedule_pending ?></div>
+    <div class="stat-lbl">Schedule Change Requests</div>
   </div>
   <div class="stat-card">
     <div class="stat-num" style="color:var(--green)"><?= $stat_patients ?></div>
@@ -321,39 +366,75 @@ require_once 'includes/header.php';
 
   <div class="card">
     <div class="sec-head" style="margin-bottom:.8rem">
-      <h2 style="font-size:1rem">Awaiting Your Confirmation</h2>
-      <?php if ($stat_doctor_approved > 0): ?>
-        <span class="badge bg-blue"><?= $stat_doctor_approved ?></span>
+      <h2 style="font-size:1rem">Schedule Change Requests</h2>
+      <?php if ($stat_schedule_pending > 0): ?>
+        <span class="badge bg-blue"><?= $stat_schedule_pending ?></span>
       <?php endif ?>
     </div>
     <div style="font-size:0.74rem;color:#3b82f6;font-weight:600;margin-bottom:0.75rem;">
-      Doctor has accepted these — confirm to notify the patient to pay.
+      Doctors are requesting weekly schedule changes — approve to apply them immediately.
     </div>
-    <?php
-    if ($pending_appts && $pending_appts->num_rows > 0):
-      $pending_appts->data_seek(0);
-      while ($a = $pending_appts->fetch_assoc()):
-    ?>
-    <div class="queue-item">
-      <div style="flex:1">
-        <div style="font-weight:700;font-size:.87rem"><?= htmlspecialchars($a['patient_name']) ?></div>
-        <div style="font-size:.74rem;color:var(--muted)">
-          <?= date('M j', strtotime($a['appointment_date'])) ?>
-          <?= date('g:i A', strtotime($a['appointment_time'])) ?>
-          · Dr. <?= htmlspecialchars($a['doctor_name']) ?>
+    <?php if (!empty($pendingScheduleRequests)): ?>
+      <div style="display:flex;flex-direction:column;gap:.7rem;max-height:340px;overflow-y:auto;">
+        <?php foreach ($pendingScheduleRequests as $r): ?>
+        <div style="padding:.75rem;border-radius:10px;border:1px solid #fed7aa;background:#fff7ed;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.5rem;">
+            <div>
+              <div style="font-weight:700;font-size:.87rem;">Dr. <?= htmlspecialchars($r['doctor_name']) ?></div>
+              <div style="font-size:.72rem;color:var(--muted);">Submitted <?= date('M j, Y g:i A', strtotime($r['submitted_at'])) ?></div>
+            </div>
+            <a href="doctors.php?doctor_id=<?= (int)$r['doctor_id'] ?>" style="font-size:.7rem;font-weight:700;color:var(--blue);text-decoration:none;white-space:nowrap;">View →</a>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:.3rem;margin-bottom:.65rem;">
+            <?php if (empty($r['slots'])): ?>
+              <div style="font-size:.76rem;color:#c2410c;">Requested to clear entire weekly schedule.</div>
+            <?php else: foreach ($r['slots'] as $slot): ?>
+              <div style="display:flex;justify-content:space-between;padding:.35rem .55rem;border-radius:7px;background:#fff;border:1px solid #fed7aa;font-size:.76rem;">
+                <span style="font-weight:700;"><?= htmlspecialchars($slot['day']) ?></span>
+                <span style="color:#c2410c;font-weight:600;"><?= fmt12Time($slot['start'] . ':00') ?> – <?= fmt12Time($slot['end'] . ':00') ?></span>
+              </div>
+            <?php endforeach; endif; ?>
+          </div>
+
+          <div style="display:flex;gap:.4rem;">
+            <form method="POST" onsubmit="return confirm('Approve this schedule change? It will replace the doctor\'s current live schedule immediately.');">
+              <input type="hidden" name="action" value="approve_schedule_request">
+              <input type="hidden" name="request_id" value="<?= (int)$r['id'] ?>">
+              <button type="submit" class="btn-green btn-sm" style="font-weight:800;display:inline-flex;align-items:center;gap:4px;">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Approve &amp; Apply
+              </button>
+            </form>
+            <button type="button" class="btn-red btn-sm" onclick="openModal('modal-reject-<?= (int)$r['id'] ?>')">Reject</button>
+          </div>
         </div>
+        <?php endforeach; ?>
       </div>
-      <div style="display:flex;gap:.4rem">
-        <button class="btn-green btn-sm" style="font-weight:800;display:inline-flex;align-items:center;gap:4px;" onclick="quickAction(<?= $a['id'] ?>, 'approve')"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Confirm</button>
-        <button class="btn-red   btn-sm" onclick="quickAction(<?= $a['id'] ?>, 'reject')">Reject</button>
-      </div>
-    </div>
-    <?php endwhile; else: ?>
-    <div class="empty-row">All caught up! No appointments awaiting confirmation.</div>
+    <?php else: ?>
+    <div class="empty-row">All caught up! No schedule change requests pending.</div>
     <?php endif ?>
   </div>
 
 </div>
+
+<?php foreach ($pendingScheduleRequests as $r): ?>
+<div class="modal-overlay" id="modal-reject-<?= (int)$r['id'] ?>">
+  <div class="modal">
+    <h3 style="margin-bottom:.6rem;">Reject Schedule Change</h3>
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:.7rem;">Dr. <?= htmlspecialchars($r['doctor_name']) ?></div>
+    <form method="POST">
+      <input type="hidden" name="action" value="reject_schedule_request">
+      <input type="hidden" name="request_id" value="<?= (int)$r['id'] ?>">
+      <label style="display:block;font-size:.72rem;font-weight:700;margin-bottom:.35rem;">Reason (optional, shown to doctor)</label>
+      <textarea name="staff_note" class="f-input" rows="3" style="width:100%;margin-bottom:.75rem;" placeholder="e.g. Conflicts with clinic hours"></textarea>
+      <div style="display:flex;gap:.5rem;">
+        <button type="submit" class="btn-primary btn-sm">Confirm Reject</button>
+        <button type="button" class="btn-light btn-sm" onclick="closeModal('modal-reject-<?= (int)$r['id'] ?>')">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+<?php endforeach; ?>
 
 <div class="card">
   <div class="sec-head" style="margin-bottom:.8rem">
@@ -390,21 +471,8 @@ require_once 'includes/header.php';
   <?php endif; ?>
 </div>
 
-<form method="POST" id="quick-form" style="display:none">
-  <input type="hidden" name="action"       id="qf-action"/>
-  <input type="hidden" name="appt_id"      id="qf-appt-id"/>
-  <input type="hidden" name="action_notes" id="qf-notes"/>
-</form>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-function quickAction(id, action) {
-  document.getElementById('qf-appt-id').value = id;
-  document.getElementById('qf-action').value  = action;
-  document.getElementById('qf-notes').value   = '';
-  document.getElementById('quick-form').submit();
-}
-
 const dailyLabels = <?= json_encode($chart_labels) ?>;
 const dailyValues = <?= json_encode($chart_values) ?>;
 

@@ -15,13 +15,7 @@ $upcoming = $conn->query("
     ORDER BY a.appointment_date ASC, a.appointment_time ASC LIMIT 3
 ");
 
-// ── Recommended doctors (active, available, random 3) ──
-$recommended = $conn->query("
-    SELECT * FROM doctors
-    WHERE status = 'active' AND is_available = 1
-    ORDER BY RAND()
-    LIMIT 3
-");
+
 
 $page_title = 'Home — TELE-CARE';
 $active_nav = 'home';
@@ -447,61 +441,7 @@ $firstName = $parts[0];
     </div>
   </div>
 
-  <!-- ══ RECOMMENDED DOCTORS ══ -->
-  <div class="db-doctors">
-    <div class="db-card teal-card">
-      <div class="db-card-head">
-        <div class="db-card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          Recommended Doctors
-        </div>
-        <a href="router.php?page=visits" class="db-card-link">
-          Book now
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-      </div>
-      <div class="db-card-body">
-        <?php if ($recommended && $recommended->num_rows > 0): ?>
-          <?php while ($doc = $recommended->fetch_assoc()): ?>
-          <div class="doc-item">
-            <div class="doc-avatar">
-              <?php if (!empty($doc['profile_photo'])): ?>
-                <img src="../<?= htmlspecialchars($doc['profile_photo']) ?>" alt=""/>
-              <?php else: ?>
-                <?= strtoupper(substr($doc['full_name'], 0, 2)) ?>
-              <?php endif; ?>
-            </div>
-            <div class="doc-info">
-              <div class="doc-name">Dr. <?= htmlspecialchars($doc['full_name']) ?></div>
-              <div class="doc-spec"><?= htmlspecialchars($doc['specialty'] ?? 'General Practitioner') ?></div>
-              <?php if (!empty($doc['subspecialty'])): ?>
-              <div class="doc-sub"><?= htmlspecialchars($doc['subspecialty']) ?></div>
-              <?php endif; ?>
-              <?php if (!empty($doc['clinic_name'])): ?>
-              <div class="doc-clinic">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                <?= htmlspecialchars($doc['clinic_name']) ?>
-              </div>
-              <?php endif; ?>
-            </div>
-            <div class="doc-right">
-              <?php if (!empty($doc['consultation_fee']) && $doc['consultation_fee'] > 0): ?>
-              <div class="doc-fee">&#8369;<?= number_format($doc['consultation_fee'], 0) ?></div>
-              <?php endif; ?>
-              <span class="doc-avail">Available</span>
-            </div>
-          </div>
-          <?php endwhile; ?>
-        <?php else: ?>
-        <div class="empty-state">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <p>No doctors available right now.</p>
-        </div>
-        <?php endif; ?>
-      </div>
-    </div>
-  </div>
-
+  
 </div><!-- /db-grid -->
 </div><!-- /page -->
 

@@ -147,7 +147,20 @@ while ($i < count($lines)) {
 
         $pdf->SetFont('Arial', '', 9);
         $pdf->SetTextColor(60, 60, 60);
-        $pdf->MultiCell(0, 5, enc_save($body), 0, 'L');
+        foreach (explode("\n", $body) as $bl) {
+        $bl = trim($bl);
+        if ($bl === '') { $pdf->Ln(5); continue; }
+        if (preg_match('/^Filipino:/i', $bl)) {
+            $pdf->SetFont('Arial', 'I', 9);
+            $pdf->SetTextColor(30, 90, 150);
+            $pdf->SetX(25);
+            $pdf->MultiCell(0, 5, enc_save($bl), 0, 'L');
+        } else {
+            $pdf->SetFont('Arial', '', 9);
+            $pdf->SetTextColor(60, 60, 60);
+            $pdf->MultiCell(0, 5, enc_save($bl), 0, 'L');
+        }
+    }
         $pdf->Ln(1);
     } else {
         $pdf->SetFont('Arial', '', 9);

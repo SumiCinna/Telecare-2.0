@@ -34,10 +34,10 @@ $nav_pages = [
 
 .sidebar-brand{ display:flex; align-items:center; gap:.65rem; padding:0 .3rem; margin-bottom:2rem; }
 .sidebar-brand-icon{
-  width:32px; height:32px; border-radius:6px; background:var(--tc-red); color:#fff;
-  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  width:36px; height:36px; border-radius:8px; overflow:hidden; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
 }
-.sidebar-brand-icon svg{ width:17px; height:17px; }
+.sidebar-brand-icon img{ width:100%; height:100%; object-fit:contain; display:block; }
 .sidebar-brand-text{ overflow:hidden; white-space:nowrap; }
 .sidebar-brand-name{ font-weight:800; font-size:0.86rem; color:var(--tc-ink); line-height:1.15; letter-spacing:0; }
 .sidebar-brand-sub{ font-size:0.6rem; color:var(--tc-muted); margin-top:0.1rem; }
@@ -113,7 +113,7 @@ body.sidebar-collapsed{ padding-left:var(--tc-sidebar-w-collapsed); }
   <div class="sidebar-toggle-row">
     <div class="sidebar-brand" style="margin-bottom:0;flex:1;">
       <div class="sidebar-brand-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        <img src="/telecarelogo.jpg" alt="TELE-CARE"/>
       </div>
       <div class="sidebar-brand-text">
         <div class="sidebar-brand-name">TELE-CARE</div>

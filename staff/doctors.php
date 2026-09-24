@@ -11,6 +11,69 @@ function fmt12Time(string $t): string {
 }
 
 $active_page = 'doctors';
+
+// NOTE: adjust $staffId below to whatever variable/session key includes/auth.php
+// actually sets for the logged-in staff member (mirrors how doctor pages get $doctor_id).
+$staffId = $staff_id ?? ($_SESSION['staff_id'] ?? ($_SESSION['user_id'] ?? null));
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+
+    if ($action === 'approve_schedule_request') {
+        $reqId = (int)($_POST['request_id'] ?? 0);
+        $rstmt = $conn->prepare("SELECT * FROM doctor_schedule_requests WHERE id=? AND status='Pending'");
+        $rstmt->bind_param('i', $reqId);
+        $rstmt->execute();
+        $reqRow = $rstmt->get_result()->fetch_assoc();
+        $rstmt->close();
+
+        if ($reqRow) {
+            $slots = json_decode($reqRow['slots_json'], true) ?: [];
+            try {
+                $conn->begin_transaction();
+
+                $del = $conn->prepare("DELETE FROM doctor_schedules WHERE doctor_id=?");
+                $del->bind_param('i', $reqRow['doctor_id']);
+                $del->execute();
+
+                if ($slots) {
+                    $ins = $conn->prepare("INSERT INTO doctor_schedules (doctor_id, day_of_week, start_time, end_time) VALUES (?, ?, ?, ?)");
+                    foreach ($slots as $slot) {
+                        $start = $slot['start'] . ':00';
+                        $end = $slot['end'] . ':00';
+                        $ins->bind_param('isss', $reqRow['doctor_id'], $slot['day'], $start, $end);
+                        $ins->execute();
+                    }
+                }
+
+                $upd = $conn->prepare("UPDATE doctor_schedule_requests SET status='Approved', reviewed_at=NOW(), reviewed_by=?, doctor_seen=0 WHERE id=?");
+                $upd->bind_param('ii', $staffId, $reqId);
+                $upd->execute();
+
+                $conn->commit();
+                $_SESSION['toast'] = 'Schedule change approved and applied.';
+            } catch (Throwable $e) {
+                $conn->rollback();
+                $_SESSION['toast_error'] = 'Failed to apply schedule change. Please try again.';
+            }
+        } else {
+            $_SESSION['toast_error'] = 'This request is no longer pending.';
+        }
+
+        header('Location: doctors.php?doctor_id=' . (int)($_POST['doctor_id'] ?? 0)); exit;
+    }
+
+    if ($action === 'reject_schedule_request') {
+        $reqId = (int)($_POST['request_id'] ?? 0);
+        $note = trim((string)($_POST['staff_note'] ?? ''));
+        $upd = $conn->prepare("UPDATE doctor_schedule_requests SET status='Rejected', reviewed_at=NOW(), reviewed_by=?, staff_note=?, doctor_seen=0 WHERE id=? AND status='Pending'");
+        $upd->bind_param('isi', $staffId, $note, $reqId);
+        $upd->execute();
+        $_SESSION['toast'] = $upd->affected_rows ? 'Schedule change rejected.' : 'Nothing to reject.';
+        header('Location: doctors.php?doctor_id=' . (int)($_POST['doctor_id'] ?? 0)); exit;
+    }
+}
+
 $stat_pending = (int)$conn->query("SELECT COUNT(*) c FROM appointments WHERE status='Pending'")->fetch_assoc()['c'];
 
 $doctorRows = $conn->query("SELECT id, full_name, specialty, consultation_fee, status FROM doctors ORDER BY full_name ASC");
@@ -48,6 +111,29 @@ if ($selectedDoctor) {
     }
 }
 
+// All pending schedule requests, across every doctor, so staff never miss one
+// regardless of which doctor happens to be selected right now.
+$pendingScheduleRequests = [];
+$psrRows = $conn->query("SELECT r.id, r.doctor_id, r.slots_json, r.submitted_at, d.full_name doctor_name
+                          FROM doctor_schedule_requests r
+                          JOIN doctors d ON d.id = r.doctor_id
+                          WHERE r.status='Pending'
+                          ORDER BY r.submitted_at ASC");
+if ($psrRows) {
+    while ($row = $psrRows->fetch_assoc()) {
+        $pendingScheduleRequests[] = $row;
+    }
+}
+
+$selectedPendingRequest = null;
+foreach ($pendingScheduleRequests as $r) {
+    if ((int)$r['doctor_id'] === $selectedDoctorId) {
+        $selectedPendingRequest = $r;
+        break;
+    }
+}
+$selectedPendingSlots = $selectedPendingRequest ? json_decode($selectedPendingRequest['slots_json'], true) : [];
+
 $doctorAppointments = [];
 if ($selectedDoctor) {
     $astmt = $conn->prepare("SELECT a.id, a.appointment_date, TIME_FORMAT(a.appointment_time,'%H:%i') appointment_time,
@@ -74,6 +160,22 @@ require_once 'includes/header.php';
 <div class="sec-head">
   <h2>Doctor Fees &amp; Schedule</h2>
 </div>
+
+<?php if (!empty($pendingScheduleRequests)): ?>
+<div class="card" style="margin-bottom:1rem;border-left:4px solid #B54708;background:#fff7ed;">
+  <div style="font-weight:700;font-size:.85rem;color:#B54708;margin-bottom:.6rem;">
+    <?= count($pendingScheduleRequests) ?> schedule change request<?= count($pendingScheduleRequests) === 1 ? '' : 's' ?> awaiting your review
+  </div>
+  <div style="display:flex;flex-direction:column;gap:.35rem;">
+    <?php foreach ($pendingScheduleRequests as $r): ?>
+      <a href="?doctor_id=<?= (int)$r['doctor_id'] ?>" style="display:flex;justify-content:space-between;font-size:.78rem;color:#92400e;text-decoration:none;padding:.45rem .6rem;border-radius:7px;background:<?= (int)$r['doctor_id'] === $selectedDoctorId ? '#fed7aa' : '#fff' ?>;border:1px solid #fed7aa;">
+        <span style="font-weight:700;">Dr. <?= htmlspecialchars($r['doctor_name']) ?></span>
+        <span>Submitted <?= date('M d, Y g:i A', strtotime($r['submitted_at'])) ?> →</span>
+      </a>
+    <?php endforeach; ?>
+  </div>
+</div>
+<?php endif; ?>
 
 <div class="card" style="margin-bottom:1rem;">
   <div style="font-size:.74rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem;">Select Doctor</div>
@@ -117,6 +219,55 @@ require_once 'includes/header.php';
       </div>
     </div>
 
+    <?php if ($selectedPendingRequest): ?>
+    <div style="margin-bottom:1rem;padding:.85rem;border-radius:10px;border:1px solid #fed7aa;background:#fff7ed;">
+      <div style="font-weight:700;font-size:.8rem;color:#c2410c;margin-bottom:.6rem;">
+        Pending schedule change — submitted <?= date('M d, Y g:i A', strtotime($selectedPendingRequest['submitted_at'])) ?>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:.85rem;">
+        <?php if (empty($selectedPendingSlots)): ?>
+          <div class="empty-row">Doctor requested to clear their entire weekly schedule.</div>
+        <?php else: foreach ($selectedPendingSlots as $slot): ?>
+          <div style="display:flex;justify-content:space-between;padding:.5rem .65rem;border-radius:8px;background:#fff;border:1px solid #fed7aa;font-size:.78rem;">
+            <span style="font-weight:700;"><?= htmlspecialchars($slot['day']) ?></span>
+            <span style="color:#c2410c;font-weight:600;"><?= fmt12Time($slot['start'] . ':00') ?> – <?= fmt12Time($slot['end'] . ':00') ?></span>
+          </div>
+        <?php endforeach; endif; ?>
+      </div>
+
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+        <form method="POST" onsubmit="return confirm('Approve this schedule change? It will replace the doctor\'s current live schedule immediately.');">
+          <input type="hidden" name="action" value="approve_schedule_request">
+          <input type="hidden" name="request_id" value="<?= (int)$selectedPendingRequest['id'] ?>">
+          <input type="hidden" name="doctor_id" value="<?= (int)$selectedDoctorId ?>">
+          <button type="submit" class="btn-primary btn-sm">Approve &amp; Apply</button>
+        </form>
+        <button type="button" class="btn-light btn-sm" onclick="openModal('modal-reject-<?= (int)$selectedPendingRequest['id'] ?>')">Reject</button>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-reject-<?= (int)$selectedPendingRequest['id'] ?>">
+      <div class="modal">
+        <h3 style="margin-bottom:.6rem;">Reject Schedule Change</h3>
+        <form method="POST">
+          <input type="hidden" name="action" value="reject_schedule_request">
+          <input type="hidden" name="request_id" value="<?= (int)$selectedPendingRequest['id'] ?>">
+          <input type="hidden" name="doctor_id" value="<?= (int)$selectedDoctorId ?>">
+          <label style="display:block;font-size:.72rem;font-weight:700;margin-bottom:.35rem;">Reason (optional, shown to doctor)</label>
+          <textarea name="staff_note" class="f-input" rows="3" style="width:100%;margin-bottom:.75rem;" placeholder="e.g. Conflicts with clinic hours"></textarea>
+          <div style="display:flex;gap:.5rem;">
+            <button type="submit" class="btn-primary btn-sm">Confirm Reject</button>
+            <button type="button" class="btn-light btn-sm" onclick="closeModal('modal-reject-<?= (int)$selectedPendingRequest['id'] ?>')">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <?php endif; ?>
+
+    <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">
+      Currently Live
+    </div>
     <?php if (empty($schedules)): ?>
       <div class="empty-row">No schedule set yet.</div>
     <?php else: ?>
@@ -130,7 +281,7 @@ require_once 'includes/header.php';
       </div>
     <?php endif; ?>
 
-    <div style="font-size:.76rem;color:var(--muted);margin-top:1rem;">The doctor manages their own availability from their account. Changes made there appear here automatically.</div>
+    <div style="font-size:.76rem;color:var(--muted);margin-top:1rem;">The doctor requests changes from their own account; changes only take effect once you approve them here.</div>
   </div>
 </div>
 

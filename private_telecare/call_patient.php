@@ -72,8 +72,11 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
     .dot.live{background:var(--gm-green);animation:blink 2s infinite;}
     @keyframes blink{0%,100%{opacity:1}50%{opacity:0.4}}
 
-    .video-area{flex:1;min-height:0;position:relative;overflow:hidden;background:#111;}
-    .remote-tile{position:absolute;inset:0;}
+        .video-area{flex:1;min-height:0;position:relative;overflow:hidden;background:#111;
+      display:flex;gap:0.5rem;padding:0.5rem;box-sizing:border-box;}
+    .video-grid{display:flex;gap:0.5rem;width:100%;height:100%;}
+    @media(max-width:700px){.video-grid{flex-direction:column;}}
+    .remote-tile{position:relative;flex:1;min-width:0;border-radius:14px;overflow:hidden;background:#2a2b2d;}
     #remote-video{width:100%;height:100%;object-fit:cover;display:block;}
 
     .cam-off-overlay{
@@ -143,21 +146,14 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
     }
 
     /* ── Self tile: bigger + draggable ── */
-    .self-tile{
-      position:absolute;
-      bottom:0.9rem;
-      right:0.9rem;
-      width:150px;
-      height:200px;
-      border-radius:12px;
+        .self-tile{
+      position:relative;
+      flex:1;
+      min-width:0;
+      border-radius:14px;
       overflow:hidden;
       background:#2a2b2d;
-      z-index:20;
-      box-shadow:0 6px 24px rgba(0,0,0,0.75);
-      border:2px solid rgba(255,255,255,0.18);
-      cursor:grab;
-      touch-action:none;
-      user-select:none;
+      box-shadow:0 4px 18px rgba(0,0,0,0.4);
     }
     .self-tile:active{cursor:grabbing;}
     @media(max-width:600px){
@@ -185,12 +181,19 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
       font-size:0.65rem;color:var(--gm-muted);text-align:center;z-index:5;pointer-events:none;
     }
 
-    .controls{
-      height:var(--ctrl-h);min-height:var(--ctrl-h);
+        .controls{
+      height:var(--ctrl-h);
+      min-height:var(--ctrl-h);
       background:var(--gm-bg);
-      display:flex;align-items:center;justify-content:space-around;
-      flex-shrink:0;border-top:1px solid rgba(255,255,255,0.08);
-      padding:0 0.3rem;padding-bottom:env(safe-area-inset-bottom,0px);z-index:30;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:0.9rem;
+      flex-shrink:0;
+      border-top:1px solid rgba(255,255,255,0.08);
+      padding:0 0.3rem;
+      padding-bottom:env(safe-area-inset-bottom,0px);
+      z-index:30;
     }
     .ctrl-sep{width:1px;height:28px;background:rgba(255,255,255,0.1);}
     .cbtn{
@@ -333,8 +336,9 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
     <div class="tb-logo">TELE<span>-</span>CARE</div>
     <span style="font-size:0.68rem;color:var(--gm-muted);"><?= date('g:i A', $appt_ts) ?> &middot; Teleconsult</span>
   </div>
-  <div style="display:flex;align-items:center;gap:0.5rem;">
+    <div style="display:flex;align-items:center;gap:0.5rem;">
     <div class="conn-dot"><div class="dot" id="conn-dot"></div><span id="conn-lbl">Connecting...</span></div>
+    <div class="timer-pill" id="people-pill">1 Person</div>
     <div class="timer-pill" id="timer">--:--</div>
   </div>
 </div>
@@ -346,6 +350,7 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
     Note: AI  transcription and summarization accuracy may be reduced if there is significant background noise during the call.
   </div>
 
+  <div class="video-grid">
   <div class="remote-tile">
     <video id="remote-video" autoplay playsinline></video>
     <div class="cam-off-overlay" id="remote-cam-off">
@@ -395,8 +400,9 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
         <?php if ($pat_photo): ?><img src="../<?= htmlspecialchars($pat_photo) ?>" alt=""/><?php else: echo $pat_initials; endif; ?>
       </div>
     </div>
-    <div class="seg-loading" id="seg-loading">Cam</div>
+        <div class="seg-loading" id="seg-loading">Cam</div>
     <div class="self-name-tag"><?= htmlspecialchars($pat_name) ?></div>
+  </div>
   </div>
 </div>
 
@@ -538,49 +544,7 @@ const canvas = document.getElementById('local-canvas');
 const ctx    = canvas.getContext('2d');
 canvas.width = 640; canvas.height = 480;
 
-// ── Draggable self-tile ───────────────────────────────────────────────────
-(function(){
-  const tile = document.getElementById('self-tile');
-  let dragging = false, startX, startY;
 
-  function getPos() {
-    const rect   = tile.getBoundingClientRect();
-    const parent = tile.parentElement.getBoundingClientRect();
-    return { left: rect.left - parent.left, top: rect.top - parent.top };
-  }
-  function startDrag(cx, cy) {
-    dragging = true;
-    const pos = getPos();
-    tile.style.right  = 'auto';
-    tile.style.bottom = 'auto';
-    tile.style.left   = pos.left + 'px';
-    tile.style.top    = pos.top  + 'px';
-    startX = cx; startY = cy;
-  }
-
-  tile.addEventListener('mousedown', e => { startDrag(e.clientX, e.clientY); e.preventDefault(); });
-  tile.addEventListener('touchstart', e => { startDrag(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
-
-  document.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    const parent = tile.parentElement.getBoundingClientRect();
-    const newLeft = Math.max(0, Math.min(parent.width  - tile.offsetWidth,  parseFloat(tile.style.left) + e.clientX - startX));
-    const newTop  = Math.max(0, Math.min(parent.height - tile.offsetHeight, parseFloat(tile.style.top)  + e.clientY - startY));
-    tile.style.left = newLeft + 'px'; tile.style.top = newTop + 'px';
-    startX = e.clientX; startY = e.clientY;
-  });
-  document.addEventListener('touchmove', e => {
-    if (!dragging) return;
-    const parent = tile.parentElement.getBoundingClientRect();
-    const newLeft = Math.max(0, Math.min(parent.width  - tile.offsetWidth,  parseFloat(tile.style.left) + e.touches[0].clientX - startX));
-    const newTop  = Math.max(0, Math.min(parent.height - tile.offsetHeight, parseFloat(tile.style.top)  + e.touches[0].clientY - startY));
-    tile.style.left = newLeft + 'px'; tile.style.top = newTop + 'px';
-    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
-  }, { passive: true });
-
-  document.addEventListener('mouseup',  () => { dragging = false; });
-  document.addEventListener('touchend', () => { dragging = false; });
-})();
 
 // ── Noise notice auto-hide after 8 s ─────────────────────────────────────
 setTimeout(() => {
@@ -588,6 +552,19 @@ setTimeout(() => {
   if (n) { n.style.transition = 'opacity 1s'; n.style.opacity = '0'; setTimeout(() => n.remove(), 1100); }
 }, 8000);
 
+function tuneSenders() {
+  if (!pc) return;
+  pc.getSenders().forEach(s => {
+    if (!s.track || s.track.kind !== 'video') return;
+    try { s.track.contentHint = 'motion'; } catch(e) {}
+    const p = s.getParameters();
+    if (!p.encodings || !p.encodings.length) p.encodings = [{}];
+    p.encodings[0].maxBitrate = 1500000;
+    p.encodings[0].maxFramerate = 30;
+    p.degradationPreference = 'maintain-framerate';
+    s.setParameters(p).catch(() => {});
+  });
+}
 function isSafariOrIOS() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome') && !navigator.userAgent.includes('Firefox'));
@@ -604,7 +581,7 @@ async function init() {
     } catch(e) {}
   }
   try {
-    rawStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: true });
+    rawStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 30 } }, audio: true });
     document.getElementById('local-video-raw').srcObject = rawStream;
   } catch(e) {
     try {
@@ -643,8 +620,13 @@ function initSeg() {
     processedStream = canvas.captureStream(30);
     rawStream.getAudioTracks().forEach(t => processedStream.addTrack(t));
     const vid = document.getElementById('local-video-raw');
+    let segBusy = false;
     segInterval = setInterval(async () => {
-      if (vid.readyState >= 2) await selfieSegmentation.send({ image: vid });
+      if (vid.readyState < 2 || segBusy) return;
+      if (bgMode === 'none') { ctx.drawImage(vid, 0, 0, 640, 480); return; }
+      segBusy = true;
+      try { await selfieSegmentation.send({ image: vid }); } catch(e) {}
+      segBusy = false;
     }, 33);
   }).catch(() => { document.getElementById('seg-loading').style.display = 'none'; });
 }
@@ -698,7 +680,7 @@ function connectWS() {
         showToast('Call connected!');
         const now = new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
         chatMessages.push(`[${now}] System: Call connected`);
-        startRecording();
+
       };
       pc.onicecandidate = e => {
         if (e.candidate && ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type: 'ice', candidate: e.candidate })); }
@@ -716,13 +698,13 @@ function connectWS() {
         ans = new RTCSessionDescription({
           type: ans.type,
           sdp: ans.sdp.replace(/m=video (\d+) UDP\/TLS\/RTP\/SAVPF ([\d ]+)/g, (match, port, payloads) => {
-            const h264 = ['126','97','120','123'];
+            const h264 = [];
             const arr = payloads.split(' ');
             const preferred = [...h264.filter(p => arr.includes(p)), ...arr.filter(p => !h264.includes(p))];
             return `m=video ${port} UDP/TLS/RTP/SAVPF ${preferred.join(' ')}`;
           })
         });
-        await pc.setLocalDescription(ans);
+        await pc.setLocalDescription(ans); tuneSenders();
         if (ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type: 'answer', sdp: ans })); }
       } catch(e) {
         showToast('Answer failed. Waiting for retry...');
@@ -794,7 +776,17 @@ async function endCall(auto = false) {
   try { selfieSegmentation?.close(); } catch(e) {}
   try { ws?.close(); } catch(e) {}
   try { pc?.close(); } catch(e) {}
-  rawStream?.getTracks().forEach(t => t.stop());
+   rawStream?.getTracks().forEach(t => t.stop());
+
+  // Mark the appointment Completed the moment someone leaves — don't wait for the 60-min timer.
+  try {
+    await fetch('router.php?page=auto_complete_appt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `appt_id=${APPT_ID}&role=patient`
+    });
+  } catch (e) {}
+
   if (callWasConnected) {
     document.getElementById('leaving-overlay').style.display = 'flex';
     const now = new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
@@ -802,14 +794,7 @@ async function endCall(auto = false) {
     const fd = new FormData();
     fd.append('appt_id', APPT_ID); fd.append('role', ROLE);
     fd.append('chat_log', chatMessages.join('\n'));
-    if (audioChunks.length > 0) {
-      const blob = new Blob(audioChunks, { type: mediaRecorder?.mimeType || 'audio/webm' });
-      if (blob.size > 1000) {
-        const ext = (mediaRecorder?.mimeType || '').includes('mp4') ? 'mp4' :
-                    (mediaRecorder?.mimeType || '').includes('ogg') ? 'ogg' : 'webm';
-        fd.append('audio', blob, `consultation.${ext}`);
-      }
-    }
+        // Audio is recorded and uploaded by the doctor side, mixed with both voices.
     try {
       const startTime = Date.now(); const maxWait = 120000;
       const checkSummary = async () => {
@@ -821,7 +806,7 @@ else if (Date.now() - startTime > maxWait) { window.location.href = 'router.php?
           else { setTimeout(checkSummary, 2000); }
         } catch(e) { setTimeout(checkSummary, 5000); }
       };
-      await fetch('process_consultation.php_v2', { method: 'POST', body: fd });
+      await fetch('process_consultation_v2.php', { method: 'POST', body: fd });
       setTimeout(checkSummary, 2000);
     } catch(e) { setTimeout(() => { window.location.href = 'router.php?page=visits'; }, 5000); }
 } else {
@@ -831,7 +816,7 @@ else if (Date.now() - startTime > maxWait) { window.location.href = 'router.php?
 
 function autoComplete() {
   if (Date.now() / 1000 < APPT_TS) return;
-  fetch('auto_complete_appt.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `appt_id=${APPT_ID}&role=patient` }).catch(() => {});
+  fetch('router.php?page=auto_complete_appt', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `appt_id=${APPT_ID}&role=patient` }).catch(() => {});
 }
 
 function toggleMic() {
@@ -954,6 +939,8 @@ function startTimer() {
 function setConn(live, label) {
   document.getElementById('conn-dot').className = 'dot' + (live ? ' live' : '');
   document.getElementById('conn-lbl').textContent = label;
+  const pp = document.getElementById('people-pill');
+  if (pp) pp.textContent = live ? '2 People' : '1 Person';
 }
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 let tT;
