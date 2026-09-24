@@ -8,69 +8,53 @@
 logs/
 error_log
 
-   *.exe
-   *.zip
-   *.log
-   error_log
-   .ngrok.exe.old
-   uploads/
-   vendor/
-   __pycache__/
-   *.pyc
+# User-generated data (patient files, profile photos, generated PDFs, OCR)
+uploads/
 
-# IDE / Editor
+# Dependencies
+vendor/
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+
+# Binaries / archives
+*.exe
+*.exe.old
+*.zip
+
+# Dated database snapshots (contain real data)
+database/telecare(*).sql
+
+# Private keys / certificates (CA cert is needed, so it stays tracked)
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+!database/ca.pem
+
+# Payment processing
+paymongo_*.php
+
+# IDE / editor
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
+Thumbs.db
 
-# Vendor / Dependencies
-vendor/
-node_modules/
-__pycache__/
-
-# Cache
+# Cache / temp / backups
 .cache/
 *.cache
-
-# Temporary files
 *.tmp
 *.temp
 .tmp/
-
-# Backup files
 *.bak
 *.backup
-
-# Python
-*.pyc
-*.egg-info/
-dist/
-build/
-
-# OS
-Thumbs.db
-
-# Private keys / certificates
-*.pem
-*.key
-*.crt
-*.p12
-*.pfx
-
-# Payment processing
-paymongo_*.php
-
-# OCR temporary files
-uploads/ocr/*.tmp
-
-*.zip
-
-.env
-
-.env
-
-*.pem
-!database/ca.pem
