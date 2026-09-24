@@ -113,7 +113,7 @@ body.sidebar-collapsed{ padding-left:var(--tc-sidebar-w-collapsed); }
   <div class="sidebar-toggle-row">
     <div class="sidebar-brand" style="margin-bottom:0;flex:1;">
       <div class="sidebar-brand-icon">
-        <img src="/telecarelogo.jpg" alt="TELE-CARE"/>
+        <img src="/telecarelogo.png" alt="TELE-CARE"/>
       </div>
       <div class="sidebar-brand-text">
         <div class="sidebar-brand-name">TELE-CARE</div>

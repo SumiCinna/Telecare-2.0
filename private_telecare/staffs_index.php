@@ -80,8 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TELE-CARE | Internal Login</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="icon" type="image/jpeg" href="/telecarelogo.jpg">
-<link rel="shortcut icon" type="image/jpeg" href="/telecarelogo.jpg">
+  <link rel="icon" type="image/png" href="/telecarelogo.png">
+<link rel="shortcut icon" type="image/png" href="/telecarelogo.png">
   <style>
   :root {
     --primary:#B31118;

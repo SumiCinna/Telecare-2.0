@@ -164,8 +164,8 @@ if (isset($conn, $patient_id)) {
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="includes/styles.css"/>
-  <link rel="icon" type="image/jpeg" href="/telecarelogo.jpg">
-<link rel="apple-touch-icon" href="/telecarelogo.jpg">
+  <link rel="icon" type="image/png" href="/telecarelogo.png">
+<link rel="apple-touch-icon" href="/telecarelogo.png">
   <style>
     :root{
       --tc-red:#B31118; --tc-red-dark:#8a000b;

@@ -7,7 +7,7 @@
 <aside class="sidebar">
   <div class="sb-logo">
     <div class="sb-logo-mark" aria-hidden="true">
-      <img src="/telecarelogo.jpg" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;display:block;"/>
+      <img src="/telecarelogo.png" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;display:block;"/>
     </div>
     <div class="sb-logo-text">
       <div class="sb-logo-title">TELE<b>CARE</b></div>

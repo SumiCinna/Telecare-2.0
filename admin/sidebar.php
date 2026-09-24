@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // admin/sidebar.php
 
 $activeNav = $activeNav ?? '';
@@ -60,19 +60,19 @@ aside.sidebar .logout-btn svg{ flex-shrink:0; }
   var icon = document.createElement('link');
   icon.rel = 'icon';
   icon.type = 'image/jpeg';
-  icon.href = '/telecarelogo.jpg';
+  icon.href = '/telecarelogo.png';
   document.head.appendChild(icon);
 
   var shortcutIcon = document.createElement('link');
   shortcutIcon.rel = 'shortcut icon';
   shortcutIcon.type = 'image/jpeg';
-  shortcutIcon.href = '/telecarelogo.jpg';
+  shortcutIcon.href = '/telecarelogo.png';
   document.head.appendChild(shortcutIcon);
 })();
 </script>
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <div class="sidebar-logo-mark"><img src="/telecarelogo.jpg" alt="TELE-CARE"/></div>
+    <div class="sidebar-logo-mark"><img src="/telecarelogo.png" alt="TELE-CARE"/></div>
     <div>
       <div class="sidebar-logo-name">TELE-CARE</div>
       <div class="sidebar-logo-sub">Admin Portal</div>

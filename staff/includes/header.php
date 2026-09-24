@@ -10,8 +10,8 @@
   <title><?= ucfirst($active_page) ?> — TELE-CARE</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
-  <link rel="icon" type="image/jpeg" href="/telecarelogo.jpg">
-<link rel="shortcut icon" type="image/jpeg" href="/telecarelogo.jpg">
+  <link rel="icon" type="image/png" href="/telecarelogo.png">
+<link rel="shortcut icon" type="image/png" href="/telecarelogo.png">
 </head>
 <body>
 
