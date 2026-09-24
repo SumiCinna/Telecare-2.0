@@ -1,0 +1,5 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/u2njdvbgxaza/public_html/
+    - /bin/rsync -rlptv --exclude='.git' --exclude='.github' --exclude='.gitignore' --exclude='.cpanel.yml' --exclude='.env' --exclude='.env.example' --exclude='uploads/' --exclude='vendor/' --exclude='logs/' --exclude='error_log' --exclude='database/*.sql' --exclude='*.py' --exclude='__pycache__/' --exclude='Dockerfile' --exclude='Procfile' --exclude='nixpacks.toml' --exclude='runtime.txt' --exclude='requirements.txt' --exclude='ngrok.yml' --exclude='files.txt' --exclude='allfiles.txt' --exclude='htaccess' --exclude='README.md' ./ $DEPLOYPATH
