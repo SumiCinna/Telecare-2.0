@@ -43,7 +43,11 @@ if (file_exists($file)) {
 // No PDF on disk yet — fall back to plain text view of whatever summary text we have.
 $safe = nl2br(htmlspecialchars($row['consultation_summary'] ?? 'No summary content.'));
 $safe = preg_replace('/^(Filipino:.*?)(<br\s*\/?>)?\r?$/mi', '<span style="font-style:italic;color:#1e5a96;">$1</span>$2', $safe);
-echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Consultation Summary</title></head>';
+echo '<!DOCTYPE html><html><head>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2"><meta charset="UTF-8"><title>Consultation Summary</title></head>';
 echo '<body style="font-family:Arial,sans-serif;max-width:920px;margin:2rem auto;padding:0 1rem;color:#1f2937;line-height:1.65;">';
 echo '<h2 style="margin-bottom:0.6rem;color:#244441;">Consultation Summary</h2>';
 echo '<div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:1rem 1.1rem;">' . $safe . '</div>';

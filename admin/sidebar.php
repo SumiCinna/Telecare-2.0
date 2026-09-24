@@ -55,21 +55,6 @@ aside.sidebar .logout-btn{
 aside.sidebar .logout-btn:hover{ background:rgba(179,17,24,0.08); color:var(--tc-red); }
 aside.sidebar .logout-btn svg{ flex-shrink:0; }
 </style>
-<script>
-(function() {
-  var icon = document.createElement('link');
-  icon.rel = 'icon';
-  icon.type = 'image/png';
-  icon.href = '/telecarelogo.png';
-  document.head.appendChild(icon);
-
-  var shortcutIcon = document.createElement('link');
-  shortcutIcon.rel = 'shortcut icon';
-  shortcutIcon.type = 'image/png';
-  shortcutIcon.href = '/telecarelogo.png';
-  document.head.appendChild(shortcutIcon);
-})();
-</script>
 <aside class="sidebar">
   <div class="sidebar-logo">
     <div class="sidebar-logo-mark"><img src="/telecarelogo.png" alt="TELE-CARE"/></div>
