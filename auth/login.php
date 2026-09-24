@@ -190,8 +190,8 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
 
         <form method="POST" novalidate>
           <div class="field">
-            <label for="email">Email Address or Patient ID</label>
-            <input id="email" class="form-input" type="email" name="email" placeholder="Enter your email or ID" value="<?= htmlspecialchars($emailValue) ?>" required autocomplete="username"/>
+            <label for="email">Email Address</label>
+            <input id="email" class="form-input" type="email" name="email" placeholder="Enter your email" value="<?= htmlspecialchars($emailValue) ?>" required autocomplete="username"/>
           </div>
           <div class="field">
             <label for="password">Password</label>
