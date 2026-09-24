@@ -108,7 +108,7 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
     * { box-sizing:border-box; }
     body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem 1rem; font-family:'DM Sans',sans-serif; color:var(--ink); background:linear-gradient(125deg,#eef1ff 0%,#faf4f8 52%,#dff8ff 100%); }
     .page { width:min(100%, 500px); text-align:center; }
-    .brand-mark { width:56px; height:56px; margin:0 auto .75rem; display:grid; place-items:center; border-radius:50%; background:var(--red); color:#fff; font-weight:800; font-size:1.25rem; }
+    .brand-mark { display:block; width:88px; height:88px; margin:0 auto .6rem; object-fit:contain; }
     .brand-name { margin:0; color:#a70009; font-family:'Plus Jakarta Sans',sans-serif; font-size:1.8rem; letter-spacing:-.03em; }
     .brand-subtitle { margin:.3rem 0 1.8rem; color:#62353b; font-size:.88rem; }
     .login-card { overflow:hidden; text-align:left; background:var(--panel); border:1px solid var(--line); border-radius:12px; box-shadow:0 10px 18px rgba(62,32,42,.12); }
@@ -162,7 +162,7 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
       Back to Homepage
     </a>
-    <div class="brand-mark">TC</div>
+    <img class="brand-mark" src="/telecarelogo.png" alt="Tele-Care logo"/>
     <p class="brand-name">Tele-Care AI</p>
     <p class="brand-subtitle">Patient Portal Login</p>
 
@@ -190,8 +190,8 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
 
         <form method="POST" novalidate>
           <div class="field">
-            <label for="email">Email Address</label>
-            <input id="email" class="form-input" type="email" name="email" placeholder="Enter your email" value="<?= htmlspecialchars($emailValue) ?>" required autocomplete="username"/>
+            <label for="email">Email Address or Patient ID</label>
+            <input id="email" class="form-input" type="email" name="email" placeholder="Enter your email or ID" value="<?= htmlspecialchars($emailValue) ?>" required autocomplete="username"/>
           </div>
           <div class="field">
             <label for="password">Password</label>

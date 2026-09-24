@@ -71,7 +71,9 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       from { transform: translateY(-100%); opacity: 0; }
       to   { transform: translateY(0); opacity: 1; }
     }
-    .nav-brand { display: flex; flex-direction: column; gap: 0.06rem; }
+    .nav-brand { display: flex; align-items: center; gap: 0.6rem; }
+    .nav-brand a { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+    .logo-img { width: 42px; height: 42px; object-fit: contain; flex-shrink: 0; }
     .logo {
       font-family: 'Inter', sans-serif;
       font-size: 1.5rem; font-weight: 900;
@@ -624,7 +626,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       padding: 2.8rem 0; text-align: center;
       color: rgba(21,28,39,0.42); font-size: 0.8rem;
     }
-    .foot-logo { font-family: 'Inter', sans-serif; font-size: 1.35rem; font-weight: 900; color: var(--ink); }
+    .foot-logo { display: inline-flex; align-items: center; gap: 0.6rem; font-family: 'Inter', sans-serif; font-size: 1.35rem; font-weight: 900; color: var(--ink); }
     .foot-logo span { color: var(--red); }
     footer p { margin-top: 0.5rem; }
 
@@ -696,7 +698,10 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
 <nav id="nav">
   <div class="nav-inner">
     <div class="nav-brand">
-      <div class="logo">TELE<span>-</span>CARE</div>
+      <a href="index.php">
+        <img class="logo-img" src="/telecarelogo.png" alt="Tele-Care logo"/>
+        <div class="logo">TELE<span>-</span>CARE</div>
+      </a>
     </div>
     <ul class="nav-links">
       <li><a href="#features">Features</a></li>
@@ -857,8 +862,8 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
             </div>
             <div>
-              <div class="hv-badge-label">Secured with</div>
-              <div class="hv-badge-val">Google OAuth 2.0</div>
+              <div class="hv-badge-label">Your records are</div>
+              <div class="hv-badge-val">Private &amp; Secure</div>
             </div>
           </div>
 
@@ -912,21 +917,21 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
         </div>
         <h3>Online Payment Processing</h3>
-        <p>Pay consultation fees seamlessly via PayMongo. Safe, fast, and automatically reflected in your account dashboard.</p>
+        <p>Pay consultation fees seamlessly online. Safe, fast, and automatically reflected in your account dashboard.</p>
       </div>
       <div class="feat-card reveal">
         <div class="feat-icon ib-red">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         </div>
         <h3>Prescription &amp; Lab Result Scanning</h3>
-        <p>Upload photos of prescriptions or lab results — Tesseract OCR and Poppler extract and digitize the data automatically.</p>
+        <p>Upload photos of prescriptions or lab results — the data is extracted and digitized automatically.</p>
       </div>
       <div class="feat-card reveal">
         <div class="feat-icon ib-green">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
         </div>
         <h3>Secure Authentication</h3>
-        <p>Google OAuth 2.0 login with role-based access control for Patients, Doctors, and Administrators.</p>
+        <p>Secure login with role-based access for Patients, Doctors, and Administrators.</p>
       </div>
     </div>
   </div>
@@ -945,7 +950,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       <div class="step reveal">
         <div class="step-num">1</div>
         <h3>Create an Account</h3>
-        <p>Register in under 5 minutes using your email or Google account.</p>
+        <p>Create your account in under 5 minutes.</p>
       </div>
       <div class="step reveal">
         <div class="step-num">2</div>
@@ -955,7 +960,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       <div class="step reveal">
         <div class="step-num">3</div>
         <h3>Pay Securely</h3>
-        <p>Complete payment online via our integrated PayMongo gateway.</p>
+        <p>Complete your payment online, quickly and securely.</p>
       </div>
       <div class="step reveal">
         <div class="step-num">4</div>
@@ -1002,7 +1007,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         </div>
         <h3>Prescription Scanning</h3>
-        <p>Upload a photo of your prescription and Tesseract OCR + Poppler extract and digitize the text automatically.</p>
+        <p>Upload a photo of your prescription and the text is extracted and digitized automatically.</p>
       </div>
       <div class="svc-card reveal">
         <div class="svc-icon ib-red">
@@ -1016,14 +1021,14 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
         </div>
         <h3>Online Payment Processing</h3>
-        <p>Secure consultation payments via PayMongo, with automatic status updates in your account dashboard.</p>
+        <p>Secure online consultation payments, with automatic status updates in your account dashboard.</p>
       </div>
       <div class="svc-card reveal">
         <div class="svc-icon ib-blue">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
         </div>
         <h3>Secure Authentication</h3>
-        <p>Google OAuth 2.0 login with role-based access for Patients, Doctors, and Administrators — data privacy guaranteed.</p>
+        <p>Secure login with role-based access for Patients, Doctors, and Administrators — your data privacy protected.</p>
       </div>
       <div class="svc-card reveal">
         <div class="svc-icon ib-red">
@@ -1047,15 +1052,13 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       <h2>Ready to See a Doctor <em>Today?</em></h2>
       <p>Experience healthcare without barriers — anytime, anywhere.</p>
       <a href="auth/register.php" class="btn-white">
-        <span>Get Started &mdash; It's Free</span>
+        <span>Get Started</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
       <div class="cta-tags">
-        <span class="cta-tag"><span class="cta-tag-dot"></span>Video Call</span>
-        <span class="cta-tag"><span class="cta-tag-dot"></span>Tesseract OCR</span>
-        <span class="cta-tag"><span class="cta-tag-dot"></span>Poppler PDF</span>
-        <span class="cta-tag"><span class="cta-tag-dot"></span>PayMongo</span>
-        <span class="cta-tag"><span class="cta-tag-dot"></span>Google OAuth 2.0</span>
+        <span class="cta-tag"><span class="cta-tag-dot"></span>Teleconsultation</span>
+        <span class="cta-tag"><span class="cta-tag-dot"></span>OCR</span>
+        <span class="cta-tag"><span class="cta-tag-dot"></span>Online Payment</span>
         <span class="cta-tag"><span class="cta-tag-dot"></span>AI Summary</span>
       </div>
     </div>
@@ -1067,7 +1070,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
 <footer>
   <div class="container">
     <div>
-      <div class="foot-logo">TELE<span>-</span>CARE</div>
+      <div class="foot-logo"><img class="logo-img" src="/telecarelogo.png" alt="Tele-Care logo"/>TELE<span>-</span>CARE</div>
     </div>
     <p>&copy; 2026 Tele-Care Development Team &mdash; University of Caloocan City</p>
   </div>
@@ -1166,10 +1169,7 @@ const marqueeItems = [
   'AI Consultation Summary',
   'Prescription Scanning',
   'Lab Result Digitization',
-  'Online Payments via PayMongo',
-  'Google OAuth 2.0',
-  'Tesseract OCR',
-  'Role-Based Access Control',
+  'Online Payments',
   'Administrative Dashboard',
 ];
 const track = document.getElementById('marqueeTrack');
