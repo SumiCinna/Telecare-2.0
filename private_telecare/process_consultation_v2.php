@@ -195,14 +195,17 @@ if ($existing_summary !== ''
     $existing_summary = '';
 }
 
+// Always hand the model the FULL accumulated transcript/chat (all sessions,
+// including any earlier ones already summarized) plus the previous summary
+// itself when one exists. This lets the model UPDATE/MERGE into one set of
+// 6 sections instead of writing a second fresh summary that later gets
+// concatenated onto the first (which is what caused the doubled sections).
 $contextParts = [];
 if ($existing_summary !== '') {
-    if ($new_transcript) $contextParts[] = "VOICE TRANSCRIPT:\n" . trim($new_transcript);
-    if ($new_chat)       $contextParts[] = "CHAT LOG:\n" . trim($new_chat);
-} else {
-    if ($full_transcript) $contextParts[] = "VOICE TRANSCRIPT:\n$full_transcript";
-    if ($full_chat)       $contextParts[] = "CHAT LOG:\n$full_chat";
+    $contextParts[] = "PREVIOUS SUMMARY (already generated earlier for this same appointment):\n" . $existing_summary;
 }
+if ($full_transcript) $contextParts[] = "FULL VOICE TRANSCRIPT (all sessions so far):\n$full_transcript";
+if ($full_chat)       $contextParts[] = "FULL CHAT LOG (all sessions so far):\n$full_chat";
 
 $has_new_content   = (!empty($new_transcript)) || (!empty($new_chat));
 $should_regenerate = $has_new_content || ($session_changed && !empty($contextParts));
@@ -263,7 +266,10 @@ RULES:
 - Write in plain text only. Section titles should be written exactly as shown above (e.g. '1. Chief Complaint').
 - Be concise but thorough. Do not invent information not present in the consultation.
 - Write every section in English first. Directly below it, add one line that starts with Filipino: followed by a natural Filipino translation of the English text you just wrote. Keep drug names, doses, numbers, and dates exactly as written in English. If a section is Not discussed, the Filipino line is Filipino: Hindi napag-usapan. Do not add or remove any information in the Filipino line.
-- If there are multiple sessions separated by '[--- Rejoined Session ---]', consolidate all sessions into one unified summary.";
+- If there are multiple sessions separated by '[--- Rejoined Session ---]', consolidate all sessions into one unified summary." . ($existing_summary !== '' ? "
+
+IMPORTANT — THIS IS A REJOINED SESSION:
+A PREVIOUS SUMMARY for this same appointment is included above, already written in the same 6-section format. You are UPDATING that summary, not writing a second one. Produce exactly ONE final summary containing each of the 6 sections ONCE — never output a section twice and never append a second copy of the summary after the first. Merge any new information from the rejoined session into the correct existing section (for example, a symptom mentioned only after rejoining still belongs inside the single Chief Complaint / History of Present Illness section, not a new one). If the new session changes or adds to the diagnosis, treatment plan, or follow-up instructions, update that section's text in place. Only add a short note like '(follow-up after rejoined session)' inline within a section if it materially helps the reader — never as a duplicate heading." : "") . "";
 
         debug_log_v2("Calling Groq LLM for summary...");
 
@@ -342,28 +348,37 @@ RULES:
 $final_summary = $existing_summary;
 
 if ($role === 'doctor') {
-    $marker = '[#session:' . $session_key . ']';
-    $block  = $summary;
-    $pos    = ($existing_summary === '') ? false : strpos($existing_summary, $marker);
+    // $summary is already the single, fully-merged 6-section summary (the
+    // prompt above was given the previous summary plus the full transcript
+    // and told to update it in place) — so it simply REPLACES the old text.
+    // It never gets concatenated onto the old summary, which is what used
+    // to double every section on a rejoined session.
+    $final_summary = ($summary !== '') ? $summary : $existing_summary;
 
-    if ($pos !== false) {
-        $head = rtrim(substr($existing_summary, 0, $pos));
-        $final_summary = ($head === '') ? $block : $head . "\n\n" . $block;
-    } elseif ($existing_summary !== '') {
-        $final_summary = $existing_summary . "\n\n" . $block;
+    // A rejoined session brought in new voice/chat content, which just
+    // changed what the summary says — so any earlier publish/review no
+    // longer reflects the actual consultation. Clear the review stamp so
+    // the doctor is forced to check it again (from session 1 through the
+    // latest) before it's shown to the patient as published.
+    if ($has_new_content) {
+        $stmtSummaryOnly = $conn->prepare("
+            UPDATE appointments
+            SET consultation_summary = ?,
+                summary_edited       = 0,
+                summary_reviewed_at  = NULL
+            WHERE id = ?
+        ");
     } else {
-        $final_summary = $block;
+        $stmtSummaryOnly = $conn->prepare("
+            UPDATE appointments
+            SET consultation_summary = ?,
+                summary_edited       = 0
+            WHERE id = ?
+        ");
     }
-
-    $stmtSummaryOnly = $conn->prepare("
-        UPDATE appointments
-        SET consultation_summary = ?,
-            summary_edited       = 0
-        WHERE id = ?
-    ");
     $stmtSummaryOnly->bind_param('si', $final_summary, $appt_id);
     $stmtSummaryOnly->execute();
-    debug_log_v2("Saved summary for appt_id={$appt_id}, length=" . strlen($final_summary) . ", affected_rows=" . $stmtSummaryOnly->affected_rows);
+    debug_log_v2("Saved summary for appt_id={$appt_id}, length=" . strlen($final_summary) . ", review_reset=" . ($has_new_content ? 'yes' : 'no') . ", affected_rows=" . $stmtSummaryOnly->affected_rows);
 } else {
     debug_log_v2("role={$role} — skipping summary write entirely (doctor owns the summary)");
 }
