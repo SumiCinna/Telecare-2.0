@@ -112,3 +112,46 @@ if (!function_exists('safe_prepare')) {
         return $stmt;
     }
 }
+if (!function_exists('telecare_reconnect_db')) {
+    /**
+     * Long-running scripts (AI transcription/summary calls that block on
+     * curl_exec for 1-2+ minutes) can outlive MySQL's wait_timeout, especially
+     * on shared hosting where it's set low. When that happens, the next query
+     * throws "MySQL server has gone away" instead of just reconnecting.
+     *
+     * Call this right before any DB write that follows a slow network call
+     * (e.g. right after a Groq/Whisper curl_exec). It pings the connection
+     * with a cheap query and transparently swaps in a fresh connection
+     * (reusing the same $conn variable via reference) if the old one died.
+     */
+    function telecare_reconnect_db(mysqli &$conn): void
+    {
+        try {
+            if (@$conn->query('SELECT 1') !== false) {
+                return; // connection is still alive
+            }
+        } catch (\mysqli_sql_exception $e) {
+            // fall through and reconnect below
+        }
+
+        @$conn->close();
+
+        $fresh = mysqli_init();
+        if (DB_SSL_CA && is_file(DB_SSL_CA)) {
+            mysqli_ssl_set($fresh, null, null, DB_SSL_CA, null, null);
+            $fresh->real_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT, null, MYSQLI_CLIENT_SSL);
+        } else {
+            $fresh->real_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT);
+        }
+
+        if ($fresh->connect_error) {
+            // Can't recover here — let the caller's next query throw so it
+            // still gets logged instead of failing silently.
+            return;
+        }
+
+        $fresh->set_charset('utf8mb4');
+        $fresh->query("SET time_zone = '+08:00'");
+        $conn = $fresh;
+    }
+}

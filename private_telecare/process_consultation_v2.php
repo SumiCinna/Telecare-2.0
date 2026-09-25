@@ -178,6 +178,13 @@ if ($new_chat) {
 }
 
 // ── 5. Save raw data ──────────────────────────────────────────────────────
+// The Groq Whisper calls above can block for 1-2+ minutes each; on this host
+// that's long enough for MySQL's wait_timeout to kill the idle connection,
+// which used to crash the script here with "MySQL server has gone away".
+// Reconnect first so this and every write below actually lands.
+telecare_reconnect_db($conn);
+debug_log_v2("DB connection checked/reconnected before saving raw transcript+chat");
+
 $stmt = $conn->prepare("
     UPDATE appointments
     SET chat_log = ?, consultation_transcript = ?, summary_session_key = ?
@@ -339,6 +346,12 @@ A PREVIOUS SUMMARY for this same appointment is included above, already written 
 } elseif (empty($contextParts) && !$summary) {
     $summary = 'No consultation content was captured for this session yet. A full summary will be generated once the consultation is completed.';
 }
+
+// The Groq LLM call above can also block for a while (up to ~90s per
+// attempt, plus up to a minute of backoff sleep across retries), which can
+// again outlive the DB's idle timeout — so reconnect before writing again.
+telecare_reconnect_db($conn);
+debug_log_v2("DB connection checked/reconnected before saving summary");
 
 // ── 7a. Save the summary text IMMEDIATELY, before anything that could crash ──
 // This is the row the doctor's review banner reads. Everything after this point

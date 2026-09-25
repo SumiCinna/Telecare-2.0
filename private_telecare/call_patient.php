@@ -506,6 +506,17 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
   </button>
 </div>
 
+<div id="leave-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(3px);z-index:1000;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:var(--gm-surface);border-radius:16px;padding:1.5rem;width:min(320px,100%);text-align:center;box-shadow:0 12px 36px rgba(0,0,0,0.45);">
+    <div style="font-size:1rem;font-weight:600;margin-bottom:0.4rem;">Leave the call?</div>
+    <div style="font-size:0.8rem;color:var(--gm-muted);margin-bottom:1.4rem;">You can rejoin later while the appointment is still active.</div>
+    <div style="display:flex;gap:0.6rem;">
+      <button id="leave-modal-cancel" style="flex:1;padding:0.65rem 0.5rem;border-radius:24px;border:1px solid rgba(255,255,255,0.25);background:transparent;color:var(--gm-text);font-family:inherit;font-size:0.85rem;font-weight:600;cursor:pointer;">Cancel</button>
+      <button id="leave-modal-confirm" style="flex:1;padding:0.65rem 0.5rem;border-radius:24px;border:none;background:var(--gm-red);color:#fff;font-family:inherit;font-size:0.85rem;font-weight:600;cursor:pointer;">Leave</button>
+    </div>
+  </div>
+</div>
+
 <div id="leaving-overlay" style="display:none;position:fixed;inset:0;background:#202124;z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;">
   <div style="width:56px;height:56px;border:4px solid rgba(255,255,255,0.1);border-top-color:#1a73e8;border-radius:50%;animation:spin 1s linear infinite;"></div>
   <div style="text-align:center;">
@@ -767,8 +778,35 @@ function startRecording() {
   } catch(e) { console.warn('Recording failed:', e); }
 }
 
+function showLeaveModal() {
+  return new Promise(resolve => {
+    const overlay  = document.getElementById('leave-modal-overlay');
+    const btnCancel = document.getElementById('leave-modal-cancel');
+    const btnConfirm = document.getElementById('leave-modal-confirm');
+    overlay.style.display = 'flex';
+
+    function cleanup(result) {
+      overlay.style.display = 'none';
+      btnCancel.removeEventListener('click', onCancel);
+      btnConfirm.removeEventListener('click', onConfirm);
+      overlay.removeEventListener('click', onBackdrop);
+      resolve(result);
+    }
+    function onCancel() { cleanup(false); }
+    function onConfirm() { cleanup(true); }
+    function onBackdrop(e) { if (e.target === overlay) cleanup(false); }
+
+    btnCancel.addEventListener('click', onCancel);
+    btnConfirm.addEventListener('click', onConfirm);
+    overlay.addEventListener('click', onBackdrop);
+  });
+}
+
 async function endCall(auto = false) {
-  if (!auto && !confirm('Leave the call?')) return;
+  if (!auto) {
+    const confirmedLeave = await showLeaveModal();
+    if (!confirmedLeave) return;
+  }
   isDestroyed = true;
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
     await Promise.race([
