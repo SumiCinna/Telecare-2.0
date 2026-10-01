@@ -2,6 +2,7 @@
 // auth/google-login.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 require_once '../database/config.php';
+require_once 'app_handoff_lib.php';
 
 // Load environment variables
 $google_client_id = getenv('GOOGLE_CLIENT_ID') ?: '';
@@ -11,7 +12,7 @@ if (empty($google_client_id) || empty($google_redirect_uri)) {
     die('Error: Google OAuth credentials not configured in .env file.');
 }
 
-$state = bin2hex(random_bytes(16));
+$state = tc_app_state();
 $_SESSION['oauth_state'] = $state;
 
 header('Location: https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query([

@@ -195,13 +195,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .btn-accept{padding:.7rem 1.4rem;border-radius:8px;background:var(--teal);color:#fff;font-weight:600;font-size:.88rem;border:none;cursor:not-allowed;opacity:.5;transition:all .25s}
     .btn-accept.unlocked{cursor:pointer;opacity:1}
     .btn-accept.unlocked:hover{background:#005249}
+      /* ── Mobile: hide the dark TELE-CARE side panel, show only the form ── */
+    @media(max-width:768px){
+      .left-panel{display:none!important}
+      .reg-wrap{display:block!important;min-height:0!important}
+      .reg-right{padding:1.25rem 1rem 2rem!important;width:100%;box-sizing:border-box;overflow:visible!important}
+      .reg-right input,.reg-right select,.reg-right textarea{max-width:100%;box-sizing:border-box}
+    }
   </style>
 </head>
 <body>
 
 <div class="toast-wrap" id="toastWrap"></div>
 
-<div style="display:flex;min-height:100vh">
+<div class="reg-wrap" style="display:flex;min-height:100vh">
 
   <!-- LEFT -->
   <div class="left-panel" style="width:42%;display:flex;flex-direction:column;justify-content:center;padding:3rem;position:sticky;top:0;height:100vh">
@@ -217,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
 
   <!-- RIGHT -->
-  <div style="flex:1;overflow-y:auto;padding:3rem 4%">
+  <div class="reg-right" style="flex:1;overflow-y:auto;padding:3rem 4%">
     <div style="max-width:520px;margin:0 auto">
 
     <?php if($show_verify): ?>

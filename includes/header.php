@@ -309,6 +309,13 @@ if (isset($conn, $patient_id)) {
     }
     @media (max-width:900px){
       .carebot-widget{ bottom:90px; right:16px; }
+      /* mobile: small round button instead of the wide "Chat with CareBot" pill */
+      .carebot-btn{ width:48px; padding:0 !important; }
+      #cbLabel{ display:none !important; }
+      /* chat window fits the phone screen */
+      #carebotPanel{ width:calc(100vw - 32px) !important; max-width:380px; height:min(480px, calc(100vh - 190px)) !important; }
+      /* hidden while booking an appointment so it never covers the form */
+      .carebot-widget.carebot-hide-mobile{ display:none !important; }
     }
     @keyframes carebotPulse {
       0%   { transform:scale(1);   opacity:0.5; }
@@ -409,7 +416,7 @@ if (isset($conn, $patient_id)) {
 </div>
 
 <!-- ── CareBot Floating Widget ── -->
-<div id="carebotWidget" class="carebot-widget">
+<div id="carebotWidget" class="carebot-widget<?= (strpos($_SERVER['SCRIPT_NAME'] ?? '', '/booking/') !== false) ? ' carebot-hide-mobile' : '' ?>">
 
   <div id="carebotPanel" style="
     width:340px;

@@ -2,6 +2,8 @@
 // auth/google-register-callback.php
 require_once '../database/config.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
+require_once 'app_handoff_lib.php';
+tc_app_handoff_enable($conn);
 
 // Load environment variables
   $client_id     = getenv('GOOGLE_CLIENT_ID') ?: '';
