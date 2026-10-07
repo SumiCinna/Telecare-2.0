@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($slotValid) {
       $_SESSION['booking']['appt_date'] = $date;
       $_SESSION['booking']['appt_time'] = $timeValue . ':00';
-      header('Location: router.php?page=booking/step4_review'); exit;
+      header('Location: router.php?page=booking/step4_payment_method'); exit;
     }
     $error = 'That date and time is no longer available. Please choose another slot.';
     }

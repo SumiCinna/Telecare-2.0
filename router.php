@@ -25,6 +25,7 @@ $privatePages = [
     'billings',
     'rate_doctor', 'doctor_reviews',
     'booking/step1_details', 'booking/step2_doctor', 'booking/step3_schedule',
+    'booking/step4_payment_method', 'booking/step4_yakap', 'booking/step4_hmo',
     'booking/step4_review', 'booking/confirmed', 'booking/payment',
     'booking/process_booking', 'booking/success'
 ];

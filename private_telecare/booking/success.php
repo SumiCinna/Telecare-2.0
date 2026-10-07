@@ -46,6 +46,9 @@ echo booking_wizard_css();
     <div class="success-sub">
       Your appointment with <strong>Dr. <?= htmlspecialchars($appt['doctor_name']) ?></strong> has been confirmed for
       <strong><?= (new DateTime($appt['appointment_date']))->format('F j, Y') ?> at <?= date('g:i A', strtotime($appt['appointment_time'])) ?></strong>.
+      <?php if (in_array($appt['payment_method'] ?? 'Regular', ['YAKAP', 'HMO'], true)): ?>
+        <br>Your <?= htmlspecialchars(booking_payment_label($appt['payment_method'])) ?> details were submitted and will be verified by the clinic.
+      <?php endif; ?>
     </div>
   <a href="router.php?page=booking/confirmed&amp;appt_id=<?= $appt_id ?>" class="wiz-btn primary" style="width:100%;text-align:center;box-sizing:border-box;">View Appointment</a>
   <a href="router.php?page=dashboard" class="wiz-btn ghost" style="width:100%;text-align:center;box-sizing:border-box;margin-top:.45rem;">Return to Dashboard</a>

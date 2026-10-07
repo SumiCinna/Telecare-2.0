@@ -44,7 +44,19 @@ $apptTs   = strtotime($appt['appointment_date'].' '.$appt['appointment_time']);
 
 $isPaid          = $appt['payment_status'] === 'Paid';
 $isCancelled     = $appt['status'] === 'Cancelled';
-$isPendingUnpaid = !$isPaid && !$isCancelled; // anything not paid/cancelled is awaiting payment
+$payMethod       = $appt['payment_method'] ?? 'Regular';
+$isCoverage      = in_array($payMethod, ['YAKAP', 'HMO'], true); // YAKAP / HMO: no online payment
+$isPendingUnpaid = !$isPaid && !$isCancelled && !$isCoverage; // anything else not paid/cancelled is awaiting payment
+
+$coverageStatus = 'Pending verification';
+if ($isCoverage) {
+    try {
+        $covTable = $payMethod === 'YAKAP' ? 'appointment_yakap' : 'appointment_hmo';
+        $covCol   = $payMethod === 'YAKAP' ? 'verification_status' : 'coverage_status';
+        $covRes   = $conn->query("SELECT $covCol AS s FROM $covTable WHERE appointment_id = " . (int)$appt_id);
+        if ($covRes && ($covRow = $covRes->fetch_assoc()) && $covRow['s'] !== 'Pending') $coverageStatus = $covRow['s'];
+    } catch (Throwable $e) { /* table not created yet: keep default */ }
+}
 $isPast          = $appt['status'] === 'Completed' || $apptTs < time();
 
 $deadlineTsMs = null;
@@ -175,7 +187,7 @@ echo booking_wizard_css();
           <?php endif; ?>
         </div>
         <div class="status-badge <?= $isCancelled ? 'cancelled' : ($isPendingUnpaid ? 'pending' : 'paid') ?>">
-          <?= $isCancelled ? 'Cancelled' : ($isPendingUnpaid ? 'Awaiting Payment' : 'Confirmed & Paid') ?>
+          <?= $isCancelled ? 'Cancelled' : ($isPendingUnpaid ? 'Awaiting Payment' : ($isCoverage ? 'Confirmed' : 'Confirmed & Paid')) ?>
         </div>
       </div>
     </div>
@@ -194,7 +206,7 @@ echo booking_wizard_css();
         <div class="info-row"><div><div class="info-lbl">Date</div><div class="info-v"><?= (new DateTime($appt['appointment_date']))->format('F j, Y') ?></div></div></div>
         <div class="info-row"><div><div class="info-lbl">Time</div><div class="info-v"><?= date('g:i A', strtotime($appt['appointment_time'])) ?></div></div></div>
         <div class="info-row"><div><div class="info-lbl">Type</div><div class="info-v">Online Consultation</div></div></div>
-        <div class="info-row"><div><div class="info-lbl">Payment Status</div><div class="info-v"><?= htmlspecialchars($appt['payment_status']) ?></div></div></div>
+        <div class="info-row"><div><div class="info-lbl"><?= $isCoverage ? 'Payment Method' : 'Payment Status' ?></div><div class="info-v"><?= $isCoverage ? htmlspecialchars(booking_payment_label($payMethod)) : htmlspecialchars($appt['payment_status']) ?></div></div></div>
       </div>
       <?php if (!empty($appt['reason'])): ?>
         <div class="info-lbl" style="margin-top:0.8rem;">Reason for Consultation</div>
@@ -227,7 +239,12 @@ echo booking_wizard_css();
       <div class="wiz-card">
         <h3>Payment Summary</h3>
         <div class="pay-row"><span>Consultation Fee</span><span>&#8369;<?= number_format((float)$appt['consultation_fee'], 2) ?></span></div>
+        <?php if ($isCoverage): ?>
+        <div class="pay-row"><span>Payment Method</span><span><?= htmlspecialchars(booking_payment_label($payMethod)) ?></span></div>
+        <div class="pay-row"><span><?= $payMethod === 'YAKAP' ? 'YAKAP Verification' : 'HMO Coverage' ?></span><span><?= htmlspecialchars($coverageStatus) ?></span></div>
+        <?php else: ?>
         <div class="pay-row"><span>Payment Status</span><span><?= htmlspecialchars($appt['payment_status']) ?></span></div>
+        <?php endif; ?>
       </div>
     </div>
   </div>

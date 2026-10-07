@@ -106,19 +106,187 @@ function booking_wizard_css(): string {
     .wiz-btn:disabled{opacity:0.45;cursor:not-allowed}
     .wiz-actions{display:flex;justify-content:space-between;align-items:center;margin-top:1rem}
     .wiz-err{background:rgba(195,54,67,0.08);color:var(--red);border:1px solid rgba(195,54,67,0.2);padding:0.7rem 1rem;border-radius:12px;font-size:0.83rem;margin-bottom:1rem}
+    @media(max-width:520px){.wiz-page{padding:1.2rem 1rem 5rem}.stepper{padding:1rem .6rem}.step-label{width:54px;font-size:.6rem}.step-line{margin:14px .15rem 0}}
     </style>
     CSS;
 }
 
-/** Renders the 4-step progress bar. $active = 1..4 */
+/** Renders the 5-step progress bar. $active = 1..5 */
 function render_stepper(int $active): void {
-    $labels = ['Details', 'Doctor', 'Schedule', 'Review'];
+    $labels = ['Details', 'Doctor', 'Schedule', 'Payment', 'Review'];
     echo '<div class="stepper">';
     foreach ($labels as $i => $label) {
         $n = $i + 1;
         $cls = $n < $active ? 'done' : ($n === $active ? 'active' : '');
         echo '<div class="step-col"><div class="step-dot ' . $cls . '">' . ($n < $active ? '&#10003;' : $n) . '</div><div class="step-label">' . $label . '</div></div>';
-        if ($n < 4) echo '<div class="step-line ' . ($n < $active ? 'done' : '') . '"></div>';
+        if ($n < 5) echo '<div class="step-line ' . ($n < $active ? 'done' : '') . '"></div>';
     }
     echo '</div>';
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Payment method (Regular / PhilHealth YAKAP / HMO)
+// ─────────────────────────────────────────────────────────────────────────
+
+const BOOKING_HMO_PROVIDERS = [
+    'Maxicare', 'Intellicare', 'Medicard', 'PhilCare', 'Cocolife',
+    'Pacific Cross', 'Etiqa', 'Avega', 'Generali', 'Other',
+];
+
+function booking_payment_methods(): array {
+    return [
+        'Regular' => ['label' => 'Regular Payment',   'desc' => 'Pay using cash, e-wallet, or online payment.',          'icon' => 'card'],
+        'YAKAP'   => ['label' => 'PhilHealth YAKAP',  'desc' => 'Use your PhilHealth YAKAP benefits for Primary Care services.', 'icon' => 'yakap'],
+        'HMO'     => ['label' => 'HMO',               'desc' => 'Use your HMO coverage for this consultation.',          'icon' => 'shield'],
+    ];
+}
+
+function booking_payment_label(string $method): string {
+    return booking_payment_methods()[$method]['label'] ?? 'Regular Payment';
+}
+
+function booking_method_icon(string $key): string {
+    $i = [
+        'card'   => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>',
+        'yakap'  => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M12 21s-7-4.35-9.5-8.5C.8 9 2 5 5.5 4.5 8 4.1 10 6 12 8c2-2 4-3.9 6.5-3.5C22 5 23.2 9 21.5 12.5 19 16.65 12 21 12 21z"/></svg>',
+        'shield' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M12 9v6M9 12h6"/></svg>',
+    ];
+    return $i[$key] ?? '';
+}
+
+/** Trim, collapse whitespace, cap length. */
+function booking_clean($v, int $max = 255): string {
+    $v = preg_replace('/\s+/u', ' ', trim((string)$v));
+    return mb_substr($v, 0, $max);
+}
+
+/** 12-digit PhilHealth PIN -> 12-345678901-2 */
+function booking_format_pin(string $digits): string {
+    $d = preg_replace('/\D/', '', $digits);
+    return strlen($d) === 12 ? substr($d, 0, 2) . '-' . substr($d, 2, 9) . '-' . substr($d, 11, 1) : $d;
+}
+
+/** Hide all but the last 4 digits for display on review / confirmation pages. */
+function booking_mask_pin(string $digits): string {
+    $d = preg_replace('/\D/', '', $digits);
+    return str_repeat('•', max(0, strlen($d) - 4)) . substr($d, -4);
+}
+
+/** Philippine-friendly phone check: 10-13 digits. */
+function booking_valid_phone(string $v): bool {
+    $d = preg_replace('/\D/', '', $v);
+    return strlen($d) >= 10 && strlen($d) <= 13;
+}
+
+/**
+ * Makes sure appointments.payment_method and the two coverage tables exist.
+ * Safe to call repeatedly. Returns false if the DB user is not allowed to
+ * alter/create (then run database/booking_payment_methods.sql by hand).
+ */
+function booking_ensure_payment_schema(mysqli $conn): bool {
+    try {
+        $r = $conn->query("SHOW COLUMNS FROM appointments LIKE 'payment_method'");
+        if ($r && $r->num_rows === 0) {
+            $conn->query("ALTER TABLE appointments ADD COLUMN payment_method ENUM('Regular','YAKAP','HMO') NOT NULL DEFAULT 'Regular' AFTER payment_status");
+        }
+
+        $conn->query("CREATE TABLE IF NOT EXISTS appointment_yakap (
+            id INT NOT NULL AUTO_INCREMENT,
+            appointment_id INT NOT NULL,
+            philhealth_pin VARCHAR(14) NOT NULL,
+            patient_name VARCHAR(150) NOT NULL,
+            date_of_birth DATE NULL,
+            member_type ENUM('Member','Dependent') NOT NULL,
+            contact_number VARCHAR(20) NOT NULL,
+            address VARCHAR(255) NOT NULL,
+            yakap_clinic VARCHAR(150) NOT NULL,
+            empanelment_status ENUM('Empaneled','Not Yet Empaneled') NOT NULL,
+            fpe_status ENUM('Completed','Not Yet Completed') NOT NULL,
+            consent TINYINT(1) NOT NULL DEFAULT 0,
+            consent_at DATETIME NULL,
+            verification_status ENUM('Pending','Verified','Rejected') NOT NULL DEFAULT 'Pending',
+            diagnosis_icd10 TEXT NULL,
+            consultation_notes TEXT NULL,
+            prescription TEXT NULL,
+            pcu_reference_no VARCHAR(60) NULL,
+            provider_confirmed TINYINT(1) NOT NULL DEFAULT 0,
+            provider_confirmed_at DATETIME NULL,
+            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY uniq_yakap_appt (appointment_id),
+            CONSTRAINT appointment_yakap_fk FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+
+        $conn->query("CREATE TABLE IF NOT EXISTS appointment_hmo (
+            id INT NOT NULL AUTO_INCREMENT,
+            appointment_id INT NOT NULL,
+            hmo_provider VARCHAR(100) NOT NULL,
+            hmo_member_id VARCHAR(60) NOT NULL,
+            member_type ENUM('Member','Dependent') NOT NULL,
+            principal_member_name VARCHAR(150) NOT NULL,
+            company_employer VARCHAR(150) NULL,
+            hmo_plan VARCHAR(100) NULL,
+            patient_name VARCHAR(150) NOT NULL,
+            date_of_birth DATE NULL,
+            contact_number VARCHAR(20) NOT NULL,
+            service_type ENUM('Online Consultation','Follow-up Consultation') NOT NULL,
+            loa_number VARCHAR(60) NULL,
+            coverage_status ENUM('Pending','Approved','Not Covered') NOT NULL DEFAULT 'Pending',
+            hmo_coverage_amount DECIMAL(10,2) NULL,
+            patient_share DECIMAL(10,2) NULL,
+            diagnosis TEXT NULL,
+            consultation_notes TEXT NULL,
+            prescription TEXT NULL,
+            supporting_documents VARCHAR(255) NULL,
+            claim_reference_no VARCHAR(60) NULL,
+            claim_status ENUM('Pending','Approved','Denied','Processed') NOT NULL DEFAULT 'Pending',
+            consent TINYINT(1) NOT NULL DEFAULT 0,
+            consent_at DATETIME NULL,
+            provider_confirmed TINYINT(1) NOT NULL DEFAULT 0,
+            provider_confirmed_at DATETIME NULL,
+            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY uniq_hmo_appt (appointment_id),
+            CONSTRAINT appointment_hmo_fk FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+
+        $r = $conn->query("SHOW COLUMNS FROM appointments LIKE 'payment_method'");
+        return $r && $r->num_rows === 1;
+    } catch (Throwable $e) {
+        error_log('booking_ensure_payment_schema: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/** CSS for the payment-method cards and the YAKAP / HMO forms. */
+function booking_form_css(): string {
+    return <<<CSS
+    <style>
+    .method-list{display:grid;gap:.8rem}
+    .method-card{display:flex;align-items:center;gap:1rem;background:#fff;border:1.5px solid rgba(36,68,65,.12);border-radius:16px;padding:1rem 1.2rem;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+    .method-card:hover{border-color:rgba(195,54,67,.4)}
+    .method-card.selected{border-color:var(--red);box-shadow:0 0 0 3px rgba(195,54,67,.1)}
+    .method-card input{position:absolute;opacity:0;pointer-events:none}
+    .method-icon{width:46px;height:46px;border-radius:12px;background:rgba(36,68,65,.07);color:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .method-card.selected .method-icon{background:rgba(195,54,67,.1);color:var(--red)}
+    .method-card strong{display:block;color:var(--green);font-size:.98rem}
+    .method-card small{display:block;color:var(--muted);font-size:.8rem;margin-top:.15rem}
+    .f-grid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem 1.1rem}
+    .f-full{grid-column:1/-1}
+    .f-field label.f-lbl{display:block;font-size:.72rem;font-weight:700;color:var(--green);margin-bottom:.3rem}
+    .f-field label.f-lbl .req{color:var(--red)}
+    .f-field input[type=text],.f-field input[type=tel],.f-field select,.f-field textarea{width:100%;box-sizing:border-box;padding:.65rem .8rem;border:1.5px solid rgba(36,68,65,.15);border-radius:10px;font:inherit;font-size:.88rem;background:#fff;color:#151c27}
+    .f-field input:focus,.f-field select:focus{outline:none;border-color:var(--red)}
+    .f-field input[readonly]{background:#f3f5f5;color:#5b6b69}
+    .f-hint{font-size:.7rem;color:var(--muted);margin-top:.25rem}
+    .f-choice{display:flex;gap:1.1rem;flex-wrap:wrap;padding:.35rem 0}
+    .f-choice label{display:flex;align-items:center;gap:.4rem;font-size:.86rem;color:#151c27;cursor:pointer}
+    .f-consent{display:flex;gap:.6rem;align-items:flex-start;background:rgba(36,68,65,.04);border-radius:12px;padding:.8rem 1rem;font-size:.82rem;color:var(--green);line-height:1.5}
+    .f-consent input{margin-top:.25rem;flex-shrink:0}
+    .f-note{border-left:3px solid var(--blue);background:#f3f6ff;border-radius:8px;padding:.6rem .8rem;font-size:.76rem;color:var(--green);line-height:1.45;margin-bottom:1rem}
+    .f-sec{font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:1.2rem 0 .6rem}
+    .f-sec:first-child{margin-top:0}
+    @media(max-width:640px){.f-grid{grid-template-columns:1fr}}
+    </style>
+    CSS;
 }
