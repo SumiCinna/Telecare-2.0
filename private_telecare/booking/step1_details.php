@@ -1,53 +1,36 @@
 <?php
 // private_telecare/booking/step1_details.php
+// Step 1 of 4: the patient describes their concern in their own words.
+// The system then recommends a department (and doctors) in step 2.
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/booking_helpers.php';
 require_once __DIR__ . '/../../ocr/ocr_api.php';
 
 const MAX_MEDICAL_DOCS = 5;
+const CONCERN_MIN = 10;
+const CONCERN_MAX = 500; // appointments.reason is varchar(500)
 
-function get_available_departments(mysqli $conn): array {
-    $with_doctors = [];
-    $res = $conn->query("SELECT DISTINCT department FROM doctors WHERE status='active' AND department IS NOT NULL AND department <> ''");
-    while ($row = $res->fetch_assoc()) {
-        $with_doctors[] = $row['department'];
-    }
+$available_departments = booking_available_departments($conn);
 
-    return array_filter(BOOKING_DEPARTMENTS, function ($info, $name) use ($with_doctors) {
-        return in_array($name, $with_doctors, true);
-    }, ARRAY_FILTER_USE_BOTH);
-}
-
-$available_departments = get_available_departments($conn);
-
-$sel_department = $_SESSION['booking']['department']   ?? '';
-$sel_reasons    = $_SESSION['booking']['reasons']       ?? [];
-$sel_other      = $_SESSION['booking']['reason_other']  ?? '';
-
-if ($sel_department !== '' && !array_key_exists($sel_department, $available_departments)) {
-    $sel_department = '';
-    $sel_reasons    = [];
-    unset($_SESSION['booking']['department'], $_SESSION['booking']['reasons']);
-}
-
-$error = null;
+$concern = $_SESSION['booking']['concern'] ?? '';
+$error   = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $dept    = trim($_POST['department'] ?? '');
-    $reasons = $_POST['reasons'] ?? [];
-    $other   = trim($_POST['reason_other'] ?? '');
+    $concern = booking_clean($_POST['concern'] ?? '', CONCERN_MAX);
 
-    $valid_reasons = BOOKING_REASONS_BY_DEPT[$dept] ?? null;
-
-    if (!array_key_exists($dept, $available_departments)) {
-        $error = 'Please select a department.';
-    } elseif (empty($reasons) && $other === '') {
-        $error = 'Please select at least one reason for consultation.';
+    if (empty($available_departments)) {
+        $error = 'No departments are available for booking right now. Please check back later.';
+    } elseif (mb_strlen($concern) < CONCERN_MIN) {
+        $error = 'Please describe your concern in a little more detail (at least ' . CONCERN_MIN . ' characters).';
     } else {
-        $_SESSION['booking']['department']   = $dept;
-        $_SESSION['booking']['reasons']      = array_values(array_intersect($reasons, $valid_reasons ?? []));
-        $_SESSION['booking']['reason_other'] = $other;
+        // A different concern means a different recommendation: drop everything chosen after this step.
+        $prev = $_SESSION['booking']['concern'] ?? '';
+        if ($prev !== $concern) {
+            unset($_SESSION['booking']['rec'], $_SESSION['booking']['department'], $_SESSION['booking']['doctor_id'],
+                  $_SESSION['booking']['appt_date'], $_SESSION['booking']['appt_time']);
+        }
+        $_SESSION['booking']['concern'] = $concern;
 
         if (!empty($_FILES['medical_doc']['name'][0])) {
             $allowed_ext  = ['jpg', 'jpeg', 'png', 'webp'];
@@ -100,7 +83,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        if (!$error) { header('Location: router.php?page=booking/step2_doctor'); exit; }
+        if (!$error) {
+            // Work out the recommendation now (the button shows "Finding..." while this runs),
+            // so step 2 opens instantly.
+            if (empty($_SESSION['booking']['rec'])) {
+                $_SESSION['booking']['rec'] = booking_recommend_department($conn, $concern);
+            }
+            header('Location: router.php?page=booking/step2_doctor'); exit;
+        }
     }
 }
 
@@ -110,35 +100,24 @@ require_once __DIR__ . '/../../includes/header.php';
 echo booking_wizard_css();
 ?>
 <style>
-.dept-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.9rem}
-.dept-card{border:1.5px solid rgba(36,68,65,0.1);border-radius:14px;padding:1rem;cursor:pointer;transition:all .2s;position:relative}
-.dept-card:hover{border-color:var(--blue)}
-.dept-card.selected{border-color:var(--red);background:rgba(195,54,67,0.05)}
-.dept-icon{width:38px;height:38px;border-radius:10px;background:rgba(195,54,67,0.08);color:var(--red);display:flex;align-items:center;justify-content:center;margin-bottom:0.6rem}
-.dept-name{font-weight:700;font-size:0.9rem;color:var(--green)}
-.dept-desc{font-size:0.76rem;color:var(--muted);margin-top:0.15rem}
-.dept-check{position:absolute;top:0.6rem;right:0.6rem;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;display:none;align-items:center;justify-content:center;font-size:0.7rem}
-.dept-card.selected .dept-check{display:flex}
-.dept-empty{font-size:0.85rem;color:var(--muted);padding:0.4rem 0}
-.reason-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.7rem}
-.reason-placeholder{font-size:0.85rem;color:var(--muted);padding:0.4rem 0;}
-.reason-opt{display:flex;align-items:center;gap:0.6rem;border:1.5px solid rgba(36,68,65,0.1);border-radius:12px;padding:0.7rem 0.9rem;cursor:pointer;font-size:0.85rem;color:var(--green)}
-.reason-opt input{accent-color:var(--red)}
-.other-input{width:100%;margin-top:0.4rem;padding:0.65rem 0.9rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--green)}
+.concern-box{width:100%;box-sizing:border-box;min-height:140px;resize:vertical;padding:.85rem 1rem;border:1.5px solid rgba(36,68,65,0.15);border-radius:14px;font-family:'DM Sans',sans-serif;font-size:.95rem;line-height:1.5;color:var(--green)}
+.concern-box:focus{outline:none;border-color:var(--red)}
+.concern-meta{display:flex;justify-content:space-between;gap:1rem;margin-top:.45rem;font-size:.72rem;color:var(--muted)}
+.concern-tips{margin-top:.9rem;font-size:.78rem;color:var(--green);background:rgba(36,68,65,.04);border-radius:12px;padding:.7rem .9rem;line-height:1.55}
+.concern-tips strong{display:block;margin-bottom:.15rem}
 .upload-box{border:1.5px dashed rgba(36,68,65,0.2);border-radius:14px;padding:1.4rem;text-align:center;color:var(--green);font-size:0.85rem}
 .upload-box input{margin-top:0.7rem;display:block;margin-left:auto;margin-right:auto}
 .file-list{display:flex;flex-direction:column;gap:0.5rem;margin-top:1rem;text-align:left}
-.file-item{display:flex;align-items:center;justify-content:space-between;gap:0.6rem;background:rgba(195,54,67,0.06);border:1.5px solid rgba(195,54,67,0.25);color:var(--green);font-weight:600;font-size:0.82rem;padding:0.55rem 0.9rem;border-radius:10px}
+.file-item{display:flex;align-items:center;justify-content:space-between;gap:0.6rem;background:rgba(195,54,67,0.06);border:1.5px solid rgba(195,54,67,0.25);color:var(--green);font-weight:600;font-size:.8rem;border-radius:10px;padding:.5rem .8rem}
 .file-item .fname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .file-item .fremove{cursor:pointer;color:var(--red);font-weight:800;flex-shrink:0;padding:0 0.2rem}
 .upload-warn{color:var(--red);font-weight:700;font-size:0.78rem;margin-top:0.6rem}
 .wiz-btn:disabled{opacity:.5;cursor:not-allowed}
-@media(max-width:700px){.dept-grid,.reason-grid{grid-template-columns:1fr}}
 </style>
 
 <div class="wiz-page">
   <div class="wiz-title">Book Appointment</div>
-  <div class="wiz-sub">Schedule a new consultation with your preferred healthcare provider.</div>
+  <div class="wiz-sub">Tell us what's bothering you. We'll suggest the right department and doctors.</div>
 
   <?php render_stepper(1); ?>
 
@@ -146,45 +125,22 @@ echo booking_wizard_css();
 
   <form method="POST" enctype="multipart/form-data" id="step1-form">
     <div class="wiz-card">
-      <h3>1. Select Department</h3>
-      <?php if (empty($available_departments)): ?>
-      <p class="dept-empty">No departments are available for booking right now. Please check back later.</p>
-      <?php else: ?>
-      <div class="dept-grid">
-        <?php foreach ($available_departments as $name => $info): ?>
-        <div class="dept-card <?= $sel_department === $name ? 'selected' : '' ?>" data-dept="<?= htmlspecialchars($name) ?>" onclick="pickDept(this)">
-          <div class="dept-check">&#10003;</div>
-          <div class="dept-icon"><?= dept_icon($info['icon']) ?></div>
-          <div class="dept-name"><?= htmlspecialchars($name) ?></div>
-          <div class="dept-desc"><?= htmlspecialchars($info['desc']) ?></div>
-        </div>
-        <?php endforeach; ?>
+      <h3>1. What is your concern?</h3>
+      <textarea class="concern-box" name="concern" id="concern" maxlength="<?= CONCERN_MAX ?>" required
+        placeholder="e.g. I've had a dry cough and mild fever for 3 days, and I get short of breath at night."><?= htmlspecialchars($concern) ?></textarea>
+      <div class="concern-meta">
+        <span>You can write in English or Filipino.</span>
+        <span><span id="concern-count"><?= mb_strlen($concern) ?></span>/<?= CONCERN_MAX ?></span>
       </div>
-      <?php endif; ?>
-      <input type="hidden" name="department" id="department-input" value="<?= htmlspecialchars($sel_department) ?>"/>
+      <div class="concern-tips">
+        <strong>Helpful details</strong>
+        What you feel, where, how long it has been going on, and anything you've already taken or tried.
+        <br>Your description is analyzed by an AI service only to suggest a department. It is not a diagnosis.
+      </div>
     </div>
 
     <div class="wiz-card">
-      <h3>2. Reason for Consultation</h3>
-      <p id="reason-placeholder" class="reason-placeholder" style="<?= $sel_department ? 'display:none;' : '' ?>">Select a department above to see relevant consultation reasons.</p>
-      <?php foreach (BOOKING_REASONS_BY_DEPT as $dept_name => $dept_reasons): ?>
-      <?php if (!array_key_exists($dept_name, $available_departments)) continue; ?>
-      <div class="reason-grid" data-reason-group="<?= htmlspecialchars($dept_name) ?>" style="<?= $sel_department === $dept_name ? '' : 'display:none;' ?>">
-        <?php foreach ($dept_reasons as $r): ?>
-        <label class="reason-opt">
-          <input type="checkbox" name="reasons[]" value="<?= htmlspecialchars($r) ?>" <?= ($sel_department === $dept_name && in_array($r, $sel_reasons, true)) ? 'checked' : '' ?> <?= $sel_department === $dept_name ? '' : 'disabled' ?>/>
-          <?= htmlspecialchars($r) ?>
-        </label>
-        <?php endforeach; ?>
-      </div>
-      <?php endforeach; ?>
-      <label style="display:block;font-size:0.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:0.9rem;">Other (optional)</label>
-      <input type="text" name="reason_other" class="other-input" value="<?= htmlspecialchars($sel_other) ?>" placeholder="Describe your symptoms…"/>
-      <p style="font-size:0.72rem;color:var(--muted);margin-top:0.6rem;">This stays the same even if you switch departments — it's just for the doctor's reference.</p>
-    </div>
-
-    <div class="wiz-card">
-      <h3>3. Upload Past Medical Document <span style="font-weight:400;font-size:0.72rem;text-transform:none;">(optional, up to 5 images)</span></h3>
+      <h3>2. Upload Past Medical Document <span style="font-weight:400;font-size:0.72rem;text-transform:none;">(optional, up to 5 images)</span></h3>
       <div class="upload-box" id="upload-box">
         <div id="upload-label">Upload a prescription or lab result — <strong>image files only</strong> (JPG, PNG, WEBP). You can select up to 5. We'll scan them automatically so they're on file for the doctor.</div>
         <input type="file" name="medical_doc[]" id="medical-doc-input" accept="image/*" multiple/>
@@ -194,29 +150,22 @@ echo booking_wizard_css();
 
     <div class="wiz-actions">
       <a href="../router.php?page=visits" class="wiz-btn ghost">Cancel</a>
-      <button type="submit" class="wiz-btn primary" <?= empty($available_departments) ? 'disabled' : '' ?>>Continue to Doctor Selection</button>
+      <button type="submit" id="go-btn" class="wiz-btn primary" <?= empty($available_departments) ? 'disabled' : '' ?>>Find the Right Doctor</button>
     </div>
   </form>
 </div>
 
 <script>
-function pickDept(el) {
-  document.querySelectorAll('.dept-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  const dept = el.dataset.dept;
-  document.getElementById('department-input').value = dept;
+const concernEl = document.getElementById('concern');
+concernEl.addEventListener('input', () => {
+  document.getElementById('concern-count').textContent = concernEl.value.length;
+});
 
-  document.getElementById('reason-placeholder').style.display = 'none';
-
-  document.querySelectorAll('.reason-grid[data-reason-group]').forEach(group => {
-    const isMatch = group.dataset.reasonGroup === dept;
-    group.style.display = isMatch ? '' : 'none';
-    group.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-      cb.disabled = !isMatch;
-      if (!isMatch) cb.checked = false;
-    });
-  });
-}
+// The recommendation can take a few seconds: show progress and stop double submits.
+document.getElementById('step1-form').addEventListener('submit', () => {
+  const b = document.getElementById('go-btn');
+  setTimeout(() => { b.disabled = true; b.textContent = 'Finding the right doctor…'; }, 0);
+});
 
 const docInput = document.getElementById('medical-doc-input');
 const fileList  = document.getElementById('file-list');

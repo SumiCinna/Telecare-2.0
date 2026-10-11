@@ -4,8 +4,33 @@ date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/booking_helpers.php';
 
-booking_require(['department']);
-$department = $_SESSION['booking']['department'];
+booking_require(['concern']);
+$concern   = $_SESSION['booking']['concern'];
+$available = booking_available_departments($conn);
+
+// Recommendation is normally computed in step 1; recompute if the session lost it.
+if (empty($_SESSION['booking']['rec'])) {
+    $_SESSION['booking']['rec'] = booking_recommend_department($conn, $concern);
+}
+$rec = $_SESSION['booking']['rec'];
+
+// The patient can pick a different department than the suggested one.
+if (isset($_GET['dept'])) {
+    $want = (string)$_GET['dept'];
+    if (isset($available[$want])) {
+        if (($_SESSION['booking']['department'] ?? '') !== $want) {
+            unset($_SESSION['booking']['doctor_id'], $_SESSION['booking']['appt_date'], $_SESSION['booking']['appt_time']);
+        }
+        $_SESSION['booking']['department'] = $want;
+    }
+    header('Location: router.php?page=booking/step2_doctor'); exit;
+}
+
+$department = $_SESSION['booking']['department'] ?? $rec['department'];
+if (!isset($available[$department])) $department = $rec['department'];
+if (!isset($available[$department])) $department = (string)array_key_first($available);
+$_SESSION['booking']['department'] = $department;
+$isSuggested = ($department === $rec['department']);
 
 // Selecting a doctor is a simple GET link — validate + store, then move on.
 if (isset($_GET['doctor_id'])) {
@@ -24,7 +49,9 @@ $stmt = $conn->prepare("SELECT id, full_name, specialty, subspecialty, consultat
                          ORDER BY full_name ASC");
 $stmt->bind_param("s", $department);
 $stmt->execute();
-$doctors = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$doctors = booking_rank_doctors($stmt->get_result()->fetch_all(MYSQLI_ASSOC), $concern);
+
+$reasonText = $rec['reason'] !== '' ? $rec['reason'] : 'Based on the words in your description.';
 
 $page_title = 'Select Doctor — TELE-CARE';
 $active_nav = 'visits';
@@ -78,27 +105,69 @@ echo booking_wizard_css();
 .summary-line span:first-child{color:var(--muted)}
 .summary-line span:last-child{text-align:right;font-weight:700}
 .empty-state{grid-column:1/-1;text-align:center;padding:2.5rem;color:var(--muted);font-size:0.88rem}
+/* ── Recommendation ── */
+.doctor-card{position:relative}
+.rec-badge{position:absolute;top:-9px;right:12px;background:var(--red);color:#fff;font-size:.62rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:.15rem .55rem;border-radius:20px}
+.rec-card{background:#fff;border:1.5px solid rgba(195,54,67,.25);border-radius:14px;padding:1rem 1.1rem;margin-bottom:1rem}
+.rec-label{font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.rec-dept{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;color:var(--green);margin:.15rem 0 .25rem}
+.rec-reason{font-size:.84rem;color:var(--green);line-height:1.5}
+.rec-src{font-size:.68rem;color:var(--muted);margin-top:.35rem}
+.rec-concern{font-size:.78rem;color:var(--muted);margin-top:.7rem;padding-top:.7rem;border-top:1px solid rgba(36,68,65,.08)}
+.rec-concern em{color:var(--green);font-style:normal;font-weight:600}
+.rec-switch{margin-top:.7rem;font-size:.76rem;color:var(--muted)}
+.rec-switch a{display:inline-block;margin:.25rem .35rem 0 0;padding:.3rem .75rem;border:1.5px solid rgba(36,68,65,.15);border-radius:20px;color:var(--green);text-decoration:none;font-weight:600}
+.rec-switch a:hover{border-color:var(--red);color:var(--red)}
+.urgent-note{background:#fef2f2;border:1.5px solid #fca5a5;color:#991b1b;border-radius:12px;padding:.8rem 1rem;margin-bottom:1rem;font-size:.84rem;line-height:1.5}
+.urgent-note strong{display:block;margin-bottom:.15rem}
 @media(max-width:800px){.doctor-layout{grid-template-columns:1fr}.doctor-summary{order:-1;position:static}}
 @media(max-width:560px){.doctor-grid{grid-template-columns:1fr;max-height:none;overflow-y:visible}}
 </style>
 
 <div class="wiz-page">
-  <div class="wiz-title">Select your Healthcare Provider</div>
-  <div class="wiz-sub">Choose from our team in <strong><?= htmlspecialchars($department) ?></strong>.</div>
+  <div class="wiz-title">Recommended for You</div>
+  <div class="wiz-sub">Based on your concern, here is the department and the doctors we suggest.</div>
 
   <?php render_stepper(2); ?>
 
   <div class="doctor-layout">
   <div>
+  <?php if (!empty($rec['urgent'])): ?>
+  <div class="urgent-note">
+    <strong>Some symptoms you described can be serious.</strong>
+    If they are severe, sudden, or getting worse, do not wait for an appointment. Call <b>911</b> or go to the nearest emergency room.
+  </div>
+  <?php endif; ?>
+
+  <div class="rec-card">
+    <div class="rec-label"><?= $isSuggested ? 'Suggested department' : 'Selected department' ?></div>
+    <div class="rec-dept"><?= htmlspecialchars($department) ?></div>
+    <?php if ($isSuggested): ?>
+      <div class="rec-reason"><?= htmlspecialchars($reasonText) ?></div>
+      <div class="rec-src"><?= $rec['source'] === 'ai' ? 'Suggested by our AI assistant' : 'Suggested from your keywords' ?> &middot; this is not a diagnosis.</div>
+    <?php else: ?>
+      <div class="rec-reason">You chose this instead of our suggestion (<?= htmlspecialchars($rec['department']) ?>).</div>
+    <?php endif; ?>
+    <div class="rec-concern">Your concern: <em>&ldquo;<?= htmlspecialchars($concern) ?>&rdquo;</em></div>
+    <?php if (count($available) > 1): ?>
+    <div class="rec-switch">Not quite right? See another department:<br>
+      <?php foreach ($available as $dn => $dinfo): if ($dn === $department) continue; ?>
+        <a href="router.php?page=booking/step2_doctor&dept=<?= urlencode($dn) ?>"><?= htmlspecialchars($dn) ?></a>
+      <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+  </div>
+
   <div class="doctor-toolbar"><span>Available healthcare providers</span><span><?= count($doctors) ?> provider<?= count($doctors) === 1 ? '' : 's' ?></span></div>
   <div class="doctor-grid">
     <?php if (!$doctors): ?>
-      <div class="empty-state">No doctors are currently listed under this department.<br/><a href="router.php?page=booking/step1_details">Choose another department</a>.</div>
+      <div class="empty-state">No doctors are currently listed under this department.<br/>Try another department above, or <a href="router.php?page=booking/step1_details">change your concern</a>.</div>
     <?php endif; ?>
-    <?php foreach ($doctors as $dr):
+    <?php foreach ($doctors as $di => $dr):
       $initials = strtoupper(substr($dr['full_name'],0,1).(strpos($dr['full_name'],' ')!==false ? substr($dr['full_name'],strpos($dr['full_name'],' ')+1,1) : ''));
     ?>
     <div class="doctor-card">
+      <?php if ($di === 0 && count($doctors) > 1): ?><span class="rec-badge">Recommended</span><?php endif; ?>
       <div class="doctor-avatar">
         <?php if (!empty($dr['profile_photo'])): ?><img src="../../<?= htmlspecialchars($dr['profile_photo']) ?>"/><?php else: echo $initials; endif; ?>
       </div>

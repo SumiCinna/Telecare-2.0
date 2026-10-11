@@ -4,24 +4,8 @@ date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/booking_helpers.php';
 
-booking_require(['department', 'doctor_id', 'appt_date', 'appt_time']);
+booking_require(['concern', 'department', 'doctor_id', 'appt_date', 'appt_time']);
 $b = $_SESSION['booking'];
-
-// ── Payment method chosen in step 4 (Regular / YAKAP / HMO) ──
-$payMethod = $b['payment_method'] ?? '';
-$cov       = $b['coverage'] ?? [];
-if (!in_array($payMethod, ['Regular', 'YAKAP', 'HMO'], true)) {
-    header('Location: router.php?page=booking/step4_payment_method'); exit;
-}
-$isCoverage = $payMethod !== 'Regular';
-if ($isCoverage && (($cov['method'] ?? '') !== $payMethod || empty($cov['consent']))) {
-    header('Location: router.php?page=booking/step4_payment_method'); exit;
-}
-$hasPM = booking_ensure_payment_schema($conn); // adds payment_method column + coverage tables if missing
-if ($isCoverage && !$hasPM) {
-    $_SESSION['toast_error'] = 'YAKAP / HMO booking is not set up on the database yet. Please contact support.';
-    header('Location: router.php?page=booking/step4_review'); exit;
-}
 
 $doctor_id  = (int)$b['doctor_id'];
 $department = $b['department'];
@@ -40,8 +24,9 @@ $conn->query("CREATE TABLE IF NOT EXISTS doctor_schedule_settings (
     CONSTRAINT doctor_schedule_settings_doctor_fk FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
-$reason = implode(', ', $b['reasons'] ?? []);
-$notes  = trim($b['reason_other'] ?? '');
+// The patient's own words are the reason for the visit (appointments.reason is varchar(500)).
+$reason = mb_substr(trim($b['concern']), 0, 500);
+$notes  = '';
 
 // Multiple images may have been uploaded in step1 (up to 5). The DB still
 // has single string columns for attachment_path/type/ocr_text, so we pack
@@ -115,79 +100,38 @@ if ($dup->get_result()->fetch_assoc()) {
     header('Location: router.php?page=booking/step3_schedule'); exit;
 }
 
-// ── Create the appointment ──
-//  Regular   : Pending/Unpaid, patient continues to PayMongo (pay.php).
-//  YAKAP/HMO : no online payment. Created as Confirmed right away; the coverage details
-//              are saved with it (appointment_yakap / appointment_hmo) for the clinic to verify.
+// ── Straight-to-payment flow ──
+// No more Pending -> DoctorApproved -> Staff Confirmed chain. The
+// appointment is created as Confirmed/Unpaid immediately and the patient
+// is sent straight to payment.php.
 $reference      = 'APT-' . date('Y') . '-' . str_pad((string)mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
 $type           = 'Teleconsult';
-$status         = $isCoverage ? 'Confirmed' : 'Pending';
+$status         = 'Pending';   
 $payment_status = 'Unpaid';
 
-$cols  = 'patient_id, doctor_id, appointment_date, appointment_time, type, department, notes, reason, attachment_path, attachment_type, attachment_ocr_text, status, payment_status, reference_no';
-$marks = '?,?,?,?,?,?,?,?,?,?,?,?,?,?';
-$vals  = [$patient_id, $doctor_id, $date, $time, $type, $department,
-          $notes, $reason, $attachment_path, $attachment_type, $attachment_ocr,
-          $status, $payment_status, $reference];
-$bindTypes = 'ii' . str_repeat('s', 12); // patient_id, doctor_id are int; the rest are strings
-if ($hasPM) {
-    $cols .= ', payment_method'; $marks .= ',?'; $vals[] = $payMethod; $bindTypes .= 's';
-}
+$stmt = $conn->prepare(
+    "INSERT INTO appointments
+        (patient_id, doctor_id, appointment_date, appointment_time, type, department,
+         notes, reason, attachment_path, attachment_type, attachment_ocr_text,
+         status, payment_status, reference_no)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+);
+$bindTypes = 'ii' . str_repeat('s', 12); // patient_id,doctor_id are int; the rest are strings
+$stmt->bind_param(
+    $bindTypes,
+    $patient_id, $doctor_id, $date, $time, $type, $department,
+    $notes, $reason, $attachment_path, $attachment_type, $attachment_ocr,
+    $status, $payment_status, $reference
+);
 
-$patient_name = $p['full_name'] ?? '';
-$patient_dob  = !empty($p['date_of_birth']) ? $p['date_of_birth'] : null;
-
-try {
-    $conn->begin_transaction();
-
-    $stmt = $conn->prepare("INSERT INTO appointments ($cols) VALUES ($marks)");
-    $stmt->bind_param($bindTypes, ...$vals);
-    if (!$stmt->execute()) throw new RuntimeException($stmt->error);
-    $appt_id = (int)$conn->insert_id;
-
-    if ($payMethod === 'YAKAP') {
-        $pin     = preg_replace('/\D/', '', (string)($cov['philhealth_pin'] ?? ''));
-        $member  = (string)($cov['member_type'] ?? '');
-        $contact = (string)($cov['contact_number'] ?? '');
-        $addr    = (string)($cov['address'] ?? '');
-        $clinic  = (string)($cov['yakap_clinic'] ?? '');
-        $emp     = (string)($cov['empanelment_status'] ?? '');
-        $fpe     = (string)($cov['fpe_status'] ?? '');
-        $ys = $conn->prepare("INSERT INTO appointment_yakap
-            (appointment_id, philhealth_pin, patient_name, date_of_birth, member_type, contact_number, address, yakap_clinic, empanelment_status, fpe_status, consent, consent_at)
-            VALUES (?,?,?,?,?,?,?,?,?,?,1,NOW())");
-        $ys->bind_param('isssssssss', $appt_id, $pin, $patient_name, $patient_dob, $member, $contact, $addr, $clinic, $emp, $fpe);
-        if (!$ys->execute()) throw new RuntimeException($ys->error);
-    } elseif ($payMethod === 'HMO') {
-        $prov    = (string)($cov['hmo_provider'] ?? '');
-        $mid     = (string)($cov['hmo_member_id'] ?? '');
-        $member  = (string)($cov['member_type'] ?? '');
-        $princ   = (string)($cov['principal_member_name'] ?? '');
-        $comp    = ($cov['company_employer'] ?? '') !== '' ? $cov['company_employer'] : null;
-        $plan    = ($cov['hmo_plan'] ?? '') !== '' ? $cov['hmo_plan'] : null;
-        $contact = (string)($cov['contact_number'] ?? '');
-        $service = (string)($cov['service_type'] ?? '');
-        $loa     = ($cov['loa_number'] ?? '') !== '' ? $cov['loa_number'] : null;
-        $hs = $conn->prepare("INSERT INTO appointment_hmo
-            (appointment_id, hmo_provider, hmo_member_id, member_type, principal_member_name, company_employer, hmo_plan, patient_name, date_of_birth, contact_number, service_type, loa_number, consent, consent_at)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1,NOW())");
-        $hs->bind_param('isssssssssss', $appt_id, $prov, $mid, $member, $princ, $comp, $plan, $patient_name, $patient_dob, $contact, $service, $loa);
-        if (!$hs->execute()) throw new RuntimeException($hs->error);
-    }
-
-    $conn->commit();
-} catch (Throwable $ex) {
-    try { $conn->rollback(); } catch (Throwable $ignore) {}
-    error_log('process_booking failed: ' . $ex->getMessage());
-    $_SESSION['toast_error'] = 'Could not create the appointment. Please try again.';
+if (!$stmt->execute()) {
+    $_SESSION['toast_error'] = 'Could not create the appointment: ' . $stmt->error;
     header('Location: router.php?page=booking/step4_review'); exit;
 }
 
+$appt_id = $conn->insert_id;
 unset($_SESSION['booking']); // wizard state no longer needed
 
-if ($isCoverage) {
-    header('Location: ../router.php?page=booking/success&appt_id=' . $appt_id);
-} else {
-    header('Location: ../router.php?page=pay&appt_id=' . $appt_id);
-}
+header('Location: ../router.php?page=pay&appt_id=' . $appt_id);
+
 exit;

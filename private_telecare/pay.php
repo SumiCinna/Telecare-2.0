@@ -1,19 +1,18 @@
 <?php
 // private_telecare/pay.php
+// Pay step of the booking flow:  Method -> Review -> Payment
+// Methods: GCash (PayMongo), PhilHealth YAKAP, HMO.  (No card payments.)
 
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/legal_policy_helper.php';
-// pay.php
+require_once __DIR__ . '/booking/booking_helpers.php';
 if (!isset($patient_id)) {
     die('❌ $patient_id is not set. Check auth.php — session key may differ.');
 }
 
 $paymongoSecretKey = $_ENV['PAYMONGO_SECRET_KEY'] ?? ($_SERVER['PAYMONGO_SECRET_KEY'] ?? getenv('PAYMONGO_SECRET_KEY') ?: '');
-$paymongoPublicKey = $_ENV['PAYMONGO_PUBLIC_KEY'] ?? ($_SERVER['PAYMONGO_PUBLIC_KEY'] ?? getenv('PAYMONGO_PUBLIC_KEY') ?: '');
-
 define('PAYMONGO_SECRET_KEY', $paymongoSecretKey);
-define('PAYMONGO_PUBLIC_KEY', $paymongoPublicKey);
 
 $appt_id = (int)($_GET['appt_id'] ?? 0);
 if (!$appt_id) { header('Location: ../visits.php'); exit; }
@@ -47,35 +46,54 @@ function formatPhone(?string $raw): ?string {
     return null;
 }
 
+// CSRF token for the payment form.
+if (empty($_SESSION['pay_csrf'])) $_SESSION['pay_csrf'] = bin2hex(random_bytes(32));
+$csrf = $_SESSION['pay_csrf'];
+
+$formErrors  = [];
+$postedMeth  = '';
+$isRepost    = false;
+
 // ── Handle POST ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_method'])) {
     while (ob_get_level()) ob_end_clean();
 
-    $method       = $_POST['pay_method'];
-    $email        = trim($_POST['email'] ?? '');
-    $name         = trim($_POST['name']  ?? '');
-    $phone        = formatPhone($_POST['phone'] ?? '');
-    $amount_cents = (int)(floatval($appt['consultation_fee']) * 100);
-    if ($amount_cents < 10000) $amount_cents = 10000;
-
-    $success_url = BASE_URL . '/router.php?page=pay_success&appt_id=' . $appt_id . '&patient=' . $patient_id;
-$failed_url  = BASE_URL . '/router.php?page=pay_cancel&appt_id='  . $appt_id;
-
-    if (PAYMONGO_SECRET_KEY === '') {
-      $_SESSION['toast_error'] = 'Payment setup error: missing PAYMONGO_SECRET_KEY in .env.';
-      header('Location: router.php?page=pay&appt_id=' . $appt_id); exit;
+    if (!hash_equals($csrf, (string)($_POST['csrf'] ?? ''))) {
+        $_SESSION['toast_error'] = 'Your session expired. Please try again.';
+        header('Location: router.php?page=pay&appt_id=' . $appt_id); exit;
     }
 
-    if ($method === 'card' && PAYMONGO_PUBLIC_KEY === '') {
-      $_SESSION['toast_error'] = 'Payment setup error: missing PAYMONGO_PUBLIC_KEY in .env.';
-      header('Location: router.php?page=pay&appt_id=' . $appt_id); exit;
-    }
+    $method = (string)$_POST['pay_method'];
 
-    $billing = ['name' => $name, 'email' => $email];
-    if ($phone !== null) $billing['phone'] = $phone;
+    // ── PhilHealth YAKAP / HMO: save the details, confirm the appointment ──
+    if ($method === 'yakap' || $method === 'hmo') {
+        $res = booking_save_coverage($conn, $patient_id, $appt_id, $method, $_POST);
+        if (!empty($res['ok'])) {
+            header('Location: ' . $res['redirect']); exit;
+        }
+        $formErrors = $res['errors'] ?? ['Could not save your details.'];
+        $postedMeth = $method;
+        $isRepost   = true;   // fall through and show the page again with the errors
 
     // ── GCash ──
-    if ($method === 'gcash') {
+    } elseif ($method === 'gcash') {
+        $name         = trim((string)$appt['patient_name']);
+        $email        = trim((string)$appt['patient_email']);
+        $phone        = formatPhone($appt['patient_phone'] ?? '');
+        $amount_cents = (int)(floatval($appt['consultation_fee']) * 100);
+        if ($amount_cents < 10000) $amount_cents = 10000;
+
+        $success_url = BASE_URL . '/router.php?page=pay_success&appt_id=' . $appt_id . '&patient=' . $patient_id;
+        $failed_url  = BASE_URL . '/router.php?page=pay_cancel&appt_id='  . $appt_id;
+
+        if (PAYMONGO_SECRET_KEY === '') {
+            $_SESSION['toast_error'] = 'Payment setup error: missing PAYMONGO_SECRET_KEY in .env.';
+            header('Location: router.php?page=pay&appt_id=' . $appt_id); exit;
+        }
+
+        $billing = ['name' => $name, 'email' => $email];
+        if ($phone !== null) $billing['phone'] = $phone;
+
         $payload = ['data' => ['attributes' => [
             'amount'   => $amount_cents,
             'currency' => 'PHP',
@@ -97,12 +115,20 @@ $failed_url  = BASE_URL . '/router.php?page=pay_cancel&appt_id='  . $appt_id;
         $response  = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-        $result = json_decode($response, true);
+        $result = json_decode((string)$response, true);
 
         if ($http_code === 200 && isset($result['data']['attributes']['redirect']['checkout_url'])) {
             $source_id = $result['data']['id'];
             $upd = $conn->prepare("UPDATE appointments SET paymongo_link_id = ? WHERE id = ?");
             if ($upd) { $upd->bind_param("si", $source_id, $appt_id); $upd->execute(); }
+            // Remember the method on the appointment (best effort; needs the payment_method column).
+            try {
+                if (booking_ensure_payment_schema($conn)) {
+                    $pm = $conn->prepare("UPDATE appointments SET payment_method='GCash' WHERE id=? AND patient_id=?");
+                    $pm->bind_param('ii', $appt_id, $patient_id);
+                    $pm->execute();
+                }
+            } catch (Throwable $ignore) { /* not critical */ }
             header('Location: ' . $result['data']['attributes']['redirect']['checkout_url']); exit;
         } else {
             $error = $result['errors'][0]['detail'] ?? 'GCash payment gateway error.';
@@ -110,150 +136,24 @@ $failed_url  = BASE_URL . '/router.php?page=pay_cancel&appt_id='  . $appt_id;
             header('Location: router.php?page=pay&appt_id=' . $appt_id); exit;
         }
 
-    // ── Card — direct REST API, no PayMongo.js ──
-    } elseif ($method === 'card') {
-
-        $card_number = preg_replace('/\s+/', '', trim($_POST['card_number'] ?? ''));
-        $exp_month   = (int)($_POST['exp_month'] ?? 0);
-        $exp_year    = (int)($_POST['exp_year']  ?? 0);
-        $cvc         = trim($_POST['cvc'] ?? '');
-
-        if (!$card_number || !$exp_month || !$exp_year || !$cvc) {
-            header('Content-Type: application/json');
-            echo json_encode(['status' => 'error', 'message' => 'Card details are incomplete.']);
-            exit;
-        }
-
-        // Step 1 — Create Payment Method (use PUBLIC key)
-        $pm_payload = ['data' => ['attributes' => [
-            'type'    => 'card',
-            'details' => [
-                'card_number' => $card_number,
-                'exp_month'   => $exp_month,
-                'exp_year'    => $exp_year,
-                'cvc'         => $cvc,
-            ],
-            'billing' => $billing,
-        ]]];
-
-        $ch = curl_init('https://api.paymongo.com/v1/payment_methods');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_HTTPHEADER     => [
-                'Content-Type: application/json',
-                'Authorization: Basic ' . base64_encode(PAYMONGO_PUBLIC_KEY . ':'),
-            ],
-            CURLOPT_POSTFIELDS => json_encode($pm_payload),
-        ]);
-        $pm_resp = curl_exec($ch);
-        $pm_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        $pm = json_decode($pm_resp, true);
-
-        if ($pm_code !== 200 || !isset($pm['data']['id'])) {
-            $error = $pm['errors'][0]['detail'] ?? 'Could not tokenise card. Check card details.';
-            header('Content-Type: application/json');
-            echo json_encode(['status' => 'error', 'message' => $error]);
-            exit;
-        }
-
-        $pm_id = $pm['data']['id'];
-
-        // Step 2 — Create Payment Intent (use SECRET key)
-        $pi_payload = ['data' => ['attributes' => [
-            'amount'                 => $amount_cents,
-            'currency'               => 'PHP',
-            'payment_method_allowed' => ['card'],
-            'description'            => 'Teleconsultation with Dr. ' . $appt['doctor_name'],
-            'statement_descriptor'   => 'TELE-CARE',
-            'capture_type'           => 'automatic',
-        ]]];
-
-        $ch = curl_init('https://api.paymongo.com/v1/payment_intents');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_HTTPHEADER     => [
-                'Content-Type: application/json',
-                'Authorization: Basic ' . base64_encode(PAYMONGO_SECRET_KEY . ':'),
-            ],
-            CURLOPT_POSTFIELDS => json_encode($pi_payload),
-        ]);
-        $pi_resp = curl_exec($ch);
-        $pi_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        $pi = json_decode($pi_resp, true);
-
-        if ($pi_code !== 200 || !isset($pi['data']['id'])) {
-            $error = $pi['errors'][0]['detail'] ?? 'Could not create payment intent.';
-            header('Content-Type: application/json');
-            echo json_encode(['status' => 'error', 'message' => $error]);
-            exit;
-        }
-
-        $intent_id  = $pi['data']['id'];
-        $client_key = $pi['data']['attributes']['client_key'];
-
-        $upd = $conn->prepare("UPDATE appointments SET paymongo_link_id = ? WHERE id = ?");
-        if ($upd) { $upd->bind_param("si", $intent_id, $appt_id); $upd->execute(); }
-
-        // Step 3 — Attach Payment Method (use SECRET key)
-        $attach_payload = ['data' => ['attributes' => [
-            'payment_method' => $pm_id,
-            'client_key'     => $client_key,
-            'return_url'     => $success_url . '&intent_id=' . $intent_id,
-        ]]];
-
-        $ch = curl_init("https://api.paymongo.com/v1/payment_intents/{$intent_id}/attach");
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_HTTPHEADER     => [
-                'Content-Type: application/json',
-                'Authorization: Basic ' . base64_encode(PAYMONGO_SECRET_KEY . ':'),
-            ],
-            CURLOPT_POSTFIELDS => json_encode($attach_payload),
-        ]);
-        $att_resp = curl_exec($ch);
-        $att_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        $att = json_decode($att_resp, true);
-
-        if ($att_code !== 200) {
-            $error = $att['errors'][0]['detail'] ?? 'Could not process payment.';
-            header('Content-Type: application/json');
-            echo json_encode(['status' => 'error', 'message' => $error]);
-            exit;
-        }
-
-        $intent_status = $att['data']['attributes']['status'];
-        $next_action   = $att['data']['attributes']['next_action'] ?? null;
-
-        header('Content-Type: application/json');
-        if ($intent_status === 'succeeded') {
-            echo json_encode(['status' => 'succeeded', 'redirect' => $success_url . '&intent_id=' . $intent_id]);
-        } elseif ($next_action && isset($next_action['redirect']['url'])) {
-            echo json_encode(['status' => 'awaiting_next_action', 'redirect' => $next_action['redirect']['url']]);
-        } elseif ($intent_status === 'awaiting_payment_method') {
-            echo json_encode(['status' => 'error', 'message' => 'Card was declined. Please try the test card shown.']);
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Payment failed: ' . $intent_status]);
-        }
-        exit;
-
     } else {
         $_SESSION['toast_error'] = 'Invalid payment method.';
         header('Location: router.php?page=pay&appt_id=' . $appt_id); exit;
     }
 }
 
-$pre_name  = htmlspecialchars($appt['patient_name']  ?? '');
-$pre_email = htmlspecialchars($appt['patient_email'] ?? '');
-$pre_phone = htmlspecialchars($appt['patient_phone'] ?? '');
+$e         = fn($x) => htmlspecialchars((string)$x, ENT_QUOTES);
+// Re-show what the patient typed after a validation error; otherwise use profile defaults.
+$old       = fn(string $k, string $d = '') => $e($isRepost ? (string)($_POST[$k] ?? '') : $d);
+$checked   = fn(string $k, string $v) => ($isRepost && (string)($_POST[$k] ?? '') === $v) ? 'checked' : '';
 $fee       = floatval($appt['consultation_fee']);
 $fee_fmt   = '₱' . number_format($fee, 2);
-$doc_name  = 'Dr. ' . htmlspecialchars($appt['doctor_name']);
+$doc_name  = 'Dr. ' . $e($appt['doctor_name']);
+$hmoList   = booking_hmo_provider_list($conn);
+$dobFmt    = !empty($p['date_of_birth']) ? (new DateTime($p['date_of_birth']))->format('M j, Y') : '';
+$apptWhen  = (new DateTime($appt['appointment_date']))->format('M j, Y') . ' at ' . date('g:i A', strtotime($appt['appointment_time']));
+$defPhone  = (string)($appt['patient_phone'] ?? '');
+$defAddr   = (string)($p['address'] ?? ($p['home_address'] ?? ''));
 
 $ref_suffix = str_pad((string)((abs(crc32($appt_id . '|' . date('Ymd'))) % 9000) + 1000), 4, '0', STR_PAD_LEFT);
 $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
@@ -312,7 +212,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     .amount-big .currency { font-size:1.5rem; vertical-align:top; margin-top:0.4rem; display:inline-block; }
     .amount-label { font-size:0.72rem; color:var(--muted); margin-top:0.3rem; }
 
-    .method-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:0.6rem; margin-bottom:1.5rem; max-width:400px; margin-left:auto; margin-right:auto; }
+    .method-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:0.6rem; margin-bottom:1.2rem; max-width:520px; margin-left:auto; margin-right:auto; }
     .method-card { border:2px solid var(--border); border-radius:var(--radius); padding:1rem 0.5rem; display:flex; flex-direction:column; align-items:center; gap:0.4rem; cursor:pointer; transition:all 0.2s; background:var(--white); position:relative; }
     .method-card:hover { border-color:var(--teal); }
     .method-card.selected { border-color:var(--teal); background:rgba(13,148,136,0.06); box-shadow:0 0 0 1px var(--teal); }
@@ -322,41 +222,8 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     .method-name  { font-size:0.78rem; font-weight:600; color:var(--text); text-align:center; }
     .method-sub   { font-size:0.65rem; color:var(--muted); text-align:center; }
     .logo-gcash   { background:#00a3e0; color:#fff; font-weight:800; font-size:1.2rem; }
-    .logo-card    { background:linear-gradient(135deg,#1a56db,#7e3af2); color:#fff; }
-
-    /* ── Card section ── */
-    .card-fields { display:none; margin-bottom:1rem; }
-    .card-fields.visible { display:block; }
-
-    .card-preview {
-      background:linear-gradient(135deg,#1a56db 0%,#7e3af2 100%);
-      border-radius:16px; padding:1.4rem 1.5rem; margin-bottom:1rem;
-      color:#fff; position:relative; overflow:hidden; min-height:140px;
-      box-shadow:0 8px 24px rgba(26,86,219,0.35);
-    }
-    .card-preview::before { content:''; position:absolute; top:-40px; right:-30px; width:130px; height:130px; border-radius:50%; background:rgba(255,255,255,0.08); }
-    .card-preview::after  { content:''; position:absolute; bottom:-50px; right:30px; width:160px; height:160px; border-radius:50%; background:rgba(255,255,255,0.05); }
-    .card-chip { width:34px; height:26px; background:rgba(255,255,255,0.28); border-radius:4px; margin-bottom:0.9rem; }
-    .card-num-display { font-family:'Plus Jakarta Sans',sans-serif; font-size:1.1rem; font-weight:700; letter-spacing:0.2em; margin-bottom:0.7rem; }
-    .card-bottom { display:flex; justify-content:space-between; align-items:flex-end; }
-    .card-meta-label { font-size:0.58rem; opacity:0.6; text-transform:uppercase; letter-spacing:0.08em; }
-    .card-meta-value { font-size:0.82rem; font-weight:600; }
-    .card-brand { font-family:'Plus Jakarta Sans',sans-serif; font-size:1rem; font-weight:800; opacity:0.9; }
-
-    .test-badge { display:inline-flex; align-items:center; gap:0.35rem; background:#fef3c7; border:1px solid #fbbf24; border-radius:6px; padding:0.3rem 0.7rem; font-size:0.72rem; color:#92400e; font-weight:600; margin-bottom:0.8rem; }
-
-    .card-form { display:grid; gap:0.75rem; }
-    .card-row2  { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
-    .cf-label { font-size:0.72rem; font-weight:700; color:var(--text); display:block; margin-bottom:0.3rem; }
-    .cf-input {
-      width:100%; padding:0.68rem 0.9rem;
-      border:1.5px solid var(--border); border-radius:8px;
-      font-family:'DM Sans',sans-serif; font-size:0.92rem;
-      color:var(--text); background:var(--white); outline:none;
-      transition:border-color 0.2s,box-shadow 0.2s;
-    }
-    .cf-input:focus { border-color:var(--teal); box-shadow:0 0 0 3px rgba(13,148,136,0.12); }
-    .cf-input.ok { background:#f0fdf4; border-color:#86efac; color:#166534; font-weight:600; }
+    .logo-yakap   { background:#0b8f4d; color:#fff; font-weight:800; font-size:.8rem; }
+    .logo-hmo     { background:#7e3af2; color:#fff; font-weight:800; font-size:.9rem; }
 
     .error-banner { background:#fef2f2; border:1px solid #fca5a5; border-radius:var(--radius); padding:0.65rem 0.9rem; font-size:0.8rem; color:#991b1b; margin-bottom:1rem; display:none; }
     .error-banner.visible { display:block; }
@@ -417,6 +284,28 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
       .policy-modal-header h2 { font-size:1.2rem; }
       .policy-modal-body { font-size:0.88rem; }
     }
+
+    .method-sub { line-height:1.25; }
+    @media(max-width:420px){ .method-grid{gap:.4rem} .method-card{padding:.8rem .3rem} .method-name{font-size:.72rem} }
+    .cov-form { display:none; background:var(--white); border:1.5px solid var(--border); border-radius:var(--radius); padding:1rem; margin-bottom:1rem; }
+    .cov-form.visible { display:block; }
+    .cov-form fieldset { border:0; min-width:0; }
+    .cov-title { font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:.92rem; margin-bottom:.15rem; }
+    .cov-sub { font-size:.74rem; color:var(--muted); margin-bottom:.9rem; line-height:1.4; }
+    .cov-sec { font-size:.68rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--teal2); margin:1rem 0 .55rem; }
+    .cov-grid { display:grid; grid-template-columns:1fr 1fr; gap:.7rem .8rem; }
+    .cov-grid .full { grid-column:1 / -1; }
+    @media(max-width:520px){ .cov-grid{grid-template-columns:1fr} }
+    .cov-form select.form-input { appearance:auto; }
+    .radio-row { display:flex; gap:.9rem; flex-wrap:wrap; font-size:.84rem; padding:.35rem 0; }
+    .radio-row label { display:flex; align-items:center; gap:.35rem; cursor:pointer; }
+    .radio-row input { accent-color:var(--teal); }
+    .cov-note { font-size:.72rem; color:var(--muted); background:rgba(13,148,136,.06); border-radius:8px; padding:.55rem .7rem; margin-top:.9rem; line-height:1.45; }
+    .cov-consent { display:flex; gap:.5rem; align-items:flex-start; font-size:.76rem; margin-top:.9rem; line-height:1.4; }
+    .cov-consent input { margin-top:.15rem; accent-color:var(--teal); }
+    .ro-input { background:#f3f4f6; color:var(--muted); }
+    .error-banner div + div { margin-top:.2rem; }
+    .cov-sum td:last-child { word-break:break-word; }
   </style>
 </head>
 <body>
@@ -427,33 +316,35 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
 
 <div class="checkout-header">
   <h1>TELE-CARE</h1>
-  <div class="tagline">SECURE ONLINE PAYMENT</div>
+  <div class="tagline">SECURE PAYMENT</div>
 </div>
 
 <div class="ref-bar">
   <span>Reference:</span>
-  <span class="ref-num"><?= htmlspecialchars($reference_number) ?></span>
+  <span class="ref-num"><?= $e($reference_number) ?></span>
   <span class="method-tag" id="method-display" style="display:none;"></span>
 </div>
 
 <div class="stepper">
   <div class="step-item"><div class="step-circle active" id="sc1">1</div><span class="step-label active" id="sl1">Method</span></div>
   <div class="step-line" id="line1"></div>
-  <div class="step-item"><div class="step-circle pending" id="sc2">2</div><span class="step-label" id="sl2">Billing</span></div>
+  <div class="step-item"><div class="step-circle pending" id="sc2">2</div><span class="step-label" id="sl2">Review</span></div>
   <div class="step-line" id="line2"></div>
-  <div class="step-item"><div class="step-circle pending" id="sc3">3</div><span class="step-label" id="sl3">Summary</span></div>
-  <div class="step-line" id="line3"></div>
-  <div class="step-item"><div class="step-circle pending" id="sc4">4</div><span class="step-label" id="sl4">Payment</span></div>
+  <div class="step-item"><div class="step-circle pending" id="sc3">3</div><span class="step-label" id="sl3">Payment</span></div>
 </div>
 
 <div class="checkout-body">
 
-  <!-- ════ STEP 1 ════ -->
+<form method="POST" id="pay-form" action="router.php?page=pay&appt_id=<?= $appt_id ?>" novalidate>
+  <input type="hidden" name="csrf" value="<?= $e($csrf) ?>"/>
+  <input type="hidden" name="pay_method" id="f-method" value=""/>
+
+  <!-- ════ STEP 1: METHOD ════ -->
   <div class="checkout-step active" id="step1">
     <div class="amount-display">
       <div class="amount-desc">Teleconsultation with <?= $doc_name ?></div>
       <div class="amount-big"><span class="currency">₱</span><?= number_format($fee, 2) ?></div>
-      <div class="amount-label">Amount to Pay</div>
+      <div class="amount-label">Consultation fee</div>
     </div>
 
     <div class="section-heading">SELECT PAYMENT METHOD</div>
@@ -465,99 +356,190 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
         <div class="method-name">GCash</div>
         <div class="method-sub">e-Wallet</div>
       </div>
-      <div class="method-card" data-method="card" data-label="Credit/Debit Card" onclick="selectMethod(this)">
+      <div class="method-card" data-method="yakap" data-label="PhilHealth YAKAP" onclick="selectMethod(this)">
         <div class="check-badge"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
-        <div class="method-icon logo-card">💳</div>
-        <div class="method-name">Credit/Debit Card</div>
-        <div class="method-sub">Visa / Mastercard</div>
+        <div class="method-icon logo-yakap">YAKAP</div>
+        <div class="method-name">PhilHealth YAKAP</div>
+        <div class="method-sub">Covered by PhilHealth</div>
+      </div>
+      <div class="method-card" data-method="hmo" data-label="HMO" onclick="selectMethod(this)">
+        <div class="check-badge"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        <div class="method-icon logo-hmo">HMO</div>
+        <div class="method-name">HMO</div>
+        <div class="method-sub">Covered by your HMO</div>
       </div>
     </div>
 
-    <!-- Card section (shown on card select) -->
-    <div class="card-fields" id="card-fields">
+    <div id="form-error" class="error-banner<?= $formErrors ? ' visible' : '' ?>"><?php foreach ($formErrors as $fe): ?><div><?= $e($fe) ?></div><?php endforeach; ?></div>
 
-      <div class="test-badge">🧪 Test Mode — PH test card pre-filled</div>
+    <!-- YAKAP details -->
+    <div class="cov-form" id="cov-yakap">
+      <fieldset disabled>
+        <div class="cov-title">PhilHealth YAKAP details</div>
+        <div class="cov-sub">The clinic verifies these after booking. No payment is taken now.</div>
 
-      <!-- Live card preview -->
-      <div class="card-preview">
-        <div class="card-chip"></div>
-        <div class="card-num-display" id="preview-number">4009 9300 0000 1421</div>
-        <div class="card-bottom">
-          <div>
-            <div class="card-meta-label">Card Holder</div>
-            <div class="card-meta-value" id="preview-name"><?= $pre_name ?: 'CARDHOLDER' ?></div>
+        <div class="cov-sec">Patient information</div>
+        <div class="cov-grid">
+          <div class="full">
+            <label class="form-label" for="y-pin"><span class="req">*</span> PhilHealth PIN</label>
+            <input class="form-input" id="y-pin" name="philhealth_pin" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="12-345678901-2" value="<?= $old('philhealth_pin') ?>"/>
           </div>
           <div>
-            <div class="card-meta-label">Expires</div>
-            <div class="card-meta-value" id="preview-expiry">12 / 28</div>
-          </div>
-          <div class="card-brand" id="preview-brand">VISA</div>
-        </div>
-      </div>
-
-      <div id="card-error" class="error-banner"></div>
-
-      <div class="card-form">
-        <div>
-          <label class="cf-label">Card Number</label>
-          <input class="cf-input ok" id="cf-number" type="text" inputmode="numeric"
-                 value="4009 9300 0000 1421" maxlength="19"
-                 oninput="fmtNum(this)" onkeyup="livePreview()"/>
-        </div>
-        <div class="card-row2">
-          <div>
-            <label class="cf-label">Expiry (MM / YY)</label>
-            <input class="cf-input ok" id="cf-expiry" type="text" inputmode="numeric"
-                   value="12 / 28" maxlength="7"
-                   oninput="fmtExp(this)" onkeyup="livePreview()"/>
+            <label class="form-label">Patient name</label>
+            <input class="form-input ro-input" readonly value="<?= $e($appt['patient_name']) ?>"/>
           </div>
           <div>
-            <label class="cf-label">CVV / CVC</label>
-            <input class="cf-input ok" id="cf-cvc" type="text" inputmode="numeric"
-                   value="123" maxlength="4"
-                   oninput="this.value=this.value.replace(/\D/g,'')"/>
+            <label class="form-label">Date of birth</label>
+            <input class="form-input ro-input" readonly value="<?= $e($dobFmt) ?>"/>
+          </div>
+          <div class="full">
+            <label class="form-label"><span class="req">*</span> Member type</label>
+            <div class="radio-row">
+              <label><input type="radio" name="member_type" value="Member" <?= $checked('member_type','Member') ?>/> Member</label>
+              <label><input type="radio" name="member_type" value="Dependent" <?= $checked('member_type','Dependent') ?>/> Dependent</label>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="y-contact"><span class="req">*</span> Contact number</label>
+            <input class="form-input" id="y-contact" type="tel" name="contact_number" placeholder="09XX XXX XXXX" value="<?= $old('contact_number', $defPhone) ?>"/>
+          </div>
+          <div>
+            <label class="form-label" for="y-addr"><span class="req">*</span> Address</label>
+            <input class="form-input" id="y-addr" name="address" maxlength="255" placeholder="Complete address" value="<?= $old('address', $defAddr) ?>"/>
           </div>
         </div>
-      </div>
+
+        <div class="cov-sec">YAKAP details</div>
+        <div class="cov-grid">
+          <div class="full">
+            <label class="form-label" for="y-clinic"><span class="req">*</span> YAKAP clinic</label>
+            <input class="form-input" id="y-clinic" name="yakap_clinic" maxlength="150" placeholder="Your selected / accredited YAKAP clinic" value="<?= $old('yakap_clinic') ?>"/>
+          </div>
+          <div>
+            <label class="form-label"><span class="req">*</span> YES / MCA (empanelment)</label>
+            <div class="radio-row">
+              <label><input type="radio" name="empanelment_status" value="Empaneled" <?= $checked('empanelment_status','Empaneled') ?>/> Empaneled</label>
+              <label><input type="radio" name="empanelment_status" value="Not Yet Empaneled" <?= $checked('empanelment_status','Not Yet Empaneled') ?>/> Not yet</label>
+            </div>
+          </div>
+          <div>
+            <label class="form-label"><span class="req">*</span> First Patient Encounter (FPE)</label>
+            <div class="radio-row">
+              <label><input type="radio" name="fpe_status" value="Completed" <?= $checked('fpe_status','Completed') ?>/> Completed</label>
+              <label><input type="radio" name="fpe_status" value="Not Yet Completed" <?= $checked('fpe_status','Not Yet Completed') ?>/> Not yet</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="cov-note">Diagnosis, prescription and PCU reference are added by your doctor after the consultation.</div>
+        <label class="cov-consent"><input type="checkbox" name="consent" value="1" <?= $checked('consent','1') ?>/> <span>I confirm that the information provided is correct and authorize its processing for PhilHealth / YAKAP purposes.</span></label>
+      </fieldset>
+    </div>
+
+    <!-- HMO details -->
+    <div class="cov-form" id="cov-hmo">
+      <fieldset disabled>
+        <div class="cov-title">HMO details</div>
+        <div class="cov-sub">The clinic checks your coverage and authorization after booking. No payment is taken now.</div>
+
+        <div class="cov-sec">HMO</div>
+        <div class="cov-grid">
+          <div>
+            <label class="form-label" for="h-prov"><span class="req">*</span> HMO provider</label>
+            <select class="form-input" id="h-prov" name="hmo_provider">
+              <option value="">Select your HMO</option>
+              <?php foreach ($hmoList as $hp): ?>
+                <option value="<?= $e($hp) ?>" <?= ($isRepost && ($_POST['hmo_provider'] ?? '') === $hp) ? 'selected' : '' ?>><?= $e($hp) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div id="h-other-wrap" style="display:none;">
+            <label class="form-label" for="h-other"><span class="req">*</span> HMO name</label>
+            <input class="form-input" id="h-other" name="hmo_provider_other" maxlength="90" value="<?= $old('hmo_provider_other') ?>"/>
+          </div>
+          <div>
+            <label class="form-label" for="h-mid"><span class="req">*</span> Member ID / Card no.</label>
+            <input class="form-input" id="h-mid" name="hmo_member_id" maxlength="60" value="<?= $old('hmo_member_id') ?>"/>
+          </div>
+          <div>
+            <label class="form-label"><span class="req">*</span> Member type</label>
+            <div class="radio-row">
+              <label><input type="radio" name="member_type" value="Member" <?= $checked('member_type','Member') ?>/> Member</label>
+              <label><input type="radio" name="member_type" value="Dependent" <?= $checked('member_type','Dependent') ?>/> Dependent</label>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="h-pm"><span class="req">*</span> Principal member</label>
+            <input class="form-input" id="h-pm" name="principal_member_name" maxlength="150" placeholder="Full name of principal member" value="<?= $old('principal_member_name') ?>"/>
+          </div>
+          <div>
+            <label class="form-label" for="h-comp">Company / employer</label>
+            <input class="form-input" id="h-comp" name="company_employer" maxlength="150" placeholder="Optional" value="<?= $old('company_employer') ?>"/>
+          </div>
+          <div>
+            <label class="form-label" for="h-plan">Plan / account type</label>
+            <input class="form-input" id="h-plan" name="hmo_plan" maxlength="100" placeholder="Optional" value="<?= $old('hmo_plan') ?>"/>
+          </div>
+          <div>
+            <label class="form-label" for="h-loa">LOA / authorization no.</label>
+            <input class="form-input" id="h-loa" name="loa_number" maxlength="60" placeholder="If available" value="<?= $old('loa_number') ?>"/>
+          </div>
+        </div>
+
+        <div class="cov-sec">Patient &amp; consultation</div>
+        <div class="cov-grid">
+          <div>
+            <label class="form-label">Patient name</label>
+            <input class="form-input ro-input" readonly value="<?= $e($appt['patient_name']) ?>"/>
+          </div>
+          <div>
+            <label class="form-label">Date of birth</label>
+            <input class="form-input ro-input" readonly value="<?= $e($dobFmt) ?>"/>
+          </div>
+          <div>
+            <label class="form-label" for="h-contact"><span class="req">*</span> Contact number</label>
+            <input class="form-input" id="h-contact" type="tel" name="contact_number" placeholder="09XX XXX XXXX" value="<?= $old('contact_number', $defPhone) ?>"/>
+          </div>
+          <div>
+            <label class="form-label">Doctor</label>
+            <input class="form-input ro-input" readonly value="<?= $doc_name ?>"/>
+          </div>
+          <div class="full">
+            <label class="form-label"><span class="req">*</span> Service</label>
+            <div class="radio-row">
+              <label><input type="radio" name="service_type" value="Online Consultation" <?= $isRepost ? $checked('service_type','Online Consultation') : 'checked' ?>/> Online Consultation</label>
+              <label><input type="radio" name="service_type" value="Follow-up Consultation" <?= $checked('service_type','Follow-up Consultation') ?>/> Follow-up Consultation</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="cov-note">Diagnosis, prescription, HMO coverage amount, your share (co-payment) and the claim reference are added by the clinic.</div>
+        <label class="cov-consent"><input type="checkbox" name="consent" value="1" <?= $checked('consent','1') ?>/> <span>I confirm that the information provided is accurate and authorize processing and sharing of my information for HMO purposes.</span></label>
+      </fieldset>
     </div>
   </div>
 
-  <!-- ════ STEP 2 ════ -->
+  <!-- ════ STEP 2: REVIEW ════ -->
   <div class="checkout-step" id="step2">
-    <div class="section-heading">Customer Information</div>
-    <div class="form-row">
-      <div>
-        <label class="form-label"><span class="req">*</span> E-mail</label>
-        <input type="email" class="form-input" id="inp-email" value="<?= $pre_email ?>" placeholder="you@email.com"/>
-      </div>
-      <div>
-        <label class="form-label">Phone <span style="color:var(--muted);font-weight:400;">(optional)</span></label>
-        <input type="tel"   class="form-input" id="inp-phone" value="<?= $pre_phone ?>" placeholder="09XXXXXXXXX"/>
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label"><span class="req">*</span> Full Name</label>
-      <input type="text" class="form-input" id="inp-name" value="<?= $pre_name ?>" placeholder="Full Name"/>
-    </div>
-  </div>
-
-  <!-- ════ STEP 3 ════ -->
-  <div class="checkout-step" id="step3">
     <div class="summary-block">
-      <div class="summary-block-title">Payment Info</div>
+      <div class="summary-block-title">Appointment</div>
       <table class="summary-table">
-        <tr><td>Description</td><td>Teleconsultation with <?= $doc_name ?></td></tr>
-        <tr><td>Amount</td><td style="font-size:1rem;color:var(--teal);"><?= $fee_fmt ?></td></tr>
+        <tr><td>Doctor</td><td><?= $doc_name ?></td></tr>
+        <tr><td>Date &amp; time</td><td><?= $e($apptWhen) ?></td></tr>
+        <tr><td>Patient</td><td><?= $e($appt['patient_name']) ?></td></tr>
+      </table>
+    </div>
+    <div class="summary-block">
+      <div class="summary-block-title">Payment</div>
+      <table class="summary-table cov-sum" id="sum-payment">
         <tr><td>Method</td><td id="sum-method"></td></tr>
+        <tr><td>Consultation fee</td><td><?= $e($fee_fmt) ?></td></tr>
+        <tr><td id="sum-due-label">Amount to pay now</td><td id="sum-due" style="font-size:1rem;color:var(--teal);"></td></tr>
       </table>
     </div>
-    <div class="summary-block">
-      <div class="summary-block-title">Billing Details</div>
-      <table class="summary-table">
-        <tr><td>Name</td><td id="sum-name"></td></tr>
-        <tr><td>E-mail</td><td id="sum-email"></td></tr>
-        <tr><td>Phone</td><td id="sum-phone"></td></tr>
-      </table>
+    <div class="summary-block" id="sum-details-block" style="display:none;">
+      <div class="summary-block-title">Your details</div>
+      <table class="summary-table cov-sum" id="sum-details"></table>
     </div>
     <div class="privacy-note">
       <input type="checkbox" id="agree-chk"/>
@@ -565,18 +547,19 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     </div>
   </div>
 
-  <!-- ════ STEP 4 ════ -->
-  <div class="checkout-step" id="step4">
+  <!-- ════ STEP 3: PAYMENT ════ -->
+  <div class="checkout-step" id="step3">
     <div style="text-align:center;padding:3rem 1rem;">
       <div style="width:60px;height:60px;border:4px solid rgba(13,148,136,0.2);border-top-color:var(--teal);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 1.2rem;"></div>
       <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:0.5rem;" id="processing-label">Processing…</div>
       <div style="font-size:0.82rem;color:var(--muted);">Please wait…</div>
     </div>
   </div>
+</form>
 
   <div class="powered-by">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-    Secured by TELE-CARE · Powered by PayMongo
+    Secured by TELE-CARE · GCash payments powered by PayMongo
   </div>
 </div>
 
@@ -597,21 +580,14 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
   </div>
 </div>
 
-<!-- GCash form -->
-<form method="POST" id="pay-form" action="router.php?page=pay&appt_id=<?= $appt_id ?>">
-  <input type="hidden" name="pay_method" id="f-method"/>
-  <input type="hidden" name="email"      id="f-email"/>
-  <input type="hidden" name="name"       id="f-name"/>
-  <input type="hidden" name="phone"      id="f-phone"/>
-</form>
-
 <div class="nav-row">
-  <button class="btn-back" id="btn-back" onclick="goBack()" style="display:none;">Back</button>
-  <button class="btn-next" id="btn-next" onclick="goNext()" disabled>Next</button>
+  <button type="button" class="btn-back" id="btn-back" onclick="goBack()" style="display:none;">Back</button>
+  <button type="button" class="btn-next" id="btn-next" onclick="goNext()" disabled>Next</button>
 </div>
 
 <script>
   let step = 1, selMethod = null, selLabel = null;
+  const FEE = <?= json_encode($fee_fmt) ?>;
 
   // ── Toast ──
   function showToast(msg, type='error') {
@@ -626,31 +602,6 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     <?php unset($_SESSION['toast_error']); ?>
   <?php endif; ?>
 
-  // ── Card formatters ──
-  function fmtNum(el) {
-    let v = el.value.replace(/\D/g,'').substring(0,16);
-    el.value = v.replace(/(.{4})/g,'$1 ').trim();
-    livePreview();
-  }
-  function fmtExp(el) {
-    let v = el.value.replace(/\D/g,'').substring(0,4);
-    el.value = v.length >= 3 ? v.slice(0,2) + ' / ' + v.slice(2) : v;
-    livePreview();
-  }
-
-  // ── Live card preview ──
-  function livePreview() {
-    const raw = document.getElementById('cf-number').value.replace(/\s/g,'');
-    document.getElementById('preview-number').textContent =
-      raw ? raw.replace(/(.{4})/g,'$1 ').trim() : '•••• •••• •••• ••••';
-    document.getElementById('preview-expiry').textContent =
-      document.getElementById('cf-expiry').value || '•• / ••';
-    let brand = 'CARD';
-    if (/^4/.test(raw)) brand = 'VISA';
-    else if (/^5/.test(raw)) brand = 'MASTERCARD';
-    document.getElementById('preview-brand').textContent = brand;
-  }
-
   // ── Method select ──
   function selectMethod(el) {
     document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
@@ -658,19 +609,120 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     selMethod = el.dataset.method; selLabel = el.dataset.label;
     document.getElementById('method-display').textContent   = selLabel;
     document.getElementById('method-display').style.display = '';
-    document.getElementById('card-fields').classList.toggle('visible', selMethod === 'card');
+    document.getElementById('f-method').value = selMethod;
+    // Only the chosen coverage form is enabled, so its fields are the only ones submitted.
+    ['yakap', 'hmo'].forEach(m => {
+      const box = document.getElementById('cov-' + m);
+      box.classList.toggle('visible', selMethod === m);
+      box.querySelector('fieldset').disabled = (selMethod !== m);
+    });
+    setFormError([]);
     document.getElementById('btn-next').disabled = false;
+  }
+
+  function setFormError(list) {
+    const b = document.getElementById('form-error');
+    b.textContent = '';
+    list.forEach(t => { const d = document.createElement('div'); d.textContent = t; b.appendChild(d); });
+    b.classList.toggle('visible', list.length > 0);
+  }
+
+  // ── PIN + HMO "Other" helpers ──
+  (function () {
+    const el = document.getElementById('y-pin');
+    el.addEventListener('input', () => {
+      const d = el.value.replace(/\D/g, '').slice(0, 12);
+      let out = d;
+      if (d.length > 2)  out = d.slice(0, 2) + '-' + d.slice(2);
+      if (d.length > 11) out = d.slice(0, 2) + '-' + d.slice(2, 11) + '-' + d.slice(11);
+      el.value = out;
+    });
+    const prov = document.getElementById('h-prov');
+    const sync = () => { document.getElementById('h-other-wrap').style.display = prov.value === 'Other' ? '' : 'none'; };
+    prov.addEventListener('change', sync); sync();
+  })();
+
+  // ── Coverage form helpers (client side only helps the patient; the server re-checks everything) ──
+  function covBox() { return document.getElementById('cov-' + selMethod); }
+  function val(name) { const f = covBox().querySelector('[name="' + name + '"]'); return f ? f.value.trim() : ''; }
+  function radio(name) { const f = covBox().querySelector('[name="' + name + '"]:checked'); return f ? f.value : ''; }
+  function consented() { return covBox().querySelector('[name="consent"]').checked; }
+
+  function validateCoverage() {
+    const errs = [];
+    if (!radio('member_type')) errs.push('Select whether the patient is a Member or a Dependent.');
+    if (val('contact_number').replace(/\D/g, '').length < 10) errs.push('Enter a valid contact number.');
+    if (selMethod === 'yakap') {
+      if (val('philhealth_pin').replace(/\D/g, '').length !== 12) errs.push('PhilHealth PIN must be 12 digits.');
+      if (!val('address')) errs.push('Address is required.');
+      if (!val('yakap_clinic')) errs.push('Enter your YAKAP clinic.');
+      if (!radio('empanelment_status')) errs.push('Select your YES/MCA (empanelment) status.');
+      if (!radio('fpe_status')) errs.push('Select your First Patient Encounter (FPE) status.');
+    } else {
+      if (!val('hmo_provider')) errs.push('Select your HMO provider.');
+      if (val('hmo_provider') === 'Other' && !val('hmo_provider_other')) errs.push('Enter the name of your HMO provider.');
+      if (!val('hmo_member_id')) errs.push('HMO Member ID / Card No. is required.');
+      if (!val('principal_member_name')) errs.push('Principal member name is required.');
+      if (!radio('service_type')) errs.push('Select the type of consultation.');
+    }
+    if (!consented()) errs.push('Please confirm the consent statement.');
+    return errs;
+  }
+
+  function maskPin(raw) {
+    const d = raw.replace(/\D/g, '');
+    return d.length === 12 ? '••-•••••' + d.slice(7, 11) + '-' + d.slice(11) : d;
+  }
+
+  function fillReview() {
+    document.getElementById('sum-method').textContent = selLabel;
+    const details = document.getElementById('sum-details');
+    const block = document.getElementById('sum-details-block');
+    details.textContent = '';
+    const row = (k, v) => {
+      if (!v) return;
+      const tr = document.createElement('tr');
+      const a = document.createElement('td'); a.textContent = k;
+      const b = document.createElement('td'); b.textContent = v;
+      tr.append(a, b); details.appendChild(tr);
+    };
+    if (selMethod === 'gcash') {
+      block.style.display = 'none';
+      document.getElementById('sum-due-label').textContent = 'Amount to pay now';
+      document.getElementById('sum-due').textContent = FEE;
+      return;
+    }
+    block.style.display = '';
+    document.getElementById('sum-due-label').textContent = 'Amount to pay now';
+    document.getElementById('sum-due').textContent = '₱0.00 (coverage — verified by the clinic)';
+    row('Member type', radio('member_type'));
+    row('Contact number', val('contact_number'));
+    if (selMethod === 'yakap') {
+      row('PhilHealth PIN', maskPin(val('philhealth_pin')));
+      row('Address', val('address'));
+      row('YAKAP clinic', val('yakap_clinic'));
+      row('YES / MCA', radio('empanelment_status'));
+      row('FPE', radio('fpe_status'));
+    } else {
+      row('HMO provider', val('hmo_provider') === 'Other' ? 'Other: ' + val('hmo_provider_other') : val('hmo_provider'));
+      row('Member ID / Card no.', val('hmo_member_id'));
+      row('Principal member', val('principal_member_name'));
+      row('Company / employer', val('company_employer'));
+      row('Plan', val('hmo_plan'));
+      row('LOA no.', val('loa_number'));
+      row('Service', radio('service_type'));
+    }
   }
 
   // ── Stepper ──
   function updateStepper(n) {
-    for (let i=1;i<=4;i++) {
+    for (let i=1;i<=3;i++) {
       const sc = document.getElementById('sc'+i), sl = document.getElementById('sl'+i);
       sc.className = 'step-circle '+(i<n?'done':i===n?'active':'pending');
       sl.className = 'step-label'+(i===n?' active':'');
       if(i<n) sc.innerHTML='<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
       else sc.textContent=i;
-      if(i<4) document.getElementById('line'+i).className='step-line '+(i<n?'done':'');
+      if(i<3) document.getElementById('line'+i).className='step-line '+(i<n?'done':'');
     }
   }
 
@@ -680,141 +732,62 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     document.getElementById('step'+n).classList.add('active');
     updateStepper(n);
     const bb=document.getElementById('btn-back'), bn=document.getElementById('btn-next');
-    bb.style.display = n>1?'':'none';
-    if(n===1){ bn.disabled=!selMethod; bn.textContent='Next'; bn.style.display=''; }
-    else if(n===2){ bn.disabled=false; bn.textContent='Next'; bn.style.display=''; }
-    else if(n===3){
-      bn.disabled=true; bn.textContent='Confirm & Pay →'; bn.style.display='';
+    bb.style.display = n===2 ? '' : 'none';
+    if (n===1) { bn.disabled=!selMethod; bn.textContent='Next'; bn.style.display=''; }
+    else if (n===2) {
+      bn.textContent = selMethod === 'gcash' ? 'Confirm & Pay with GCash →' : 'Confirm & Submit →';
       const chk=document.getElementById('agree-chk');
-      chk.checked=false; chk.onchange=()=>{ bn.disabled=!chk.checked; };
+      chk.checked=false; bn.disabled=true; bn.style.display='';
+      chk.onchange=()=>{ bn.disabled=!chk.checked; };
     } else { bn.style.display='none'; bb.style.display='none'; }
+    window.scrollTo(0, 0);
   }
 
-  function goBack() { if(step>1){ step--; showStep(step); } }
+  function goBack() { if (step===2) { step=1; showStep(1); } }
 
   function goNext() {
-    if(step===1) {
-      if(!selMethod) return;
+    if (step===1) {
+      if (!selMethod) return;
+      if (selMethod !== 'gcash') {
+        const errs = validateCoverage();
+        if (errs.length) { setFormError(errs); document.getElementById('form-error').scrollIntoView({behavior:'smooth', block:'center'}); return; }
+        setFormError([]);
+      }
+      fillReview();
       step=2; showStep(2);
-    } else if(step===2) {
-      const email=document.getElementById('inp-email').value.trim();
-      const name =document.getElementById('inp-name').value.trim();
-      if(!email||!name){ alert('Please fill in your email and name.'); return; }
-      document.getElementById('sum-method').textContent = selLabel;
-      document.getElementById('sum-name').textContent   = name;
-      document.getElementById('sum-email').textContent  = email;
-      document.getElementById('sum-phone').textContent  = document.getElementById('inp-phone').value.trim()||'—';
-      // Update card preview name
-      document.getElementById('preview-name').textContent = name||'CARDHOLDER';
-      step=3; showStep(3);
-    } else if(step===3) {
+    } else if (step===2) {
       submitPayment();
     }
   }
 
-  // ══════════════════════════════════════════════
-  // submitPayment — card uses plain HTML inputs,
-  // sends raw details to PHP → PayMongo REST API
-  // ══════════════════════════════════════════════
-  async function submitPayment() {
-    showStep(4);
-    const email = document.getElementById('inp-email').value.trim();
-    const name  = document.getElementById('inp-name').value.trim();
-    const phone = document.getElementById('inp-phone').value.trim();
-
-    if (selMethod === 'card') {
-      document.getElementById('processing-label').textContent = 'Tokenising card…';
-
-      const rawNumber = document.getElementById('cf-number').value.replace(/\s/g,'');
-      const rawExpiry = document.getElementById('cf-expiry').value; // "MM / YY"
-      const cvc       = document.getElementById('cf-cvc').value.trim();
-
-      // Parse expiry
-      const parts    = rawExpiry.replace(/\s/g,'').split('/');
-      const expMonth = parseInt(parts[0]||'0',10);
-      const expYearS = parseInt(parts[1]||'0',10);
-      const expYear  = expYearS < 100 ? 2000 + expYearS : expYearS;
-
-      if (!rawNumber || rawNumber.length < 13 || !expMonth || !expYear || !cvc) {
-        showCardError('Please check all card fields are filled correctly.');
-        return;
-      }
-
-      const fd = new FormData();
-      fd.append('pay_method',  'card');
-      fd.append('card_number', rawNumber);
-      fd.append('exp_month',   expMonth);
-      fd.append('exp_year',    expYear);
-      fd.append('cvc',         cvc);
-      fd.append('email', email);
-      fd.append('name',  name);
-      fd.append('phone', phone);
-
-      let rawText;
-      try {
-        const res = await fetch('router.php?page=pay&appt_id=<?= $appt_id ?>', { method:'POST', body:fd });
-        rawText = await res.text();
-      } catch(e) {
-        showCardError('Network error: ' + e.message);
-        return;
-      }
-
-      let data;
-      try { data = JSON.parse(rawText); }
-      catch(_) {
-        console.error('Non-JSON from server:', rawText);
-        showCardError('Server error — check the browser console for details.');
-        return;
-      }
-
-      if (data.status === 'succeeded') {
-        window.location.href = data.redirect;
-      } else if (data.status === 'awaiting_next_action') {
-        window.location.href = data.redirect; // 3DS
-      } else {
-        showCardError(data.message || 'Payment failed. Please try again.');
-      }
-
-    } else {
-      // GCash
-      document.getElementById('processing-label').textContent = 'Redirecting to GCash…';
-      document.getElementById('f-method').value = selMethod;
-      document.getElementById('f-email').value  = email;
-      document.getElementById('f-name').value   = name;
-      document.getElementById('f-phone').value  = phone;
-      setTimeout(() => document.getElementById('pay-form').submit(), 800);
-    }
+  function submitPayment() {
+    step=3; showStep(3);
+    document.getElementById('processing-label').textContent =
+      selMethod === 'gcash' ? 'Redirecting to GCash…' : 'Saving your details…';
+    setTimeout(() => document.getElementById('pay-form').submit(), 600);
   }
 
-  function showCardError(msg) {
-    step = 1; showStep(1);
-    const cardCard = document.querySelector('[data-method="card"]');
-    if (cardCard && selMethod === 'card') selectMethod(cardCard);
-    document.getElementById('card-fields').classList.add('visible');
-    const err = document.getElementById('card-error');
-    err.textContent = msg; err.classList.add('visible');
-    showToast(msg, 'error');
-  }
-
-  livePreview(); // init preview
+  // After a server-side validation error, reopen the chosen method with the typed values.
+  <?php if ($isRepost && $postedMeth !== ''): ?>
+  (function () {
+    const el = document.querySelector('[data-method="<?= $e($postedMeth) ?>"]');
+    if (el) { selectMethod(el); setFormError(<?= json_encode(array_values($formErrors)) ?>); showToast(<?= json_encode($formErrors[0] ?? 'Please check your details.') ?>, 'error'); }
+  })();
+  <?php endif; ?>
 
   // ── Privacy Policy Modal ──
   function openPolicyModal(e) {
     e.preventDefault();
     document.getElementById('policy-modal').classList.add('visible');
   }
-
   function closePolicyModal() {
     document.getElementById('policy-modal').classList.remove('visible');
   }
-
   function agreePolicyModal() {
     document.getElementById('agree-chk').checked = true;
     document.getElementById('btn-next').disabled = false;
     closePolicyModal();
   }
-
-  // Close modal on Escape key
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && document.getElementById('policy-modal').classList.contains('visible')) {
       closePolicyModal();
@@ -823,11 +796,3 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-

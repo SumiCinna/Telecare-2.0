@@ -4,28 +4,17 @@ date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/booking_helpers.php';
 
-booking_require(['department', 'doctor_id', 'appt_date', 'appt_time']);
+booking_require(['concern', 'department', 'doctor_id', 'appt_date', 'appt_time']);
 $b = $_SESSION['booking'];
-
-// Payment method must have been chosen (and its form completed) in the previous step.
-$method = $b['payment_method'] ?? '';
-$cov    = $b['coverage'] ?? [];
-if (!in_array($method, ['Regular', 'YAKAP', 'HMO'], true) || ($method !== 'Regular' && ($cov['method'] ?? '') !== $method)) {
-    header('Location: router.php?page=booking/step4_payment_method'); exit;
-}
-$isCoverage = $method !== 'Regular';
-$backPage   = $method === 'YAKAP' ? 'booking/step4_yakap' : ($method === 'HMO' ? 'booking/step4_hmo' : 'booking/step4_payment_method');
 
 $doctor_id = (int)$b['doctor_id'];
 $dstmt = $conn->prepare("SELECT * FROM doctors WHERE id=?");
 $dstmt->bind_param("i", $doctor_id);
 $dstmt->execute();
 $doctor = $dstmt->get_result()->fetch_assoc();
-if (!$doctor) { header('Location: step2_doctor.php'); exit; }
+if (!$doctor) { header('Location: router.php?page=booking/step2_doctor'); exit; }
 
-$reason_parts = $b['reasons'] ?? [];
-if (!empty($b['reason_other'])) $reason_parts[] = $b['reason_other'];
-$reason_display = $reason_parts ? implode(', ', $reason_parts) : 'Not specified';
+$reason_display = $b['concern'];
 
 $fee   = (float)($doctor['consultation_fee'] ?? 0);
 $total = $fee; // extend here if you add a platform/service fee later
@@ -64,9 +53,9 @@ echo booking_wizard_css();
 
 <div class="wiz-page">
   <div class="wiz-title">Review Appointment</div>
-  <div class="wiz-sub"><?= $isCoverage ? 'Check everything before you confirm your appointment.' : 'Check everything before you proceed to payment.' ?></div>
+  <div class="wiz-sub">Check everything before you proceed to payment.</div>
 
-  <?php render_stepper(5); ?>
+  <?php render_stepper(4); ?>
 
   <div class="review-grid">
     <div class="review-main">
@@ -78,9 +67,9 @@ echo booking_wizard_css();
         <div class="info-row"><span class="info-label">Consultation Type</span><span class="info-val">Teleconsultation (Video)</span></div>
         <div class="info-row"><span class="info-label">Date &amp; Time</span><span class="info-val"><?= (new DateTime($b['appt_date']))->format('M j, Y') ?> at <?= date('g:i A', strtotime($b['appt_time'])) ?></span></div>
       </div>
-      <h3 style="margin-top:1.2rem;">Reason for Consultation</h3>
+      <h3 style="margin-top:1.2rem;">Your Concern</h3>
       <div class="reason-box"><?= htmlspecialchars($reason_display) ?></div>
-      <?php if (!empty($b['attachment_path'])): ?>
+      <?php if (!empty($b['attachment_paths'])): ?>
         <div class="reason-box" style="margin-top:0.6rem;">📎 Document attached (scanned, on file for the doctor).</div>
       <?php endif; ?>
     </div>
@@ -92,54 +81,18 @@ echo booking_wizard_css();
         <div class="info-row"><span class="info-label">Email</span><span class="info-val"><?= htmlspecialchars($p['email']) ?></span></div>
       </div>
     </div>
-
-    <div class="wiz-card">
-      <h3>Payment Method: <?= htmlspecialchars(booking_payment_label($method)) ?></h3>
-      <?php if ($method === 'YAKAP'): ?>
-      <div class="info-grid">
-        <div class="info-row"><span class="info-label">PhilHealth PIN</span><span class="info-val"><?= htmlspecialchars(booking_mask_pin($cov['philhealth_pin'] ?? '')) ?></span></div>
-        <div class="info-row"><span class="info-label">Member Type</span><span class="info-val"><?= htmlspecialchars($cov['member_type'] ?? '') ?></span></div>
-        <div class="info-row"><span class="info-label">YAKAP Clinic</span><span class="info-val"><?= htmlspecialchars($cov['yakap_clinic'] ?? '') ?></span></div>
-        <div class="info-row"><span class="info-label">YES / MCA Status</span><span class="info-val"><?= htmlspecialchars($cov['empanelment_status'] ?? '') ?></span></div>
-        <div class="info-row"><span class="info-label">FPE Status</span><span class="info-val"><?= htmlspecialchars($cov['fpe_status'] ?? '') ?></span></div>
-        <div class="info-row"><span class="info-label">Contact Number</span><span class="info-val"><?= htmlspecialchars($cov['contact_number'] ?? '') ?></span></div>
-        <div class="info-row" style="grid-column:1/-1"><span class="info-label">Address</span><span class="info-val"><?= htmlspecialchars($cov['address'] ?? '') ?></span></div>
-      </div>
-      <?php elseif ($method === 'HMO'): ?>
-      <div class="info-grid">
-        <div class="info-row"><span class="info-label">HMO Provider</span><span class="info-val"><?= htmlspecialchars($cov['hmo_provider'] ?? '') ?></span></div>
-        <div class="info-row"><span class="info-label">Member ID / Card No.</span><span class="info-val"><?= htmlspecialchars($cov['hmo_member_id'] ?? '') ?></span></div>
-        <div class="info-row"><span class="info-label">Member Type</span><span class="info-val"><?= htmlspecialchars($cov['member_type'] ?? '') ?></span></div>
-        <div class="info-row"><span class="info-label">Principal Member</span><span class="info-val"><?= htmlspecialchars($cov['principal_member_name'] ?? '') ?></span></div>
-        <?php if (!empty($cov['company_employer'])): ?><div class="info-row"><span class="info-label">Company / Employer</span><span class="info-val"><?= htmlspecialchars($cov['company_employer']) ?></span></div><?php endif; ?>
-        <?php if (!empty($cov['hmo_plan'])): ?><div class="info-row"><span class="info-label">Plan / Account Type</span><span class="info-val"><?= htmlspecialchars($cov['hmo_plan']) ?></span></div><?php endif; ?>
-        <div class="info-row"><span class="info-label">Service</span><span class="info-val"><?= htmlspecialchars($cov['service_type'] ?? '') ?></span></div>
-        <div class="info-row"><span class="info-label">LOA / Authorization No.</span><span class="info-val"><?= htmlspecialchars(($cov['loa_number'] ?? '') !== '' ? $cov['loa_number'] : 'Not provided') ?></span></div>
-        <div class="info-row"><span class="info-label">Coverage Status</span><span class="info-val">Pending verification</span></div>
-        <div class="info-row"><span class="info-label">Contact Number</span><span class="info-val"><?= htmlspecialchars($cov['contact_number'] ?? '') ?></span></div>
-      </div>
-      <?php else: ?>
-      <div class="reason-box" style="margin-top:0">Pay using cash, e-wallet, or online payment on the next screen.</div>
-      <?php endif; ?>
-      <div style="margin-top:.7rem"><a href="router.php?page=booking/step4_payment_method" style="font-size:.76rem;color:var(--red);font-weight:700;text-decoration:none">Change payment method</a></div>
-    </div>
-    <div class="review-reminder"><strong>Important Reminders</strong>Please join the consultation a few minutes before your scheduled time. <?= $isCoverage ? 'Your appointment is confirmed right away. Your ' . htmlspecialchars(booking_payment_label($method)) . ' details will be verified by the clinic.' : 'Your appointment will be created after payment is completed.' ?></div>
+    <div class="review-reminder"><strong>Important Reminders</strong>Please join the consultation a few minutes before your scheduled time. Next you will choose how to pay: GCash, PhilHealth YAKAP, or HMO.</div>
     </div>
 
     <div class="wiz-card">
       <h3>Billing Summary</h3>
       <div class="bill-row"><span>Consultation Fee</span><span><?= '&#8369;' . number_format($fee, 2) ?></span></div>
-      <?php if ($isCoverage): ?>
-        <div class="bill-row"><span>Payment</span><span><?= htmlspecialchars(booking_payment_label($method)) ?></span></div>
-        <div class="bill-total"><span>Due Now</span><span><?= '&#8369;' . number_format(0, 2) ?></span></div>
-        <div style="font-size:.7rem;color:var(--muted);margin-top:.5rem;line-height:1.4"><?= $method === 'HMO' ? 'HMO coverage and any patient share (co-payment) will be confirmed after verification.' : 'No online payment is needed. Your YAKAP details will be verified by the clinic.' ?></div>
-      <?php else: ?>
-        <div class="bill-total"><span>Total Due</span><span><?= '&#8369;' . number_format($total, 2) ?></span></div>
-      <?php endif; ?>
+      <div class="bill-total"><span>Total Due</span><span><?= '&#8369;' . number_format($total, 2) ?></span></div>
+      <div class="f-hint" style="font-size:.68rem;color:var(--muted);margin-top:.4rem;">Pay by GCash, or use PhilHealth YAKAP / HMO coverage on the next page.</div>
       <form method="POST" action="router.php?page=booking/process_booking" style="margin-top:1.2rem;">
-        <button type="submit" class="wiz-btn primary" style="width:100%;text-align:center;"><?= $isCoverage ? 'Confirm Appointment' : 'Confirm &amp; Proceed to Payment' ?></button>
+        <button type="submit" class="wiz-btn primary" style="width:100%;text-align:center;">Proceed to Payment</button>
       </form>
-      <a href="router.php?page=<?= $backPage ?>" class="wiz-btn ghost" style="width:100%;text-align:center;box-sizing:border-box;margin-top:0.6rem;">Back</a>
+      <a href="router.php?page=booking/step3_schedule" class="wiz-btn ghost" style="width:100%;text-align:center;box-sizing:border-box;margin-top:0.6rem;">Back to Schedule</a>
     </div>
   </div>
 </div>
