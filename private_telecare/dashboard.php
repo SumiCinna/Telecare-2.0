@@ -29,7 +29,7 @@ $firstName = $parts[0];
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root{
-  --tc-red:#B31118; --tc-red-dark:#8a000b;
+  --tc-red:#2166B1; --tc-red-dark:#164B82;
   --tc-teal:#006a61; --tc-teal-light:#0D9488;
   --tc-ink:#151c27; --tc-muted:rgba(21,28,39,0.55);
   --tc-line:rgba(21,28,39,0.08);
@@ -43,7 +43,7 @@ $firstName = $parts[0];
   padding: 1.8rem 2rem 5rem !important;
   background: transparent !important;
   overflow-x: clip;
-  font-family:'Inter',sans-serif;
+  font-family:'Poppins',sans-serif;
 }
 .page-head{
   display:flex; align-items:center; justify-content:space-between; gap:1rem;
@@ -51,7 +51,7 @@ $firstName = $parts[0];
 }
 .page-head-copy{ min-width:0; }
 .page-title{
-  font-family:'Inter',sans-serif; font-weight:800; font-size:1.9rem;
+  font-family:'Poppins',sans-serif; font-weight:800; font-size:1.9rem;
   color:var(--tc-ink); line-height:1.15; margin-bottom:0.3rem;
 }
 .page-sub{ color:var(--tc-muted); font-size:0.92rem; }
@@ -132,7 +132,7 @@ $firstName = $parts[0];
 .si-green { background: var(--tc-red-tint); color: var(--tc-red); }
 .si-red   { background: var(--tc-teal-tint);  color: var(--tc-teal-light); }
 .stat-num {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 1.9rem; font-weight: 800; line-height: 1;
   color: var(--tc-ink);
 }
@@ -193,7 +193,7 @@ $firstName = $parts[0];
   align-items: center; justify-content: center;
 }
 .appt-date-box .day {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 1.2rem; font-weight: 800;
   color: var(--tc-teal); line-height: 1.1;
 }
@@ -266,7 +266,7 @@ $firstName = $parts[0];
 .doc-right { text-align: right; flex-shrink: 0; }
 .doc-fee {
   font-size: 0.85rem; font-weight: 800; color: var(--tc-ink);
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
 }
 .doc-avail {
   display: inline-block; margin-top: 0.28rem;

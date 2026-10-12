@@ -5,29 +5,26 @@ require_once '../database/config.php';
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Forgot Password — TELE-CARE</title>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
-    :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF}
+    :root{--red:#E34248;--green:#173B64;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF}
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'DM Sans',sans-serif;background:linear-gradient(160deg,var(--green) 0%,#1a3330 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;}
+    body{font-family:'Poppins',sans-serif;background:linear-gradient(160deg,var(--green) 0%,#1a3330 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;}
     body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(63,130,227,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(63,130,227,0.06) 1px,transparent 1px);background-size:44px 44px;animation:gridMove 20s linear infinite;pointer-events:none;}
     @keyframes gridMove{from{transform:translateY(0)}to{transform:translateY(44px)}}
     .card{background:#fff;border-radius:24px;padding:2.5rem 2rem;width:100%;max-width:420px;position:relative;z-index:1;box-shadow:0 30px 80px rgba(0,0,0,0.25);animation:fadeUp 0.5s ease;}
     @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-    .logo{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:var(--green);text-decoration:none;display:block;margin-bottom:2rem;}
+    .logo{font-family:'Poppins',serif;font-size:1.4rem;font-weight:900;color:var(--green);text-decoration:none;display:block;margin-bottom:2rem;}
     .logo span{color:var(--red)}
     .field-label{display:block;font-size:0.78rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#5a7a77;margin-bottom:0.45rem;}
-    .field-input{width:100%;padding:0.8rem 1rem;border:1.5px solid rgba(36,68,65,0.15);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.95rem;background:var(--white);color:var(--green);outline:none;transition:border-color 0.25s,box-shadow 0.25s;}
+    .field-input{width:100%;padding:0.8rem 1rem;border:1.5px solid rgba(36,68,65,0.15);border-radius:12px;font-family:'Poppins',sans-serif;font-size:0.95rem;background:var(--white);color:var(--green);outline:none;transition:border-color 0.25s,box-shadow 0.25s;}
     .field-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(63,130,227,0.12);}
-    .btn{width:100%;padding:0.9rem;border-radius:50px;background:var(--red);color:#fff;font-weight:600;font-size:0.95rem;border:none;cursor:pointer;transition:all 0.3s;box-shadow:0 6px 20px rgba(195,54,67,0.3);margin-top:1.2rem;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:0.5rem;}
+    .btn{width:100%;padding:0.9rem;border-radius:50px;background:var(--red);color:#fff;font-weight:600;font-size:0.95rem;border:none;cursor:pointer;transition:all 0.3s;box-shadow:0 6px 20px rgba(195,54,67,0.3);margin-top:1.2rem;font-family:'Poppins',sans-serif;display:flex;align-items:center;justify-content:center;gap:0.5rem;}
     .btn:hover{background:#a82d38;transform:translateY(-2px);}
     .btn:disabled{background:#c88;cursor:not-allowed;transform:none;}
     .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
@@ -39,11 +36,11 @@ require_once '../database/config.php';
 </head>
 <body>
 <div class="card">
-  <a href="login.php" class="logo">TELE<span>-</span>CARE</a>
+  <a href="login.php" class="logo"><img src="/src/assets/logo.png" alt="TELE-CARE"/>TELE-CARE</a>
 
   <div style="margin-bottom:1.8rem;">
     <div style="width:52px;height:52px;border-radius:14px;background:rgba(195,54,67,0.08);border:1px solid rgba(195,54,67,0.15);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:1rem;">🔐</div>
-    <h2 style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:var(--green);margin-bottom:0.3rem;">Forgot Password?</h2>
+    <h2 style="font-family:'Poppins',serif;font-size:1.6rem;font-weight:900;color:var(--green);margin-bottom:0.3rem;">Forgot Password?</h2>
     <p style="color:#6b8a87;font-size:0.88rem;line-height:1.6;">No worries. Enter your registered email and we'll send you a reset link.</p>
   </div>
 
@@ -162,5 +159,4 @@ require_once '../database/config.php';
 </script>
 </body>
 </html>
-
 

@@ -144,9 +144,9 @@ function isCallActive(string $date, string $time): bool {
   color:#9ab0ae; font-size:.72rem; font-weight:600;
 }
 .breadcrumbs a { color:#6b8886; text-decoration:none; }
-.breadcrumbs a:hover { color:#C33643; }
+.breadcrumbs a:hover { color:#E34248; }
 .breadcrumbs-separator { color:rgba(36,68,65,.3); }
-.breadcrumbs-current { color:#244441; }
+.breadcrumbs-current { color:#173B64; }
 
 /* ── PAGE HEADER ── */
 .visits-header {
@@ -155,21 +155,21 @@ function isCallActive(string $date, string $time): bool {
   flex-wrap: wrap; gap: 1rem;
 }
 .visits-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.9rem; font-weight: 900; color: #244441; line-height: 1;
+  font-family: 'Poppins', serif;
+  font-size: 1.9rem; font-weight: 900; color: #173B64; line-height: 1;
 }
 .visits-title span {
-  display: block; font-family: 'DM Sans', sans-serif;
+  display: block; font-family: 'Poppins', sans-serif;
   font-size: 0.85rem; font-weight: 500; color: #9ab0ae;
   margin-top: 0.4rem; letter-spacing: 0;
 }
 .book-btn {
   display: inline-flex; align-items: center; gap: 0.45rem;
-  background: #C33643; color: #fff;
+  background: #E34248; color: #fff;
   padding: 0.72rem 1.5rem; border-radius: 50px;
   font-size: 0.85rem; font-weight: 700;
   border: none; cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Poppins', sans-serif;
   box-shadow: 0 4px 16px rgba(195,54,67,0.28);
   transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
   text-decoration: none;
@@ -205,13 +205,13 @@ function isCallActive(string $date, string $time): bool {
 .stat-icon svg { width: 20px; height: 20px; }
 .stat-icon.pending   { background: rgba(217,158,11,0.12); color: #d97706; }
 .stat-icon.upcoming  { background: rgba(63,130,227,0.1);  color: #3F82E3; }
-.stat-icon.completed { background: rgba(195,54,67,0.08);  color: #C33643; }
-.stat-icon.cancelled { background: rgba(195,54,67,0.08);  color: #C33643; }
+.stat-icon.completed { background: rgba(195,54,67,0.08);  color: #E34248; }
+.stat-icon.cancelled { background: rgba(195,54,67,0.08);  color: #E34248; }
 .stat-label {
   font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em;
   text-transform: uppercase; color: #9ab0ae; margin-bottom: 0.15rem;
 }
-.stat-value { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 900; color: #244441; }
+.stat-value { font-family: 'Poppins', serif; font-size: 1.5rem; font-weight: 900; color: #173B64; }
 
 /* ── SEARCH + FILTER BAR ── */
 .controls-bar {
@@ -220,8 +220,8 @@ function isCallActive(string $date, string $time): bool {
 }
 .filter-select, .filter-date {
   height:36px; padding:0 .8rem; border:1.5px solid rgba(36,68,65,.1);
-  border-radius:8px; background:#fff; color:#244441;
-  font:500 .78rem 'DM Sans',sans-serif; outline:none;
+  border-radius:8px; background:#fff; color:#173B64;
+  font:500 .78rem 'Poppins',sans-serif; outline:none;
 }
 .filter-select:focus, .filter-date:focus { border-color:#3F82E3; }
 .filter-select { min-width:118px; }
@@ -234,7 +234,7 @@ function isCallActive(string $date, string $time): bool {
 .search-input {
   width: 100%; padding: 0.68rem 1rem 0.68rem 2.4rem;
   border: 1.5px solid rgba(36,68,65,0.1); border-radius: 50px;
-  font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: #244441;
+  font-family: 'Poppins', sans-serif; font-size: 0.85rem; color: #173B64;
   outline: none; background: #fff; transition: border-color 0.2s;
 }
 .search-input:focus { border-color: #3F82E3; }
@@ -248,20 +248,20 @@ function isCallActive(string $date, string $time): bool {
 .inner-tab {
   padding: 0.52rem 1.5rem; border-radius: 9px;
   border: none; background: transparent;
-  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  cursor: pointer; font-family: 'Poppins', sans-serif;
   font-size: 0.84rem; font-weight: 600;
   color: #9ab0ae; transition: all 0.2s;
   display: inline-flex; align-items: center; gap: 0.4rem;
 }
 .inner-tab.active {
-  background: #fff; color: #244441;
+  background: #fff; color: #173B64;
   box-shadow: 0 2px 8px rgba(36,68,65,0.1);
 }
 .inner-tab .tab-count {
-  background: rgba(36,68,65,0.1); color: #244441;
+  background: rgba(36,68,65,0.1); color: #173B64;
   font-size: 0.68rem; font-weight: 800; padding: 0.05rem 0.45rem; border-radius: 50px;
 }
-.inner-tab.active .tab-count { background: rgba(195,54,67,0.12); color: #C33643; }
+.inner-tab.active .tab-count { background: rgba(195,54,67,0.12); color: #E34248; }
 
 /* ── APPOINTMENT ROW CARD ── */
 .appt-card {
@@ -292,7 +292,7 @@ function isCallActive(string $date, string $time): bool {
   overflow: hidden;
 }
 .appt-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.appt-avatar.past { background: rgba(36,68,65,0.15); color: #244441; }
+.appt-avatar.past { background: rgba(36,68,65,0.15); color: #173B64; }
 .appt-avatar.pending { background: #d97706; }
 
 /* Center info */
@@ -301,7 +301,7 @@ function isCallActive(string $date, string $time): bool {
   display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap;
   margin-bottom: 0.28rem;
 }
-.appt-doctor-name { font-weight: 700; font-size: 0.98rem; color: #244441; }
+.appt-doctor-name { font-weight: 700; font-size: 0.98rem; color: #173B64; }
 
 .appt-sub {
   font-size: 0.82rem; color: #9ab0ae; margin-bottom: 0.45rem;
@@ -347,7 +347,7 @@ function isCallActive(string $date, string $time): bool {
 }
 .badge-green  { background: rgba(34,197,94,0.12);  color: #16a34a; }
 .badge-orange { background: rgba(245,158,11,0.12); color: #ca8a04; }
-.badge-red    { background: rgba(195,54,67,0.1);   color: #C33643; }
+.badge-red    { background: rgba(195,54,67,0.1);   color: #E34248; }
 .badge-blue   { background: rgba(63,130,227,0.1);  color: #2563eb; }
 .badge-gray   { background: rgba(36,68,65,0.08);   color: #6b8886; }
 
@@ -357,7 +357,7 @@ function isCallActive(string $date, string $time): bool {
   padding: 0.55rem 1.05rem; border-radius: 50px;
   font-size: 0.78rem; font-weight: 700; text-decoration: none;
   border: 1.5px solid transparent; cursor: pointer;
-  font-family: 'DM Sans', sans-serif; transition: all 0.2s; white-space: nowrap;
+  font-family: 'Poppins', sans-serif; transition: all 0.2s; white-space: nowrap;
   line-height: 1;
 }
 .btn-pill svg { width: 13px; height: 13px; flex-shrink: 0; display: block; }
@@ -368,9 +368,9 @@ function isCallActive(string $date, string $time): bool {
 .btn-pill.outline-green:hover  { background: rgba(34,197,94,0.08); }
 .btn-pill.outline-blue   { background:#fff; border-color: rgba(63,130,227,0.3); color:#2563eb; }
 .btn-pill.outline-blue:hover   { background: rgba(63,130,227,0.08); }
-.btn-pill.outline-neutral{ background:#fff; border-color: rgba(36,68,65,0.15); color:#244441; }
+.btn-pill.outline-neutral{ background:#fff; border-color: rgba(36,68,65,0.15); color:#173B64; }
 .btn-pill.outline-neutral:hover{ background: rgba(36,68,65,0.05); }
-.btn-pill.outline-red{ background:#fff; border-color: rgba(195,54,67,0.3); color:#C33643; }
+.btn-pill.outline-red{ background:#fff; border-color: rgba(195,54,67,0.3); color:#E34248; }
 .btn-pill.outline-red:hover{ background: rgba(195,54,67,0.06); }
 .btn-pill.outline-gold{ background:#fff; border-color: rgba(202,138,4,0.35); color:#ca8a04; }
 .btn-pill.outline-gold:hover{ background: rgba(202,138,4,0.08); }
@@ -379,7 +379,7 @@ function isCallActive(string $date, string $time): bool {
 .rate-modal-backdrop{display:none;position:fixed;inset:0;background:rgba(15,25,24,.55);z-index:1000;align-items:center;justify-content:center;padding:1rem}
 .rate-modal-backdrop.open{display:flex}
 .rate-modal{background:#fff;border-radius:14px;max-width:420px;width:100%;padding:1.3rem 1.4rem}
-.rate-modal h3{font-family:'DM Sans',sans-serif;color:var(--green);margin:0 0 .2rem;font-size:1.02rem;display:flex;justify-content:space-between;align-items:center}
+.rate-modal h3{font-family:'Poppins',sans-serif;color:var(--green);margin:0 0 .2rem;font-size:1.02rem;display:flex;justify-content:space-between;align-items:center}
 .rate-modal h3 button{background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--muted)}
 .rate-modal .rate-sub{font-size:.75rem;color:var(--muted);margin-bottom:1rem}
 .star-input{display:flex;gap:.35rem;justify-content:center;font-size:2rem;margin:.4rem 0 1rem;cursor:pointer;user-select:none}
@@ -387,7 +387,7 @@ function isCallActive(string $date, string $time): bool {
 .star-input span.filled{color:#ca8a04}
 .rate-modal textarea{width:100%;box-sizing:border-box;border:1px solid rgba(36,68,65,.15);border-radius:8px;padding:.6rem .7rem;font:inherit;font-size:.8rem;resize:vertical;min-height:80px;margin-bottom:.9rem}
 .rate-modal-actions{display:flex;gap:.6rem;justify-content:flex-end}
-.rate-modal-error{color:#C33643;font-size:.74rem;margin-bottom:.6rem;display:none}
+.rate-modal-error{color:#E34248;font-size:.74rem;margin-bottom:.6rem;display:none}
 .rate-modal-success{color:#15803d;font-size:.74rem;margin-bottom:.6rem;display:none}
 
 @keyframes callPulse {
@@ -418,7 +418,7 @@ function isCallActive(string $date, string $time): bool {
 }
 .pending-notice-text svg { width: 14px; height: 14px; flex-shrink: 0; color: #d97706; }
 .countdown-chip {
-  font-family: 'Playfair Display', serif; font-weight: 900; font-size: 0.9rem;
+  font-family: 'Poppins', serif; font-weight: 900; font-size: 0.9rem;
   color: #d97706; background: rgba(217,119,6,0.12);
   padding: 0.25rem 0.7rem; border-radius: 50px;
 }
@@ -443,8 +443,8 @@ function isCallActive(string $date, string $time): bool {
   display: flex; align-items: center; gap: 0.5rem;
   white-space: nowrap;
 }
-.toast-bar.success { background: #244441; color: #fff; animation: toastIn 0.3s ease, toastOut 0.4s 3s ease forwards; }
-.toast-bar.error   { background: #C33643; color: #fff; }
+.toast-bar.success { background: #173B64; color: #fff; animation: toastIn 0.3s ease, toastOut 0.4s 3s ease forwards; }
+.toast-bar.error   { background: #E34248; color: #fff; }
 @keyframes toastIn  { from { opacity:0; transform:translateX(-50%) translateY(12px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
 @keyframes toastOut { from { opacity:1; } to { opacity:0; pointer-events:none; } }
 
@@ -727,7 +727,7 @@ function isCallActive(string $date, string $time): bool {
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.4" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
       </svg>
       <p>No upcoming (paid) appointments.</p>
-      <a href="router.php?page=booking/step1_details" style="margin-top:0.5rem;padding:0.55rem 1.4rem;background:#3F82E3;color:#fff;border:none;border-radius:50px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 4px 14px rgba(63,130,227,0.28);text-decoration:none;">
+      <a href="router.php?page=booking/step1_details" style="margin-top:0.5rem;padding:0.55rem 1.4rem;background:#3F82E3;color:#fff;border:none;border-radius:50px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;box-shadow:0 4px 14px rgba(63,130,227,0.28);text-decoration:none;">
         Book Now
       </a>
     </div>

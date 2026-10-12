@@ -17,10 +17,7 @@ $doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY fu
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Appointments by Doctor — TELE-CARE</title>
@@ -43,7 +40,7 @@ $doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY fu
     .appt-body{display:none;padding:0 1.5rem 1.2rem}
     .doc-card.open .appt-body{display:block}
     .tabs{display:flex;gap:0;border-bottom:1px solid rgba(36,68,65,0.08);margin-bottom:1rem;margin-top:1rem}
-    .tab-btn{padding:0.55rem 1.1rem;font-size:0.8rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border:none;background:none;cursor:pointer;color:#9ab0ae;font-family:'DM Sans',sans-serif;border-bottom:2px solid transparent;transition:all 0.2s;margin-bottom:-1px}
+    .tab-btn{padding:0.55rem 1.1rem;font-size:0.8rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border:none;background:none;cursor:pointer;color:#9ab0ae;font-family:'Poppins',sans-serif;border-bottom:2px solid transparent;transition:all 0.2s;margin-bottom:-1px}
     .tab-btn.active{color:var(--green);border-bottom-color:var(--green)}
     .tab-btn:hover:not(.active){color:var(--green)}
     .tab-panel{display:none}.tab-panel.active{display:block}
@@ -52,7 +49,7 @@ $doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY fu
     .appt-row{display:flex;align-items:center;gap:1rem;padding:0.75rem 0;border-bottom:1px solid rgba(36,68,65,0.05)}
     .appt-row:last-child{border-bottom:none}
     .appt-date{min-width:80px;text-align:center;background:rgba(36,68,65,0.05);border-radius:10px;padding:0.4rem 0.5rem}
-    .appt-date .day{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;line-height:1;color:var(--green)}
+    .appt-date .day{font-family:'Poppins',serif;font-size:1.3rem;font-weight:900;line-height:1;color:var(--green)}
     .appt-date .mon{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ab0ae;margin-top:0.1rem}
     .empty-appt{padding:1.5rem 0;text-align:center;color:#9ab0ae;font-size:0.85rem}
 
@@ -64,7 +61,7 @@ $doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY fu
     .badge-gray{background:rgba(0,0,0,0.06);color:#888}
 
   .appt-pagination{display:flex;align-items:center;justify-content:center;gap:0.35rem;margin-top:0.9rem;flex-wrap:wrap}
-  .page-btn{border:1px solid rgba(36,68,65,0.15);background:#fff;color:var(--green);font-family:'DM Sans',sans-serif;font-size:0.76rem;font-weight:600;border-radius:8px;padding:0.3rem 0.55rem;cursor:pointer;min-width:32px;transition:all 0.18s}
+  .page-btn{border:1px solid rgba(36,68,65,0.15);background:#fff;color:var(--green);font-family:'Poppins',sans-serif;font-size:0.76rem;font-weight:600;border-radius:8px;padding:0.3rem 0.55rem;cursor:pointer;min-width:32px;transition:all 0.18s}
   .page-btn:hover{border-color:var(--green)}
   .page-btn.active{background:var(--green);color:#fff;border-color:var(--green)}
   .page-btn:disabled{opacity:0.45;cursor:not-allowed}

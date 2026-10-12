@@ -6,10 +6,7 @@ require_once __DIR__ . '/../includes/auth.php';
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Privacy Policy · TELE-CARE</title>
@@ -22,7 +19,7 @@ require_once __DIR__ . '/../includes/auth.php';
       --muted: #6b7280; --border: #e5e7eb; --bg: #f9fafb;
       --white: #ffffff; --text: #111827; --radius: 12px; --red: #ef4444;
     }
-    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+    body { font-family:'Poppins',sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
 
     .policy-container { max-width:900px; margin:0 auto; padding:2rem 1rem; }
     .policy-header { text-align:center; margin-bottom:3rem; padding-bottom:2rem; border-bottom:2px solid var(--border); }

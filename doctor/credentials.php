@@ -31,7 +31,7 @@ require_once 'includes/header.php';
   .sig-colors{display:flex;gap:0.4rem;}
   .sig-color{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;}
   .sig-color.active{border-color:var(--blue);transform:scale(1.15);}
-  .sig-clear-btn{display:inline-flex;align-items:center;gap:0.35rem;background:rgba(195,54,67,0.08);color:var(--red);border:none;border-radius:50px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+  .sig-clear-btn{display:inline-flex;align-items:center;gap:0.35rem;background:rgba(195,54,67,0.08);color:var(--red);border:none;border-radius:50px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;transition:all .2s;}
   .sig-clear-btn:hover{background:rgba(195,54,67,0.18);}
 
   /* ── Upload panel ── */
@@ -42,7 +42,7 @@ require_once 'includes/header.php';
   .sig-dropzone .dz-sub{font-size:0.74rem;color:var(--muted);margin-top:0.2rem;}
   .sig-upload-preview{display:none;text-align:center;padding:1rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:14px;background:#fcfcfa;}
   .sig-upload-preview img{max-width:100%;max-height:180px;object-fit:contain;}
-  .sig-upload-preview .dz-remove{display:inline-flex;align-items:center;gap:0.35rem;margin-top:0.7rem;background:rgba(195,54,67,0.08);color:var(--red);border:none;border-radius:50px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  .sig-upload-preview .dz-remove{display:inline-flex;align-items:center;gap:0.35rem;margin-top:0.7rem;background:rgba(195,54,67,0.08);color:var(--red);border:none;border-radius:50px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;}
 
   /* ── License section ── */
   .license-status-row{display:flex;align-items:center;gap:0.6rem;margin-top:0.5rem;}
@@ -60,7 +60,7 @@ require_once 'includes/header.php';
 
   <!-- Header -->
   <div class="card" style="text-align:center;padding:1.6rem 1rem;">
-    <div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;">Professional Credentials</div>
+    <div style="font-family:'Poppins',serif;font-size:1.2rem;font-weight:700;">Professional Credentials</div>
     <div style="font-size:0.83rem;color:var(--muted);margin-top:0.2rem;">
       Your license number and e-signature are used on prescriptions, referrals, and other official documents.
     </div>
@@ -113,7 +113,7 @@ require_once 'includes/header.php';
       <div class="sig-toolbar">
         <div class="sig-colors">
           <div class="sig-color active" data-color="#1a1a1a" style="background:#1a1a1a;"></div>
-          <div class="sig-color" data-color="#244441" style="background:#244441;"></div>
+          <div class="sig-color" data-color="#173B64" style="background:#173B64;"></div>
           <div class="sig-color" data-color="#3f82e3" style="background:#3f82e3;"></div>
         </div>
         <button type="button" class="sig-clear-btn" id="clearCanvasBtn">

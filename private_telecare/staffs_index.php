@@ -76,21 +76,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TELE-CARE | Internal Login</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
   :root {
-    --primary:#B31118;
-    --primary-dark:#8A000B;
-    --primary-soft:#FCEBED;
-    --secondary:#0F9D95;
-    --secondary-dark:#08756F;
+    --primary:#2166B1;
+    --primary-dark:#164B82;
+    --primary-soft:#EAF5FF;
+    --secondary:#3D8EE8;
+    --secondary-dark:#2166B1;
     --secondary-soft:#E3F6F4;
     --text:#172033;
     --muted:#6B7280;
@@ -119,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       radial-gradient(circle at 90% 90%,rgba(15,157,149,.07),transparent 32%),
       var(--bg);
     color:var(--text);
-    font-family:'Inter',sans-serif;
+    font-family:'Poppins',sans-serif;
   }
 
   button,input,select,textarea {
@@ -330,7 +327,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
   <main class="card">
-    <div class="brand">TELE<span>-</span>CARE</div>
+    <div class="brand"><img src="/src/assets/logo.png" alt="TELE-CARE"/>TELE-CARE</div>
     <p class="subtitle">Internal staff sign-in</p>
     <?php if ($error): ?><div class="alert"><?= htmlspecialchars($error) ?></div><?php endif; ?>
 

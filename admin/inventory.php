@@ -180,10 +180,7 @@ $pageLabel = $currentCategory === 'Medicine' ? 'Medicine Inventory' : 'Testing K
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title><?= htmlspecialchars($pageLabel) ?> — TELE-CARE</title>
@@ -197,7 +194,7 @@ $pageLabel = $currentCategory === 'Medicine' ? 'Medicine Inventory' : 'Testing K
     .back-link{display:inline-flex;align-items:center;gap:0.35rem;font-size:0.78rem;font-weight:600;color:#9ab0ae;text-decoration:none;margin-bottom:0.6rem}
     .back-link:hover{color:var(--dark,#151c27)}
     .type-pill{display:inline-flex;align-items:center;font-size:0.7rem;font-weight:700;letter-spacing:.02em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:999px;margin-left:0.5rem}
-    .type-pill.medicine{background:rgba(179,17,24,0.1);color:#B31118}
+    .type-pill.medicine{background:rgba(179,17,24,0.1);color:#2166B1}
     .type-pill.testing{background:rgba(13,148,136,0.12);color:#0D9488}
 
     @media(max-width:900px){.sidebar{display:none}}

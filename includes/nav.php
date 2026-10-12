@@ -19,7 +19,7 @@ $nav_pages = [
 ?>
 <style>
 :root{
-  --tc-red:#B31118; --tc-red-dark:#8a000b; --tc-ink:#151c27; --tc-teal:#006a61; --tc-teal-light:#0D9488;
+  --tc-red:#2166B1; --tc-red-dark:#164B82; --tc-ink:#151c27; --tc-teal:#006a61; --tc-teal-light:#0D9488;
   --tc-line:rgba(21,28,39,0.08); --tc-muted:rgba(21,28,39,0.5);
   --tc-sidebar-w:240px; --tc-sidebar-w-collapsed:72px;
 }
@@ -27,7 +27,7 @@ $nav_pages = [
   position:fixed; top:0; left:0; bottom:0; width:var(--tc-sidebar-w); z-index:150;
   background:#f1f3fc; border-right:1px solid #dce1ef;
   display:flex; flex-direction:column; padding:1.2rem .85rem;
-  font-family:'Inter',sans-serif;
+  font-family:'Poppins',sans-serif;
   transition:width 0.2s ease;
 }
 .sidebar.collapsed{ width:var(--tc-sidebar-w-collapsed); padding:1.2rem .55rem; }
@@ -65,7 +65,7 @@ $nav_pages = [
   padding:.65rem .7rem; border-radius:7px;
   color:var(--tc-muted); font-size:.78rem; font-weight:600;
   text-decoration:none; transition:all 0.2s; width:100%; background:none; border:none;
-  cursor:pointer; font-family:'Inter',sans-serif;
+  cursor:pointer; font-family:'Poppins',sans-serif;
 }
 .sidebar-logout:hover{ background:var(--tc-red-tint); color:var(--tc-red); }
 .sidebar-logout .nav-icon{ width:19px; height:19px; flex-shrink:0; display:flex; }
@@ -113,7 +113,7 @@ body.sidebar-collapsed{ padding-left:var(--tc-sidebar-w-collapsed); }
   <div class="sidebar-toggle-row">
     <div class="sidebar-brand" style="margin-bottom:0;flex:1;">
       <div class="sidebar-brand-icon">
-        <img src="/telecarelogo.png" alt="TELE-CARE"/>
+        <img src="/src/assets/logo.png" alt="TELE-CARE"/>
       </div>
       <div class="sidebar-brand-text">
         <div class="sidebar-brand-name">TELE-CARE</div>

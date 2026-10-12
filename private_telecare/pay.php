@@ -261,10 +261,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Pay · TELE-CARE</title>
@@ -277,7 +274,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
       --muted: #6b7280; --border: #e5e7eb; --bg: #f9fafb;
       --white: #ffffff; --text: #111827; --radius: 12px; --red: #ef4444;
     }
-    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    body { font-family:'Poppins',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
 
     .toast-container { position:fixed; top:1rem; left:50%; transform:translateX(-50%); width:90%; max-width:500px; z-index:9999; display:none; }
     .toast { padding:1rem 1.5rem; border-radius:10px; color:#fff; font-weight:600; font-size:0.9rem; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; align-items:center; gap:0.75rem; }
@@ -351,7 +348,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     .cf-input {
       width:100%; padding:0.68rem 0.9rem;
       border:1.5px solid var(--border); border-radius:8px;
-      font-family:'DM Sans',sans-serif; font-size:0.92rem;
+      font-family:'Poppins',sans-serif; font-size:0.92rem;
       color:var(--text); background:var(--white); outline:none;
       transition:border-color 0.2s,box-shadow 0.2s;
     }
@@ -365,7 +362,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     .form-group { margin-bottom:1rem; }
     .form-label { display:block; font-size:0.75rem; font-weight:700; color:var(--text); margin-bottom:0.35rem; }
     .form-label .req { color:#ef4444; }
-    .form-input { width:100%; padding:0.7rem 0.9rem; border:1.5px solid var(--border); border-radius:var(--radius); font-family:'DM Sans',sans-serif; font-size:0.88rem; color:var(--text); background:var(--white); outline:none; transition:border-color 0.2s,box-shadow 0.2s; }
+    .form-input { width:100%; padding:0.7rem 0.9rem; border:1.5px solid var(--border); border-radius:var(--radius); font-family:'Poppins',sans-serif; font-size:0.88rem; color:var(--text); background:var(--white); outline:none; transition:border-color 0.2s,box-shadow 0.2s; }
     .form-input:focus { border-color:var(--teal); box-shadow:0 0 0 3px rgba(13,148,136,0.1); }
 
     .summary-block { background:var(--white); border:1.5px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:1.2rem; }
@@ -380,9 +377,9 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     .privacy-note a { color:var(--teal); text-decoration:none; font-weight:600; }
 
     .nav-row { display:flex; align-items:center; gap:0.8rem; padding:1rem; position:fixed; bottom:0; left:0; right:0; background:var(--white); border-top:1px solid var(--border); z-index:10; }
-    .btn-back { padding:0.7rem 1.4rem; border:1.5px solid var(--border); border-radius:50px; background:var(--white); font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:600; color:var(--muted); cursor:pointer; transition:all 0.2s; }
+    .btn-back { padding:0.7rem 1.4rem; border:1.5px solid var(--border); border-radius:50px; background:var(--white); font-family:'Poppins',sans-serif; font-size:0.85rem; font-weight:600; color:var(--muted); cursor:pointer; transition:all 0.2s; }
     .btn-back:hover { border-color:var(--teal); color:var(--teal); }
-    .btn-next { flex:1; padding:0.8rem 1.4rem; border-radius:50px; border:none; background:var(--teal); color:#fff; font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:700; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 14px rgba(13,148,136,0.3); }
+    .btn-next { flex:1; padding:0.8rem 1.4rem; border-radius:50px; border:none; background:var(--teal); color:#fff; font-family:'Poppins',sans-serif; font-size:0.9rem; font-weight:700; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 14px rgba(13,148,136,0.3); }
     .btn-next:hover:not(:disabled) { background:var(--teal2); transform:translateY(-1px); }
     .btn-next:disabled { background:#d1d5db; color:#9ca3af; box-shadow:none; cursor:not-allowed; }
 
@@ -407,7 +404,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     .policy-modal-body li { margin-bottom:0.5rem; }
     .policy-modal-body .highlight { background:rgba(13,148,136,0.08); border-left:3px solid var(--teal); padding:1rem; border-radius:6px; margin:1rem 0; }
     .policy-modal-footer { display:flex; gap:0.8rem; margin-top:2rem; padding-top:1rem; border-top:1.5px solid var(--border); }
-    .policy-modal-footer button { flex:1; padding:0.8rem 1.2rem; border:none; border-radius:50px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:0.88rem; transition:all 0.2s; }
+    .policy-modal-footer button { flex:1; padding:0.8rem 1.2rem; border:none; border-radius:50px; font-weight:700; cursor:pointer; font-family:'Poppins',sans-serif; font-size:0.88rem; transition:all 0.2s; }
     .btn-policy-close { background:var(--border); color:var(--muted); }
     .btn-policy-close:hover { background:#d1d5db; }
     .btn-policy-agree { background:var(--teal); color:#fff; box-shadow:0 4px 12px rgba(13,148,136,0.3); }

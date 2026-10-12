@@ -1,10 +1,7 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
   <title><?= $page_title ?? 'Doctor — TELE-CARE' ?></title>
@@ -13,7 +10,7 @@
   <style>
     * { box-sizing:border-box; margin:0; padding:0; }
     body { min-height:100vh; }
-    h1,h2,h3 { font-family:'Inter',sans-serif; }
+    h1,h2,h3 { font-family:'Poppins',sans-serif; }
 
     /* TOP HEADER */
     .top-header {
@@ -36,7 +33,9 @@
     @media (min-width: 768px) {
       .hamburger-btn { display:flex; }
     }
-    .header-brand { font-family:'Inter',sans-serif; font-size:1.1rem; font-weight:700; color:var(--green); }
+    .header-brand { font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:700; color:var(--green); }
+    .header-brand { display:flex; align-items:center; gap:.45rem; }
+    .header-brand img { width:30px; height:30px; object-fit:contain; }
     .header-brand span { color:var(--red); }
     .header-avatar {
       width:38px; height:38px; border-radius:10px;
@@ -121,7 +120,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
       </svg>
     </button>
-    <div class="header-brand">TELE<span>-</span>CARE</div>
+    <div class="header-brand"><img src="/src/assets/logo.png" alt="TELE-CARE"/>TELE-CARE</div>
   </div>
   <div class="header-center"><?= $page_title_short ?? '' ?></div>
   <div class="header-profile">

@@ -171,10 +171,7 @@ unset($_SESSION['toast']);
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Dashboard — TELE-CARE</title>
@@ -195,7 +192,7 @@ unset($_SESSION['toast']);
 .stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:1rem;margin-bottom:1.5rem}
 .stat-card{background:var(--white);border-radius:16px;padding:1.2rem 1rem;border:1px solid rgba(36,68,65,0.07);box-shadow:0 2px 10px rgba(0,0,0,0.04)}
 .stat-card .label{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9ab0ae;margin-bottom:0.4rem}
-.stat-card .value{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:900;color:var(--green);line-height:1}
+.stat-card .value{font-family:'Poppins',serif;font-size:1.9rem;font-weight:900;color:var(--green);line-height:1}
 .stat-card.revenue-card .value{font-size:1.3rem}
 .delta{font-size:0.7rem;font-weight:600;display:block;margin-top:0.3rem}
 .delta.pos{color:#16a34a}.delta.neg{color:var(--red)}.delta.neu{color:#9ab0ae}
@@ -204,10 +201,10 @@ unset($_SESSION['toast']);
 .chart-card{background:var(--white);border-radius:16px;padding:1.4rem;border:1px solid rgba(36,68,65,0.07);box-shadow:0 2px 10px rgba(0,0,0,0.04)}
 .chart-card.full{grid-column:1/-1}
 .chart-title{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#9ab0ae;margin-bottom:0.2rem}
-.chart-subtitle{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--green);margin-bottom:1rem}
+.chart-subtitle{font-family:'Poppins',serif;font-size:1rem;font-weight:700;color:var(--green);margin-bottom:1rem}
 .chart-wrap{position:relative;width:100%}
 .chart-wrap canvas{max-width:100%}
-.btn-primary{display:inline-flex;align-items:center;gap:0.4rem;background:var(--red);color:#fff;padding:0.6rem 1.3rem;border-radius:50px;font-size:0.85rem;font-weight:600;border:none;cursor:pointer;transition:all 0.25s;font-family:'DM Sans',sans-serif;box-shadow:0 4px 14px rgba(195,54,67,0.25);text-decoration:none}
+.btn-primary{display:inline-flex;align-items:center;gap:0.4rem;background:var(--red);color:#fff;padding:0.6rem 1.3rem;border-radius:50px;font-size:0.85rem;font-weight:600;border:none;cursor:pointer;transition:all 0.25s;font-family:'Poppins',sans-serif;box-shadow:0 4px 14px rgba(195,54,67,0.25);text-decoration:none}
 .btn-primary:hover{background:#a82d38;transform:translateY(-1px)}
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
 .section-header h2{font-size:1.3rem}
@@ -374,10 +371,10 @@ const fontColor = '#9ab0ae';
 
 const baseOpts = {
   responsive:true, maintainAspectRatio:false,
-  plugins:{ legend:{ labels:{ font:{family:"'DM Sans',sans-serif",size:11}, color:'#244441', boxWidth:10, padding:12 }}},
+  plugins:{ legend:{ labels:{ font:{family:"'Poppins',sans-serif",size:11}, color:'#173B64', boxWidth:10, padding:12 }}},
   scales:{
-    x:{ grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'DM Sans',sans-serif"}} },
-    y:{ grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'DM Sans',sans-serif"},precision:0} }
+    x:{ grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'Poppins',sans-serif"}} },
+    y:{ grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'Poppins',sans-serif"},precision:0} }
   }
 };
 
@@ -409,8 +406,8 @@ new Chart(document.getElementById('stackedBar'), {
   options:{
     ...baseOpts,
     scales:{
-      x:{ stacked:true, grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'DM Sans',sans-serif"}} },
-      y:{ stacked:true, grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'DM Sans',sans-serif"},precision:0} }
+      x:{ stacked:true, grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'Poppins',sans-serif"}} },
+      y:{ stacked:true, grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'Poppins',sans-serif"},precision:0} }
     }
   }
 });
@@ -430,10 +427,10 @@ new Chart(document.getElementById('areaChart'), {
   },
   options:{
     ...baseOpts,
-    plugins:{...baseOpts.plugins, legend:{display:true, labels:{font:{family:"'DM Sans',sans-serif",size:11},color:'#244441',boxWidth:10}}},
+    plugins:{...baseOpts.plugins, legend:{display:true, labels:{font:{family:"'Poppins',sans-serif",size:11},color:'#173B64',boxWidth:10}}},
     scales:{
-      x:{ grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'DM Sans',sans-serif"}} },
-      y:{ grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'DM Sans',sans-serif"},callback:v=>'₱'+v.toLocaleString()} }
+      x:{ grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'Poppins',sans-serif"}} },
+      y:{ grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'Poppins',sans-serif"},callback:v=>'₱'+v.toLocaleString()} }
     }
   }
 });
@@ -448,7 +445,7 @@ new Chart(document.getElementById('donutChart'), {
   options:{
     responsive:true, maintainAspectRatio:false, cutout:'65%',
     plugins:{
-      legend:{ position:'bottom', labels:{font:{family:"'DM Sans',sans-serif",size:11},color:'#244441',boxWidth:10,padding:10} },
+      legend:{ position:'bottom', labels:{font:{family:"'Poppins',sans-serif",size:11},color:'#173B64',boxWidth:10,padding:10} },
       tooltip:{ callbacks:{ label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(paidCnt+unpaidCnt||1)*100)}%)` } }
     }
   }
@@ -465,8 +462,8 @@ new Chart(document.getElementById('doctorBar'), {
     ...baseOpts,
     plugins:{...baseOpts.plugins, legend:{display:false}},
     scales:{
-      x:{ grid:{display:false}, ticks:{color:fontColor,font:{size:9,family:"'DM Sans',sans-serif"},maxRotation:30} },
-      y:{ grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'DM Sans',sans-serif"},precision:0} }
+      x:{ grid:{display:false}, ticks:{color:fontColor,font:{size:9,family:"'Poppins',sans-serif"},maxRotation:30} },
+      y:{ grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'Poppins',sans-serif"},precision:0} }
     }
   }
 });

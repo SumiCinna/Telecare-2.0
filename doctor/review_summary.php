@@ -87,7 +87,7 @@ require_once 'includes/header.php';
       <input type="hidden" name="appt_id" value="<?= $appt_id ?>">
       <div class="form-field">
         <label class="field-label">Editable Summary Text</label>
-        <textarea class="field-input" name="summary_text" rows="16" required style="font-family:'DM Sans',sans-serif;line-height:1.55;"><?= htmlspecialchars($appt['consultation_summary'] ?? '') ?></textarea>
+        <textarea class="field-input" name="summary_text" rows="16" required style="font-family:'Poppins',sans-serif;line-height:1.55;"><?= htmlspecialchars($appt['consultation_summary'] ?? '') ?></textarea>
       </div>
 
       <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:0.4rem;">

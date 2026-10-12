@@ -138,10 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Complete Your Registration — TELE-CARE</title>
@@ -149,10 +146,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
-    :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF}
+    :root{--red:#E34248;--green:#173B64;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF}
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--green);min-height:100vh}
-    h1,h2{font-family:'Playfair Display',serif}
+    body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--green);min-height:100vh}
+    h1,h2{font-family:'Poppins',serif}
 
     .page-wrap{display:flex;min-height:100vh}
     .left-panel{background:linear-gradient(160deg,var(--green) 0%,#1a3330 100%);position:sticky;top:0;height:100vh;width:42%;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;padding:3rem;overflow:hidden}
@@ -164,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .right-panel{flex:1;overflow-y:auto;padding:3rem 4%}
 
     .mobile-header{display:none;background:linear-gradient(135deg,var(--green) 0%,#1a3330 100%);padding:1.25rem 1.5rem;position:sticky;top:0;z-index:100;align-items:center;justify-content:space-between}
-    .mobile-header-logo{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:900;color:#fff;text-decoration:none;letter-spacing:.04em}
+    .mobile-header-logo{font-family:'Poppins',serif;font-size:1.35rem;font-weight:900;color:#fff;text-decoration:none;letter-spacing:.04em}
 
     .step-bar{display:flex;gap:.5rem;margin-bottom:2rem}
     .step-dot{flex:1;height:4px;border-radius:2px;background:rgba(36,68,65,.12);transition:background .4s}
@@ -175,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     .field-label{display:block;font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5a7a77;margin-bottom:.45rem}
     .field-label .req{color:var(--red)}
-    .field-input{width:100%;padding:.75rem 1rem;border:1.5px solid rgba(36,68,65,.15);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:16px;background:var(--white);color:var(--green);outline:none;transition:border-color .25s,box-shadow .25s}
+    .field-input{width:100%;padding:.75rem 1rem;border:1.5px solid rgba(36,68,65,.15);border-radius:12px;font-family:'Poppins',sans-serif;font-size:16px;background:var(--white);color:var(--green);outline:none;transition:border-color .25s,box-shadow .25s}
     .field-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(63,130,227,.12)}
     .field-input.has-error{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(195,54,67,.1)!important}
     .field-input:disabled{background:#f0f0f0;color:#aaa;cursor:not-allowed}
@@ -197,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .toast{background:#fff;border-radius:12px;padding:.75rem 1.1rem;font-size:.84rem;font-weight:500;box-shadow:0 8px 28px rgba(0,0,0,.13);border-left:4px solid var(--red);color:var(--green);animation:toastIn .3s ease;pointer-events:auto;max-width:300px;line-height:1.4}
     @keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
 
-    .resend-btn{background:none;border:none;color:var(--red);font-weight:600;font-size:.9rem;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline;padding:0}
+    .resend-btn{background:none;border:none;color:var(--red);font-weight:600;font-size:.9rem;cursor:pointer;font-family:'Poppins',sans-serif;text-decoration:underline;padding:0}
     .resend-btn:disabled{color:#9ab0ae;cursor:not-allowed;text-decoration:none}
 
     .spinner-inline{display:inline-block;width:14px;height:14px;border:2px solid rgba(195,54,67,.3);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
@@ -207,8 +204,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .phone-combo{display:flex;border:1.5px solid rgba(36,68,65,.15);border-radius:12px;overflow:hidden;background:var(--white);transition:border-color .25s,box-shadow .25s}
     .phone-combo:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(63,130,227,.12)}
     .phone-combo.has-error{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(195,54,67,.1)!important}
-    .phone-prefix-fixed{display:flex;align-items:center;justify-content:center;border-right:1.5px solid rgba(36,68,65,.1);background:rgba(36,68,65,.05);color:var(--green);font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:700;padding:.75rem .85rem;min-width:64px;flex-shrink:0}
-    .phone-number-input{border:none;outline:none;flex:1;padding:.75rem 1rem;font-family:'DM Sans',sans-serif;font-size:16px;color:var(--green);background:transparent;min-width:0}
+    .phone-prefix-fixed{display:flex;align-items:center;justify-content:center;border-right:1.5px solid rgba(36,68,65,.1);background:rgba(36,68,65,.05);color:var(--green);font-family:'Poppins',sans-serif;font-size:.88rem;font-weight:700;padding:.75rem .85rem;min-width:64px;flex-shrink:0}
+    .phone-number-input{border:none;outline:none;flex:1;padding:.75rem 1rem;font-family:'Poppins',sans-serif;font-size:16px;color:var(--green);background:transparent;min-width:0}
     .phone-number-input::placeholder{color:#b0c4c2}
 
     .google-card{display:flex;align-items:center;gap:1rem;background:rgba(63,130,227,.06);border:1.5px solid rgba(63,130,227,.15);border-radius:16px;padding:1rem 1.2rem;margin-bottom:1.5rem}
@@ -229,7 +226,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="toast-wrap" id="toastWrap"></div>
 
 <header class="mobile-header">
-  <a href="../index.php" class="mobile-header-logo">TELE<span style="color:var(--red)">-</span>CARE</a>
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
+  <a href="../index.php" class="mobile-header-logo"><img src="/src/assets/logo.png" alt="TELE-CARE"/>TELE-CARE</a>
   <span style="font-size:.75rem;color:rgba(255,255,255,.6)" id="mobileStepInfo">Step 1 of 2</span>
 </header>
 
@@ -238,7 +236,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="orb" style="width:320px;height:320px;background:radial-gradient(circle,rgba(63,130,227,.2) 0%,transparent 70%);top:-60px;right:-60px"></div>
     <div class="orb" style="width:220px;height:220px;background:radial-gradient(circle,rgba(195,54,67,.15) 0%,transparent 70%);bottom:60px;left:20px;animation-delay:3s"></div>
     <div style="position:relative;z-index:2">
-      <a href="../index.php" style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:#fff;text-decoration:none;letter-spacing:.04em">TELE<span style="color:var(--red)">-</span>CARE</a>
+      <a href="../index.php" style="display:flex;align-items:center;gap:.5rem;font-family:'Poppins',serif;font-size:1.6rem;font-weight:900;color:#fff;text-decoration:none;letter-spacing:.04em"><img src="/src/assets/logo.png" alt="TELE-CARE" style="width:42px;height:42px;object-fit:contain;"/>TELE-CARE</a>
       <div style="margin-top:3rem">
         <h1 style="font-size:2.2rem;color:#fff;line-height:1.2;margin-bottom:1rem">Almost There!</h1>
         <p style="color:rgba(255,255,255,.55);font-size:.95rem;line-height:1.75">We got your Google info. Just fill in a few more details to complete your patient account.</p>
@@ -321,7 +319,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <div style="font-weight:600;font-size:1rem;color:var(--green)"><?= htmlspecialchars($g['full_name']) ?></div>
           <div style="font-size:.82rem;color:#6b8a87"><?= htmlspecialchars($g['email']) ?></div>
           <div style="font-size:.75rem;color:#9ab0ae;margin-top:.2rem;display:flex;align-items:center;gap:.3rem">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#244441"/></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#173B64"/></svg>
             Connected via Google
           </div>
         </div>
@@ -568,6 +566,4 @@ window.addEventListener('load', () => { loadRegions(); updateMobileStepInfo(); }
 </script>
 </body>
 </html>
-
-
 

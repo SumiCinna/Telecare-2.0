@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // includes/header.php
 // $page_title must be set before including this.
 
@@ -158,10 +158,7 @@ if (isset($conn, $patient_id)) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title><?= htmlspecialchars($page_title ?? 'TELE-CARE') ?></title>
@@ -170,13 +167,13 @@ if (isset($conn, $patient_id)) {
   <link rel="stylesheet" href="includes/styles.css"/>
   <style>
     :root{
-      --tc-red:#B31118; --tc-red-dark:#8a000b;
+      --tc-red:#2166B1; --tc-red-dark:#164B82;
       --tc-teal:#006a61; --tc-teal-light:#0D9488;
       --tc-ink:#151c27; --tc-muted:rgba(21,28,39,0.55);
       --tc-line:rgba(21,28,39,0.08);
       --tc-red-tint:#FEF2F2; --tc-teal-tint:#ECFDF5;
     }
-    body{ font-family:'Inter',sans-serif; }
+    body{ font-family:'Poppins',sans-serif; }
 
     .site-topbar{
       position:sticky; top:0; z-index:120;
@@ -229,7 +226,7 @@ if (isset($conn, $patient_id)) {
     .profile-option{
       display:flex; align-items:center; gap:.6rem; width:100%; padding:.6rem .65rem;
       border:0; border-radius:7px; background:none; color:var(--tc-ink);
-      font:600 .78rem 'Inter',sans-serif; text-decoration:none; text-align:left; cursor:pointer;
+      font:600 .78rem 'Poppins',sans-serif; text-decoration:none; text-align:left; cursor:pointer;
     }
     .profile-option:hover{ background:#f1f3fc; color:var(--tc-ink); text-decoration:none; }
     .profile-option.logout{ color:var(--tc-red); }
@@ -457,7 +454,7 @@ if (isset($conn, $patient_id)) {
   <button onclick="toggleCarebot()" class="carebot-btn" style="
     height:48px;
     border-radius:50px;
-    background:linear-gradient(135deg,#B31118,#8a000b);
+    background:linear-gradient(135deg,#2166B1,#164B82);
     border:none;
     cursor:pointer;
     display:flex;

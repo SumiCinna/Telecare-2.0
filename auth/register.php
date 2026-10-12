@@ -99,10 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Create Account — TELE-CARE</title>
@@ -110,10 +107,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
-    :root{--red:#B31118;--red-dark:#8a000b;--ink:#151c27;--teal:#006a61;--teal-light:#0D9488;--bg:#F5F6FA;--white:#FFFFFF}
+    :root{--red:#2166B1;--red-dark:#164B82;--ink:#151c27;--teal:#006a61;--teal-light:#0D9488;--bg:#F5F6FA;--white:#FFFFFF}
     *{box-sizing:border-box}
-    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
-    h1,h2{font-family:'Inter',sans-serif;font-weight:800}
+    body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+    h1,h2{font-family:'Poppins',sans-serif;font-weight:800}
     .left-panel{background:linear-gradient(160deg,var(--ink) 0%,#0a0e14 100%);position:relative;overflow:hidden}
     .left-panel::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(13,148,136,0.08) 1px,transparent 1px),linear-gradient(90deg,rgba(13,148,136,0.08) 1px,transparent 1px);background-size:44px 44px;animation:gridMove 20s linear infinite}
     @keyframes gridMove{from{transform:translateY(0)}to{transform:translateY(44px)}}
@@ -121,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     @keyframes pulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.2);opacity:1}}
     .field-label{display:block;font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(21,28,39,0.55);margin-bottom:.45rem}
     .field-label .req{color:var(--red)}
-    .field-input{width:100%;padding:.75rem 1rem;border:1.5px solid rgba(21,28,39,.15);border-radius:8px;font-family:'Inter',sans-serif;font-size:.95rem;background:var(--white);color:var(--ink);outline:none;transition:border-color .25s,box-shadow .25s}
+    .field-input{width:100%;padding:.75rem 1rem;border:1.5px solid rgba(21,28,39,.15);border-radius:8px;font-family:'Poppins',sans-serif;font-size:.95rem;background:var(--white);color:var(--ink);outline:none;transition:border-color .25s,box-shadow .25s}
     .field-input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,106,97,.12)}
     .field-input.has-error{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(179,17,24,.1)!important}
     .field-error{font-size:.76rem;color:var(--red);margin-top:.3rem;display:none}
@@ -147,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .toast{background:#fff;border-radius:12px;padding:.75rem 1.1rem;font-size:.84rem;font-weight:500;box-shadow:0 8px 28px rgba(0,0,0,.13);border-left:4px solid var(--red);color:var(--ink);animation:toastIn .3s ease;pointer-events:auto;max-width:300px;line-height:1.4}
     .toast.ok{border-left-color:var(--teal)}
     @keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
-    .resend-btn{background:none;border:none;color:var(--red);font-weight:600;font-size:.9rem;cursor:pointer;font-family:'Inter',sans-serif;text-decoration:underline;padding:0}
+    .resend-btn{background:none;border:none;color:var(--red);font-weight:600;font-size:.9rem;cursor:pointer;font-family:'Poppins',sans-serif;text-decoration:underline;padding:0}
     .resend-btn:disabled{color:#9ab0ae;cursor:not-allowed;text-decoration:none}
     .spinner-inline{display:inline-block;width:14px;height:14px;border:2px solid rgba(179,17,24,.3);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
     @keyframes spin{to{transform:rotate(360deg)}}
@@ -156,8 +153,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .phone-combo{display:flex;border:1.5px solid rgba(21,28,39,.15);border-radius:8px;overflow:hidden;background:var(--white);transition:border-color .25s,box-shadow .25s}
     .phone-combo:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,106,97,.12)}
     .phone-combo.has-error{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(179,17,24,.1)!important}
-    .phone-prefix-fixed{display:flex;align-items:center;justify-content:center;border-right:1.5px solid rgba(21,28,39,.1);background:rgba(21,28,39,.05);color:var(--ink);font-family:'Inter',sans-serif;font-size:.88rem;font-weight:700;padding:.75rem .85rem;min-width:64px;flex-shrink:0}
-    .phone-number-input{border:none;outline:none;flex:1;padding:.75rem 1rem;font-family:'Inter',sans-serif;font-size:.95rem;color:var(--ink);background:transparent;min-width:0}
+    .phone-prefix-fixed{display:flex;align-items:center;justify-content:center;border-right:1.5px solid rgba(21,28,39,.1);background:rgba(21,28,39,.05);color:var(--ink);font-family:'Poppins',sans-serif;font-size:.88rem;font-weight:700;padding:.75rem .85rem;min-width:64px;flex-shrink:0}
+    .phone-number-input{border:none;outline:none;flex:1;padding:.75rem 1rem;font-family:'Poppins',sans-serif;font-size:.95rem;color:var(--ink);background:transparent;min-width:0}
     .phone-number-input::placeholder{color:#b0c4c2}
 
     /* ── Terms agreement row ─────────────────────────────────────────────── */
@@ -166,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .terms-checkbox{width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:var(--teal);cursor:not-allowed}
     .terms-checkbox.unlocked{cursor:pointer}
     .terms-text{font-size:.85rem;line-height:1.55;color:var(--ink)}
-    .terms-link{color:var(--teal);font-weight:600;text-decoration:underline;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:.85rem;padding:0}
+    .terms-link{color:var(--teal);font-weight:600;text-decoration:underline;background:none;border:none;cursor:pointer;font-family:'Poppins',sans-serif;font-size:.85rem;padding:0}
     .terms-hint{font-size:.74rem;color:#9ab0ae;margin-top:.35rem}
 
     /* ── Modal ────────────────────────────────────────────────────────────── */
@@ -174,11 +171,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .modal-overlay.open{display:flex}
     .modal-box{background:#fff;border-radius:18px;width:100%;max-width:640px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,.3);overflow:hidden}
     .modal-head{padding:1.3rem 1.6rem;border-bottom:1px solid rgba(21,28,39,.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-    .modal-head h3{font-size:1.15rem;font-weight:800;font-family:'Inter',sans-serif}
+    .modal-head h3{font-size:1.15rem;font-weight:800;font-family:'Poppins',sans-serif}
     .modal-close{background:none;border:none;cursor:pointer;color:#9ab0ae;padding:.3rem;border-radius:6px;transition:background .2s,color .2s}
     .modal-close:hover{background:rgba(21,28,39,.06);color:var(--ink)}
     .modal-tabs{display:flex;gap:.4rem;padding:.8rem 1.6rem 0;flex-shrink:0;border-bottom:1px solid rgba(21,28,39,.08)}
-    .modal-tab{background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:600;color:#9ab0ae;padding:.55rem .9rem;border-radius:8px 8px 0 0;position:relative;top:1px}
+    .modal-tab{background:none;border:none;cursor:pointer;font-family:'Poppins',sans-serif;font-size:.82rem;font-weight:600;color:#9ab0ae;padding:.55rem .9rem;border-radius:8px 8px 0 0;position:relative;top:1px}
     .modal-tab.active{color:var(--teal);border-bottom:2px solid var(--teal)}
     .modal-body{padding:1.4rem 1.6rem;overflow-y:auto;flex:1;font-size:.86rem;line-height:1.75;color:#3a4650}
     .modal-body h4{font-size:.95rem;font-weight:700;color:var(--ink);margin:1.1rem 0 .4rem}
@@ -215,7 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="orb" style="width:320px;height:320px;background:radial-gradient(circle,rgba(0,106,97,.25) 0%,transparent 70%);top:-60px;right:-60px"></div>
     <div class="orb" style="width:220px;height:220px;background:radial-gradient(circle,rgba(179,17,24,.2) 0%,transparent 70%);bottom:60px;left:20px;animation-delay:3s"></div>
     <div style="position:relative;z-index:2">
-      <a href="../index.php" style="font-family:'Inter',sans-serif;font-size:1.6rem;font-weight:900;color:#fff;text-decoration:none;letter-spacing:.02em">TELE<span style="color:var(--red)">-</span>CARE</a>
+      <a href="../index.php" style="display:flex;align-items:center;gap:.5rem;font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:900;color:#fff;text-decoration:none;letter-spacing:.02em"><img src="/src/assets/logo.png" alt="TELE-CARE" style="width:42px;height:42px;object-fit:contain;"/>TELE-CARE</a>
       <div style="margin-top:3rem">
         <h1 style="font-size:2.2rem;color:#fff;line-height:1.2;margin-bottom:1rem">Create Your<br/>Patient Account</h1>
         <p style="color:rgba(255,255,255,.55);font-size:.95rem;line-height:1.75">Fill in your details below. All information is kept private and used only for your consultations.</p>
@@ -304,7 +301,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius:8px;
             background:#fff;
             color:#151c27;
-            font-family:'Inter',sans-serif;font-size:.92rem;font-weight:600;
+            font-family:'Poppins',sans-serif;font-size:.92rem;font-weight:600;
             text-decoration:none;
             transition:all .25s;
             box-shadow:0 2px 8px rgba(0,0,0,.07);
@@ -686,5 +683,4 @@ if (dobEl) {
 </script>
 </body>
 </html>
-
 

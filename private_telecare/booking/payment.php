@@ -30,7 +30,7 @@ echo booking_wizard_css();
 <style>
 .pay-card{max-width:480px;margin:0 auto}
 .bill-row{display:flex;justify-content:space-between;font-size:0.87rem;padding:0.4rem 0}
-.bill-total{display:flex;justify-content:space-between;font-family:'Playfair Display',serif;font-weight:900;font-size:1.3rem;color:var(--red);border-top:1px solid rgba(36,68,65,0.1);margin-top:0.6rem;padding-top:0.7rem}
+.bill-total{display:flex;justify-content:space-between;font-family:'Poppins',serif;font-weight:900;font-size:1.3rem;color:var(--red);border-top:1px solid rgba(36,68,65,0.1);margin-top:0.6rem;padding-top:0.7rem}
 </style>
 
 <div class="wiz-page">

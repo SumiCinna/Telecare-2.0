@@ -424,10 +424,7 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>User Management — TELE-CARE</title>
@@ -463,7 +460,7 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
     .invite-box code{font-size:0.75rem;word-break:break-all;color:var(--green);background:rgba(36,68,65,0.06);padding:0.4rem 0.6rem;border-radius:8px;display:block}
 
     .role-select{display:flex;gap:0.5rem;margin-bottom:1.2rem}
-    .role-select button{flex:1;padding:0.6rem;border-radius:12px;border:1.5px solid rgba(36,68,65,0.12);background:var(--white);color:var(--green);font-weight:600;font-size:0.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+    .role-select button{flex:1;padding:0.6rem;border-radius:12px;border:1.5px solid rgba(36,68,65,0.12);background:var(--white);color:var(--green);font-weight:600;font-size:0.82rem;cursor:pointer;font-family:'Poppins',sans-serif;transition:all 0.2s}
     .role-select button.active{background:var(--green);border-color:var(--green);color:#fff}
     .role-select button:disabled{opacity:0.4;cursor:not-allowed}
     .role-note{font-size:0.75rem;color:#9ab0ae;margin-bottom:1rem;line-height:1.4}

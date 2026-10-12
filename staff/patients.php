@@ -79,8 +79,8 @@ require_once 'includes/header.php';
 <style>
 /* ── Patients page refresh (scoped additions, matches appointments.php) ── */
 .sec-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.2rem}
-.sec-head h2{font-family:'Playfair Display',serif;font-size:1.55rem;font-weight:800;color:var(--text,#1a1a1a);margin:0}
-.search-bar{border:1.5px solid var(--border,#e5e7eb);border-radius:12px;padding:.6rem 1rem;font-family:'DM Sans',sans-serif;font-size:.85rem;min-width:260px;outline:none;transition:border-color .2s,box-shadow .2s;background:#fff}
+.sec-head h2{font-family:'Poppins',serif;font-size:1.55rem;font-weight:800;color:var(--text,#1a1a1a);margin:0}
+.search-bar{border:1.5px solid var(--border,#e5e7eb);border-radius:12px;padding:.6rem 1rem;font-family:'Poppins',sans-serif;font-size:.85rem;min-width:260px;outline:none;transition:border-color .2s,box-shadow .2s;background:#fff}
 .search-bar:focus{border-color:var(--red,#8B1E2B);box-shadow:0 0 0 3px rgba(139,30,43,.1)}
 
 .tbl-wrap{background:#fff;border:1.5px solid var(--border,#e5e7eb);border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.03)}
@@ -97,16 +97,16 @@ require_once 'includes/header.php';
 .bg-blue{background:rgba(63,130,227,.12);color:#1d4ed8}
 .bg-red{background:rgba(239,68,68,.12);color:#b91c1c}
 
-.btn-sm{border:none;border-radius:50px;padding:.42rem .85rem;font-size:.76rem;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:transform .15s,opacity .15s}
+.btn-sm{border:none;border-radius:50px;padding:.42rem .85rem;font-size:.76rem;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer;transition:transform .15s,opacity .15s}
 .btn-sm:hover{transform:translateY(-1px)}
 
 /* ── Modals ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,20,20,.5);z-index:9998;align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
 .modal{background:#fff;border-radius:18px;padding:1.6rem;max-width:480px;width:92%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
-.modal h3{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:800;margin:0 0 1rem;color:var(--text,#1a1a1a)}
+.modal h3{font-family:'Poppins',serif;font-size:1.25rem;font-weight:800;margin:0 0 1rem;color:var(--text,#1a1a1a)}
 .f-label{display:block;font-size:.75rem;font-weight:700;color:var(--muted,#6b7280);margin:.8rem 0 .35rem;text-transform:uppercase;letter-spacing:.04em}
-.f-input{width:100%;padding:.65rem .85rem;border:1.5px solid var(--border,#e5e7eb);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;margin-bottom:.6rem}
+.f-input{width:100%;padding:.65rem .85rem;border:1.5px solid var(--border,#e5e7eb);border-radius:10px;font-family:'Poppins',sans-serif;font-size:.88rem;outline:none;margin-bottom:.6rem}
 .f-input:focus{border-color:var(--red,#8B1E2B);box-shadow:0 0 0 3px rgba(139,30,43,.1)}
 .btn-submit{width:100%;background:var(--red,#8B1E2B);color:#fff;border:none;border-radius:50px;padding:.75rem;font-weight:700;font-size:.88rem;cursor:pointer;margin-top:.4rem}
 .btn-submit:hover{background:#5c131c}
@@ -127,7 +127,7 @@ require_once 'includes/header.php';
 .pt-phone-combo{display:flex;border:1.5px solid var(--border,#e5e7eb);border-radius:11px;overflow:hidden;background:#fff;margin-bottom:.25rem;transition:border-color .2s,box-shadow .2s}
 .pt-phone-combo:focus-within{border-color:var(--red,#8B1E2B);box-shadow:0 0 0 3px rgba(139,30,43,.1)}
 .pt-phone-prefix{display:flex;align-items:center;justify-content:center;padding:.68rem .82rem;background:#fafafa;border-right:1.5px solid var(--border,#e5e7eb);font-weight:700;color:var(--red,#8B1E2B);font-size:.88rem;min-width:60px}
-.pt-phone-input{border:none;outline:none;flex:1;padding:.68rem .9rem;font-family:'DM Sans',sans-serif;font-size:.88rem;background:transparent}
+.pt-phone-input{border:none;outline:none;flex:1;padding:.68rem .9rem;font-family:'Poppins',sans-serif;font-size:.88rem;background:transparent}
 .pt-hint{font-size:.72rem;color:var(--muted,#6b7280);margin:0 0 .65rem}
 .pt-modal-note{font-size:.76rem;color:var(--muted,#6b7280);margin-bottom:.9rem;background:#fafafa;border-radius:10px;padding:.6rem .8rem}
 

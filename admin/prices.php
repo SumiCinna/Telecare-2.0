@@ -20,10 +20,7 @@ $activeNav = 'pos-prices';
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Prices — TELE-CARE</title>
@@ -39,7 +36,7 @@ $activeNav = 'pos-prices';
     .controls-bar{display:flex;flex-wrap:wrap;align-items:center;gap:1rem;margin-bottom:1.5rem}
     .search-wrap{position:relative;flex:1;min-width:220px;max-width:340px}
     .search-wrap svg{position:absolute;left:0.85rem;top:50%;transform:translateY(-50%);color:#9ab0ae;width:16px;height:16px}
-    .search-input{width:100%;padding:0.62rem 0.9rem 0.62rem 2.3rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--green);outline:none;background:var(--white)}
+    .search-input{width:100%;padding:0.62rem 0.9rem 0.62rem 2.3rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:50px;font-family:'Poppins',sans-serif;font-size:0.85rem;color:var(--green);outline:none;background:var(--white)}
     .filter-tabs{display:flex;gap:0.5rem;flex-wrap:wrap}
     .filter-tab{padding:0.5rem 1rem;border-radius:50px;font-size:0.8rem;font-weight:600;border:1.5px solid rgba(36,68,65,0.12);background:var(--white);color:var(--green);cursor:pointer}
     .filter-tab.active{background:var(--green);border-color:var(--green);color:#fff}

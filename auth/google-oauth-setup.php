@@ -54,8 +54,8 @@ $google_login_url = $google_base . '?' . http_build_query([
     border:1.5px solid rgba(36,68,65,.18);
     border-radius:50px;
     background:#fff;
-    color:#244441;
-    font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:600;
+    color:#173B64;
+    font-family:'Poppins',sans-serif;font-size:.92rem;font-weight:600;
     text-decoration:none;
     transition:all .25s;
     box-shadow:0 2px 8px rgba(0,0,0,.07);
@@ -89,8 +89,8 @@ $google_login_url = $google_base . '?' . http_build_query([
     border:1.5px solid rgba(36,68,65,.18);
     border-radius:50px;
     background:#fff;
-    color:#244441;
-    font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:600;
+    color:#173B64;
+    font-family:'Poppins',sans-serif;font-size:.92rem;font-weight:600;
     text-decoration:none;
     transition:all .25s;
     box-shadow:0 2px 8px rgba(0,0,0,.07);

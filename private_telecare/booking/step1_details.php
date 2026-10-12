@@ -124,7 +124,7 @@ echo booking_wizard_css();
 .reason-placeholder{font-size:0.85rem;color:var(--muted);padding:0.4rem 0;}
 .reason-opt{display:flex;align-items:center;gap:0.6rem;border:1.5px solid rgba(36,68,65,0.1);border-radius:12px;padding:0.7rem 0.9rem;cursor:pointer;font-size:0.85rem;color:var(--green)}
 .reason-opt input{accent-color:var(--red)}
-.other-input{width:100%;margin-top:0.4rem;padding:0.65rem 0.9rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--green)}
+.other-input{width:100%;margin-top:0.4rem;padding:0.65rem 0.9rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:10px;font-family:'Poppins',sans-serif;font-size:0.85rem;color:var(--green)}
 .upload-box{border:1.5px dashed rgba(36,68,65,0.2);border-radius:14px;padding:1.4rem;text-align:center;color:var(--green);font-size:0.85rem}
 .upload-box input{margin-top:0.7rem;display:block;margin-left:auto;margin-right:auto}
 .file-list{display:flex;flex-direction:column;gap:0.5rem;margin-top:1rem;text-align:left}

@@ -66,12 +66,12 @@ echo booking_wizard_css();
 .conf-banner-left{display:flex;align-items:center;gap:0.9rem}
 .conf-icon{width:48px;height:48px;border-radius:50%;background:rgba(34,197,94,0.12);color:#16a34a;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .conf-icon.pending{background:rgba(217,119,6,0.12);color:#d97706}
-.conf-icon.cancelled{background:rgba(195,54,67,0.1);color:#C33643}
-.conf-title{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:900;color:var(--green)}
+.conf-icon.cancelled{background:rgba(195,54,67,0.1);color:#E34248}
+.conf-title{font-family:'Poppins',serif;font-size:1.25rem;font-weight:900;color:var(--green)}
 .conf-sub{font-size:0.82rem;color:var(--muted)}
 .ref-box{background:rgba(63,130,227,0.08);border-radius:12px;padding:0.6rem 1rem;text-align:center}
 .ref-label{font-size:0.65rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue)}
-.ref-val{font-family:'Playfair Display',serif;font-weight:900;color:var(--green)}
+.ref-val{font-family:'Poppins',serif;font-weight:900;color:var(--green)}
 .conf-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:1.2rem}
 .info-row{display:flex;align-items:flex-start;gap:0.6rem;padding:0.5rem 0;font-size:0.87rem}
 .info-row svg{width:16px;height:16px;color:var(--muted);flex-shrink:0;margin-top:2px}
@@ -95,7 +95,7 @@ echo booking_wizard_css();
 }
 .status-badge.paid{background:rgba(34,197,94,0.12);color:#16a34a}
 .status-badge.pending{background:rgba(217,119,6,0.12);color:#d97706}
-.status-badge.cancelled{background:rgba(195,54,67,0.1);color:#C33643}
+.status-badge.cancelled{background:rgba(195,54,67,0.1);color:#E34248}
 
 /* ── Countdown ── */
 .countdown-wrap{
@@ -108,13 +108,13 @@ echo booking_wizard_css();
 .btn-fix{
   display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;
   padding:0.75rem 1.6rem;border-radius:50px;
-  font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:700;
+  font-family:'Poppins',sans-serif;font-size:0.88rem;font-weight:700;
   text-decoration:none;border:1.5px solid transparent;cursor:pointer;
   line-height:1;white-space:nowrap;transition:all .2s;
 }
 .btn-fix svg{width:16px;height:16px;flex-shrink:0;display:block}
 .btn-fix.pay{
-  background:linear-gradient(135deg,#C33643,#a82d38);color:#fff;
+  background:linear-gradient(135deg,#E34248,#a82d38);color:#fff;
   box-shadow:0 4px 14px rgba(195,54,67,0.32);
 }
 .btn-fix.pay:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(195,54,67,0.4)}
@@ -123,7 +123,7 @@ echo booking_wizard_css();
 }
 .btn-fix.save:hover{background:rgba(36,68,65,0.05)}
 .btn-fix.danger-outline{
-  background:#fff;border-color:rgba(195,54,67,0.3);color:#C33643;
+  background:#fff;border-color:rgba(195,54,67,0.3);color:#E34248;
 }
 .btn-fix.danger-outline:hover{background:rgba(195,54,67,0.06)}
 
@@ -135,15 +135,15 @@ echo booking_wizard_css();
 .tc-modal-box{background:#fff;border-radius:18px;max-width:420px;width:100%;padding:1.8rem;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;}
 .tc-modal-icon{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;}
 .tc-modal-icon.warn{background:rgba(217,119,6,0.12);color:#d97706}
-.tc-modal-icon.danger{background:rgba(195,54,67,0.1);color:#C33643}
-.tc-modal-title{font-family:'Playfair Display',serif;font-weight:900;font-size:1.15rem;color:var(--green);margin-bottom:0.5rem;}
+.tc-modal-icon.danger{background:rgba(195,54,67,0.1);color:#E34248}
+.tc-modal-title{font-family:'Poppins',serif;font-weight:900;font-size:1.15rem;color:var(--green);margin-bottom:0.5rem;}
 .tc-modal-body{font-size:0.87rem;color:var(--muted);line-height:1.55;margin-bottom:1.4rem;}
 .tc-modal-body strong{color:var(--green)}
 .tc-modal-actions{display:flex;gap:0.7rem;}
 .tc-modal-actions .btn-fix{flex:1;padding:0.7rem 1rem;}
 .tc-btn-ghost{background:#fff;border:1.5px solid rgba(36,68,65,0.15);color:var(--green);}
 .tc-btn-ghost:hover{background:rgba(36,68,65,0.05);}
-.tc-btn-danger{background:linear-gradient(135deg,#C33643,#a82d38);color:#fff;border:none;}
+.tc-btn-danger{background:linear-gradient(135deg,#E34248,#a82d38);color:#fff;border:none;}
 .tc-btn-danger:hover{background:linear-gradient(135deg,#a82d38,#8f2530);}
 .tc-btn-warnok{background:linear-gradient(135deg,#d97706,#b45309);color:#fff;border:none;}
 .tc-btn-warnok:hover{background:linear-gradient(135deg,#b45309,#92400e);}
@@ -318,7 +318,7 @@ document.addEventListener('keydown', e => {
     const diff = deadline - Date.now();
     if (diff <= 0) {
       if (el) el.textContent = 'Expired';
-      if (wrap) wrap.style.color = '#C33643';
+      if (wrap) wrap.style.color = '#E34248';
       clearInterval(timer);
       setTimeout(() => location.reload(), 1200);
       return;

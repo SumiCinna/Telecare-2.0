@@ -24,10 +24,7 @@ $activeNav = 'pos-products';
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Inventory — TELE-CARE</title>
@@ -35,13 +32,13 @@ $activeNav = 'pos-products';
   <link href="assets/admin.css" rel="stylesheet"/>
   <style>
     .select-wrap{max-width:900px}
-    .select-title{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--dark, #151c27);margin-bottom:0.35rem}
+    .select-title{font-family:'Poppins',serif;font-size:1.8rem;font-weight:900;color:var(--dark, #151c27);margin-bottom:0.35rem}
     .select-sub{color:#9ab0ae;font-size:0.9rem;margin-bottom:2rem}
     .type-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem}
     .type-card{background:var(--white,#fff);border:1px solid #e7edec;border-radius:18px;padding:1.75rem;text-decoration:none;color:inherit;display:block;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}
     .type-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(21,28,39,0.08);border-color:#d8e2e0}
     .type-icon{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:1.1rem}
-    .type-icon.medicine{background:rgba(179,17,24,0.1);color:#B31118}
+    .type-icon.medicine{background:rgba(179,17,24,0.1);color:#2166B1}
     .type-icon.testing{background:rgba(13,148,136,0.12);color:#0D9488}
     .type-card h3{font-size:1.15rem;font-weight:700;margin-bottom:0.4rem}
     .type-card p{font-size:0.85rem;color:#7d8f8d;margin-bottom:0.9rem}

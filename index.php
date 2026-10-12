@@ -5,110 +5,57 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title><?= $pageTitle ?></title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --red: #B31118;
-      --red-dark: #8a000b;
-      --red-tint: #FEF2F2;
-      --teal: #006a61;
-      --teal-light: #0D9488;
-      --teal-tint: #ECFDF5;
-      --ink: #151c27;
-      --ink-soft: rgba(21,28,39,0.6);
-      --bg: #f9f9ff;
-      --cream: #f0f3ff;
-      --line: rgba(21,28,39,0.1);
+      --blue: #1f6fc6;
+      --blue-dark: #193f72;
+      --blue-bright: #4382d6;
+      --blue-soft: #d9ecff;
+      --sky: #d9ecff;
+      --ink: #474748;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --surface: #fafafa;
+      --page: #fafafa;
+      --green: #26ae83;
+      --amber: #f2a51a;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #fff; color: var(--ink);
-      overflow-x: hidden;
-    }
+    body { font-family: 'Poppins', 'Poppins', sans-serif; background: var(--page); color: var(--ink); overflow-x:hidden; }
 
     /* ── CONTAINER ── */
-    .container {
-      width: 100%;
-      max-width: 1240px;
-      margin: 0 auto;
-      padding: 0 48px;
-    }
-
-    /* ── SCROLL PROGRESS ── */
-    .scroll-bar {
-      position: fixed; top: 0; left: 0; height: 2px;
-      background: linear-gradient(90deg, var(--red), var(--teal));
-      z-index: 9999; width: 0%;
-    }
-
-    h1, h2, h3 { font-family: 'Inter', sans-serif; font-weight: 800; }
+    .container { width:100%; max-width:1440px; margin:0 auto; padding:0 44px; }
 
     /* ── NAV ── */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-      background: rgba(255,255,255,0.96);
-      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--line);
-      box-shadow: 0 1px 30px rgba(21,28,39,0.06);
-      animation: navIn 0.8s cubic-bezier(0.16,1,0.3,1) both;
-      transition: padding 0.3s;
-    }
-    .nav-inner {
-      max-width: 1240px; margin: 0 auto; padding: 0 48px;
-      display: flex; align-items: center; justify-content: space-between;
-      height: 68px;
-    }
+    nav { position:sticky; top:0; z-index:200; background:rgba(255,255,255,.96); backdrop-filter:blur(14px); border-bottom:1px solid var(--line); box-shadow:0 2px 16px rgba(33,102,177,.08); }
+    .nav-inner { max-width:1440px; margin:0 auto; padding:0 44px; display:flex; align-items:center; justify-content:space-between; min-height:68px; }
     @keyframes navIn {
       from { transform: translateY(-100%); opacity: 0; }
       to   { transform: translateY(0); opacity: 1; }
     }
-    .nav-brand { display: flex; align-items: center; gap: 0.6rem; }
-    .nav-brand a { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
-    .logo-img { width: 42px; height: 42px; object-fit: contain; flex-shrink: 0; }
-    .logo {
-      font-family: 'Inter', sans-serif;
-      font-size: 1.5rem; font-weight: 900;
-      color: var(--ink); letter-spacing: 0.02em; line-height: 1;
-    }
-    .logo span { color: var(--red); }
-    .nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
-    .nav-links a {
-      color: rgba(21,28,39,0.6); font-size: 0.87rem; font-weight: 500;
-      text-decoration: none; position: relative; transition: color 0.2s;
-    }
+    .nav-brand a { display:flex; align-items:center; gap:.45rem; text-decoration:none; color:var(--blue-dark); font-size:1.15rem; font-weight:800; letter-spacing:-.03em; }
+    .logo-img { width:42px; height:42px; object-fit:contain; flex-shrink:0; }
+    .nav-links { display:flex; gap:1.15rem; list-style:none; align-items:center; }
+    .nav-links a { color:var(--ink); font-size:.75rem; font-weight:500; text-decoration:none; white-space:nowrap; transition:color .2s; }
     .nav-links a::after {
       content: ''; position: absolute; bottom: -3px; left: 0;
       width: 0; height: 1.5px; background: var(--red);
       transition: width 0.3s cubic-bezier(0.16,1,0.3,1);
     }
-    .nav-links a:hover { color: var(--ink); }
-    .nav-links a:hover::after { width: 100%; }
-    .nav-login {
-      color: var(--ink) !important; font-size: 0.8rem !important; font-weight: 600 !important;
-      padding: 0.48rem 1.05rem; border: 1.5px solid rgba(21,28,39,0.22) !important; border-radius: 8px;
-      background: transparent; transition: all 0.25s !important; white-space: nowrap;
-    }
-    .nav-login:hover { background: var(--ink) !important; color: #fff !important; border-color: var(--ink) !important; }
+    .nav-links a:hover { color:var(--blue-bright); }
+    .nav-login { color:#fff !important; font-size:.72rem !important; font-weight:600 !important; padding:.55rem 1rem; border-radius:18px; background:var(--blue) !important; box-shadow:0 5px 14px rgba(33,102,177,.22); }
+    .nav-login:hover { background:var(--blue-dark) !important; }
     .nav-login::after { display: none !important; }
-    .nav-cta {
-      background: var(--red) !important; color: #fff !important;
-      padding: 0.48rem 1.25rem !important; border-radius: 8px;
-      font-weight: 600 !important; font-size: 0.8rem !important;
-      box-shadow: 0 4px 14px rgba(179,17,24,0.28);
-      transition: background 0.25s, transform 0.2s, box-shadow 0.25s !important;
-    }
-    .nav-cta:hover { background: var(--red-dark) !important; transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(179,17,24,0.38) !important; }
+    .nav-cta { background:var(--blue) !important; color:#fff !important; padding:.55rem 1rem !important; border-radius:18px; font-weight:600 !important; font-size:.72rem !important; }
+    .nav-cta:hover { background:var(--blue-dark) !important; }
     .nav-cta::after { display: none !important; }
-    .nav-divider { width: 1px; height: 18px; background: rgba(21,28,39,0.14); }
+    .nav-divider { width:1px; height:18px; background:var(--line); }
 
     .hamburger { display: none; flex-direction: column; gap: 0.28rem; }
     .hamburger span { width: 22px; height: 2px; background: var(--ink); border-radius: 2px; transition: all 0.3s; }
@@ -320,7 +267,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     .ib-green { background: rgba(0,106,97,0.1);  color: var(--teal); }
     .ib-blue  { background: rgba(13,148,136,0.12); color: var(--teal-light); }
     .hv-badge-label { font-size: 0.61rem; color: rgba(21,28,39,0.42); font-weight: 500; margin-bottom: 0.06rem; }
-    .hv-badge-val   { font-size: 0.83rem; font-weight: 800; color: var(--ink); font-family: 'Inter', sans-serif; }
+    .hv-badge-val   { font-size: 0.83rem; font-weight: 800; color: var(--ink); font-family: 'Poppins', sans-serif; }
     .badge-top { animation: bob 4s ease-in-out infinite; align-self: flex-end; }
     .badge-bot { animation: bob 5s ease-in-out infinite 1.2s; }
     @keyframes bob {
@@ -368,13 +315,13 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .hv-row-icon svg { width: 17px; height: 17px; }
-    .hv-row-name { font-size: 0.83rem; font-weight: 700; color: var(--ink); margin-bottom: 0.05rem; font-family: 'Inter', sans-serif; }
-    .hv-row-sub  { font-size: 0.7rem; color: rgba(21,28,39,0.42); font-family: 'Inter', sans-serif; }
+    .hv-row-name { font-size: 0.83rem; font-weight: 700; color: var(--ink); margin-bottom: 0.05rem; font-family: 'Poppins', sans-serif; }
+    .hv-row-sub  { font-size: 0.7rem; color: rgba(21,28,39,0.42); font-family: 'Poppins', sans-serif; }
     .hv-row-info { flex: 1; min-width: 0; }
     .hv-tag {
       font-size: 0.62rem; font-weight: 700; letter-spacing: 0.07em;
       text-transform: uppercase; padding: 0.2rem 0.55rem; border-radius: 50px;
-      white-space: nowrap; flex-shrink: 0; font-family: 'Inter', sans-serif;
+      white-space: nowrap; flex-shrink: 0; font-family: 'Poppins', sans-serif;
     }
     .t-green { background: var(--teal-tint); color: var(--teal-light); }
     .t-blue  { background: rgba(13,148,136,0.1);  color: var(--teal-light); }
@@ -393,8 +340,8 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     }
     .hv-cta:hover::after { left: 100%; }
     .hv-cta:hover { background: #0a0e14; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(21,28,39,0.2); }
-    .hv-cta-text { font-size: 0.85rem; font-weight: 700; color: #fff; font-family: 'Inter', sans-serif; }
-    .hv-cta-sub  { font-size: 0.68rem; color: rgba(255,255,255,0.55); margin-top: 0.07rem; font-family: 'Inter', sans-serif; }
+    .hv-cta-text { font-size: 0.85rem; font-weight: 700; color: #fff; font-family: 'Poppins', sans-serif; }
+    .hv-cta-sub  { font-size: 0.68rem; color: rgba(255,255,255,0.55); margin-top: 0.07rem; font-family: 'Poppins', sans-serif; }
     .hv-cta-arrow {
       width: 30px; height: 30px; border-radius: 50%;
       background: rgba(255,255,255,0.14);
@@ -443,7 +390,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       font-weight: 800; color: var(--ink); line-height: 1.13;
       margin-bottom: 1rem; letter-spacing: -0.01em;
     }
-    .ssub { color: rgba(21,28,39,0.55); font-size: 1rem; line-height: 1.8; max-width: 510px; font-family: 'Inter', sans-serif; }
+    .ssub { color: rgba(21,28,39,0.55); font-size: 1rem; line-height: 1.8; max-width: 510px; font-family: 'Poppins', sans-serif; }
 
     /* ══ FEATURES ══ */
     .features { background: var(--cream); }
@@ -479,7 +426,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     .feat-card:hover .feat-icon { transform: scale(1.1) rotate(-3deg); }
     .feat-icon svg { width: 22px; height: 22px; }
     .feat-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.6rem; color: var(--ink); }
-    .feat-card p  { font-size: 0.87rem; line-height: 1.72; color: rgba(21,28,39,0.55); font-family: 'Inter', sans-serif; }
+    .feat-card p  { font-size: 0.87rem; line-height: 1.72; color: rgba(21,28,39,0.55); font-family: 'Poppins', sans-serif; }
 
     /* ══ HOW IT WORKS ══ */
     .how { background: #fff; }
@@ -498,7 +445,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       width: 64px; height: 64px; border-radius: 50%;
       background: #fff; border: 2px solid rgba(21,28,39,0.18);
       display: flex; align-items: center; justify-content: center;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Poppins', sans-serif;
       font-size: 1.45rem; font-weight: 900; color: var(--ink);
       margin: 0 auto 1.3rem; position: relative; z-index: 1;
       transition: all 0.38s cubic-bezier(0.16,1,0.3,1);
@@ -508,7 +455,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       transform: scale(1.1); box-shadow: 0 10px 30px rgba(179,17,24,0.2);
     }
     .step h3 { font-size: 0.98rem; font-weight: 700; margin-bottom: 0.45rem; color: var(--ink); }
-    .step p  { font-size: 0.82rem; color: rgba(21,28,39,0.55); line-height: 1.65; font-family: 'Inter', sans-serif; }
+    .step p  { font-size: 0.82rem; color: rgba(21,28,39,0.55); line-height: 1.65; font-family: 'Poppins', sans-serif; }
 
     /* ══ SERVICES ══ */
     .services { background: #fff; border-top: 1px solid var(--line); }
@@ -538,7 +485,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     .svc-card:hover .svc-icon { transform: scale(1.12) rotate(4deg); }
     .svc-icon svg { width: 20px; height: 20px; }
     .svc-card h3 { font-size: 0.98rem; font-weight: 700; color: var(--ink); margin-bottom: 0.45rem; }
-    .svc-card p  { font-size: 0.82rem; color: rgba(21,28,39,0.55); line-height: 1.67; font-family: 'Inter', sans-serif; }
+    .svc-card p  { font-size: 0.82rem; color: rgba(21,28,39,0.55); line-height: 1.67; font-family: 'Poppins', sans-serif; }
 
     /* ══ CTA BAND ══ */
     .cta-band {
@@ -584,7 +531,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       margin-bottom: 0.9rem; letter-spacing: -0.01em;
     }
     .cta-band h2 em { color: #ff5a63; font-style: normal; }
-    .cta-band p { color: rgba(255,255,255,0.52); margin-bottom: 2.8rem; font-size: 1.02rem; line-height: 1.8; font-family: 'Inter', sans-serif; }
+    .cta-band p { color: rgba(255,255,255,0.52); margin-bottom: 2.8rem; font-size: 1.02rem; line-height: 1.8; font-family: 'Poppins', sans-serif; }
     .btn-white {
       background: #fff; color: var(--ink);
       padding: 1rem 2.8rem; border-radius: 8px;
@@ -626,7 +573,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       padding: 2.8rem 0; text-align: center;
       color: rgba(21,28,39,0.42); font-size: 0.8rem;
     }
-    .foot-logo { display: inline-flex; align-items: center; gap: 0.6rem; font-family: 'Inter', sans-serif; font-size: 1.35rem; font-weight: 900; color: var(--ink); }
+    .foot-logo { display: inline-flex; align-items: center; gap: 0.6rem; font-family: 'Poppins', sans-serif; font-size: 1.35rem; font-weight: 900; color: var(--ink); }
     .foot-logo span { color: var(--red); }
     footer p { margin-top: 0.5rem; }
 
@@ -688,6 +635,73 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: #fff; }
     ::-webkit-scrollbar-thumb { background: var(--ink); border-radius: 3px; }
+
+    /* Patient landing-page design kit */
+    .hero-wrap,.marquee-strip,.features,.how,.services,.cta-band { display:none !important; }
+    .kit-page { background:var(--page); }
+    .kit-hero { padding:64px 0 46px; background:var(--blue-soft); }
+    .kit-hero-grid { display:grid; grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr); align-items:center; gap:72px; }
+    .kit-hero h1 { color:var(--blue-dark); font-size:clamp(2.4rem,5vw,4.4rem); line-height:.98; letter-spacing:-.06em; margin:12px 0 14px; }
+    .kit-hero h1 span { color:var(--blue-bright); }
+    .kit-hero p { max-width:520px; color:var(--muted); font-size:.92rem; line-height:1.7; margin-bottom:20px; }
+    .kit-eyebrow { color:var(--blue); font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.12em; }
+    .kit-actions { display:flex; gap:10px; flex-wrap:wrap; margin:18px 0; }
+    .kit-btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:10px 18px; border-radius:20px; border:1px solid transparent; text-decoration:none; font-size:.75rem; font-weight:700; }
+    .kit-btn-primary { color:#fff; background:var(--blue); box-shadow:0 7px 16px rgba(33,102,177,.22); }
+    .kit-btn-primary:hover { background:var(--blue-dark); }
+    .kit-btn-outline { color:var(--blue); border-color:#a9d1f1; background:#fff; }
+    .kit-search { display:flex; align-items:center; gap:8px; max-width:520px; padding:12px 15px; background:#fff; border:1px solid var(--line); border-radius:24px; box-shadow:0 5px 16px rgba(31,111,198,.08); }
+    .kit-search svg { width:15px; color:var(--blue-bright); flex:0 0 auto; }
+    .kit-search span { color:#90a7bc; font-size:.7rem; }
+    .kit-search input { width:100%; border:0; outline:0; background:transparent; color:var(--ink); font:inherit; font-size:.7rem; }
+    .kit-search input::placeholder { color:#90a7bc; }
+    .kit-hero-art { min-height:310px; display:grid; place-items:center; position:relative; }
+    .kit-art-circle { width:min(100%,360px); aspect-ratio:1; border-radius:50%; display:grid; place-items:center; background:radial-gradient(circle at 35% 30%,#fff 0 14%,#b8e1ff 15% 46%,#5aa9ed 47% 70%,#1d6bc0 71%); box-shadow:0 20px 50px rgba(33,102,177,.18); }
+    .kit-art-circle img { width:57%; height:57%; object-fit:contain; filter:drop-shadow(0 14px 12px rgba(0,57,117,.2)); }
+    .kit-float { position:absolute; display:flex; align-items:center; gap:7px; padding:9px 12px; border:1px solid var(--line); border-radius:12px; background:#fff; color:var(--blue-dark); font-size:.66rem; font-weight:700; box-shadow:0 8px 22px rgba(33,102,177,.12); }
+    .kit-float svg { width:17px; color:var(--blue-bright); }
+    .kit-float.one { top:16px; right:0; } .kit-float.two { bottom:24px; left:0; }
+    .kit-section { padding:42px 0; }
+    .kit-section-head { display:flex; justify-content:space-between; align-items:end; gap:20px; margin-bottom:20px; }
+    .kit-section h2 { color:var(--blue-dark); font-size:clamp(1.5rem,3vw,2rem); margin:5px 0 0; letter-spacing:-.04em; }
+    .kit-section-head p { color:var(--muted); font-size:.78rem; max-width:390px; line-height:1.6; }
+    .kit-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+    .kit-card { position:relative; padding:18px; border:1px solid var(--line); border-radius:12px; background:#fff; box-shadow:0 4px 14px rgba(33,102,177,.05); transition:transform .2s,box-shadow .2s; }
+    .kit-card:hover { transform:translateY(-3px); border-color:var(--blue-bright); box-shadow:0 12px 24px rgba(31,111,198,.14); }
+    .kit-icon { width:38px; height:38px; display:grid; place-items:center; border-radius:10px; color:var(--blue); background:var(--blue-soft); margin-bottom:12px; }
+    .kit-icon svg { width:20px; height:20px; }
+    .kit-card h3 { color:var(--ink); font-size:.82rem; margin-bottom:5px; }
+    .kit-card p { color:var(--muted); font-size:.68rem; line-height:1.55; }
+    .kit-arrow { position:absolute; right:14px; bottom:13px; color:var(--blue-bright); font-size:1rem; }
+    .kit-process { background:#fff; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .kit-steps { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; }
+    .kit-step { position:relative; text-align:center; padding:8px 10px; }
+    .kit-step:not(:last-child)::after { content:'→'; position:absolute; right:-12px; top:19px; color:#8bc0ed; font-size:1.4rem; }
+    .kit-step-num { width:32px; height:32px; margin:0 auto 8px; display:grid; place-items:center; border-radius:50%; color:#fff; background:var(--blue); font-size:.75rem; font-weight:700; }
+    .kit-step h3 { font-size:.78rem; color:var(--ink); margin-bottom:4px; }
+    .kit-step p { color:var(--muted); font-size:.66rem; line-height:1.5; }
+    .kit-benefits { background:#f1f8ff; }
+    .kit-benefit-grid { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr); gap:52px; align-items:center; }
+    .kit-benefit-panel { padding:24px; background:#fff; border:1px solid #cfe6f8; border-radius:14px; }
+    .kit-benefit-row { display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid #e8f2fa; color:var(--ink); font-size:.76rem; }
+    .kit-benefit-row:last-child { border-bottom:0; }
+    .kit-benefit-row svg { width:18px; color:var(--blue-bright); }
+    .kit-benefit-row strong { color:var(--blue-dark); }
+    .kit-benefit-row a { color:var(--blue); font-weight:700; text-decoration:none; white-space:nowrap; }
+    .kit-app { background:var(--blue-soft); color:var(--ink); }
+    .kit-app-grid { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); align-items:center; gap:52px; }
+    .kit-app h2 { color:var(--blue-dark); } .kit-app p { color:var(--muted); font-size:.78rem; line-height:1.7; max-width:440px; }
+    .kit-phone { justify-self:end; width:190px; padding:12px; border:7px solid #d8efff; border-radius:24px; background:#fff; box-shadow:0 15px 30px rgba(0,24,67,.25); transform:rotate(7deg); }
+    .kit-phone img { display:block; width:100%; border-radius:14px; }
+    .kit-store-row { display:flex; gap:9px; margin-top:16px; flex-wrap:wrap; }
+    .kit-store { padding:8px 12px; border:1px solid var(--blue); border-radius:8px; color:var(--blue-dark); font-size:.65rem; text-decoration:none; background:#fff; }
+    .nav-links li:first-child a { color:var(--blue); font-weight:700; }
+    .nav-links li:first-child a::after { width:100%; }
+    footer { padding:28px 0; background:var(--blue-dark); border:0; color:#c8e4fb; }
+    .foot-logo { color:#fff; font-size:1.1rem; } .foot-logo span { color:#8fd0ff; }
+    footer p { font-size:.68rem; } 
+    @media(max-width:780px) { .kit-hero-grid,.kit-benefit-grid,.kit-app-grid { grid-template-columns:1fr; } .kit-hero-art { min-height:270px; } .kit-grid { grid-template-columns:1fr 1fr; } .kit-phone { justify-self:center; } .nav-links { display:none; } .hamburger { display:flex; } }
+    @media(max-width:520px) { .kit-grid,.kit-steps { grid-template-columns:1fr; } .kit-section-head { display:block; } .kit-section-head p { margin-top:8px; } .kit-step:not(:last-child)::after { display:none; } .kit-hero { padding-top:34px; } }
   </style>
 </head>
 <body>
@@ -699,14 +713,17 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
   <div class="nav-inner">
     <div class="nav-brand">
       <a href="index.php">
-        <img class="logo-img" src="/telecarelogo.png" alt="Tele-Care logo"/>
-        <div class="logo">TELE<span>-</span>CARE</div>
+        <img class="logo-img" src="/src/assets/logo.png" alt="Tele-Care logo"/>
+        <div class="logo">TELE-CARE</div>
       </a>
     </div>
     <ul class="nav-links">
-      <li><a href="#features">Features</a></li>
-      <li><a href="#how">How It Works</a></li>
-      <li><a href="#services">Services</a></li>
+      <li><a href="index.php" aria-current="page">Home</a></li>
+      <li><a href="#services">Find a Doctor</a></li>
+      <li><a href="#consultation">Quick Consultation</a></li>
+      <li><a href="#appointments">Appointments</a></li>
+      <li><a href="#benefits">Insurance &amp; Benefits</a></li>
+      <li><a href="#download">Download App</a></li>
       <li style="display:flex;align-items:center;gap:0.32rem;">
         <a href="auth/login.php" class="nav-login">Log In</a>
       </li>
@@ -717,12 +734,81 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
 </nav>
 
 <div class="mob-menu" id="mobMenu">
-  <a href="#features">Features</a>
-  <a href="#how">How It Works</a>
-  <a href="#services">Services</a>
+  <a href="index.php" aria-current="page">Home</a>
+  <a href="#services">Find a Doctor</a>
+  <a href="#consultation">Quick Consultation</a>
+  <a href="#appointments">Appointments</a>
+  <a href="#benefits">Insurance &amp; Benefits</a>
+  <a href="#download">Download App</a>
   <a href="auth/login.php" class="nav-login">Log In</a>
   <a href="auth/register.php" class="nav-cta">Register</a>
 </div>
+
+<main class="kit-page">
+  <section class="kit-hero" id="consultation">
+    <div class="container kit-hero-grid">
+      <div>
+        <div class="kit-eyebrow">Your Healthcare, Anywhere</div>
+        <h1>Your Healthcare,<br><span>Anywhere.</span></h1>
+        <p>Connect with licensed healthcare professionals online, book consultations, and access healthcare services from wherever you are.</p>
+        <div class="kit-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input type="search" aria-label="Search doctor or specialty" placeholder="Search doctor or specialty...">
+        </div>
+        <div class="kit-actions">
+          <a class="kit-btn kit-btn-primary" href="auth/register.php">Find a Doctor</a>
+          <a class="kit-btn kit-btn-outline" href="private_telecare/booking/step1_details.php">Quick Consultation</a>
+        </div>
+      </div>
+      <div class="kit-hero-art" aria-label="Tele-Care healthcare illustration">
+        <div class="kit-art-circle"><img src="/src/assets/logo.png" alt="Tele-Care"/></div>
+        <div class="kit-float one"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Licensed professionals</div>
+        <div class="kit-float two"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg> Private &amp; secure</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="kit-section" id="services">
+    <div class="container">
+      <div class="kit-section-head"><div><div class="kit-eyebrow">Clinical services</div><h2>Clinical Services</h2></div><p>Access healthcare services designed around your needs.</p></div>
+      <div class="kit-grid">
+        <a class="kit-card" href="auth/register.php"><div class="kit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3v5a4 4 0 0 0 8 0V3M6 3H4m10 0h2M10 12v2a5 5 0 0 0 10 0v-1"/><circle cx="20" cy="10" r="2"/></svg></div><h3>Online Doctor Consultation</h3><p>Talk to a licensed healthcare professional online.</p><span class="kit-arrow">→</span></a>
+        <a class="kit-card" href="auth/register.php"><div class="kit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4m8-4v4M3 10h18"/></svg></div><h3>Appointment &amp; Follow-up Care</h3><p>Schedule your preferred date and time.</p><span class="kit-arrow">→</span></a>
+        <a class="kit-card" href="ocr/scan.php"><div class="kit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6l2 2h3v16H4V5h3l2-2Z"/><path d="M8 11h8M8 15h6"/></svg></div><h3>Prescription &amp; Treatment Guidance</h3><p>Keep your treatment information organized.</p><span class="kit-arrow">→</span></a>
+        <a class="kit-card" href="ocr/scan.php"><div class="kit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16 9 11l4 4 3-3 4 4"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div><h3>Medical Certificate</h3><p>Receive important records after your consultation.</p><span class="kit-arrow">→</span></a>
+        <a class="kit-card" href="ocr/scan.php"><div class="kit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19h16M6 17V7m4 10V4m4 13v-7m4 7V3"/></svg></div><h3>Laboratory &amp; Diagnostic Requests</h3><p>Submit and digitize your health documents.</p><span class="kit-arrow">→</span></a>
+        <a class="kit-card" href="auth/register.php"><div class="kit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M5 8v11h14V8M8 5h8M9 12h6M9 16h4"/></svg></div><h3>Consultation Summary &amp; Medical Records</h3><p>Access structured consultation summaries and medical records.</p><span class="kit-arrow">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="kit-section kit-process" id="appointments">
+    <div class="container">
+      <div class="kit-section-head"><div><div class="kit-eyebrow">How Tele-Care works</div><h2>How TELE-CARE Works</h2></div></div>
+      <div class="kit-steps">
+        <div class="kit-step"><div class="kit-step-num">1</div><h3>Find a Doctor</h3><p>Choose the right healthcare professional.</p></div>
+        <div class="kit-step"><div class="kit-step-num">2</div><h3>Book / Quick Consult</h3><p>Select an appointment or start quickly.</p></div>
+        <div class="kit-step"><div class="kit-step-num">3</div><h3>Verify</h3><p>Complete your secure patient details.</p></div>
+        <div class="kit-step"><div class="kit-step-num">4</div><h3>Consult</h3><p>Meet your healthcare professional online.</p></div>
+        <div class="kit-step"><div class="kit-step-num">5</div><h3>Receive Records</h3><p>Get your summary and care information.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="kit-section kit-benefits" id="benefits">
+    <div class="container kit-benefit-grid">
+      <div><div class="kit-eyebrow">Insurance &amp; benefits</div><h2>Insurance &amp; Benefits</h2><p style="color:var(--muted);font-size:.78rem;line-height:1.7;margin-top:10px;">Check available healthcare coverage for your consultation.</p></div>
+      <div class="kit-benefit-panel">
+        <div class="kit-benefit-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 4 7v5c0 5 3.5 8 8 9 4.5-1 8-4 8-9V7l-8-4Z"/><path d="m9 12 2 2 4-4"/></svg><span><strong>HMO</strong><br>Check HMO availability and verify coverage with participating providers. <a href="auth/register.php">Learn More →</a></span></div>
+        <div class="kit-benefit-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 4 7v5c0 5 3.5 8 8 9 4.5-1 8-4 8-9V7l-8-4Z"/><path d="M8 12h8M12 8v8"/></svg><span><strong>PhilHealth YAKAP</strong><br>Access applicable PhilHealth YAKAP services through eligible primary-care providers. <a href="auth/register.php">Learn More →</a></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="kit-section kit-app" id="download">
+    <div class="container kit-app-grid"><div><div class="kit-eyebrow">Download TELE-CARE App</div><h2>Download TELE-CARE App</h2><p>Get convenient access to healthcare services from your mobile device.</p><div class="kit-store-row"><a class="kit-store" href="#"><strong>Google Play</strong></a><a class="kit-store" href="#"><strong>App Store</strong></a></div><small style="display:block;margin-top:10px;color:var(--muted);">Coming Soon</small></div><div class="kit-phone"><img src="/src/assets/logo.png" alt="Tele-Care app"/></div></div>
+  </section>
+</main>
 
 
 <!-- ══ HERO ══ -->
@@ -1069,10 +1155,26 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
 <!-- ══ FOOTER ══ -->
 <footer>
   <div class="container">
-    <div>
-      <div class="foot-logo"><img class="logo-img" src="/telecarelogo.png" alt="Tele-Care logo"/>TELE<span>-</span>CARE</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;">
+      <div>
+        <div class="foot-logo"><img class="logo-img" src="/src/assets/logo.png" alt="Tele-Care logo"/>TELE-CARE</div>
+        <p>Your Healthcare, Anywhere.</p>
+        <p>Connecting patients with accessible and quality healthcare services online.</p>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.68rem;">
+        <a href="index.php" style="color:#c8e4fb;text-decoration:none;">Home</a>
+        <a href="#services" style="color:#c8e4fb;text-decoration:none;">Find a Doctor</a>
+        <a href="#consultation" style="color:#c8e4fb;text-decoration:none;">Quick Consultation</a>
+        <a href="#appointments" style="color:#c8e4fb;text-decoration:none;">Appointments</a>
+        <a href="#benefits" style="color:#c8e4fb;text-decoration:none;">Insurance &amp; Benefits</a>
+        <a href="#download" style="color:#c8e4fb;text-decoration:none;">Download App</a>
+        <a href="#faq" style="color:#c8e4fb;text-decoration:none;">FAQ</a>
+        <a href="#contact" style="color:#c8e4fb;text-decoration:none;">Contact</a>
+        <a href="private_telecare/privacy-policy.php" style="color:#c8e4fb;text-decoration:none;">Privacy Policy</a>
+        <a href="auth/termsandpolicy.php" style="color:#c8e4fb;text-decoration:none;">Terms &amp; Conditions</a>
+      </div>
     </div>
-    <p>&copy; 2026 Tele-Care Development Team &mdash; University of Caloocan City</p>
+    <p>&copy; 2026 TELE-CARE. Frontend prototype.</p>
   </div>
 </footer>
 

@@ -28,10 +28,10 @@
 
   /* Header */
   #tpHeader{
-    background:linear-gradient(135deg,#244441 0%,#1a3330 100%);
+    background:linear-gradient(135deg,#173B64 0%,#1a3330 100%);
     padding:1.4rem 1.6rem 1.2rem;flex-shrink:0;position:relative;
   }
-  #tpHeader h2{font-family:'Playfair Display',serif;font-size:1.3rem;color:#fff;margin:0 0 .2rem}
+  #tpHeader h2{font-family:'Poppins',serif;font-size:1.3rem;color:#fff;margin:0 0 .2rem}
   #tpHeader p{font-size:.78rem;color:rgba(255,255,255,.55);margin:0}
   #tpCloseBtn{
     position:absolute;top:1rem;right:1rem;width:32px;height:32px;border-radius:50%;
@@ -44,17 +44,17 @@
   #tpTabs{display:flex;border-bottom:2px solid rgba(36,68,65,.1);flex-shrink:0;background:#fafafa}
   .tp-tab{
     flex:1;padding:.85rem 1rem;border:none;background:transparent;cursor:pointer;
-    font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;
+    font-family:'Poppins',sans-serif;font-size:.82rem;font-weight:600;
     color:#9ab0ae;letter-spacing:.04em;text-transform:uppercase;
     border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .25s;
   }
-  .tp-tab.active{color:#244441;border-bottom-color:#C33643}
-  .tp-tab:hover:not(.active){color:#244441;background:rgba(36,68,65,.04)}
+  .tp-tab.active{color:#173B64;border-bottom-color:#E34248}
+  .tp-tab:hover:not(.active){color:#173B64;background:rgba(36,68,65,.04)}
 
   /* Scroll notice */
   #tpScrollNotice{
     background:rgba(195,54,67,.07);border-bottom:1px solid rgba(195,54,67,.15);
-    padding:.6rem 1.4rem;font-size:.76rem;color:#C33643;font-weight:600;
+    padding:.6rem 1.4rem;font-size:.76rem;color:#E34248;font-weight:600;
     display:flex;align-items:center;gap:.5rem;flex-shrink:0;transition:opacity .4s;
   }
   #tpScrollNotice svg{flex-shrink:0}
@@ -69,7 +69,7 @@
 
   /* Typography inside modal */
   .tp-section-title{
-    font-family:'Playfair Display',serif;font-size:1rem;color:#244441;
+    font-family:'Poppins',serif;font-size:1rem;color:#173B64;
     margin:1.2rem 0 .4rem;padding-bottom:.3rem;
     border-bottom:1px solid rgba(36,68,65,.08);
   }
@@ -86,16 +86,16 @@
   #tpCheckRow{display:flex;align-items:flex-start;gap:.7rem;cursor:pointer}
   #tpCheckbox{
     width:18px;height:18px;border:1.5px solid rgba(36,68,65,.3);border-radius:5px;
-    flex-shrink:0;margin-top:1px;cursor:pointer;accent-color:#244441;
+    flex-shrink:0;margin-top:1px;cursor:pointer;accent-color:#173B64;
   }
   #tpCheckLabel{font-size:.82rem;color:#4a6a67;line-height:1.5;cursor:pointer;user-select:none}
-  #tpCheckLabel a{color:#C33643;font-weight:600;text-decoration:none}
+  #tpCheckLabel a{color:#E34248;font-weight:600;text-decoration:none}
 
   #tpAcceptBtn{
-    width:100%;padding:.85rem;border-radius:50px;background:#C33643;color:#fff;
+    width:100%;padding:.85rem;border-radius:50px;background:#E34248;color:#fff;
     font-weight:700;font-size:.9rem;border:none;cursor:pointer;
     transition:all .3s;box-shadow:0 6px 18px rgba(195,54,67,.3);
-    font-family:'DM Sans',sans-serif;
+    font-family:'Poppins',sans-serif;
   }
   #tpAcceptBtn:hover:not(:disabled){background:#a82d38;transform:translateY(-1px)}
   #tpAcceptBtn:disabled{background:#ccc;box-shadow:none;cursor:not-allowed;transform:none}
@@ -108,7 +108,7 @@
   #tpScrollProgress{
     height:3px;background:rgba(36,68,65,.08);flex-shrink:0;
   }
-  #tpScrollBar{height:100%;width:0%;background:linear-gradient(90deg,#244441,#C33643);transition:width .1s linear;border-radius:0 2px 2px 0}
+  #tpScrollBar{height:100%;width:0%;background:linear-gradient(90deg,#173B64,#E34248);transition:width .1s linear;border-radius:0 2px 2px 0}
 
   @media(max-width:480px){
     #tpModal{max-height:96vh;border-radius:16px 16px 0 0;margin-top:auto}
@@ -289,7 +289,7 @@
     </div><!-- /#tpBody -->
 
     <div id="tpFooter">
-      <p id="tpScrollHint" style="color:#C33643;font-size:.76rem;font-weight:600;text-align:center">
+      <p id="tpScrollHint" style="color:#E34248;font-size:.76rem;font-weight:600;text-align:center">
         ↓ Scroll to the bottom to enable the checkbox
       </p>
       <label id="tpCheckRow" style="pointer-events:none;opacity:.45">
@@ -378,12 +378,12 @@
       checkRow.style.pointerEvents = 'auto';
       checkRow.style.opacity = '1';
       hint.textContent = 'Check the box below to accept';
-      hint.style.color = '#244441';
+      hint.style.color = '#173B64';
     } else {
       hint.textContent = _tpScrolledTerms
         ? '↓ Switch to Privacy Policy tab and scroll to the bottom'
         : '↓ Scroll to the bottom to enable the checkbox';
-      hint.style.color = '#C33643';
+      hint.style.color = '#E34248';
     }
 
     btn.disabled = !(bothScrolled && checkbox.checked);

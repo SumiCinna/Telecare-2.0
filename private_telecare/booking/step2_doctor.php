@@ -51,10 +51,10 @@ echo booking_wizard_css();
 .reviews-modal-backdrop{display:none;position:fixed;inset:0;background:rgba(15,25,24,.55);z-index:1000;align-items:center;justify-content:center;padding:1rem}
 .reviews-modal-backdrop.open{display:flex}
 .reviews-modal{background:#fff;border-radius:14px;max-width:480px;width:100%;max-height:85vh;overflow-y:auto;padding:1.25rem 1.4rem}
-.reviews-modal h3{font-family:'DM Sans',sans-serif;color:var(--green);margin:0 0 .9rem;font-size:1.02rem;display:flex;justify-content:space-between;align-items:center}
+.reviews-modal h3{font-family:'Poppins',sans-serif;color:var(--green);margin:0 0 .9rem;font-size:1.02rem;display:flex;justify-content:space-between;align-items:center}
 .reviews-modal h3 button{background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--muted)}
 .reviews-summary{display:flex;gap:1rem;align-items:center;padding-bottom:1rem;margin-bottom:1rem;border-bottom:1px solid rgba(36,68,65,.1)}
-.reviews-summary .avg-num{font-size:2rem;font-weight:800;color:var(--green);font-family:'DM Sans',sans-serif;line-height:1}
+.reviews-summary .avg-num{font-size:2rem;font-weight:800;color:var(--green);font-family:'Poppins',sans-serif;line-height:1}
 .reviews-summary .avg-stars{color:#ca8a04;font-size:.9rem;margin:.15rem 0}
 .reviews-summary .avg-count{font-size:.7rem;color:var(--muted)}
 .reviews-bars{flex:1;display:grid;gap:.2rem}
@@ -73,7 +73,7 @@ echo booking_wizard_css();
 .doctor-meta{grid-column:1/-1;background:#f3f6ff;border-radius:8px;padding:.55rem .7rem;font-size:.76rem;color:var(--green);margin:.5rem 0 .1rem;font-weight:600}
 .doctor-card .wiz-btn{grid-column:1/-1;width:100%;padding:.6rem 1rem;font-size:.76rem;border-radius:6px}
 .doctor-summary{background:#fff;border:1px solid rgba(36,68,65,.1);border-radius:12px;padding:1rem;font-size:.78rem;color:var(--green);position:sticky;top:1rem}
-.doctor-summary h3{font-family:'DM Sans',sans-serif;font-size:.9rem;margin-bottom:.8rem;color:var(--green)}
+.doctor-summary h3{font-family:'Poppins',sans-serif;font-size:.9rem;margin-bottom:.8rem;color:var(--green)}
 .summary-line{display:flex;justify-content:space-between;gap:.6rem;padding:.55rem 0;border-top:1px solid rgba(36,68,65,.08)}
 .summary-line span:first-child{color:var(--muted)}
 .summary-line span:last-child{text-align:right;font-weight:700}

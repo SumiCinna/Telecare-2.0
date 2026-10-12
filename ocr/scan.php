@@ -191,10 +191,7 @@ function formatOcrText(string $text, string $type): string {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="manifest" href="/uploads/logo/site.webmanifest" />
@@ -202,10 +199,10 @@ function formatOcrText(string $text, string $type): string {
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
-    :root { --red:#C33643; --green:#244441; --blue:#3F82E3; --blue-dark:#2563C4; --blue-light:#EBF2FD; --bg:#EEF3FB; --white:#FFFFFF; --text:#1a2f5e; --muted:#8fa3c8; }
+    :root { --red:#E34248; --green:#173B64; --blue:#3F82E3; --blue-dark:#2563C4; --blue-light:#EBF2FD; --bg:#EEF3FB; --white:#FFFFFF; --text:#1a2f5e; --muted:#8fa3c8; }
     * { box-sizing:border-box; }
-    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; margin:0; }
-    h1,h2,h3 { font-family:'Playfair Display',serif; }
+    body { font-family:'Poppins',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; margin:0; }
+    h1,h2,h3 { font-family:'Poppins',serif; }
 
     .top-header {
       background:var(--white); padding:1rem 1.5rem;
@@ -253,7 +250,7 @@ function formatOcrText(string $text, string $type): string {
     .field-label { display:block; font-size:0.7rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); margin-bottom:0.4rem; }
     .field-input {
       width:100%; padding:0.72rem 0.9rem; border:1.5px solid rgba(63,130,227,0.15);
-      border-radius:12px; font-family:'DM Sans',sans-serif; font-size:0.9rem;
+      border-radius:12px; font-family:'Poppins',sans-serif; font-size:0.9rem;
       color:var(--text); background:var(--white); outline:none; transition:border-color 0.2s;
     }
     .field-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(63,130,227,0.1); }
@@ -263,7 +260,7 @@ function formatOcrText(string $text, string $type): string {
       font-weight:700; font-size:0.95rem; border:none; cursor:pointer;
       transition:all 0.3s; box-shadow:0 6px 18px rgba(63,130,227,0.3);
       display:flex; align-items:center; justify-content:center; gap:0.5rem;
-      font-family:'DM Sans',sans-serif; margin-top:1rem;
+      font-family:'Poppins',sans-serif; margin-top:1rem;
     }
     .btn-scan:hover { background:var(--blue-dark); transform:translateY(-2px); }
     .btn-scan:disabled { background:#b0c4e8; cursor:not-allowed; transform:none; box-shadow:none; }
@@ -283,7 +280,7 @@ function formatOcrText(string $text, string $type): string {
       background:rgba(36,68,65,0.03); border:1px solid rgba(63,130,227,0.1);
       border-radius:12px; padding:1.1rem; font-size:0.84rem; line-height:2;
       color:var(--text); max-height:320px; overflow-y:auto;
-      font-family:'DM Sans',sans-serif; word-break:break-word;
+      font-family:'Poppins',sans-serif; word-break:break-word;
     }
     .result-text mark { border-radius:4px; padding:1px 4px; }
 
@@ -360,7 +357,7 @@ function formatOcrText(string $text, string $type): string {
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
       Back
     </a>
-    <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:1rem;color:var(--text);">Document Scanner</div>
+    <div style="font-family:'Poppins',serif;font-weight:700;font-size:1rem;color:var(--text);">Document Scanner</div>
   </div>
   <div style="display:flex;align-items:center;gap:0.8rem;">
     <?php if($p['profile_photo']): ?>
@@ -440,7 +437,7 @@ function formatOcrText(string $text, string $type): string {
     </div>
 
     <div class="result-actions">
-      <button onclick="copyRawText()" style="flex:1;padding:0.65rem;border-radius:50px;background:var(--blue-light);color:var(--blue);border:none;font-weight:700;font-size:0.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;" id="copyBtn">
+      <button onclick="copyRawText()" style="flex:1;padding:0.65rem;border-radius:50px;background:var(--blue-light);color:var(--blue);border:none;font-weight:700;font-size:0.82rem;cursor:pointer;font-family:'Poppins',sans-serif;" id="copyBtn">
         Copy Text
       </button>
       <a href="../dashboard.php" style="flex:1;padding:0.65rem;border-radius:50px;background:var(--blue);color:#fff;font-weight:700;font-size:0.82rem;text-decoration:none;text-align:center;display:block;">
@@ -471,7 +468,7 @@ function formatOcrText(string $text, string $type): string {
         <?php if($ext === 'pdf'): ?>
           <div style="width:44px;height:44px;border-radius:10px;background:rgba(195,54,67,0.08);border:1px solid rgba(195,54,67,0.2);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;gap:1px;">
             <span style="font-size:1.2rem;line-height:1;">📄</span>
-            <span style="font-size:0.5rem;font-weight:700;color:#C33643;letter-spacing:0.04em;">PDF</span>
+            <span style="font-size:0.5rem;font-weight:700;color:#E34248;letter-spacing:0.04em;">PDF</span>
           </div>
         <?php else: ?>
           <img src="../<?= htmlspecialchars($scan['file_path']) ?>" style="width:44px;height:44px;object-fit:cover;border-radius:10px;border:1px solid rgba(63,130,227,0.1);flex-shrink:0;"/>

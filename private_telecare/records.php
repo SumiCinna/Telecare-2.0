@@ -196,99 +196,99 @@ require_once __DIR__ . '/../includes/header.php';
 <style>
 .rx-page{max-width:1320px;margin:0 auto;padding:1.4rem 2rem 5rem}
 .rx-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.2rem}
-.rx-title{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:900;color:#244441;line-height:1}
+.rx-title{font-family:'Poppins',serif;font-size:1.9rem;font-weight:900;color:#173B64;line-height:1}
 .rx-sub{font-size:0.85rem;color:#9ab0ae;margin-top:0.4rem}
 
 .record-profile{display:flex;align-items:center;justify-content:space-between;gap:1rem;background:#fff;border:1px solid rgba(36,68,65,.08);border-radius:16px;padding:1.1rem 1.3rem;margin-bottom:1rem;box-shadow:0 2px 10px rgba(0,0,0,0.03)}
 .record-profile-main{display:flex;align-items:center;gap:.9rem;min-width:0}
 .record-avatar{width:58px;height:58px;border-radius:50%;overflow:hidden;background:#eaf1ff;color:#3F82E3;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}
 .record-avatar img{width:100%;height:100%;object-fit:cover}
-.record-name{font-weight:800;color:#244441;font-size:1.08rem;font-family:'Playfair Display',serif}
+.record-name{font-weight:800;color:#173B64;font-size:1.08rem;font-family:'Poppins',serif}
 .record-meta{display:flex;flex-wrap:wrap;gap:.4rem 1.1rem;color:#6b8886;font-size:.72rem;margin-top:.35rem}
 .record-meta span{display:flex;align-items:center;gap:.3rem}
 .record-meta svg{width:13px;height:13px;flex-shrink:0;color:#9ab0ae}
-.record-edit{display:flex;align-items:center;gap:.35rem;padding:.55rem .95rem;border:1px solid rgba(195,54,67,.25);border-radius:8px;color:#C33643;text-decoration:none;font-size:.75rem;font-weight:700;white-space:nowrap}
+.record-edit{display:flex;align-items:center;gap:.35rem;padding:.55rem .95rem;border:1px solid rgba(195,54,67,.25);border-radius:8px;color:#E34248;text-decoration:none;font-size:.75rem;font-weight:700;white-space:nowrap}
 .record-edit:hover{background:rgba(195,54,67,.06)}
 .record-edit svg{width:13px;height:13px}
 
 .rx-search-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.2rem}
 .rx-search-box{flex:1;min-width:200px;position:relative;display:flex;align-items:center}
 .rx-search-box svg{position:absolute;left:.9rem;width:15px;height:15px;color:#9ab0ae}
-.rx-search-box input{width:100%;padding:.65rem .9rem .65rem 2.3rem;border:1px solid rgba(36,68,65,.1);border-radius:10px;background:#fff;font-family:'DM Sans',sans-serif;font-size:.82rem;color:#244441;outline:none}
+.rx-search-box input{width:100%;padding:.65rem .9rem .65rem 2.3rem;border:1px solid rgba(36,68,65,.1);border-radius:10px;background:#fff;font-family:'Poppins',sans-serif;font-size:.82rem;color:#173B64;outline:none}
 .rx-search-box input:focus{border-color:#3F82E3}
-.rx-filter-select{padding:.65rem .9rem;border:1px solid rgba(36,68,65,.1);border-radius:10px;background:#fff;font-family:'DM Sans',sans-serif;font-size:.78rem;color:#244441;outline:none;cursor:pointer}
+.rx-filter-select{padding:.65rem .9rem;border:1px solid rgba(36,68,65,.1);border-radius:10px;background:#fff;font-family:'Poppins',sans-serif;font-size:.78rem;color:#173B64;outline:none;cursor:pointer}
 
 .rx-grid{display:grid;grid-template-columns:1fr 320px;gap:1.4rem;align-items:start}
 @media(max-width:960px){.rx-grid{grid-template-columns:1fr}}
 
 .rx-section{background:#fff;border:1px solid rgba(36,68,65,0.08);border-radius:18px;padding:1.4rem 1.5rem;margin-bottom:1.3rem;box-shadow:0 2px 10px rgba(0,0,0,0.03)}
 .rx-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem}
-.rx-section-title{display:flex;align-items:center;gap:0.55rem;font-family:'Playfair Display',serif;font-weight:900;font-size:1.05rem;color:#244441}
-.rx-section-icon{width:28px;height:28px;border-radius:8px;background:rgba(195,54,67,0.1);color:#C33643;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rx-section-title{display:flex;align-items:center;gap:0.55rem;font-family:'Poppins',serif;font-weight:900;font-size:1.05rem;color:#173B64}
+.rx-section-icon{width:28px;height:28px;border-radius:8px;background:rgba(195,54,67,0.1);color:#E34248;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .rx-section-icon svg{width:15px;height:15px}
-.rx-section-link{font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:700;color:#C33643;text-decoration:none}
+.rx-section-link{font-family:'Poppins',sans-serif;font-size:.75rem;font-weight:700;color:#E34248;text-decoration:none}
 .rx-section-link:hover{text-decoration:underline}
 
 .hist-list{display:flex;flex-direction:column;gap:0}
 .hist-item{position:relative;padding:.9rem 0 .9rem 1.2rem;border-top:1px solid rgba(36,68,65,.07)}
 .hist-item:first-child{border-top:none;padding-top:0}
-.hist-dot{position:absolute;left:0;top:1.25rem;width:9px;height:9px;border-radius:50%;border:2.5px solid #C33643;background:#fff}
+.hist-dot{position:absolute;left:0;top:1.25rem;width:9px;height:9px;border-radius:50%;border:2.5px solid #E34248;background:#fff}
 .hist-dot.blue{border-color:#3F82E3}
 .hist-dot.green{border-color:#16a34a}
 .hist-dot.gray{border-color:#9ab0ae}
 .hist-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.7rem;flex-wrap:wrap}
-.hist-date{font-size:.7rem;color:#C33643;font-weight:700;letter-spacing:.02em}
-.hist-name{font-size:.9rem;color:#244441;font-weight:700;margin-top:.15rem}
+.hist-date{font-size:.7rem;color:#E34248;font-weight:700;letter-spacing:.02em}
+.hist-name{font-size:.9rem;color:#173B64;font-weight:700;margin-top:.15rem}
 .hist-detail{font-size:.76rem;color:#6b8886;margin-top:.2rem}
 .hist-status{font-size:.62rem;padding:.22rem .6rem;border-radius:50px;font-weight:700;white-space:nowrap}
 .hist-status.completed{background:rgba(22,163,74,.1);color:#16a34a}
 .hist-status.confirmed{background:rgba(63,130,227,.1);color:#2563eb}
 .hist-status.archived{background:rgba(154,176,174,.15);color:#6b8886}
-.hist-status.cancelled{background:rgba(195,54,67,.1);color:#C33643}
+.hist-status.cancelled{background:rgba(195,54,67,.1);color:#E34248}
 .hist-actions{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;margin-top:.5rem}
-.hist-view{font-size:.72rem;font-weight:700;color:#3F82E3;text-decoration:none;display:inline-flex;align-items:center;gap:.25rem;cursor:pointer;background:none;border:none;padding:0;font-family:'DM Sans',sans-serif}
+.hist-view{font-size:.72rem;font-weight:700;color:#3F82E3;text-decoration:none;display:inline-flex;align-items:center;gap:.25rem;cursor:pointer;background:none;border:none;padding:0;font-family:'Poppins',sans-serif}
 .hist-view:hover{text-decoration:underline}
-.hist-summary{display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;border-radius:50px;border:1.5px solid rgba(63,130,227,.3);background:#fff;color:#2563eb;font-size:.7rem;font-weight:700;text-decoration:none;font-family:'DM Sans',sans-serif;transition:background .2s}
+.hist-summary{display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;border-radius:50px;border:1.5px solid rgba(63,130,227,.3);background:#fff;color:#2563eb;font-size:.7rem;font-weight:700;text-decoration:none;font-family:'Poppins',sans-serif;transition:background .2s}
 .hist-summary:hover{background:rgba(63,130,227,.08)}
 .hist-summary svg{width:12px;height:12px;flex-shrink:0}
-.hist-detail-panel{display:none;margin-top:.6rem;background:rgba(63,130,227,0.04);border:1px solid rgba(63,130,227,0.1);border-radius:10px;padding:.7rem .9rem;font-size:.78rem;color:#244441}
+.hist-detail-panel{display:none;margin-top:.6rem;background:rgba(63,130,227,0.04);border:1px solid rgba(63,130,227,0.1);border-radius:10px;padding:.7rem .9rem;font-size:.78rem;color:#173B64}
 .hist-detail-panel.open{display:block}
 
 .med-list{display:flex;flex-direction:column;gap:.7rem}
 .med-item{display:flex;align-items:flex-start;gap:.65rem;padding:.7rem;border:1px solid rgba(36,68,65,.07);border-radius:12px;background:#fbfdfd}
-.med-icon{width:34px;height:34px;border-radius:9px;background:rgba(195,54,67,0.1);color:#C33643;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.med-icon{width:34px;height:34px;border-radius:9px;background:rgba(195,54,67,0.1);color:#E34248;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .med-icon svg{width:16px;height:16px}
-.med-name{font-weight:700;font-size:.86rem;color:#244441}
+.med-name{font-weight:700;font-size:.86rem;color:#173B64}
 .med-meta{font-size:.72rem;color:#9ab0ae;margin-top:.15rem}
 .med-chip{display:inline-block;margin-top:.4rem;font-size:.6rem;font-weight:700;letter-spacing:.03em;padding:.18rem .5rem;border-radius:50px}
 .med-chip.active{background:rgba(22,163,74,.1);color:#16a34a}
-.med-chip.refill{background:rgba(195,54,67,.1);color:#C33643}
+.med-chip.refill{background:rgba(195,54,67,.1);color:#E34248}
 
-.upload-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;background:#fff;border:1px solid rgba(36,68,65,0.08);border-radius:16px;padding:1.3rem;box-shadow:0 2px 10px rgba(0,0,0,0.03);cursor:pointer;width:100%;font-family:'DM Sans',sans-serif}
+.upload-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;background:#fff;border:1px solid rgba(36,68,65,0.08);border-radius:16px;padding:1.3rem;box-shadow:0 2px 10px rgba(0,0,0,0.03);cursor:pointer;width:100%;font-family:'Poppins',sans-serif}
 .upload-tile:hover{border-color:rgba(195,54,67,.25);background:rgba(195,54,67,0.03)}
 .upload-tile .ic{width:38px;height:38px;border-radius:10px;background:rgba(63,130,227,0.1);color:#3F82E3;display:flex;align-items:center;justify-content:center}
 .upload-tile .ic svg{width:18px;height:18px}
-.upload-tile span{font-size:.78rem;font-weight:700;color:#244441}
+.upload-tile span{font-size:.78rem;font-weight:700;color:#173B64}
 
 .scan-table{width:100%;border-collapse:collapse}
 .scan-table thead th{text-align:left;font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9ab0ae;padding:0 0 .6rem;border-bottom:1px solid rgba(36,68,65,.08)}
-.scan-table tbody td{padding:.85rem 0;border-bottom:1px solid rgba(36,68,65,.06);font-size:.82rem;color:#244441;vertical-align:top}
+.scan-table tbody td{padding:.85rem 0;border-bottom:1px solid rgba(36,68,65,.06);font-size:.82rem;color:#173B64;vertical-align:top}
 .scan-table tbody tr:last-child td{border-bottom:none}
 .scan-name-cell{display:flex;align-items:center;gap:.6rem}
 .scan-thumb{width:38px;height:38px;border-radius:9px;object-fit:cover;border:1px solid rgba(63,130,227,0.1);flex-shrink:0;cursor:pointer}
 .scan-thumb-pdf{width:38px;height:38px;border-radius:9px;background:rgba(195,54,67,0.08);border:1px solid rgba(195,54,67,0.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.scan-name{font-weight:700;font-size:.85rem;color:#244441}
+.scan-name{font-weight:700;font-size:.85rem;color:#173B64}
 .chip{border-radius:50px;padding:0.15rem 0.6rem;font-size:0.62rem;font-weight:700;white-space:nowrap;display:inline-block;margin-top:.2rem}
 .scan-actions{display:flex;align-items:center;gap:.6rem;justify-content:flex-end}
-.scan-action-link{display:flex;align-items:center;gap:.3rem;background:none;border:none;cursor:pointer;color:#3F82E3;font-size:.75rem;font-weight:700;font-family:'DM Sans',sans-serif;padding:0}
+.scan-action-link{display:flex;align-items:center;gap:.3rem;background:none;border:none;cursor:pointer;color:#3F82E3;font-size:.75rem;font-weight:700;font-family:'Poppins',sans-serif;padding:0}
 .scan-action-link.muted{color:#6b8886}
 .scan-action-link svg{width:14px;height:14px}
-.scan-rename-toggle{background:none;border:none;cursor:pointer;color:#9ab0ae;font-size:0.68rem;font-weight:700;text-decoration:underline;padding:0;margin-top:.25rem;font-family:'DM Sans',sans-serif;display:block}
+.scan-rename-toggle{background:none;border:none;cursor:pointer;color:#9ab0ae;font-size:0.68rem;font-weight:700;text-decoration:underline;padding:0;margin-top:.25rem;font-family:'Poppins',sans-serif;display:block}
 .scan-rename-form{display:none;gap:0.45rem;margin-top:0.5rem}
 .scan-rename-form.open{display:flex}
-.scan-rename-form input[type="text"]{flex:1;padding:0.45rem 0.65rem;font-size:0.78rem;border-radius:9px;border:1.5px solid rgba(63,130,227,0.15);font-family:'DM Sans',sans-serif;outline:none}
+.scan-rename-form input[type="text"]{flex:1;padding:0.45rem 0.65rem;font-size:0.78rem;border-radius:9px;border:1.5px solid rgba(63,130,227,0.15);font-family:'Poppins',sans-serif;outline:none}
 .scan-rename-form input[type="text"]:focus{border-color:#3F82E3}
-.scan-rename-form button{border:none;border-radius:9px;background:rgba(63,130,227,0.1);color:#3F82E3;font-weight:700;font-size:0.72rem;padding:0.45rem 0.68rem;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif}
+.scan-rename-form button{border:none;border-radius:9px;background:rgba(63,130,227,0.1);color:#3F82E3;font-weight:700;font-size:0.72rem;padding:0.45rem 0.68rem;cursor:pointer;white-space:nowrap;font-family:'Poppins',sans-serif}
 .scan-detail-row td{padding:0 !important;border-bottom:1px solid rgba(36,68,65,.06) !important}
 .scan-detail-inner{display:none;padding:0 0 1rem}
 .scan-detail-inner.open{display:block}
@@ -310,24 +310,24 @@ require_once __DIR__ . '/../includes/header.php';
 .original-overlay.open{display:flex}
 .original-modal{width:min(100%,980px);height:min(92vh,760px);display:flex;flex-direction:column;overflow:hidden;background:#fff;border-radius:16px;box-shadow:0 20px 70px rgba(0,0,0,.35)}
 .original-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 1rem;border-bottom:1px solid rgba(36,68,65,.1);flex-shrink:0}
-.original-title{min-width:0;font-size:.88rem;font-weight:800;color:#244441;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.original-title{min-width:0;font-size:.88rem;font-weight:800;color:#173B64;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .original-tools{display:flex;align-items:center;gap:.35rem;flex-shrink:0}
-.original-tool,.original-close{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(36,68,65,.12);border-radius:8px;background:#fff;color:#244441;cursor:pointer;font:700 .8rem 'DM Sans',sans-serif}
+.original-tool,.original-close{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(36,68,65,.12);border-radius:8px;background:#fff;color:#173B64;cursor:pointer;font:700 .8rem 'Poppins',sans-serif}
 .original-tool:hover,.original-close:hover{background:#f1f3fc}
-.original-close{font-size:1.1rem;color:#C33643}
+.original-close{font-size:1.1rem;color:#E34248}
 .original-stage{position:relative;display:flex;align-items:center;justify-content:center;min-height:0;flex:1;overflow:auto;background:#eef1f6;padding:1.2rem}
 .original-image{max-width:none;max-height:none;display:none;transform-origin:center center;transition:transform .15s ease;box-shadow:0 4px 18px rgba(21,28,39,.18);background:#fff}
 .original-frame{width:100%;height:100%;display:none;border:0;background:#fff}
 .original-hint{position:absolute;bottom:.7rem;left:50%;transform:translateX(-50%);padding:.35rem .65rem;border-radius:50px;background:rgba(21,28,39,.72);color:#fff;font-size:.68rem;pointer-events:none}
 .upl-modal{background:#fff;border-radius:20px;padding:1.8rem;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.25)}
 .upl-close{position:absolute;top:1rem;right:1rem;background:rgba(36,68,65,0.06);border:none;width:32px;height:32px;border-radius:50%;font-size:1.2rem;color:#6b8886;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
-.upl-close:hover{background:rgba(195,54,67,0.1);color:#C33643}
-.upl-title{font-family:'Playfair Display',serif;font-weight:900;font-size:1.3rem;color:#244441;margin-bottom:0.3rem}
+.upl-close:hover{background:rgba(195,54,67,0.1);color:#E34248}
+.upl-title{font-family:'Poppins',serif;font-weight:900;font-size:1.3rem;color:#173B64;margin-bottom:0.3rem}
 .upl-sub{font-size:0.83rem;color:#9ab0ae;margin-bottom:1.2rem}
-.upl-alert-error{background:rgba(195,54,67,0.08);border:1px solid rgba(195,54,67,0.2);color:#C33643;border-radius:12px;padding:0.7rem 1rem;font-size:0.83rem;margin-bottom:1rem}
+.upl-alert-error{background:rgba(195,54,67,0.08);border:1px solid rgba(195,54,67,0.2);color:#E34248;border-radius:12px;padding:0.7rem 1rem;font-size:0.83rem;margin-bottom:1rem}
 .upl-alert-success{background:rgba(63,130,227,0.08);border:1px solid rgba(63,130,227,0.2);color:#3F82E3;border-radius:12px;padding:0.7rem 1rem;font-size:0.83rem;margin-bottom:1rem}
 .upl-field-label{display:block;font-size:0.7rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#9ab0ae;margin-bottom:0.4rem}
-.upl-field-input{width:100%;padding:0.72rem 0.9rem;border:1.5px solid rgba(63,130,227,0.15);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:#244441;background:#fff;outline:none;transition:border-color 0.2s;margin-bottom:1rem}
+.upl-field-input{width:100%;padding:0.72rem 0.9rem;border:1.5px solid rgba(63,130,227,0.15);border-radius:12px;font-family:'Poppins',sans-serif;font-size:0.9rem;color:#173B64;background:#fff;outline:none;transition:border-color 0.2s;margin-bottom:1rem}
 .upl-field-input:focus{border-color:#3F82E3;box-shadow:0 0 0 3px rgba(63,130,227,0.1)}
 .upl-dropzone{border:2px dashed rgba(63,130,227,0.3);border-radius:16px;padding:2rem 1rem;text-align:center;cursor:pointer;transition:all 0.25s;background:#EBF2FD;position:relative}
 .upl-dropzone:hover,.upl-dropzone.dragover{border-color:#3F82E3;background:rgba(63,130,227,0.1)}
@@ -338,7 +338,7 @@ require_once __DIR__ . '/../includes/header.php';
 .upl-preview-wrap{margin-top:1rem;display:none}
 .upl-preview-wrap img{width:100%;max-height:200px;object-fit:contain;border-radius:12px;border:1px solid rgba(63,130,227,0.1)}
 .upl-preview-name{font-size:0.75rem;color:#9ab0ae;margin-top:0.5rem;text-align:center}
-.upl-submit-btn{width:100%;padding:0.9rem;border-radius:50px;background:#C33643;color:#fff;font-weight:700;font-size:0.92rem;border:none;cursor:pointer;transition:all 0.3s;box-shadow:0 6px 18px rgba(195,54,67,0.3);display:flex;align-items:center;justify-content:center;gap:0.5rem;font-family:'DM Sans',sans-serif;margin-top:1rem}
+.upl-submit-btn{width:100%;padding:0.9rem;border-radius:50px;background:#E34248;color:#fff;font-weight:700;font-size:0.92rem;border:none;cursor:pointer;transition:all 0.3s;box-shadow:0 6px 18px rgba(195,54,67,0.3);display:flex;align-items:center;justify-content:center;gap:0.5rem;font-family:'Poppins',sans-serif;margin-top:1rem}
 .upl-submit-btn:hover{background:#a82d38;transform:translateY(-2px)}
 .upl-submit-btn:disabled{background:#b0c4e8;cursor:not-allowed;transform:none;box-shadow:none}
 .upl-spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:upl-spin 0.7s linear infinite}
@@ -499,7 +499,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="scan-name-cell">
                   <?php if ($ext === 'pdf'): ?>
                     <div onclick="toggleScanned(<?= $s['id'] ?>)" class="scan-thumb-pdf">
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C33643" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v5h5"/></svg>
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#E34248" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v5h5"/></svg>
                     </div>
                   <?php else: ?>
                     <img src="<?= htmlspecialchars(scanFileUrl($s['file_path'])) ?>" class="scan-thumb" onclick="toggleScanned(<?= $s['id'] ?>)"/>
@@ -535,7 +535,7 @@ require_once __DIR__ . '/../includes/header.php';
               <td colspan="4">
                 <div class="scan-detail-inner" id="scanned-<?= $s['id'] ?>">
                   <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9ab0ae;margin-bottom:0.5rem;">Extracted Text</div>
-                  <div style="background:rgba(63,130,227,0.04);border:1px solid rgba(63,130,227,0.1);border-radius:10px;padding:0.9rem;font-size:0.82rem;line-height:2;color:#244441;max-height:220px;overflow-y:auto;font-family:'DM Sans',sans-serif;word-break:break-word;">
+                  <div style="background:rgba(63,130,227,0.04);border:1px solid rgba(63,130,227,0.1);border-radius:10px;padding:0.9rem;font-size:0.82rem;line-height:2;color:#173B64;max-height:220px;overflow-y:auto;font-family:'Poppins',sans-serif;word-break:break-word;">
                     <?= formatOcrText($s['extracted_text'] ?? '', $s['doc_type']) ?>
                   </div>
                   <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.6rem;">
@@ -544,13 +544,13 @@ require_once __DIR__ . '/../includes/header.php';
                     <span class="legend-chip" style="background:rgba(168,85,247,0.12);color:#6d28d9;"><svg class="record-inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3z"/><path d="M12 9v5M12 17h.01"/></svg>Important</span>
                   </div>
                   <div style="display:flex;gap:0.6rem;margin-top:0.7rem;">
-                    <button onclick="copyScanned(<?= $s['id'] ?>)" id="copy-<?= $s['id'] ?>" style="flex:1;padding:0.5rem;border-radius:50px;background:rgba(63,130,227,0.1);color:#3F82E3;border:none;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;">
+                    <button onclick="copyScanned(<?= $s['id'] ?>)" id="copy-<?= $s['id'] ?>" style="flex:1;padding:0.5rem;border-radius:50px;background:rgba(63,130,227,0.1);color:#3F82E3;border:none;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:'Poppins',sans-serif;">
                       Copy Text
                     </button>
-                    <button type="button" onclick="openOriginalModal(<?= htmlspecialchars(json_encode(scanFileUrl($s['file_path']))) ?>, <?= htmlspecialchars(json_encode($s['doc_label'] ?: 'Scanned Document')) ?>, <?= htmlspecialchars(json_encode($ext)) ?>)" style="flex:1;padding:0.5rem;border-radius:50px;background:rgba(36,68,65,0.08);color:#244441;border:none;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;">
+                    <button type="button" onclick="openOriginalModal(<?= htmlspecialchars(json_encode(scanFileUrl($s['file_path']))) ?>, <?= htmlspecialchars(json_encode($s['doc_label'] ?: 'Scanned Document')) ?>, <?= htmlspecialchars(json_encode($ext)) ?>)" style="flex:1;padding:0.5rem;border-radius:50px;background:rgba(36,68,65,0.08);color:#173B64;border:none;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:'Poppins',sans-serif;">
                       View Original
                     </button>
-                    <button type="button" onclick="openUploadModal()" style="flex:1;padding:0.5rem;border-radius:50px;background:rgba(244,132,95,0.1);color:#f4845f;border:none;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;">
+                    <button type="button" onclick="openUploadModal()" style="flex:1;padding:0.5rem;border-radius:50px;background:rgba(244,132,95,0.1);color:#f4845f;border:none;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:'Poppins',sans-serif;">
                       Scan New
                     </button>
                   </div>
@@ -665,9 +665,9 @@ require_once __DIR__ . '/../includes/header.php';
       <div class="upl-preview-wrap" id="previewWrap">
         <img id="previewImg" src="" alt="Preview" style="display:none;"/>
         <div id="pdfPreview" style="display:none;align-items:center;gap:1rem;background:rgba(195,54,67,0.06);border:1px solid rgba(195,54,67,0.15);border-radius:12px;padding:1rem 1.2rem;">
-          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#C33643" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v5h5"/></svg>
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#E34248" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v5h5"/></svg>
           <div>
-            <div style="font-weight:700;color:#C33643;font-size:0.88rem;">PDF File Ready</div>
+            <div style="font-weight:700;color:#E34248;font-size:0.88rem;">PDF File Ready</div>
           </div>
         </div>
         <div id="previewName" class="upl-preview-name"></div>

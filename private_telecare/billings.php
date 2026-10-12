@@ -60,7 +60,7 @@ require_once __DIR__ . '/../includes/header.php';
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root{
-  --tc-red:#B31118; --tc-red-dark:#8a000b;
+  --tc-red:#2166B1; --tc-red-dark:#164B82;
   --tc-teal:#006a61; --tc-teal-light:#0D9488;
   --tc-ink:#151c27; --tc-muted:rgba(21,28,39,0.55);
   --tc-line:rgba(21,28,39,0.08);
@@ -73,18 +73,18 @@ require_once __DIR__ . '/../includes/header.php';
   padding: 1.8rem 2rem 5rem !important;
   background: transparent !important;
   overflow-x: clip;
-  font-family:'Inter',sans-serif;
+  font-family:'Poppins',sans-serif;
 }
 .page-head{ margin-bottom:1.25rem; }
 .page-title{
-  font-family:'Inter',sans-serif; font-weight:800; font-size:1.9rem;
+  font-family:'Poppins',sans-serif; font-weight:800; font-size:1.9rem;
   color:var(--tc-ink); line-height:1.15; margin-bottom:0.3rem;
 }
 .page-sub{ color:var(--tc-muted); font-size:0.92rem; }
 
 .toast-bar{position:fixed;bottom:5.5rem;left:50%;transform:translateX(-50%);z-index:400;padding:0.75rem 1.4rem;border-radius:16px;font-size:0.82rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.15);white-space:normal;max-width:88vw;text-align:center;}
 .toast-bar.success{background:var(--tc-teal);color:#fff;animation:toastOut 0.4s 3.5s ease forwards;}
-.toast-bar.error{background:#C33643;color:#fff;}
+.toast-bar.error{background:#E34248;color:#fff;}
 @keyframes toastOut{from{opacity:1}to{opacity:0;pointer-events:none}}
 
 /* ── STATS ROW ── */
@@ -119,7 +119,7 @@ require_once __DIR__ . '/../includes/header.php';
 .si-red  { background: var(--tc-red-tint);  color: var(--tc-red); }
 .si-teal { background: var(--tc-teal-tint); color: var(--tc-teal); }
 .stat-num {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 1.75rem; font-weight: 800; line-height: 1;
   color: var(--tc-ink);
 }
@@ -183,7 +183,7 @@ require_once __DIR__ . '/../includes/header.php';
 .tx-table tr:last-child td{ border-bottom:none; }
 .tx-desc-main{ font-weight:700; font-size:0.85rem; }
 .tx-desc-sub{ font-size:0.74rem; color:var(--tc-muted); margin-top:0.1rem; }
-.tx-amount{ font-weight:800; font-family:'Inter',sans-serif; white-space:nowrap; }
+.tx-amount{ font-weight:800; font-family:'Poppins',sans-serif; white-space:nowrap; }
 .tx-pay{ display:flex; align-items:center; gap:0.35rem; color:var(--tc-muted); font-size:0.78rem; white-space:nowrap; }
 .tx-pay svg{ width:13px; height:13px; flex-shrink:0; }
 

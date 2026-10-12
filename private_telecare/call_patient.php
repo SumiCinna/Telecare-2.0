@@ -36,10 +36,7 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/>
   <title>Dr. <?= htmlspecialchars($appt['doctor_name']) ?> &mdash; TELE-CARE</title>
@@ -67,7 +64,8 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
       padding:0 1rem;padding-top:env(safe-area-inset-top,0px);
       flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.06);z-index:10;
     }
-    .tb-logo{font-size:0.85rem;font-weight:700;}
+    .tb-logo{display:flex;align-items:center;gap:.35rem;font-size:0.85rem;font-weight:700;}
+    .tb-logo img{width:26px;height:26px;object-fit:contain;}
     .tb-logo span{color:var(--gm-blue);}
     .timer-pill{background:var(--gm-surface2);border-radius:20px;padding:0.25rem 0.8rem;font-size:0.78rem;font-weight:500;min-width:52px;text-align:center;font-variant-numeric:tabular-nums;}
     .timer-pill.urgent{color:var(--gm-red);}
@@ -337,7 +335,7 @@ $doc_photo    = $appt['doctor_photo'] ?? '';
 
 <div class="topbar">
   <div style="display:flex;align-items:center;gap:0.6rem;">
-    <div class="tb-logo">TELE<span>-</span>CARE</div>
+    <div class="tb-logo"><img src="/src/assets/logo.png" alt="TELE-CARE"/>TELE-CARE</div>
     <span style="font-size:0.68rem;color:var(--gm-muted);"><?= date('g:i A', $appt_ts) ?> &middot; Teleconsult</span>
   </div>
     <div style="display:flex;align-items:center;gap:0.5rem;">

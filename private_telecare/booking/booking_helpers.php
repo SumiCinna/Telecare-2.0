@@ -85,9 +85,9 @@ function dept_icon(string $key): string {
 function booking_wizard_css(): string {
     return <<<CSS
     <style>
-    :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--muted:#9ab0ae}
+    :root{--red:#E34248;--green:#173B64;--blue:#3F82E3;--muted:#9ab0ae}
     .wiz-page{max-width:920px;margin:0 auto;padding:1.8rem 2rem 5rem}
-    .wiz-title{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--green)}
+    .wiz-title{font-family:'Poppins',serif;font-size:1.8rem;font-weight:900;color:var(--green)}
     .wiz-sub{color:var(--muted);font-size:0.88rem;margin-top:0.3rem;margin-bottom:1.6rem}
     .stepper{display:flex;align-items:flex-start;background:#fff;border:1px solid rgba(36,68,65,0.08);border-radius:16px;padding:1.2rem 1.5rem;margin-bottom:1.6rem}
     .step-col{display:flex;flex-direction:column;align-items:center}
@@ -98,8 +98,8 @@ function booking_wizard_css(): string {
     .step-line.done{background:#16a34a}
     .step-label{font-size:0.7rem;color:var(--muted);text-align:center;margin-top:0.4rem;width:74px}
     .wiz-card{background:#fff;border:1px solid rgba(36,68,65,0.08);border-radius:18px;padding:1.5rem;margin-bottom:1.4rem}
-    .wiz-card h3{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--green);margin-bottom:1rem}
-    .wiz-btn{padding:0.85rem 1.8rem;border-radius:50px;border:none;font-weight:700;font-size:0.9rem;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:none;display:inline-block}
+    .wiz-card h3{font-family:'Poppins',serif;font-size:1.1rem;color:var(--green);margin-bottom:1rem}
+    .wiz-btn{padding:0.85rem 1.8rem;border-radius:50px;border:none;font-weight:700;font-size:0.9rem;cursor:pointer;font-family:'Poppins',sans-serif;text-decoration:none;display:inline-block}
     .wiz-btn.primary{background:var(--red);color:#fff;box-shadow:0 4px 14px rgba(195,54,67,0.28)}
     .wiz-btn.primary:hover{background:#a82d38}
     .wiz-btn.ghost{background:transparent;color:var(--green);border:1.5px solid rgba(36,68,65,0.15)}

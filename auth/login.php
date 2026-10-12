@@ -94,10 +94,7 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Log In - TELE-CARE AI</title>
@@ -106,7 +103,7 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
   <style>
     :root { --red:#bd0f18; --red-dark:#a20c14; --ink:#101827; --line:#efc9c9; --panel:#fff; }
     * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem 1rem; font-family:'DM Sans',sans-serif; color:var(--ink); background:linear-gradient(125deg,#eef1ff 0%,#faf4f8 52%,#dff8ff 100%); }
+    body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem 1rem; font-family:'Poppins',sans-serif; color:var(--ink); background:linear-gradient(125deg,#eef1ff 0%,#faf4f8 52%,#dff8ff 100%); }
     .page { width:min(100%, 500px); text-align:center; }
     .brand-mark { display:block; width:88px; height:88px; margin:0 auto .6rem; object-fit:contain; }
     .brand-name { margin:0; color:#a70009; font-family:'Plus Jakarta Sans',sans-serif; font-size:1.8rem; letter-spacing:-.03em; }
@@ -162,7 +159,7 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
       Back to Homepage
     </a>
-    <img class="brand-mark" src="/telecarelogo.png" alt="Tele-Care logo"/>
+    <img class="brand-mark" src="/src/assets/logo.png" alt="Tele-Care logo"/>
     <p class="brand-name">Tele-Care AI</p>
     <p class="brand-subtitle">Patient Portal Login</p>
 

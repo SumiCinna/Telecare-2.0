@@ -3,8 +3,15 @@
 // Determine active page from current file
 $current_page = basename($_SERVER['PHP_SELF'], '.php'); // e.g. 'doctors', 'patients'
 ?>
+<style>
+.sidebar-logo{display:flex;align-items:center;gap:.55rem}
+.sidebar-logo img{width:32px;height:32px;object-fit:contain;flex-shrink:0}
+</style>
 <aside class="sidebar">
-  <div class="sidebar-logo">TELE<span>-</span>CARE</div>
+  <div class="sidebar-logo">
+    <img src="/src/assets/logo.png" alt="TELE-CARE"/>
+    <span>TELE-CARE</span>
+  </div>
   <div class="sidebar-admin">
     Admin Portal<br/>
     <strong><?= htmlspecialchars($_SESSION['admin_name'] ?? 'Admin') ?></strong>
@@ -54,6 +61,4 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php'); // e.g. 'doctors', 'pati
     </a>
   </div>
 </aside>
-
-
 

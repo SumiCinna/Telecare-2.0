@@ -5,7 +5,7 @@ $active_nav = $active_nav ?? '';
 function nav_active($key, $active_nav) { return $key === $active_nav ? ' active' : ''; }
 ?>
 <aside class="sidebar">
-	<div class="brand"><span class="brand-mark">+</span><div><span class="brand-name">TeleCare</span><span class="brand-role">SUPER ADMIN</span></div></div>
+	<div class="brand"><img class="brand-mark" src="/src/assets/logo.png" alt="Tele-Care"/><div><span class="brand-name">TeleCare</span><span class="brand-role">SUPER ADMIN</span></div></div>
 	<nav class="sidebar-nav">
 		<div class="nav-label">Main Menu</div>
 		<a class="nav-link<?= nav_active('dashboard', $active_nav) ?>" href="dashboard.php"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 11.5 12 4l9 7.5M5 10v10h14V10M9 20v-5h6v5"/></svg>Dashboard</a>

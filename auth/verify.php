@@ -42,19 +42,16 @@ if (empty($token)) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/src/assets/logo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Activate Account — TELE-CARE</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet"/>
   <style>
-    :root { --red:#C33643; --green:#244441; --blue:#3F82E3; }
+    :root { --red:#E34248; --green:#173B64; --blue:#3F82E3; }
     * { box-sizing:border-box; margin:0; padding:0; }
     body {
-      font-family:'DM Sans',sans-serif;
+      font-family:'Poppins',sans-serif;
       background: linear-gradient(160deg, var(--green) 0%, #1a3330 100%);
       min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem;
     }
@@ -64,7 +61,7 @@ if (empty($token)) {
       box-shadow:0 30px 80px rgba(0,0,0,0.25);
     }
     .icon { font-size:3.5rem; margin-bottom:1.5rem; }
-    h1 { font-family:'Playfair Display',serif; font-size:1.8rem; color:var(--green); margin-bottom:0.8rem; }
+    h1 { font-family:'Poppins',serif; font-size:1.8rem; color:var(--green); margin-bottom:0.8rem; }
     p  { color:#6b8a87; font-size:0.95rem; line-height:1.7; margin-bottom:2rem; }
     .btn {
       display:inline-block; padding:0.9rem 2.5rem; border-radius:50px;
@@ -80,13 +77,13 @@ if (empty($token)) {
       transition:all 0.3s; margin-top:0.8rem;
     }
     .btn-outline:hover { background:rgba(36,68,65,0.06); }
-    .logo { font-family:'Playfair Display',serif; font-size:1.3rem; font-weight:900; color:var(--green); margin-bottom:2rem; display:block; }
+    .logo { font-family:'Poppins',serif; font-size:1.3rem; font-weight:900; color:var(--green); margin-bottom:2rem; display:block; }
     .logo span { color:var(--red); }
   </style>
 </head>
 <body>
 <div class="card">
-  <a href="../index.php" class="logo">TELE<span>-</span>CARE</a>
+  <a href="../index.php" class="logo"><img src="/src/assets/logo.png" alt="TELE-CARE"/>TELE-CARE</a>
 
   <?php if ($success): ?>
     <div class="icon">✅</div>
@@ -103,7 +100,6 @@ if (empty($token)) {
 </div>
 </body>
 </html>
-
 
 
 

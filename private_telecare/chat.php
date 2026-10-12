@@ -68,7 +68,7 @@ require_once __DIR__ . '/../includes/header.php';
   }
   .chat-input-row input {
     flex:1; border:none; outline:none;
-    font-family:'DM Sans',sans-serif; font-size:0.9rem;
+    font-family:'Poppins',sans-serif; font-size:0.9rem;
     color:var(--text); background:transparent;
   }
   .chat-send {
