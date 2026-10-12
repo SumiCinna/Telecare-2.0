@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // private_telecare/booking/success.php
 // Point your PayMongo success handler here: success.php?appt_id=<id>
 date_default_timezone_set('Asia/Manila');
@@ -16,7 +16,7 @@ $stmt->execute();
 $appt = $stmt->get_result()->fetch_assoc();
 if (!$appt) { header('Location: ../router.php?page=visits'); exit; }
 
-$page_title = 'Booking Confirmed — TELE-CARE';
+$page_title = 'Booking Confirmed â€” TELE-CARE';
 $active_nav = 'visits';
 require_once __DIR__ . '/../../includes/header.php';
 echo booking_wizard_css();
@@ -26,7 +26,7 @@ echo booking_wizard_css();
 .success-modal{background:#fff;border:1px solid rgba(36,68,65,.12);border-radius:10px;padding:1.35rem 1.15rem;max-width:320px;width:100%;text-align:center;box-shadow:0 18px 45px rgba(0,0,0,.22);animation:popIn .3s ease}
 @keyframes popIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
 .success-icon{width:48px;height:48px;border-radius:50%;background:rgba(195,54,67,.1);color:var(--red);display:flex;align-items:center;justify-content:center;margin:0 auto .8rem}
-.success-title{font-family:'DM Sans',sans-serif;font-size:1.05rem;font-weight:800;color:var(--green);margin-bottom:.45rem}
+.success-title{font-family:'Poppins',sans-serif;font-size:1.05rem;font-weight:800;color:var(--green);margin-bottom:.45rem}
 .success-sub{font-size:.7rem;color:var(--muted);margin-bottom:1rem;line-height:1.45}
 .success-modal .wiz-btn{font-size:.68rem;padding:.65rem 1rem;border-radius:6px}
 </style>

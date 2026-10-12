@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // auth/termsandpolicy.php
 /**
  * termsandpolicy.php
@@ -31,7 +31,7 @@
     background:linear-gradient(135deg,#244441 0%,#1a3330 100%);
     padding:1.4rem 1.6rem 1.2rem;flex-shrink:0;position:relative;
   }
-  #tpHeader h2{font-family:'Playfair Display',serif;font-size:1.3rem;color:#fff;margin:0 0 .2rem}
+  #tpHeader h2{font-family:'Poppins',sans-serif;font-size:1.3rem;color:#fff;margin:0 0 .2rem}
   #tpHeader p{font-size:.78rem;color:rgba(255,255,255,.55);margin:0}
   #tpCloseBtn{
     position:absolute;top:1rem;right:1rem;width:32px;height:32px;border-radius:50%;
@@ -44,7 +44,7 @@
   #tpTabs{display:flex;border-bottom:2px solid rgba(36,68,65,.1);flex-shrink:0;background:#fafafa}
   .tp-tab{
     flex:1;padding:.85rem 1rem;border:none;background:transparent;cursor:pointer;
-    font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;
+    font-family:'Poppins',sans-serif;font-size:.82rem;font-weight:600;
     color:#9ab0ae;letter-spacing:.04em;text-transform:uppercase;
     border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .25s;
   }
@@ -69,7 +69,7 @@
 
   /* Typography inside modal */
   .tp-section-title{
-    font-family:'Playfair Display',serif;font-size:1rem;color:#244441;
+    font-family:'Poppins',sans-serif;font-size:1rem;color:#244441;
     margin:1.2rem 0 .4rem;padding-bottom:.3rem;
     border-bottom:1px solid rgba(36,68,65,.08);
   }
@@ -95,7 +95,7 @@
     width:100%;padding:.85rem;border-radius:50px;background:#C33643;color:#fff;
     font-weight:700;font-size:.9rem;border:none;cursor:pointer;
     transition:all .3s;box-shadow:0 6px 18px rgba(195,54,67,.3);
-    font-family:'DM Sans',sans-serif;
+    font-family:'Poppins',sans-serif;
   }
   #tpAcceptBtn:hover:not(:disabled){background:#a82d38;transform:translateY(-1px)}
   #tpAcceptBtn:disabled{background:#ccc;box-shadow:none;cursor:not-allowed;transform:none}
@@ -133,8 +133,8 @@
     <div id="tpScrollProgress"><div id="tpScrollBar"></div></div>
 
     <div id="tpTabs">
-      <button class="tp-tab active" onclick="tpSwitchTab('terms')">📋 Terms of Use</button>
-      <button class="tp-tab" onclick="tpSwitchTab('privacy')">🔒 Privacy Policy</button>
+      <button class="tp-tab active" onclick="tpSwitchTab('terms')">ðŸ“‹ Terms of Use</button>
+      <button class="tp-tab" onclick="tpSwitchTab('privacy')">ðŸ”’ Privacy Policy</button>
     </div>
 
     <div id="tpScrollNotice">
@@ -290,7 +290,7 @@
 
     <div id="tpFooter">
       <p id="tpScrollHint" style="color:#C33643;font-size:.76rem;font-weight:600;text-align:center">
-        ↓ Scroll to the bottom to enable the checkbox
+        â†“ Scroll to the bottom to enable the checkbox
       </p>
       <label id="tpCheckRow" style="pointer-events:none;opacity:.45">
         <input type="checkbox" id="tpCheckbox" disabled/>
@@ -329,7 +329,7 @@
     document.getElementById('tpAcceptBtn').disabled = true;
     document.getElementById('tpScrollNotice').style.opacity = '1';
     document.getElementById('tpScrollHint').style.display   = 'block';
-    document.getElementById('tpScrollHint').textContent = '↓ Scroll to the bottom to enable the checkbox';
+    document.getElementById('tpScrollHint').textContent = 'â†“ Scroll to the bottom to enable the checkbox';
     document.getElementById('tpScrollBar').style.width = '0%';
     document.getElementById('tpBody').scrollTop = 0;
 
@@ -381,8 +381,8 @@
       hint.style.color = '#244441';
     } else {
       hint.textContent = _tpScrolledTerms
-        ? '↓ Switch to Privacy Policy tab and scroll to the bottom'
-        : '↓ Scroll to the bottom to enable the checkbox';
+        ? 'â†“ Switch to Privacy Policy tab and scroll to the bottom'
+        : 'â†“ Scroll to the bottom to enable the checkbox';
       hint.style.color = '#C33643';
     }
 
@@ -421,5 +421,6 @@
 })();
 </script>
 <!-- ============================================================= -->
+
 
 

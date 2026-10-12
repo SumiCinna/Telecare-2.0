@@ -1,7 +1,7 @@
-<?php
+﻿<?php
 // auth/google-oauth-setup.php
 // ============================================================
-// STEP 1 — Add to your database/config.php or run this SQL
+// STEP 1 â€” Add to your database/config.php or run this SQL
 // ============================================================
 /*
 ALTER TABLE patients
@@ -12,7 +12,7 @@ ALTER TABLE patients
 
 
 // ============================================================
-// STEP 2 — Google OAuth URLs
+// STEP 2 â€” Google OAuth URLs
 // Replace YOUR_GOOGLE_CLIENT_ID below with your real Client ID
 // ============================================================
 
@@ -43,7 +43,7 @@ $google_login_url = $google_base . '?' . http_build_query([
 
 
 <!-- ============================================================
-     STEP 3 — Paste this button into register.php
+     STEP 3 â€” Paste this button into register.php
      Place it just BEFORE the <form> tag in your step-1 section
      ============================================================ -->
 
@@ -55,7 +55,7 @@ $google_login_url = $google_base . '?' . http_build_query([
     border-radius:50px;
     background:#fff;
     color:#244441;
-    font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:600;
+    font-family:'Poppins',sans-serif;font-size:.92rem;font-weight:600;
     text-decoration:none;
     transition:all .25s;
     box-shadow:0 2px 8px rgba(0,0,0,.07);
@@ -78,7 +78,7 @@ $google_login_url = $google_base . '?' . http_build_query([
 
 
 <!-- ============================================================
-     STEP 4 — Paste this button into login.php
+     STEP 4 â€” Paste this button into login.php
      Place it at the top of your login form
      ============================================================ -->
 
@@ -90,7 +90,7 @@ $google_login_url = $google_base . '?' . http_build_query([
     border-radius:50px;
     background:#fff;
     color:#244441;
-    font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:600;
+    font-family:'Poppins',sans-serif;font-size:.92rem;font-weight:600;
     text-decoration:none;
     transition:all .25s;
     box-shadow:0 2px 8px rgba(0,0,0,.07);
@@ -113,7 +113,7 @@ $google_login_url = $google_base . '?' . http_build_query([
 
 
 <!-- ============================================================
-     STEP 5 — Update your Google Cloud Console redirect URIs
+     STEP 5 â€” Update your Google Cloud Console redirect URIs
      ============================================================
      Authorized JavaScript origins:
        https://telecareai.site
@@ -122,5 +122,6 @@ $google_login_url = $google_base . '?' . http_build_query([
        https://telecareai.site/auth/google-callback.php
        https://telecareai.site/auth/google-register-callback.php
      ============================================================ -->
+
 
 

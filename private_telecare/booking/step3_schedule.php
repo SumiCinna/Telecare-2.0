@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // private_telecare/booking/step3_schedule.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../../includes/auth.php';
@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (!$date || !$time) $error = 'Please pick both a date and a time.';
 }
 
-$page_title = 'Pick Schedule — TELE-CARE';
+$page_title = 'Pick Schedule â€” TELE-CARE';
 $active_nav = 'visits';
 require_once __DIR__ . '/../../includes/header.php';
 echo booking_wizard_css();
@@ -122,7 +122,7 @@ echo booking_wizard_css();
 .doctor-strip .doctor-avatar img{width:100%;height:100%;object-fit:cover}
 .schedule-layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(240px,.9fr);gap:1.2rem;align-items:start}
 .schedule-summary{background:#fff;border:1px solid rgba(36,68,65,.1);border-radius:14px;padding:1rem;color:var(--green);position:sticky;top:1rem}
-.schedule-summary h3{font-family:'DM Sans',sans-serif;font-size:.95rem;margin-bottom:.8rem}
+.schedule-summary h3{font-family:'Poppins',sans-serif;font-size:.95rem;margin-bottom:.8rem}
 .schedule-summary-row{padding:.65rem 0;border-top:1px solid rgba(36,68,65,.08);font-size:.78rem}
 .schedule-summary-row strong{display:block;font-size:.7rem;color:var(--muted);font-weight:600;margin-bottom:.2rem}
 .schedule-time-picker{margin-top:1rem;padding-top:.9rem;border-top:1px solid rgba(36,68,65,.08)}

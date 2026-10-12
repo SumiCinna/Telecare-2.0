@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // admin/assignments.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -11,7 +11,7 @@ if (!isset($_SESSION['admin_id'])) { header('Location: login.php'); exit; }
 $toast = $_SESSION['toast'] ?? null;
 unset($_SESSION['toast']);
 
-// ── Fetch all active doctors ──
+// â”€â”€ Fetch all active doctors â”€â”€
 $doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY full_name");
 ?>
 <!DOCTYPE html>
@@ -23,9 +23,9 @@ $doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY fu
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Appointments by Doctor — TELE-CARE</title>
+  <title>Appointments by Doctor â€” TELE-CARE</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link href="assets/admin.css" rel="stylesheet"/>
   <style>
   
@@ -43,7 +43,7 @@ $doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY fu
     .appt-body{display:none;padding:0 1.5rem 1.2rem}
     .doc-card.open .appt-body{display:block}
     .tabs{display:flex;gap:0;border-bottom:1px solid rgba(36,68,65,0.08);margin-bottom:1rem;margin-top:1rem}
-    .tab-btn{padding:0.55rem 1.1rem;font-size:0.8rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border:none;background:none;cursor:pointer;color:#9ab0ae;font-family:'DM Sans',sans-serif;border-bottom:2px solid transparent;transition:all 0.2s;margin-bottom:-1px}
+    .tab-btn{padding:0.55rem 1.1rem;font-size:0.8rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border:none;background:none;cursor:pointer;color:#9ab0ae;font-family:'Poppins',sans-serif;border-bottom:2px solid transparent;transition:all 0.2s;margin-bottom:-1px}
     .tab-btn.active{color:var(--green);border-bottom-color:var(--green)}
     .tab-btn:hover:not(.active){color:var(--green)}
     .tab-panel{display:none}.tab-panel.active{display:block}
@@ -52,7 +52,7 @@ $doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY fu
     .appt-row{display:flex;align-items:center;gap:1rem;padding:0.75rem 0;border-bottom:1px solid rgba(36,68,65,0.05)}
     .appt-row:last-child{border-bottom:none}
     .appt-date{min-width:80px;text-align:center;background:rgba(36,68,65,0.05);border-radius:10px;padding:0.4rem 0.5rem}
-    .appt-date .day{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;line-height:1;color:var(--green)}
+    .appt-date .day{font-family:'Poppins',sans-serif;font-size:1.3rem;font-weight:900;line-height:1;color:var(--green)}
     .appt-date .mon{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ab0ae;margin-top:0.1rem}
     .empty-appt{padding:1.5rem 0;text-align:center;color:#9ab0ae;font-size:0.85rem}
 
@@ -64,7 +64,7 @@ $doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY fu
     .badge-gray{background:rgba(0,0,0,0.06);color:#888}
 
   .appt-pagination{display:flex;align-items:center;justify-content:center;gap:0.35rem;margin-top:0.9rem;flex-wrap:wrap}
-  .page-btn{border:1px solid rgba(36,68,65,0.15);background:#fff;color:var(--green);font-family:'DM Sans',sans-serif;font-size:0.76rem;font-weight:600;border-radius:8px;padding:0.3rem 0.55rem;cursor:pointer;min-width:32px;transition:all 0.18s}
+  .page-btn{border:1px solid rgba(36,68,65,0.15);background:#fff;color:var(--green);font-family:'Poppins',sans-serif;font-size:0.76rem;font-weight:600;border-radius:8px;padding:0.3rem 0.55rem;cursor:pointer;min-width:32px;transition:all 0.18s}
   .page-btn:hover{border-color:var(--green)}
   .page-btn.active{background:var(--green);color:#fff;border-color:var(--green)}
   .page-btn:disabled{opacity:0.45;cursor:not-allowed}
@@ -77,7 +77,7 @@ $doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY fu
 </head>
 <body>
 
-<?php if ($toast): ?><div class="toast">✓ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
+<?php if ($toast): ?><div class="toast">âœ“ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
 
 <?php $activeNav = 'assignments'; include 'sidebar.php'; ?>
 
@@ -147,7 +147,7 @@ $doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY fu
         </div>
         <div style="flex:1;">
           <div style="font-weight:700;font-size:0.97rem;">Dr. <?= htmlspecialchars($doc['full_name']) ?></div>
-          <div style="font-size:0.78rem;color:#9ab0ae;"><?= htmlspecialchars($doc['specialty'] ?? '—') ?><?= !empty($doc['subspecialty']) ? ' · ' . htmlspecialchars($doc['subspecialty']) : '' ?></div>
+          <div style="font-size:0.78rem;color:#9ab0ae;"><?= htmlspecialchars($doc['specialty'] ?? 'â€”') ?><?= !empty($doc['subspecialty']) ? ' Â· ' . htmlspecialchars($doc['subspecialty']) : '' ?></div>
         </div>
         <div style="display:flex;gap:0.5rem;align-items:center;margin-right:0.8rem;">
           <?php if ($todayCnt > 0): ?>
@@ -186,7 +186,7 @@ $doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY fu
             </div>
             <div style="flex:1;">
               <div style="font-weight:600;font-size:0.9rem;"><?= htmlspecialchars($a['patient_name']) ?></div>
-              <div style="font-size:0.78rem;color:#9ab0ae;"><?= date('g:i A', strtotime($a['appointment_time'])) ?> · <?= htmlspecialchars($a['type'] ?? 'Consultation') ?></div>
+              <div style="font-size:0.78rem;color:#9ab0ae;"><?= date('g:i A', strtotime($a['appointment_time'])) ?> Â· <?= htmlspecialchars($a['type'] ?? 'Consultation') ?></div>
             </div>
             <span class="badge <?= $a['status']==='Confirmed' ? 'badge-green' : 'badge-orange' ?>"><?= $a['status'] ?></span>
           </div>
@@ -211,7 +211,7 @@ $doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY fu
             </div>
             <div style="flex:1;">
               <div style="font-weight:600;font-size:0.9rem;"><?= htmlspecialchars($a['patient_name']) ?></div>
-              <div style="font-size:0.78rem;color:#9ab0ae;"><?= date('g:i A', strtotime($a['appointment_time'])) ?> · <?= htmlspecialchars($a['type'] ?? 'Consultation') ?></div>
+              <div style="font-size:0.78rem;color:#9ab0ae;"><?= date('g:i A', strtotime($a['appointment_time'])) ?> Â· <?= htmlspecialchars($a['type'] ?? 'Consultation') ?></div>
             </div>
             <span class="badge badge-green">Confirmed</span>
           </div>
@@ -236,7 +236,7 @@ $doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY fu
             </div>
             <div style="flex:1;">
               <div style="font-weight:600;font-size:0.9rem;"><?= htmlspecialchars($a['patient_name']) ?></div>
-              <div style="font-size:0.78rem;color:#9ab0ae;"><?= date('g:i A', strtotime($a['appointment_time'])) ?> · <?= htmlspecialchars($a['type'] ?? 'Consultation') ?></div>
+              <div style="font-size:0.78rem;color:#9ab0ae;"><?= date('g:i A', strtotime($a['appointment_time'])) ?> Â· <?= htmlspecialchars($a['type'] ?? 'Consultation') ?></div>
             </div>
             <span class="badge <?= $a['status']==='Completed' ? 'badge-gray' : 'badge-red' ?>"><?= $a['status'] ?></span>
           </div>
@@ -330,6 +330,7 @@ $doctors = $conn->query("SELECT * FROM doctors WHERE status='active' ORDER BY fu
 </script>
 </body>
 </html>
+
 
 
 

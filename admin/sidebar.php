@@ -9,7 +9,7 @@ aside.sidebar{
   position:fixed; top:0; left:0; bottom:0; width:240px; z-index:150;
   background:#f1f3fc; border-right:1px solid #dce1ef;
   display:flex; flex-direction:column; padding:1.2rem .85rem;
-  font-family:'Inter',sans-serif; overflow-y:auto; box-sizing:border-box;
+  font-family:'Poppins',sans-serif; overflow-y:auto; box-sizing:border-box;
 }
 aside.sidebar .sidebar-logo{
   display:flex; align-items:center; gap:.65rem; padding:0 .3rem; margin-bottom:1.2rem;
@@ -50,7 +50,7 @@ aside.sidebar .logout-btn{
   display:flex; align-items:center; gap:.55rem; width:100%; box-sizing:border-box;
   padding:.65rem .7rem; border-radius:7px; background:none; border:none;
   color:var(--tc-muted); font-size:.78rem; font-weight:600; text-decoration:none;
-  font-family:'Inter',sans-serif; cursor:pointer; transition:all .2s;
+  font-family:'Poppins',sans-serif; cursor:pointer; transition:all .2s;
 }
 aside.sidebar .logout-btn:hover{ background:rgba(179,17,24,0.08); color:var(--tc-red); }
 aside.sidebar .logout-btn svg{ flex-shrink:0; }

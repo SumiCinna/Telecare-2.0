@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // doctor/profile.php
 require_once 'includes/auth.php';
 
@@ -11,7 +11,7 @@ if (isset($_GET['photo_saved'])) {
   $success = 'Profile photo updated successfully.';
 }
 
-// ── Update profile ──
+// â”€â”€ Update profile â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['photo_only'])) {
   if (!empty($_FILES['profile_photo']['name']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
     $upload = $_FILES['profile_photo'];
@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     }
 }
 
-// ── Change password ──
+// â”€â”€ Change password â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     $current = $_POST['current_password'] ?? '';
     $new     = $_POST['new_password']     ?? '';
@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     }
 }
 
-$page_title       = 'Profile — TELE-CARE';
+$page_title       = 'Profile â€” TELE-CARE';
 $page_title_short = 'My Profile';
 $active_nav       = 'profile';
 require_once 'includes/header.php';
@@ -123,12 +123,12 @@ require_once 'includes/header.php';
 
 <style>
   .sched-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0.6rem;align-items:center;margin-bottom:0.6rem;}
-  .sched-input{padding:0.6rem 0.7rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--green);outline:none;width:100%;background:#fff;transition:border-color .2s;}
+  .sched-input{padding:0.6rem 0.7rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:10px;font-family:'Poppins',sans-serif;font-size:0.85rem;color:var(--green);outline:none;width:100%;background:#fff;transition:border-color .2s;}
   .sched-input:focus{border-color:var(--blue);}
   select.sched-input{cursor:pointer;}
   .sched-remove{background:rgba(195,54,67,0.08);border:none;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--red);transition:all .2s;flex-shrink:0;}
   .sched-remove:hover{background:rgba(195,54,67,0.18);}
-  .btn-add-sched{display:inline-flex;align-items:center;gap:0.4rem;background:rgba(63,130,227,0.1);color:var(--blue);border:none;border-radius:50px;padding:0.45rem 1rem;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:0.4rem;}
+  .btn-add-sched{display:inline-flex;align-items:center;gap:0.4rem;background:rgba(63,130,227,0.1);color:var(--blue);border:none;border-radius:50px;padding:0.45rem 1rem;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;transition:all .2s;margin-top:0.4rem;}
   .btn-add-sched:hover{background:rgba(63,130,227,0.18);}
 
   /* Modal overlay */
@@ -152,7 +152,7 @@ require_once 'includes/header.php';
 
 <div class="page">
 
-  <?php if ($success): ?><div class="alert-success">✓ <?= htmlspecialchars($success) ?></div><?php endif; ?>
+  <?php if ($success): ?><div class="alert-success">âœ“ <?= htmlspecialchars($success) ?></div><?php endif; ?>
   <?php if ($error):   ?><div class="alert-error">  <?= htmlspecialchars($error)   ?></div><?php endif; ?>
 
   <!-- Profile Header -->
@@ -175,13 +175,13 @@ require_once 'includes/header.php';
       </div>
       <input type="file" id="photoInput" name="profile_photo" accept="image/*" style="display:none;" onchange="previewAndSubmit(this)"/>
     </form>
-    <div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;">Dr. <?= htmlspecialchars($doc['full_name']) ?></div>
+    <div style="font-family:'Poppins',sans-serif;font-size:1.2rem;font-weight:700;">Dr. <?= htmlspecialchars($doc['full_name']) ?></div>
     <div style="font-size:0.83rem;color:var(--muted);margin-top:0.2rem;"><?= htmlspecialchars($doc['specialty'] ?? 'General Practitioner') ?></div>
     <?php if (!empty($doc['subspecialty'])): ?>
     <div style="font-size:0.78rem;color:var(--muted);margin-top:0.1rem;font-style:italic;"><?= htmlspecialchars($doc['subspecialty']) ?></div>
     <?php endif; ?>
     <div style="margin-top:0.6rem;display:flex;justify-content:center;gap:0.5rem;flex-wrap:wrap;">
-      <?php if ($doc['is_verified']): ?><span class="badge badge-green">✓ Verified</span><?php endif; ?>
+      <?php if ($doc['is_verified']): ?><span class="badge badge-green">âœ“ Verified</span><?php endif; ?>
       <span class="badge <?= $doc['is_available']?'badge-green':'badge-gray' ?>"><?= $doc['is_available']?'Available':'Unavailable' ?></span>
     </div>
   </div>
@@ -204,8 +204,8 @@ require_once 'includes/header.php';
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;">
         <div class="form-field">
-          <label class="field-label">Consultation Fee (₱)</label>
-          <input type="text" class="field-input" value="₱<?= number_format((float)($doc['consultation_fee'] ?? 0), 2) ?>" readonly/>
+          <label class="field-label">Consultation Fee (â‚±)</label>
+          <input type="text" class="field-input" value="â‚±<?= number_format((float)($doc['consultation_fee'] ?? 0), 2) ?>" readonly/>
           <div style="font-size:0.75rem;color:var(--muted);margin-top:0.35rem;">Manage your fee and weekly schedule from <a href="availability.php" style="color:var(--blue);font-weight:600;">Fees &amp; Hours</a>.</div>
         </div>
         <div class="form-field">
@@ -307,5 +307,6 @@ if (phoneInput) {
 <?php require_once 'includes/nav.php'; ?>
 </body>
 </html>
+
 
 

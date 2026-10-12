@@ -1,28 +1,28 @@
-<?php
+﻿<?php
 // doctor/credentials.php
 require_once 'includes/auth.php';
 
-// ── FRONTEND ONLY ──
+// â”€â”€ FRONTEND ONLY â”€â”€
 // No DB reads/writes or upload handling here yet.
 // $doc is assumed available from auth.php (same as profile.php / dashboard.php).
 // Placeholder values below stand in for future $doc['license_number'],
 // $doc['license_verified'], $doc['esignature_path'].
 
-$page_title       = 'Credentials — TELE-CARE';
+$page_title       = 'Credentials â€” TELE-CARE';
 $page_title_short = 'Credentials';
 $active_nav       = 'credentials';
 require_once 'includes/header.php';
 ?>
 
 <style>
-  /* ── Tabs (Draw / Upload) ── */
+  /* â”€â”€ Tabs (Draw / Upload) â”€â”€ */
   .sig-tabs{display:flex;gap:0.4rem;background:rgba(36,68,65,0.06);border-radius:14px;padding:0.3rem;margin-bottom:1rem;}
   .sig-tab{flex:1;text-align:center;padding:0.55rem 0.6rem;border-radius:10px;font-size:0.82rem;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s;user-select:none;}
   .sig-tab.active{background:#fff;color:var(--green);box-shadow:0 1px 4px rgba(0,0,0,0.08);}
   .sig-panel{display:none;}
   .sig-panel.active{display:block;}
 
-  /* ── Draw panel ── */
+  /* â”€â”€ Draw panel â”€â”€ */
   .sig-canvas-wrap{position:relative;border:1.5px dashed rgba(36,68,65,0.2);border-radius:14px;background:#fcfcfa;overflow:hidden;}
   #sigCanvas{width:100%;height:220px;display:block;touch-action:none;cursor:crosshair;}
   .sig-baseline{position:absolute;left:5%;right:5%;bottom:22%;border-bottom:1.5px dashed rgba(36,68,65,0.18);pointer-events:none;}
@@ -31,10 +31,10 @@ require_once 'includes/header.php';
   .sig-colors{display:flex;gap:0.4rem;}
   .sig-color{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;}
   .sig-color.active{border-color:var(--blue);transform:scale(1.15);}
-  .sig-clear-btn{display:inline-flex;align-items:center;gap:0.35rem;background:rgba(195,54,67,0.08);color:var(--red);border:none;border-radius:50px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+  .sig-clear-btn{display:inline-flex;align-items:center;gap:0.35rem;background:rgba(195,54,67,0.08);color:var(--red);border:none;border-radius:50px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;transition:all .2s;}
   .sig-clear-btn:hover{background:rgba(195,54,67,0.18);}
 
-  /* ── Upload panel ── */
+  /* â”€â”€ Upload panel â”€â”€ */
   .sig-dropzone{border:1.5px dashed rgba(36,68,65,0.2);border-radius:14px;background:#fcfcfa;padding:1.6rem 1rem;text-align:center;cursor:pointer;transition:all .2s;}
   .sig-dropzone:hover,.sig-dropzone.dragover{border-color:var(--blue);background:rgba(63,130,227,0.05);}
   .sig-dropzone svg{width:30px;height:30px;color:var(--muted);margin-bottom:0.5rem;}
@@ -42,25 +42,25 @@ require_once 'includes/header.php';
   .sig-dropzone .dz-sub{font-size:0.74rem;color:var(--muted);margin-top:0.2rem;}
   .sig-upload-preview{display:none;text-align:center;padding:1rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:14px;background:#fcfcfa;}
   .sig-upload-preview img{max-width:100%;max-height:180px;object-fit:contain;}
-  .sig-upload-preview .dz-remove{display:inline-flex;align-items:center;gap:0.35rem;margin-top:0.7rem;background:rgba(195,54,67,0.08);color:var(--red);border:none;border-radius:50px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  .sig-upload-preview .dz-remove{display:inline-flex;align-items:center;gap:0.35rem;margin-top:0.7rem;background:rgba(195,54,67,0.08);color:var(--red);border:none;border-radius:50px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;}
 
-  /* ── License section ── */
+  /* â”€â”€ License section â”€â”€ */
   .license-status-row{display:flex;align-items:center;gap:0.6rem;margin-top:0.5rem;}
   .verify-note{display:flex;gap:0.5rem;align-items:flex-start;background:rgba(217,119,6,0.08);border-radius:12px;padding:0.7rem 0.85rem;font-size:0.78rem;color:#92620a;margin-top:0.7rem;}
   .verify-note svg{width:16px;height:16px;flex-shrink:0;margin-top:0.1rem;}
 
-  /* ── Sig preview on saved-state card ── */
+  /* â”€â”€ Sig preview on saved-state card â”€â”€ */
   .sig-saved-box{border:1.5px solid rgba(36,68,65,0.1);border-radius:14px;background:#fcfcfa;padding:1rem;text-align:center;}
   .sig-saved-box img{max-height:80px;max-width:100%;object-fit:contain;}
 </style>
 
 <div class="page">
 
-  <div class="alert-success" style="display:none;" id="successBanner">✓ Credentials updated successfully.</div>
+  <div class="alert-success" style="display:none;" id="successBanner">âœ“ Credentials updated successfully.</div>
 
   <!-- Header -->
   <div class="card" style="text-align:center;padding:1.6rem 1rem;">
-    <div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;">Professional Credentials</div>
+    <div style="font-family:'Poppins',sans-serif;font-size:1.2rem;font-weight:700;">Professional Credentials</div>
     <div style="font-size:0.83rem;color:var(--muted);margin-top:0.2rem;">
       Your license number and e-signature are used on prescriptions, referrals, and other official documents.
     </div>
@@ -128,7 +128,7 @@ require_once 'includes/header.php';
       <div class="sig-dropzone" id="sigDropzone">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l-3.75 3.75M12 9.75l3.75 3.75M21 16.5v2.25A2.25 2.25 0 0118.75 21H5.25A2.25 2.25 0 013 18.75V16.5"/></svg>
         <div class="dz-title">Click to upload or drag & drop</div>
-        <div class="dz-sub">PNG or JPG, transparent background recommended · Max 5MB</div>
+        <div class="dz-sub">PNG or JPG, transparent background recommended Â· Max 5MB</div>
         <input type="file" id="sigFileInput" accept="image/png, image/jpeg" style="display:none;"/>
       </div>
       <div class="sig-upload-preview" id="sigUploadPreview">
@@ -156,7 +156,7 @@ require_once 'includes/header.php';
 </div>
 
 <script>
-  // ── Tab switching ──
+  // â”€â”€ Tab switching â”€â”€
   document.querySelectorAll('.sig-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.sig-tab').forEach(t => t.classList.remove('active'));
@@ -166,7 +166,7 @@ require_once 'includes/header.php';
     });
   });
 
-  // ── Signature canvas (draw) ──
+  // â”€â”€ Signature canvas (draw) â”€â”€
   const canvas = document.getElementById('sigCanvas');
   const ctx = canvas.getContext('2d');
   const hint = document.getElementById('sigHint');
@@ -235,7 +235,7 @@ require_once 'includes/header.php';
     hint.style.display = 'block';
   });
 
-  // ── Upload panel ──
+  // â”€â”€ Upload panel â”€â”€
   const dropzone = document.getElementById('sigDropzone');
   const fileInput = document.getElementById('sigFileInput');
   const uploadPreview = document.getElementById('sigUploadPreview');
@@ -280,7 +280,7 @@ require_once 'includes/header.php';
     dropzone.style.display = 'block';
   });
 
-  // ── Save signature (frontend placeholder — no backend wired yet) ──
+  // â”€â”€ Save signature (frontend placeholder â€” no backend wired yet) â”€â”€
   document.getElementById('saveSignatureBtn').addEventListener('click', () => {
     const activeTab = document.querySelector('.sig-tab.active').dataset.tab;
     if (activeTab === 'draw' && !hasDrawn) {
@@ -291,7 +291,7 @@ require_once 'includes/header.php';
       alert('Please upload a signature image first.');
       return;
     }
-    // TODO: wire to backend — POST canvas.toDataURL('image/png') or the uploaded file
+    // TODO: wire to backend â€” POST canvas.toDataURL('image/png') or the uploaded file
     const banner = document.getElementById('successBanner');
     banner.style.display = 'block';
     banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

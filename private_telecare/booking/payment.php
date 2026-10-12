@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // private_telecare/booking/payment.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../../includes/auth.php';
@@ -15,14 +15,14 @@ $stmt->execute();
 $appt = $stmt->get_result()->fetch_assoc();
 if (!$appt) { header('Location: ../visits.php'); exit; }
 
-// Already paid? Don't let them pay twice — send straight to success/confirmed.
+// Already paid? Don't let them pay twice â€” send straight to success/confirmed.
 if ($appt['payment_status'] === 'Paid') {
     header('Location: confirmed.php?appt_id=' . $appt_id); exit;
 }
 
 $fee = (float)$appt['consultation_fee'];
 
-$page_title = 'Payment — TELE-CARE';
+$page_title = 'Payment â€” TELE-CARE';
 $active_nav = 'visits';
 require_once __DIR__ . '/../../includes/header.php';
 echo booking_wizard_css();
@@ -30,7 +30,7 @@ echo booking_wizard_css();
 <style>
 .pay-card{max-width:480px;margin:0 auto}
 .bill-row{display:flex;justify-content:space-between;font-size:0.87rem;padding:0.4rem 0}
-.bill-total{display:flex;justify-content:space-between;font-family:'Playfair Display',serif;font-weight:900;font-size:1.3rem;color:var(--red);border-top:1px solid rgba(36,68,65,0.1);margin-top:0.6rem;padding-top:0.7rem}
+.bill-total{display:flex;justify-content:space-between;font-family:'Poppins',sans-serif;font-weight:900;font-size:1.3rem;color:var(--red);border-top:1px solid rgba(36,68,65,0.1);margin-top:0.6rem;padding-top:0.7rem}
 </style>
 
 <div class="wiz-page">

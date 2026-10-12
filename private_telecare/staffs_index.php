@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // private_telecare/staffs_index.php
 // ONE shared login page for Super Admin, Admin, and Staff.
 // User & Doctor keep their own separate logins (auth/login.php, doctor/login.php).
@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TELE-CARE | Internal Login</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
   :root {
     --primary:#B31118;
@@ -119,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       radial-gradient(circle at 90% 90%,rgba(15,157,149,.07),transparent 32%),
       var(--bg);
     color:var(--text);
-    font-family:'Inter',sans-serif;
+    font-family:'Poppins',sans-serif;
   }
 
   button,input,select,textarea {

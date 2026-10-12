@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // admin/inventory_meds.php
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -60,21 +60,21 @@ if ($meds) {
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Medicine Inventory — TELE-CARE</title>
+  <title>Medicine Inventory â€” TELE-CARE</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
     :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF}
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--green);display:flex;min-height:100vh}
-    h1,h2,h3{font-family:'Playfair Display',serif}
+    body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--green);display:flex;min-height:100vh}
+    h1,h2,h3{font-family:'Poppins',sans-serif}
     .sidebar{width:230px;min-width:230px;background:var(--green);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
-    .sidebar-logo{padding:1.8rem 1.5rem 1.2rem;font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:#fff;border-bottom:1px solid rgba(255,255,255,0.08)}
+    .sidebar-logo{padding:1.8rem 1.5rem 1.2rem;font-family:'Poppins',sans-serif;font-size:1.4rem;font-weight:900;color:#fff;border-bottom:1px solid rgba(255,255,255,0.08)}
     .sidebar-logo span{color:var(--red)}
     .sidebar-admin{padding:1rem 1.5rem;font-size:0.78rem;color:rgba(255,255,255,0.45);border-bottom:1px solid rgba(255,255,255,0.08)}
     .sidebar-admin strong{color:rgba(255,255,255,0.8);font-weight:600;display:block;font-size:0.88rem}
     .nav-links{padding:1rem 0;flex:1}
-    .nav-link{display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.5rem;color:rgba(255,255,255,0.55);font-size:0.88rem;font-weight:500;width:100%;text-align:left;font-family:'DM Sans',sans-serif;transition:all 0.2s;border-left:3px solid transparent;text-decoration:none}
+    .nav-link{display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.5rem;color:rgba(255,255,255,0.55);font-size:0.88rem;font-weight:500;width:100%;text-align:left;font-family:'Poppins',sans-serif;transition:all 0.2s;border-left:3px solid transparent;text-decoration:none}
     .nav-link svg{width:18px;height:18px;stroke:currentColor;flex-shrink:0}
     .nav-link:hover{color:#fff;background:rgba(255,255,255,0.06)}
     .nav-link.active{color:#fff;background:rgba(255,255,255,0.1);border-left-color:var(--red)}
@@ -88,17 +88,17 @@ if ($meds) {
     /* Summary stat chips */
     .stat-row{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
     .stat-chip{background:var(--white);border-radius:14px;border:1px solid rgba(36,68,65,0.07);box-shadow:0 2px 10px rgba(0,0,0,0.04);padding:0.9rem 1.3rem;min-width:150px}
-    .stat-chip .num{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;line-height:1}
+    .stat-chip .num{font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:900;line-height:1}
     .stat-chip .lbl{font-size:0.74rem;color:#9ab0ae;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-top:0.2rem}
     .stat-chip.warn .num{color:#d97706}
     .stat-chip.danger .num{color:var(--red)}
 
     /* Toolbar */
     .toolbar{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.2rem;flex-wrap:wrap}
-    .search-input{flex:1;min-width:220px;padding:0.6rem 1rem;border-radius:10px;border:1px solid rgba(36,68,65,0.15);font-family:'DM Sans',sans-serif;font-size:0.85rem;background:var(--white)}
+    .search-input{flex:1;min-width:220px;padding:0.6rem 1rem;border-radius:10px;border:1px solid rgba(36,68,65,0.15);font-family:'Poppins',sans-serif;font-size:0.85rem;background:var(--white)}
     .search-input:focus{outline:none;border-color:var(--blue)}
-    select.filter-select{padding:0.6rem 0.9rem;border-radius:10px;border:1px solid rgba(36,68,65,0.15);font-family:'DM Sans',sans-serif;font-size:0.83rem;background:var(--white);color:var(--green)}
-    .btn-primary{background:var(--green);color:#fff;border:none;padding:0.65rem 1.3rem;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:0.4rem;transition:opacity 0.2s}
+    select.filter-select{padding:0.6rem 0.9rem;border-radius:10px;border:1px solid rgba(36,68,65,0.15);font-family:'Poppins',sans-serif;font-size:0.83rem;background:var(--white);color:var(--green)}
+    .btn-primary{background:var(--green);color:#fff;border:none;padding:0.65rem 1.3rem;border-radius:10px;font-family:'Poppins',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:0.4rem;transition:opacity 0.2s}
     .btn-primary:hover{opacity:0.88}
 
     /* Table card */
@@ -127,7 +127,7 @@ if ($meds) {
     .empty-state{text-align:center;padding:3.5rem 1rem;color:#9ab0ae;font-size:0.88rem}
 
     .pagination{display:flex;align-items:center;justify-content:center;gap:0.35rem;padding:1rem;border-top:1px solid rgba(36,68,65,0.06)}
-    .page-btn{border:1px solid rgba(36,68,65,0.15);background:#fff;color:var(--green);font-family:'DM Sans',sans-serif;font-size:0.76rem;font-weight:600;border-radius:8px;padding:0.3rem 0.6rem;cursor:pointer;min-width:32px}
+    .page-btn{border:1px solid rgba(36,68,65,0.15);background:#fff;color:var(--green);font-family:'Poppins',sans-serif;font-size:0.76rem;font-weight:600;border-radius:8px;padding:0.3rem 0.6rem;cursor:pointer;min-width:32px}
     .page-btn:hover{border-color:var(--green)}
     .page-btn.active{background:var(--green);color:#fff;border-color:var(--green)}
     .page-btn:disabled{opacity:0.45;cursor:not-allowed}
@@ -143,10 +143,10 @@ if ($meds) {
     .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.9rem}
     .form-grid .full{grid-column:1/-1}
     .form-field label{display:block;font-size:0.76rem;font-weight:700;color:#9ab0ae;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.35rem}
-    .form-field input,.form-field select{width:100%;padding:0.6rem 0.8rem;border-radius:10px;border:1px solid rgba(36,68,65,0.15);font-family:'DM Sans',sans-serif;font-size:0.87rem}
+    .form-field input,.form-field select{width:100%;padding:0.6rem 0.8rem;border-radius:10px;border:1px solid rgba(36,68,65,0.15);font-family:'Poppins',sans-serif;font-size:0.87rem}
     .form-field input:focus,.form-field select:focus{outline:none;border-color:var(--blue)}
     .modal-foot{padding:1.1rem 1.6rem;border-top:1px solid rgba(36,68,65,0.08);display:flex;justify-content:flex-end;gap:0.7rem}
-    .btn-ghost{background:none;border:1px solid rgba(36,68,65,0.15);color:var(--green);padding:0.6rem 1.2rem;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer}
+    .btn-ghost{background:none;border:1px solid rgba(36,68,65,0.15);color:var(--green);padding:0.6rem 1.2rem;border-radius:10px;font-family:'Poppins',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer}
 
     .toast{position:fixed;bottom:2rem;right:2rem;z-index:300;background:var(--green);color:#fff;padding:0.9rem 1.5rem;border-radius:14px;font-size:0.88rem;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:slideIn 0.4s ease,fadeOut 0.4s 3s ease forwards}
     @keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -156,7 +156,7 @@ if ($meds) {
 </head>
 <body>
 
-<?php if ($toast): ?><div class="toast">✓ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
+<?php if ($toast): ?><div class="toast">âœ“ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
 
 <?php $activeNav = 'inventory'; include 'sidebar.php'; ?>
 
@@ -164,7 +164,7 @@ if ($meds) {
   <div class="topbar">
     <div>
       <div style="font-size:0.75rem;color:#9ab0ae;font-weight:600;">Inventory</div>
-      <div style="font-size:0.95rem;font-weight:700;">Medicine Stock — Pharmacy</div>
+      <div style="font-size:0.95rem;font-weight:700;">Medicine Stock â€” Pharmacy</div>
     </div>
     <button class="btn-primary" onclick="openModal()">
       <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
@@ -176,7 +176,7 @@ if ($meds) {
 
     <div class="stat-row">
       <div class="stat-chip"><div class="num"><?= $totalItems ?></div><div class="lbl">Total Items</div></div>
-      <div class="stat-chip warn"><div class="num"><?= $soonCount ?></div><div class="lbl">Expiring ≤30 Days</div></div>
+      <div class="stat-chip warn"><div class="num"><?= $soonCount ?></div><div class="lbl">Expiring â‰¤30 Days</div></div>
       <div class="stat-chip danger"><div class="num"><?= $expiredCount ?></div><div class="lbl">Expired</div></div>
       <div class="stat-chip warn"><div class="num"><?= $lowCount ?></div><div class="lbl">Low Stock</div></div>
     </div>
@@ -223,9 +223,9 @@ if ($meds) {
             <td><?= date('M d, Y', strtotime($m['production_date'])) ?></td>
             <td><?= date('M d, Y', strtotime($m['expiry_date'])) ?></td>
             <td style="font-weight:700;<?= $m['_low'] ? 'color:#d97706' : '' ?>"><?= (int)$m['quantity'] ?></td>
-            <td><?= !empty($m['last_resupply_date']) ? date('M d, Y', strtotime($m['last_resupply_date'])) : '—' ?></td>
-            <td><?= htmlspecialchars($m['updated_by'] ?? '—') ?></td>
-            <td>₱<?= number_format((float)$m['unit_price'], 2) ?></td>
+            <td><?= !empty($m['last_resupply_date']) ? date('M d, Y', strtotime($m['last_resupply_date'])) : 'â€”' ?></td>
+            <td><?= htmlspecialchars($m['updated_by'] ?? 'â€”') ?></td>
+            <td>â‚±<?= number_format((float)$m['unit_price'], 2) ?></td>
             <td>
               <?php if ($m['_expired']): ?>
                 <span class="badge badge-red">Expired</span>
@@ -270,7 +270,7 @@ if ($meds) {
           <div class="form-field"><label>Brand</label><input type="text" name="brand" required/></div>
           <div class="form-field"><label>Medicine Name</label><input type="text" name="name" required/></div>
           <div class="form-field"><label>Size / Dosage</label><input type="text" name="size" placeholder="e.g. 500mg, 100mL" required/></div>
-          <div class="form-field"><label>Unit Price (₱)</label><input type="number" step="0.01" name="unit_price" required/></div>
+          <div class="form-field"><label>Unit Price (â‚±)</label><input type="number" step="0.01" name="unit_price" required/></div>
           <div class="form-field"><label>Production Date</label><input type="date" name="production_date" required/></div>
           <div class="form-field"><label>Expiry Date</label><input type="date" name="expiry_date" required/></div>
           <div class="form-field"><label>Quantity</label><input type="number" name="quantity" required/></div>

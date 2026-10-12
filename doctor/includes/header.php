@@ -8,12 +8,12 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
   <title><?= $page_title ?? 'Doctor — TELE-CARE' ?></title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link href="includes/design-system.css" rel="stylesheet"/>
   <style>
     * { box-sizing:border-box; margin:0; padding:0; }
     body { min-height:100vh; }
-    h1,h2,h3 { font-family:'Inter',sans-serif; }
+    h1,h2,h3 { font-family:'Poppins',sans-serif; }
 
     /* TOP HEADER */
     .top-header {
@@ -36,7 +36,7 @@
     @media (min-width: 768px) {
       .hamburger-btn { display:flex; }
     }
-    .header-brand { font-family:'Inter',sans-serif; font-size:1.1rem; font-weight:700; color:var(--green); }
+    .header-brand { font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:700; color:var(--green); }
     .header-brand span { color:var(--red); }
     .header-avatar {
       width:38px; height:38px; border-radius:10px;

@@ -1,5 +1,5 @@
-<?php
-// admin/prices.php — read-only combined price reference.
+﻿<?php
+// admin/prices.php â€” read-only combined price reference.
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
@@ -26,8 +26,8 @@ $activeNav = 'pos-prices';
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Prices — TELE-CARE</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <title>Prices â€” TELE-CARE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link href="assets/admin.css" rel="stylesheet"/>
   <style>
   
@@ -39,7 +39,7 @@ $activeNav = 'pos-prices';
     .controls-bar{display:flex;flex-wrap:wrap;align-items:center;gap:1rem;margin-bottom:1.5rem}
     .search-wrap{position:relative;flex:1;min-width:220px;max-width:340px}
     .search-wrap svg{position:absolute;left:0.85rem;top:50%;transform:translateY(-50%);color:#9ab0ae;width:16px;height:16px}
-    .search-input{width:100%;padding:0.62rem 0.9rem 0.62rem 2.3rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--green);outline:none;background:var(--white)}
+    .search-input{width:100%;padding:0.62rem 0.9rem 0.62rem 2.3rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:50px;font-family:'Poppins',sans-serif;font-size:0.85rem;color:var(--green);outline:none;background:var(--white)}
     .filter-tabs{display:flex;gap:0.5rem;flex-wrap:wrap}
     .filter-tab{padding:0.5rem 1rem;border-radius:50px;font-size:0.8rem;font-weight:600;border:1.5px solid rgba(36,68,65,0.12);background:var(--white);color:var(--green);cursor:pointer}
     .filter-tab.active{background:var(--green);border-color:var(--green);color:#fff}
@@ -121,7 +121,7 @@ function renderRows(rows) {
     <td>${escHtml(i.name)}</td>
     <td><span class="kind-pill kind-${i.kind}">${i.kind}</span></td>
     <td><span class="role-pill">${escHtml(i.category)}</span></td>
-    <td>₱${Number(i.price).toFixed(2)}</td>
+    <td>â‚±${Number(i.price).toFixed(2)}</td>
   </tr>`).join('');
 }
 

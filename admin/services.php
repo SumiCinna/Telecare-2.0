@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // admin/services.php
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -11,7 +11,7 @@ $admin_id = $_SESSION['admin_id'];
 
 $CATEGORIES = ['Laboratory', 'X-ray', 'Chemical', 'Consultation', 'Other'];
 
-// ── Ensure audit_logs table exists (same fallback as Users.php / inventory.php) ──
+// â”€â”€ Ensure audit_logs table exists (same fallback as Users.php / inventory.php) â”€â”€
 $conn->query("CREATE TABLE IF NOT EXISTS `audit_logs` (
   `id` int NOT NULL AUTO_INCREMENT,
   `admin_id` int NOT NULL,
@@ -49,12 +49,12 @@ if ($statusCol && stripos($statusCol['Type'], 'enum') === 0) {
 // before the Active/Inactive rework so filters and badges stay consistent.
 $conn->query("UPDATE services SET status='Inactive' WHERE status NOT IN ('Active','Inactive')");
 
-/* ══════════════════════════════════════════════
-   ACTIONS — Service (details)
-   ══════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ACTIONS â€” Service (details)
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-// ── Add service (step 1) — creates the service, then the page reopens the
-//    Requirements modal for it so the admin can attach inventory items ──
+// â”€â”€ Add service (step 1) â€” creates the service, then the page reopens the
+//    Requirements modal for it so the admin can attach inventory items â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_service'])) {
     $name        = trim($_POST['name'] ?? '');
     $description = trim($_POST['description'] ?? '');
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_service'])) {
     header('Location: services.php'); exit;
 }
 
-// ── Edit service ──
+// â”€â”€ Edit service â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_service'])) {
     $id          = (int)($_POST['service_id'] ?? 0);
     $name        = trim($_POST['name'] ?? '');
@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_service'])) {
     header('Location: services.php'); exit;
 }
 
-// ── Activate / Deactivate service ──
+// â”€â”€ Activate / Deactivate service â”€â”€
 if (isset($_GET['deactivate_service'])) {
     $id = (int)$_GET['deactivate_service'];
     $ok = $conn->query("UPDATE services SET status='Inactive' WHERE id=$id");
@@ -137,11 +137,11 @@ if (isset($_GET['activate_service'])) {
     header('Location: services.php'); exit;
 }
 
-/* ══════════════════════════════════════════════
-   ACTIONS — Requirements (inventory items per service)
-   ══════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ACTIONS â€” Requirements (inventory items per service)
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-// ── Add / update requirement (same form — DB upserts on the unique key) ──
+// â”€â”€ Add / update requirement (same form â€” DB upserts on the unique key) â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_requirement'])) {
     $service_id = (int)($_POST['service_id'] ?? 0);
     $product_id = (int)($_POST['product_id'] ?? 0);
@@ -175,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_requirement'])) {
     header('Location: services.php'); exit;
 }
 
-// ── Update requirement quantity ──
+// â”€â”€ Update requirement quantity â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_requirement'])) {
     $req_id     = (int)($_POST['requirement_id'] ?? 0);
     $service_id = (int)($_POST['service_id'] ?? 0);
@@ -193,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_requirement'])
     header('Location: services.php'); exit;
 }
 
-// ── Remove requirement ──
+// â”€â”€ Remove requirement â”€â”€
 if (isset($_GET['remove_requirement'])) {
     $req_id     = (int)$_GET['remove_requirement'];
     $service_id = (int)($_GET['service_id'] ?? 0);
@@ -209,9 +209,9 @@ $toast_error = $_SESSION['toast_error'] ?? null;
 $openRequirementsFor = $_SESSION['open_requirements_for'] ?? null;
 unset($_SESSION['toast'], $_SESSION['toast_error'], $_SESSION['open_requirements_for']);
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    FETCH DATA
-   ══════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 $allServices = [];
 $sres = $conn->query("SELECT * FROM services ORDER BY name ASC");
 if ($sres) { while ($row = $sres->fetch_assoc()) { $allServices[] = $row; } }
@@ -229,7 +229,7 @@ if ($rres) {
     }
 }
 
-// Services only draw from Testing Kits — medicine is handled separately
+// Services only draw from Testing Kits â€” medicine is handled separately
 // by the pharmacist POS and should never be attachable to a service.
 $activeProducts = [];
 $prres = $conn->query("SELECT id, name, unit FROM products WHERE status='Active' AND category='Testing Kits' ORDER BY name ASC");
@@ -246,8 +246,8 @@ $activeNav = 'pos-services';
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Services — TELE-CARE</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <title>Services â€” TELE-CARE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link href="assets/admin.css" rel="stylesheet"/>
   <style>
     
@@ -274,8 +274,8 @@ $activeNav = 'pos-services';
 </head>
 <body>
 
-<?php if ($toast): ?><div class="toast">✓ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
-<?php if ($toast_error): ?><div class="toast error">✕ <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
+<?php if ($toast): ?><div class="toast">âœ“ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
+<?php if ($toast_error): ?><div class="toast error">âœ• <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
 
 <?php include 'sidebar.php'; ?>
 
@@ -337,7 +337,7 @@ $activeNav = 'pos-services';
             <?php foreach ($CATEGORIES as $cat): ?><option value="<?= htmlspecialchars($cat) ?>"><?= htmlspecialchars($cat) ?></option><?php endforeach; ?>
           </select>
         </div>
-        <div class="form-field"><label class="field-label">Service Price (₱) *</label><input type="number" step="0.01" min="0" name="price" class="field-input" required/></div>
+        <div class="form-field"><label class="field-label">Service Price (â‚±) *</label><input type="number" step="0.01" min="0" name="price" class="field-input" required/></div>
       </div>
       <div class="form-field">
         <label class="field-label">Status</label>
@@ -367,7 +367,7 @@ $activeNav = 'pos-services';
             <?php foreach ($CATEGORIES as $cat): ?><option value="<?= htmlspecialchars($cat) ?>"><?= htmlspecialchars($cat) ?></option><?php endforeach; ?>
           </select>
         </div>
-        <div class="form-field"><label class="field-label">Service Price (₱) *</label><input type="number" step="0.01" min="0" name="price" id="edit-service-price" class="field-input" required/></div>
+        <div class="form-field"><label class="field-label">Service Price (â‚±) *</label><input type="number" step="0.01" min="0" name="price" id="edit-service-price" class="field-input" required/></div>
       </div>
       <div class="form-field">
         <label class="field-label">Status</label>
@@ -410,13 +410,13 @@ $activeNav = 'pos-services';
       <div class="form-field">
         <label class="field-label">Add Testing Kit Item</label>
         <select name="product_id" class="field-input" required>
-          <option value="">— Select testing kit —</option>
+          <option value="">â€” Select testing kit â€”</option>
           <?php foreach ($activeProducts as $p): ?>
             <option value="<?= (int)$p['id'] ?>"><?= htmlspecialchars($p['name']) ?> (<?= htmlspecialchars($p['unit']) ?>)</option>
           <?php endforeach; ?>
         </select>
         <?php if (empty($activeProducts)): ?>
-          <div class="req-empty-hint">No active testing kits yet — add some in Inventory → Testing Kits first.</div>
+          <div class="req-empty-hint">No active testing kits yet â€” add some in Inventory â†’ Testing Kits first.</div>
         <?php endif; ?>
       </div>
       <div class="form-field qty-field">
@@ -491,7 +491,7 @@ function renderRows(rows) {
     }
     return `<tr>
       <td>${escHtml(s.name)}</td>
-      <td>₱${Number(s.price).toFixed(2)}</td>
+      <td>â‚±${Number(s.price).toFixed(2)}</td>
       <td><span class="role-pill">${escHtml(s.category)}</span></td>
       <td>${inventorySummary(s.id)}</td>
       <td>${statusBadge(s.status)}</td>
@@ -517,7 +517,7 @@ function openViewModal(id) {
   if (!s) return;
   document.getElementById('vsr-title').textContent = s.name;
   document.getElementById('vsr-category').textContent = s.category;
-  document.getElementById('vsr-price').textContent = '₱' + Number(s.price).toFixed(2);
+  document.getElementById('vsr-price').textContent = 'â‚±' + Number(s.price).toFixed(2);
   document.getElementById('vsr-description').textContent = s.description || 'No description';
 
   const items = REQUIREMENTS_BY_SERVICE[id] || [];
@@ -553,7 +553,7 @@ function renderRequirementsList(serviceId) {
           </form>
           <a href="?remove_requirement=${r.id}&service_id=${serviceId}" class="btn-sm btn-red" onclick="var el=this;event.preventDefault();showConfirm('Remove ${escAttr(r.product_name)} from this service\\'s requirements?').then(function(ok){if(ok)window.location=el.href});return false;">Remove</a>
         </div>`).join('')
-    : `<div class="req-empty">No testing kit items attached yet — add one below.</div>`;
+    : `<div class="req-empty">No testing kit items attached yet â€” add one below.</div>`;
 }
 
 function escHtml(str) {

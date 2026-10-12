@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // private_telecare/privacy-policy.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../includes/auth.php';
@@ -12,9 +12,9 @@ require_once __DIR__ . '/../includes/auth.php';
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Privacy Policy · TELE-CARE</title>
+  <title>Privacy Policy Â· TELE-CARE</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -22,15 +22,15 @@ require_once __DIR__ . '/../includes/auth.php';
       --muted: #6b7280; --border: #e5e7eb; --bg: #f9fafb;
       --white: #ffffff; --text: #111827; --radius: 12px; --red: #ef4444;
     }
-    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+    body { font-family:'Poppins',sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
 
     .policy-container { max-width:900px; margin:0 auto; padding:2rem 1rem; }
     .policy-header { text-align:center; margin-bottom:3rem; padding-bottom:2rem; border-bottom:2px solid var(--border); }
-    .policy-header h1 { font-family:'Plus Jakarta Sans',sans-serif; font-size:2.2rem; font-weight:800; color:var(--text); margin-bottom:0.5rem; }
+    .policy-header h1 { font-family:'Poppins',sans-serif; font-size:2.2rem; font-weight:800; color:var(--text); margin-bottom:0.5rem; }
     .policy-header .last-updated { font-size:0.85rem; color:var(--muted); }
 
     .policy-section { margin-bottom:2.5rem; }
-    .policy-section h2 { font-family:'Plus Jakarta Sans',sans-serif; font-size:1.2rem; font-weight:800; color:var(--text); margin-bottom:0.8rem; padding-bottom:0.5rem; border-bottom:1.5px solid var(--teal); display:inline-block; }
+    .policy-section h2 { font-family:'Poppins',sans-serif; font-size:1.2rem; font-weight:800; color:var(--text); margin-bottom:0.8rem; padding-bottom:0.5rem; border-bottom:1.5px solid var(--teal); display:inline-block; }
     .policy-section p { font-size:0.95rem; color:var(--text); margin-bottom:1rem; line-height:1.7; }
     .policy-section ul { margin-left:1.5rem; margin-bottom:1rem; }
     .policy-section li { margin-bottom:0.6rem; color:var(--text); font-size:0.95rem; line-height:1.7; }
@@ -46,7 +46,7 @@ require_once __DIR__ . '/../includes/auth.php';
     .data-table tr:nth-child(even) { background:rgba(249,250,251,1); }
 
     .policy-footer { background:var(--white); border:1.5px solid var(--border); border-radius:var(--radius); padding:1.5rem; margin-top:3rem; }
-    .policy-footer h3 { font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; margin-bottom:0.8rem; }
+    .policy-footer h3 { font-family:'Poppins',sans-serif; font-weight:700; margin-bottom:0.8rem; }
     .policy-footer p { font-size:0.92rem; color:var(--muted); margin-bottom:0.5rem; }
 
     .close-btn { display:none; position:fixed; top:1rem; right:1rem; z-index:1000; }
@@ -81,7 +81,7 @@ require_once __DIR__ . '/../includes/auth.php';
     <ul>
       <li><strong>Account Information:</strong> Full name, email address, phone number, date of birth, and password.</li>
       <li><strong>Medical Information:</strong> Health records, consultation notes, diagnoses, and prescriptions shared during appointments.</li>
-      <li><strong>Payment Information:</strong> Billing name, email, and phone number. Payment card details are NOT stored—they are transmitted directly to PayMongo for secure processing.</li>
+      <li><strong>Payment Information:</strong> Billing name, email, and phone number. Payment card details are NOT storedâ€”they are transmitted directly to PayMongo for secure processing.</li>
       <li><strong>Communication Records:</strong> Chat messages, voice recordings, and video session metadata during consultations.</li>
       <li><strong>Usage Data:</strong> IP address, browser type, appointment history, and access logs.</li>
     </ul>
@@ -226,6 +226,8 @@ require_once __DIR__ . '/../includes/auth.php';
 
 </body>
 </html>
+
+
 
 
 

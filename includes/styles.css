@@ -1,4 +1,4 @@
-/* includes/styles.css */
+﻿/* includes/styles.css */
 :root {
   --red:#C33643; --green:#244441; --blue:#3F82E3; --blue-dark:#2563C4;
   --blue-light:#EBF2FD; --bg:#EEF3FB; --white:#FFFFFF;
@@ -6,14 +6,14 @@
 }
 * { box-sizing:border-box; }
 body {
-  font-family:'DM Sans',sans-serif;
+  font-family:'Poppins',sans-serif;
   background:var(--bg); color:var(--text);
   margin:0; padding-bottom:82px;
 }
-h1, h2 { font-family:'Playfair Display',serif; }
-h3     { font-family:'DM Sans',sans-serif; }
+h1, h2 { font-family:'Poppins',sans-serif; }
+h3     { font-family:'Poppins',sans-serif; }
 
-/* ── TOP HEADER ── */
+/* â”€â”€ TOP HEADER â”€â”€ */
 .top-header {
   background:var(--white); padding:1rem 1.5rem;
   display:flex; align-items:center; justify-content:space-between;
@@ -28,7 +28,7 @@ h3     { font-family:'DM Sans',sans-serif; }
   font-weight:700; font-size:0.9rem; flex-shrink:0;
 }
 
-/* ── BOTTOM NAV ── */
+/* â”€â”€ BOTTOM NAV â”€â”€ */
 .bottom-nav {
   position:fixed; bottom:0; left:0; right:0; z-index:100;
   background:var(--white);
@@ -41,7 +41,7 @@ h3     { font-family:'DM Sans',sans-serif; }
   gap:3px; cursor:pointer; background:none;
   color:#aab8cc; font-size:0.58rem; font-weight:700; letter-spacing:0.05em;
   text-transform:uppercase; transition:all 0.2s; text-decoration:none;
-  font-family:'DM Sans',sans-serif;
+  font-family:'Poppins',sans-serif;
 }
 .nav-icon {
   width:38px; height:32px; border-radius:20px;
@@ -69,7 +69,7 @@ h3     { font-family:'DM Sans',sans-serif; }
 .nav-item[data-tab="profile"].active { color:#244441; }
 .nav-item:hover .nav-icon { background:rgba(0,0,0,0.04); }
 
-/* ── PAGE WRAPPER ── */
+/* â”€â”€ PAGE WRAPPER â”€â”€ */
 .page {
   padding:1.4rem; max-width:680px; margin:0 auto;
   animation:fadeUp 0.3s ease;
@@ -79,14 +79,14 @@ h3     { font-family:'DM Sans',sans-serif; }
   to   { opacity:1; transform:translateY(0); }
 }
 
-/* ── CARD ── */
+/* â”€â”€ CARD â”€â”€ */
 .card {
   background:var(--white); border-radius:18px; padding:1.4rem;
   margin-bottom:1.2rem; border:1px solid rgba(63,130,227,0.08);
   box-shadow:0 2px 14px rgba(63,130,227,0.07);
 }
 
-/* ── BADGES ── */
+/* â”€â”€ BADGES â”€â”€ */
 .badge {
   display:inline-block; padding:0.25rem 0.7rem;
   border-radius:50px; font-size:0.7rem; font-weight:700; letter-spacing:0.04em;
@@ -97,7 +97,7 @@ h3     { font-family:'DM Sans',sans-serif; }
 .badge-blue   { background:var(--blue-light);    color:var(--blue); }
 .badge-gray   { background:rgba(0,0,0,0.06);     color:#888; }
 
-/* ── APPOINTMENT ITEM ── */
+/* â”€â”€ APPOINTMENT ITEM â”€â”€ */
 .appt-item {
   display:flex; align-items:center; gap:1rem;
   padding:1rem 0; border-bottom:1px solid rgba(63,130,227,0.07);
@@ -111,11 +111,11 @@ h3     { font-family:'DM Sans',sans-serif; }
 .appt-date-box .day { font-size:1.1rem; font-weight:900; color:var(--blue); line-height:1; }
 .appt-date-box .mon { font-size:0.62rem; font-weight:700; color:var(--muted); text-transform:uppercase; }
 
-/* ── EMPTY STATE ── */
+/* â”€â”€ EMPTY STATE â”€â”€ */
 .empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); font-size:0.86rem; }
 .empty-state svg { width:44px; height:44px; stroke:#c5d5ef; margin:0 auto 1rem; display:block; }
 
-/* ── FORM FIELDS ── */
+/* â”€â”€ FORM FIELDS â”€â”€ */
 .field-label {
   display:block; font-size:0.7rem; font-weight:700; letter-spacing:0.06em;
   text-transform:uppercase; color:var(--muted); margin-bottom:0.4rem;
@@ -123,7 +123,7 @@ h3     { font-family:'DM Sans',sans-serif; }
 .field-input {
   width:100%; padding:0.72rem 0.9rem;
   border:1.5px solid rgba(63,130,227,0.15); border-radius:12px;
-  font-family:'DM Sans',sans-serif; font-size:0.9rem;
+  font-family:'Poppins',sans-serif; font-size:0.9rem;
   color:var(--text); background:var(--white); outline:none; transition:border-color 0.2s;
 }
 .field-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(63,130,227,0.1); }
@@ -142,7 +142,7 @@ textarea.field-input { resize:vertical; min-height:70px; }
 }
 .btn-save:hover { background:var(--blue-dark); transform:translateY(-2px); }
 
-/* ── ALERT ── */
+/* â”€â”€ ALERT â”€â”€ */
 .alert-success {
   background:rgba(63,130,227,0.08); border:1px solid rgba(63,130,227,0.2);
   color:var(--blue); border-radius:12px; padding:0.75rem 1rem;

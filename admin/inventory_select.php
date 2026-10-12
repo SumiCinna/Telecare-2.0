@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // admin/inventory_select.php
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -30,12 +30,12 @@ $activeNav = 'pos-products';
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Inventory — TELE-CARE</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <title>Inventory â€” TELE-CARE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link href="assets/admin.css" rel="stylesheet"/>
   <style>
     .select-wrap{max-width:900px}
-    .select-title{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--dark, #151c27);margin-bottom:0.35rem}
+    .select-title{font-family:'Poppins',sans-serif;font-size:1.8rem;font-weight:900;color:var(--dark, #151c27);margin-bottom:0.35rem}
     .select-sub{color:#9ab0ae;font-size:0.9rem;margin-bottom:2rem}
     .type-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem}
     .type-card{background:var(--white,#fff);border:1px solid #e7edec;border-radius:18px;padding:1.75rem;text-decoration:none;color:inherit;display:block;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}
@@ -76,7 +76,7 @@ $activeNav = 'pos-products';
             </svg>
           </div>
           <h3>Medicine</h3>
-          <p>Manage pharmacy stock — tablets, capsules, syrups, and other medicines.</p>
+          <p>Manage pharmacy stock â€” tablets, capsules, syrups, and other medicines.</p>
           <div class="type-count"><?= $medicineCount ?> active item<?= $medicineCount === 1 ? '' : 's' ?></div>
         </a>
 
@@ -88,7 +88,7 @@ $activeNav = 'pos-products';
             </svg>
           </div>
           <h3>Testing Kits</h3>
-          <p>Manage lab/testing supplies — containers, sticks, and other kit components.</p>
+          <p>Manage lab/testing supplies â€” containers, sticks, and other kit components.</p>
           <div class="type-count"><?= $testingKitCount ?> active item<?= $testingKitCount === 1 ? '' : 's' ?></div>
         </a>
       </div>

@@ -1,10 +1,10 @@
-
+﻿
 <?php
 // private_telecare/chat.php
 // WALA TO DISPLAY LANG KASI AKALA KO NEED NA FUNCTION BUT STAY KO LANG DITO
 require_once __DIR__ . '/../includes/auth.php';
 
-// ── Fetch assigned doctor ──
+// â”€â”€ Fetch assigned doctor â”€â”€
 $doc = null;
 $dr  = $conn->query("
     SELECT d.* FROM doctors d
@@ -15,7 +15,7 @@ $dr  = $conn->query("
 ");
 if ($dr && $dr->num_rows > 0) $doc = $dr->fetch_assoc();
 
-// ── Handle send message ──
+// â”€â”€ Handle send message â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message']) && $doc) {
     $msg = trim($_POST['message'] ?? '');
     if ($msg !== '') {
@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message']) && $d
     exit;
 }
 
-// ── Fetch messages + mark read ──
+// â”€â”€ Fetch messages + mark read â”€â”€
 $chat_messages = null;
 if ($doc) {
     $did           = $doc['id'];
@@ -41,7 +41,7 @@ if ($doc) {
     $conn->query("UPDATE messages SET is_read=1 WHERE sender_type='doctor' AND sender_id=$did AND receiver_id=$patient_id AND is_read=0");
 }
 
-$page_title = 'Chat — TELE-CARE';
+$page_title = 'Chat â€” TELE-CARE';
 $active_nav = 'chat';
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -68,7 +68,7 @@ require_once __DIR__ . '/../includes/header.php';
   }
   .chat-input-row input {
     flex:1; border:none; outline:none;
-    font-family:'DM Sans',sans-serif; font-size:0.9rem;
+    font-family:'Poppins',sans-serif; font-size:0.9rem;
     color:var(--text); background:transparent;
   }
   .chat-send {
@@ -93,7 +93,7 @@ require_once __DIR__ . '/../includes/header.php';
       <div style="font-size:0.78rem;color:#9ab0ae;"><?= htmlspecialchars($doc['specialty'] ?? 'General Practitioner') ?></div>
     </div>
     <span style="margin-left:auto;" class="badge <?= !empty($doc['is_available']) ? 'badge-green' : 'badge-gray' ?>">
-      <?= !empty($doc['is_available']) ? '● Online' : '○ Offline' ?>
+      <?= !empty($doc['is_available']) ? 'â— Online' : 'â—‹ Offline' ?>
     </span>
   </div>
 

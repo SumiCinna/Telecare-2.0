@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // includes/nav.php
 // $active_nav must be set before including: 'home' | 'visits' | 'meds' | 'billing' | 'profile'
 $active_nav = $active_nav ?? 'home';
@@ -14,7 +14,7 @@ $nav_pages = [
             'icon' => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/>'],
 ];
 // NOTE: The "Settings" / profile link was intentionally removed from the
-// sidebar — it's already reachable from the profile dropdown in the header
+// sidebar â€” it's already reachable from the profile dropdown in the header
 // (includes/header.php), so keeping it here just duplicated the entry.
 ?>
 <style>
@@ -27,7 +27,7 @@ $nav_pages = [
   position:fixed; top:0; left:0; bottom:0; width:var(--tc-sidebar-w); z-index:150;
   background:#f1f3fc; border-right:1px solid #dce1ef;
   display:flex; flex-direction:column; padding:1.2rem .85rem;
-  font-family:'Inter',sans-serif;
+  font-family:'Poppins',sans-serif;
   transition:width 0.2s ease;
 }
 .sidebar.collapsed{ width:var(--tc-sidebar-w-collapsed); padding:1.2rem .55rem; }
@@ -65,7 +65,7 @@ $nav_pages = [
   padding:.65rem .7rem; border-radius:7px;
   color:var(--tc-muted); font-size:.78rem; font-weight:600;
   text-decoration:none; transition:all 0.2s; width:100%; background:none; border:none;
-  cursor:pointer; font-family:'Inter',sans-serif;
+  cursor:pointer; font-family:'Poppins',sans-serif;
 }
 .sidebar-logout:hover{ background:var(--tc-red-tint); color:var(--tc-red); }
 .sidebar-logout .nav-icon{ width:19px; height:19px; flex-shrink:0; display:flex; }

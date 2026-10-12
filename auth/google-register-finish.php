@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // auth/google-register-finish.php
 require_once '../database/config.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $hashed_answer = $security_answer ? password_hash(strtolower($security_answer), PASSWORD_BCRYPT) : null;
-            // Google users don't have a password — set a random one
+            // Google users don't have a password â€” set a random one
             $hashed_pw = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
             $token      = bin2hex(random_bytes(32));
             $expires_at = date('Y-m-d H:i:s', strtotime('+24 hours'));
@@ -144,15 +144,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Complete Your Registration — TELE-CARE</title>
+  <title>Complete Your Registration â€” TELE-CARE</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
     :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF}
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--green);min-height:100vh}
-    h1,h2{font-family:'Playfair Display',serif}
+    body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--green);min-height:100vh}
+    h1,h2{font-family:'Poppins',sans-serif}
 
     .page-wrap{display:flex;min-height:100vh}
     .left-panel{background:linear-gradient(160deg,var(--green) 0%,#1a3330 100%);position:sticky;top:0;height:100vh;width:42%;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;padding:3rem;overflow:hidden}
@@ -164,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .right-panel{flex:1;overflow-y:auto;padding:3rem 4%}
 
     .mobile-header{display:none;background:linear-gradient(135deg,var(--green) 0%,#1a3330 100%);padding:1.25rem 1.5rem;position:sticky;top:0;z-index:100;align-items:center;justify-content:space-between}
-    .mobile-header-logo{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:900;color:#fff;text-decoration:none;letter-spacing:.04em}
+    .mobile-header-logo{font-family:'Poppins',sans-serif;font-size:1.35rem;font-weight:900;color:#fff;text-decoration:none;letter-spacing:.04em}
 
     .step-bar{display:flex;gap:.5rem;margin-bottom:2rem}
     .step-dot{flex:1;height:4px;border-radius:2px;background:rgba(36,68,65,.12);transition:background .4s}
@@ -175,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     .field-label{display:block;font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5a7a77;margin-bottom:.45rem}
     .field-label .req{color:var(--red)}
-    .field-input{width:100%;padding:.75rem 1rem;border:1.5px solid rgba(36,68,65,.15);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:16px;background:var(--white);color:var(--green);outline:none;transition:border-color .25s,box-shadow .25s}
+    .field-input{width:100%;padding:.75rem 1rem;border:1.5px solid rgba(36,68,65,.15);border-radius:12px;font-family:'Poppins',sans-serif;font-size:16px;background:var(--white);color:var(--green);outline:none;transition:border-color .25s,box-shadow .25s}
     .field-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(63,130,227,.12)}
     .field-input.has-error{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(195,54,67,.1)!important}
     .field-input:disabled{background:#f0f0f0;color:#aaa;cursor:not-allowed}
@@ -197,7 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .toast{background:#fff;border-radius:12px;padding:.75rem 1.1rem;font-size:.84rem;font-weight:500;box-shadow:0 8px 28px rgba(0,0,0,.13);border-left:4px solid var(--red);color:var(--green);animation:toastIn .3s ease;pointer-events:auto;max-width:300px;line-height:1.4}
     @keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
 
-    .resend-btn{background:none;border:none;color:var(--red);font-weight:600;font-size:.9rem;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline;padding:0}
+    .resend-btn{background:none;border:none;color:var(--red);font-weight:600;font-size:.9rem;cursor:pointer;font-family:'Poppins',sans-serif;text-decoration:underline;padding:0}
     .resend-btn:disabled{color:#9ab0ae;cursor:not-allowed;text-decoration:none}
 
     .spinner-inline{display:inline-block;width:14px;height:14px;border:2px solid rgba(195,54,67,.3);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
@@ -207,8 +207,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .phone-combo{display:flex;border:1.5px solid rgba(36,68,65,.15);border-radius:12px;overflow:hidden;background:var(--white);transition:border-color .25s,box-shadow .25s}
     .phone-combo:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(63,130,227,.12)}
     .phone-combo.has-error{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(195,54,67,.1)!important}
-    .phone-prefix-fixed{display:flex;align-items:center;justify-content:center;border-right:1.5px solid rgba(36,68,65,.1);background:rgba(36,68,65,.05);color:var(--green);font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:700;padding:.75rem .85rem;min-width:64px;flex-shrink:0}
-    .phone-number-input{border:none;outline:none;flex:1;padding:.75rem 1rem;font-family:'DM Sans',sans-serif;font-size:16px;color:var(--green);background:transparent;min-width:0}
+    .phone-prefix-fixed{display:flex;align-items:center;justify-content:center;border-right:1.5px solid rgba(36,68,65,.1);background:rgba(36,68,65,.05);color:var(--green);font-family:'Poppins',sans-serif;font-size:.88rem;font-weight:700;padding:.75rem .85rem;min-width:64px;flex-shrink:0}
+    .phone-number-input{border:none;outline:none;flex:1;padding:.75rem 1rem;font-family:'Poppins',sans-serif;font-size:16px;color:var(--green);background:transparent;min-width:0}
     .phone-number-input::placeholder{color:#b0c4c2}
 
     .google-card{display:flex;align-items:center;gap:1rem;background:rgba(63,130,227,.06);border:1.5px solid rgba(63,130,227,.15);border-radius:16px;padding:1rem 1.2rem;margin-bottom:1.5rem}
@@ -238,7 +238,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="orb" style="width:320px;height:320px;background:radial-gradient(circle,rgba(63,130,227,.2) 0%,transparent 70%);top:-60px;right:-60px"></div>
     <div class="orb" style="width:220px;height:220px;background:radial-gradient(circle,rgba(195,54,67,.15) 0%,transparent 70%);bottom:60px;left:20px;animation-delay:3s"></div>
     <div style="position:relative;z-index:2">
-      <a href="../index.php" style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:#fff;text-decoration:none;letter-spacing:.04em">TELE<span style="color:var(--red)">-</span>CARE</a>
+      <a href="../index.php" style="font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:900;color:#fff;text-decoration:none;letter-spacing:.04em">TELE<span style="color:var(--red)">-</span>CARE</a>
       <div style="margin-top:3rem">
         <h1 style="font-size:2.2rem;color:#fff;line-height:1.2;margin-bottom:1rem">Almost There!</h1>
         <p style="color:rgba(255,255,255,.55);font-size:.95rem;line-height:1.75">We got your Google info. Just fill in a few more details to complete your patient account.</p>
@@ -259,7 +259,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <?php if($show_verify): ?>
       <div style="text-align:center;padding:1rem 0;animation:fadeUp .6s ease">
-        <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,rgba(63,130,227,.15),rgba(36,68,65,.1));display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;font-size:2.5rem;border:2px solid rgba(63,130,227,.15)">📧</div>
+        <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,rgba(63,130,227,.15),rgba(36,68,65,.1));display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;font-size:2.5rem;border:2px solid rgba(63,130,227,.15)">ðŸ“§</div>
         <h2 style="font-size:1.8rem;margin-bottom:.6rem">Check your email!</h2>
         <p style="color:#6b8a87;font-size:.95rem;line-height:1.75;margin-bottom:.5rem">
           We sent an activation link to<br/>
@@ -268,14 +268,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <p style="color:#9ab0ae;font-size:.82rem;margin-bottom:2rem">Click the link in the email to activate your account.<br/>The link expires in <strong>24 hours</strong>.</p>
         <div style="background:rgba(63,130,227,.05);border:1px solid rgba(63,130,227,.12);border-radius:16px;padding:1.2rem 1.5rem;text-align:left;margin-bottom:2rem">
           <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ab0ae;margin-bottom:.8rem">What to do next</div>
-          <?php foreach([['📬','Open your email inbox'],['🔍','Look for an email from TELE-CARE'],['🔗','Click the "Activate Account" link'],['✅','Log in with Google and start your consultation']] as [$icon,$text]): ?>
+          <?php foreach([['ðŸ“¬','Open your email inbox'],['ðŸ”','Look for an email from TELE-CARE'],['ðŸ”—','Click the "Activate Account" link'],['âœ…','Log in with Google and start your consultation']] as [$icon,$text]): ?>
           <div style="display:flex;align-items:center;gap:.8rem;margin-bottom:.6rem;font-size:.88rem;color:var(--green)"><span><?= $icon ?></span><?= $text ?></div>
           <?php endforeach ?>
         </div>
         <p style="font-size:.85rem;color:#9ab0ae;margin-bottom:.5rem">Didn't receive the email?</p>
         <button class="resend-btn" id="resendBtn" onclick="resendEmail()">Resend activation email</button>
         <div id="resendMsg" style="font-size:.8rem;color:var(--green);margin-top:.5rem;min-height:1.2rem"></div>
-        <div style="margin-top:2rem"><a href="login.php" style="color:#9ab0ae;font-size:.85rem;text-decoration:none">Already activated? Log in →</a></div>
+        <div style="margin-top:2rem"><a href="login.php" style="color:#9ab0ae;font-size:.85rem;text-decoration:none">Already activated? Log in â†’</a></div>
       </div>
       <script>
         const EMAILJS_PUBLIC_KEY  = 'm-AvAiAdUDsgBbz6D';
@@ -295,10 +295,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           const btn = document.getElementById('resendBtn'), msg = document.getElementById('resendMsg');
           btn.disabled = true; btn.innerHTML = '<span class="spinner-inline"></span>Sending...';
           sendActivationEmail().then(() => {
-            msg.textContent = '✓ Email resent successfully!'; msg.style.color = 'var(--green)';
+            msg.textContent = 'âœ“ Email resent successfully!'; msg.style.color = 'var(--green)';
             cooldown = 60;
             const t = setInterval(() => { cooldown--; btn.innerHTML = 'Resend again in ' + cooldown + 's'; if (cooldown <= 0) { clearInterval(t); btn.disabled = false; btn.innerHTML = 'Resend activation email'; } }, 1000);
-          }).catch(() => { msg.textContent = '✗ Failed. Please try again.'; msg.style.color = 'var(--red)'; btn.disabled = false; btn.innerHTML = 'Resend activation email'; });
+          }).catch(() => { msg.textContent = 'âœ— Failed. Please try again.'; msg.style.color = 'var(--red)'; btn.disabled = false; btn.innerHTML = 'Resend activation email'; });
         }
       </script>
 
@@ -362,12 +362,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
 
           <div style="margin-bottom:1rem">
-            <label class="field-label">Profile Photo <span class="optional-tag">(optional — uses Google photo if blank)</span></label>
+            <label class="field-label">Profile Photo <span class="optional-tag">(optional â€” uses Google photo if blank)</span></label>
             <input type="file" name="profile_photo" id="f_profile_photo" class="field-input" accept="image/jpeg,image/png,image/gif,image/webp" style="padding:.6rem"/>
           </div>
 
           <div style="margin-top:2rem">
-            <button type="button" class="btn-next" onclick="goStep(2)">Continue to Location →</button>
+            <button type="button" class="btn-next" onclick="goStep(2)">Continue to Location â†’</button>
           </div>
         </div>
 
@@ -387,14 +387,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <select name="ph_region" id="sel_region" class="field-input" onchange="onRegionChange()">
               <option value="">Select region</option>
             </select>
-            <div id="lbl_region" style="font-size:.75rem;color:#9ab0ae;margin-top:.3rem;display:none"><span class="spinner-sm"></span>Loading regions…</div>
+            <div id="lbl_region" style="font-size:.75rem;color:#9ab0ae;margin-top:.3rem;display:none"><span class="spinner-sm"></span>Loading regionsâ€¦</div>
           </div>
           <div style="margin-bottom:1rem">
             <label class="field-label">City / Municipality</label>
             <select name="ph_city" id="sel_city" class="field-input" disabled>
               <option value="">Select city / municipality</option>
             </select>
-            <div id="lbl_city" style="font-size:.75rem;color:#9ab0ae;margin-top:.3rem;display:none"><span class="spinner-sm"></span>Loading cities…</div>
+            <div id="lbl_city" style="font-size:.75rem;color:#9ab0ae;margin-top:.3rem;display:none"><span class="spinner-sm"></span>Loading citiesâ€¦</div>
           </div>
 
           <div style="margin-bottom:1rem">
@@ -428,7 +428,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
 
           <div style="margin-top:2rem">
-            <button type="button" class="btn-back" onclick="goStep(1)">← Back</button>
+            <button type="button" class="btn-back" onclick="goStep(1)">â† Back</button>
             <button type="submit" class="btn-next" onclick="combinePhoneFields()">Create My Account</button>
           </div>
         </div>
@@ -568,6 +568,7 @@ window.addEventListener('load', () => { loadRegions(); updateMobileStepInfo(); }
 </script>
 </body>
 </html>
+
 
 
 

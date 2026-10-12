@@ -596,7 +596,7 @@ require_once __DIR__ . '/../includes/header.php';
     background: none;
     border: none;
     cursor: pointer;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Poppins', sans-serif;
     font-size: 0.8rem;
     font-weight: 700;
     color: var(--muted);

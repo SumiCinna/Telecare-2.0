@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // includes/header.php
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -31,7 +31,7 @@ $super_admin_name = $_SESSION['super_admin_name'] ?? 'Super Admin';
 	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="assets/js/css/style.css?v=<?= @filemtime(__DIR__ . '/../assets/js/css/style.css') ?: time() ?>">
 	<?php if (!empty($page_styles)): ?>
 	<style><?= $page_styles ?></style>

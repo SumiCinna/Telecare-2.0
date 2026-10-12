@@ -166,7 +166,7 @@ if (isset($conn, $patient_id)) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title><?= htmlspecialchars($page_title ?? 'TELE-CARE') ?></title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="includes/styles.css"/>
   <style>
     :root{
@@ -176,7 +176,7 @@ if (isset($conn, $patient_id)) {
       --tc-line:rgba(21,28,39,0.08);
       --tc-red-tint:#FEF2F2; --tc-teal-tint:#ECFDF5;
     }
-    body{ font-family:'Inter',sans-serif; }
+    body{ font-family:'Poppins',sans-serif; }
 
     .site-topbar{
       position:sticky; top:0; z-index:120;
@@ -229,7 +229,7 @@ if (isset($conn, $patient_id)) {
     .profile-option{
       display:flex; align-items:center; gap:.6rem; width:100%; padding:.6rem .65rem;
       border:0; border-radius:7px; background:none; color:var(--tc-ink);
-      font:600 .78rem 'Inter',sans-serif; text-decoration:none; text-align:left; cursor:pointer;
+      font:600 .78rem 'Poppins',sans-serif; text-decoration:none; text-align:left; cursor:pointer;
     }
     .profile-option:hover{ background:#f1f3fc; color:var(--tc-ink); text-decoration:none; }
     .profile-option.logout{ color:var(--tc-red); }

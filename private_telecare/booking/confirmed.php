@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // private_telecare/booking/confirmed.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../../includes/auth.php';
@@ -6,10 +6,10 @@ require_once __DIR__ . '/booking_helpers.php';
 
 $appt_id = (int)($_GET['appt_id'] ?? 0);
 
-// ── Auto-cancel any Pending/Unpaid appointment past its 10-minute payment window ──
+// â”€â”€ Auto-cancel any Pending/Unpaid appointment past its 10-minute payment window â”€â”€
 $conn->query("UPDATE appointments SET status='Cancelled' WHERE status='Pending' AND payment_status='Unpaid' AND created_at < (NOW() - INTERVAL 10 MINUTE)");
 
-// ── Cancel action ──
+// â”€â”€ Cancel action â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_appointment'])) {
     $c = $conn->prepare("
         UPDATE appointments
@@ -67,7 +67,7 @@ if ($isPendingUnpaid && !empty($appt['created_at'])) {
     $deadlineTsMs = $deadlineTs * 1000;
 }
 
-$page_title = 'Appointment Details — TELE-CARE';
+$page_title = 'Appointment Details â€” TELE-CARE';
 $active_nav = 'visits';
 require_once __DIR__ . '/../../includes/header.php';
 echo booking_wizard_css();
@@ -79,11 +79,11 @@ echo booking_wizard_css();
 .conf-icon{width:48px;height:48px;border-radius:50%;background:rgba(34,197,94,0.12);color:#16a34a;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .conf-icon.pending{background:rgba(217,119,6,0.12);color:#d97706}
 .conf-icon.cancelled{background:rgba(195,54,67,0.1);color:#C33643}
-.conf-title{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:900;color:var(--green)}
+.conf-title{font-family:'Poppins',sans-serif;font-size:1.25rem;font-weight:900;color:var(--green)}
 .conf-sub{font-size:0.82rem;color:var(--muted)}
 .ref-box{background:rgba(63,130,227,0.08);border-radius:12px;padding:0.6rem 1rem;text-align:center}
 .ref-label{font-size:0.65rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue)}
-.ref-val{font-family:'Playfair Display',serif;font-weight:900;color:var(--green)}
+.ref-val{font-family:'Poppins',sans-serif;font-weight:900;color:var(--green)}
 .conf-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:1.2rem}
 .info-row{display:flex;align-items:flex-start;gap:0.6rem;padding:0.5rem 0;font-size:0.87rem}
 .info-row svg{width:16px;height:16px;color:var(--muted);flex-shrink:0;margin-top:2px}
@@ -99,7 +99,7 @@ echo booking_wizard_css();
 .pay-row:last-child{border-bottom:none}
 .conf-actions{display:flex;justify-content:space-between;margin-top:1.4rem;flex-wrap:wrap;gap:0.6rem}
 
-/* ── Status badge (Pending / Confirmed / Cancelled) ── */
+/* â”€â”€ Status badge (Pending / Confirmed / Cancelled) â”€â”€ */
 .status-badge{
   display:inline-flex;align-items:center;gap:0.35rem;
   font-size:0.68rem;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;
@@ -109,18 +109,18 @@ echo booking_wizard_css();
 .status-badge.pending{background:rgba(217,119,6,0.12);color:#d97706}
 .status-badge.cancelled{background:rgba(195,54,67,0.1);color:#C33643}
 
-/* ── Countdown ── */
+/* â”€â”€ Countdown â”€â”€ */
 .countdown-wrap{
   display:flex;align-items:center;justify-content:center;gap:0.5rem;
   font-weight:800;font-size:1.05rem;color:#d97706;margin-top:0.5rem;
 }
 .countdown-wrap svg{width:16px;height:16px;flex-shrink:0}
 
-/* ── Fixed action buttons: proper pill shape, centered icon+text ── */
+/* â”€â”€ Fixed action buttons: proper pill shape, centered icon+text â”€â”€ */
 .btn-fix{
   display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;
   padding:0.75rem 1.6rem;border-radius:50px;
-  font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:700;
+  font-family:'Poppins',sans-serif;font-size:0.88rem;font-weight:700;
   text-decoration:none;border:1.5px solid transparent;cursor:pointer;
   line-height:1;white-space:nowrap;transition:all .2s;
 }
@@ -141,14 +141,14 @@ echo booking_wizard_css();
 
 @media(max-width:800px){.conf-grid{grid-template-columns:1fr}}
 
-/* ── Modal (shared pattern) ── */
+/* â”€â”€ Modal (shared pattern) â”€â”€ */
 .tc-modal{display:none;position:fixed;inset:0;background:rgba(15,25,24,0.5);z-index:9998;align-items:center;justify-content:center;padding:1rem;}
 .tc-modal.visible{display:flex}
 .tc-modal-box{background:#fff;border-radius:18px;max-width:420px;width:100%;padding:1.8rem;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;}
 .tc-modal-icon{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;}
 .tc-modal-icon.warn{background:rgba(217,119,6,0.12);color:#d97706}
 .tc-modal-icon.danger{background:rgba(195,54,67,0.1);color:#C33643}
-.tc-modal-title{font-family:'Playfair Display',serif;font-weight:900;font-size:1.15rem;color:var(--green);margin-bottom:0.5rem;}
+.tc-modal-title{font-family:'Poppins',sans-serif;font-weight:900;font-size:1.15rem;color:var(--green);margin-bottom:0.5rem;}
 .tc-modal-body{font-size:0.87rem;color:var(--muted);line-height:1.55;margin-bottom:1.4rem;}
 .tc-modal-body strong{color:var(--green)}
 .tc-modal-actions{display:flex;gap:0.7rem;}
@@ -276,7 +276,7 @@ echo booking_wizard_css();
   <input type="hidden" name="cancel_appointment" value="1"/>
 </form>
 
-<!-- ── Cancel confirmation modal ── -->
+<!-- â”€â”€ Cancel confirmation modal â”€â”€ -->
 <div class="tc-modal" id="cancel-modal">
   <div class="tc-modal-box">
     <div class="tc-modal-icon danger">
@@ -295,7 +295,7 @@ echo booking_wizard_css();
   </div>
 </div>
 
-<!-- ── Save for now warning modal ── -->
+<!-- â”€â”€ Save for now warning modal â”€â”€ -->
 <div class="tc-modal" id="save-modal">
   <div class="tc-modal-box">
     <div class="tc-modal-icon warn">

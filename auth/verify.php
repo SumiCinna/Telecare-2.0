@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // auth/verify.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 require_once '../database/config.php';
@@ -30,7 +30,7 @@ if (empty($token)) {
         $upd->bind_param("i", $patient['id']);
         $upd->execute();
 
-        // Log the patient in immediately — no separate login step needed
+        // Log the patient in immediately â€” no separate login step needed
         $_SESSION['patient_id']   = $patient['id'];
         $_SESSION['patient_name'] = $patient['full_name'];
 
@@ -48,13 +48,13 @@ if (empty($token)) {
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Activate Account — TELE-CARE</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet"/>
+  <title>Activate Account â€” TELE-CARE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
     :root { --red:#C33643; --green:#244441; --blue:#3F82E3; }
     * { box-sizing:border-box; margin:0; padding:0; }
     body {
-      font-family:'DM Sans',sans-serif;
+      font-family:'Poppins',sans-serif;
       background: linear-gradient(160deg, var(--green) 0%, #1a3330 100%);
       min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem;
     }
@@ -64,7 +64,7 @@ if (empty($token)) {
       box-shadow:0 30px 80px rgba(0,0,0,0.25);
     }
     .icon { font-size:3.5rem; margin-bottom:1.5rem; }
-    h1 { font-family:'Playfair Display',serif; font-size:1.8rem; color:var(--green); margin-bottom:0.8rem; }
+    h1 { font-family:'Poppins',sans-serif; font-size:1.8rem; color:var(--green); margin-bottom:0.8rem; }
     p  { color:#6b8a87; font-size:0.95rem; line-height:1.7; margin-bottom:2rem; }
     .btn {
       display:inline-block; padding:0.9rem 2.5rem; border-radius:50px;
@@ -80,7 +80,7 @@ if (empty($token)) {
       transition:all 0.3s; margin-top:0.8rem;
     }
     .btn-outline:hover { background:rgba(36,68,65,0.06); }
-    .logo { font-family:'Playfair Display',serif; font-size:1.3rem; font-weight:900; color:var(--green); margin-bottom:2rem; display:block; }
+    .logo { font-family:'Poppins',sans-serif; font-size:1.3rem; font-weight:900; color:var(--green); margin-bottom:2rem; display:block; }
     .logo span { color:var(--red); }
   </style>
 </head>
@@ -89,12 +89,12 @@ if (empty($token)) {
   <a href="../index.php" class="logo">TELE<span>-</span>CARE</a>
 
   <?php if ($success): ?>
-    <div class="icon">✅</div>
+    <div class="icon">âœ…</div>
     <h1>Account Activated!</h1>
     <p><?= htmlspecialchars($message) ?><br/>You can now log in and start booking consultations.</p>
-    <a href="login.php" class="btn">Go to Login →</a>
+    <a href="login.php" class="btn">Go to Login â†’</a>
   <?php else: ?>
-    <div class="icon">❌</div>
+    <div class="icon">âŒ</div>
     <h1>Activation Failed</h1>
     <p><?= htmlspecialchars($message) ?></p>
     <a href="register.php" class="btn">Register Again</a><br/>
@@ -103,6 +103,7 @@ if (empty($token)) {
 </div>
 </body>
 </html>
+
 
 
 
