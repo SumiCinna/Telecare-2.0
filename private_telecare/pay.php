@@ -149,7 +149,8 @@ $checked   = fn(string $k, string $v) => ($isRepost && (string)($_POST[$k] ?? ''
 $fee       = floatval($appt['consultation_fee']);
 $fee_fmt   = '₱' . number_format($fee, 2);
 $doc_name  = 'Dr. ' . $e($appt['doctor_name']);
-$hmoList   = booking_hmo_provider_list($conn);
+$hmoMap    = booking_hmo_providers($conn);   // name => license no.
+$hmoList   = array_merge(array_keys($hmoMap), ['Other']);
 $dobFmt    = !empty($p['date_of_birth']) ? (new DateTime($p['date_of_birth']))->format('M j, Y') : '';
 $apptWhen  = (new DateTime($appt['appointment_date']))->format('M j, Y') . ' at ' . date('g:i A', strtotime($appt['appointment_time']));
 $defPhone  = (string)($appt['patient_phone'] ?? '');
@@ -305,6 +306,8 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     .cov-consent input { margin-top:.15rem; accent-color:var(--teal); }
     .ro-input { background:#f3f4f6; color:var(--muted); }
     .error-banner div + div { margin-top:.2rem; }
+    .lic-line { margin-top:.4rem; font-size:.74rem; color:var(--teal2); background:rgba(13,148,136,.08); border-radius:8px; padding:.35rem .6rem; }
+    .lic-line b { letter-spacing:.02em; }
     .cov-sum td:last-child { word-break:break-word; }
   </style>
 </head>
@@ -449,9 +452,10 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
             <select class="form-input" id="h-prov" name="hmo_provider">
               <option value="">Select your HMO</option>
               <?php foreach ($hmoList as $hp): ?>
-                <option value="<?= $e($hp) ?>" <?= ($isRepost && ($_POST['hmo_provider'] ?? '') === $hp) ? 'selected' : '' ?>><?= $e($hp) ?></option>
+                <option value="<?= $e($hp) ?>" data-lic="<?= $e($hmoMap[$hp] ?? '') ?>" <?= ($isRepost && ($_POST['hmo_provider'] ?? '') === $hp) ? 'selected' : '' ?>><?= $e($hp) ?></option>
               <?php endforeach; ?>
             </select>
+            <div class="lic-line" id="h-lic" style="display:none;"></div>
           </div>
           <div id="h-other-wrap" style="display:none;">
             <label class="form-label" for="h-other"><span class="req">*</span> HMO name</label>
@@ -638,7 +642,17 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
       el.value = out;
     });
     const prov = document.getElementById('h-prov');
-    const sync = () => { document.getElementById('h-other-wrap').style.display = prov.value === 'Other' ? '' : 'none'; };
+    const sync = () => {
+      document.getElementById('h-other-wrap').style.display = prov.value === 'Other' ? '' : 'none';
+      const lic = prov.selectedOptions[0] ? (prov.selectedOptions[0].dataset.lic || '') : '';
+      const box = document.getElementById('h-lic');
+      box.textContent = '';
+      if (lic) {
+        box.append('Insurance Commission license no.: ');
+        const b = document.createElement('b'); b.textContent = lic; box.appendChild(b);
+      }
+      box.style.display = lic ? '' : 'none';
+    };
     prov.addEventListener('change', sync); sync();
   })();
 
@@ -705,6 +719,8 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
       row('FPE', radio('fpe_status'));
     } else {
       row('HMO provider', val('hmo_provider') === 'Other' ? 'Other: ' + val('hmo_provider_other') : val('hmo_provider'));
+      const so = covBox().querySelector('[name="hmo_provider"]').selectedOptions[0];
+      row('HMO license no.', so ? (so.dataset.lic || '') : '');
       row('Member ID / Card no.', val('hmo_member_id'));
       row('Principal member', val('principal_member_name'));
       row('Company / employer', val('company_employer'));

@@ -289,20 +289,60 @@ function booking_rank_doctors(array $doctors, string $concern): array {
 // Payment methods on pay.php: GCash / PhilHealth YAKAP / HMO
 // ─────────────────────────────────────────────────────────────────────────
 
-const BOOKING_HMO_FALLBACK = ['Maxicare', 'Intellicare', 'Medicard', 'PhilCare', 'Cocolife', 'Pacific Cross', 'Etiqa', 'Avega', 'Generali'];
+const BOOKING_HMO_FALLBACK = [
+    'Asalus Corporation (Intellicare)' => 'HMO-2023-06-R',
+    'Asiancare Health Systems, Inc.' => 'HMO-2024-01-R',
+    'Avega Managed Care, Inc.' => 'HMO-2023-05-R',
+    'Carewell Health Systems, Inc.' => 'HMO-2023-09-R',
+    'Cooperative Health Management Federation' => 'HMO-2024-03-R',
+    'Dynamic Care Corporation' => 'HMO-2023-20-R',
+    'EastWest Healthcare, Inc.' => 'HMO-2023-14-R',
+    'Getwell Health Systems, Inc.' => 'HMO-2023-13-R',
+    'Health Care and Development Corporation of the Philippines' => 'HMO-2024-04-R',
+    'Health Delivery System, Inc.' => 'HMO-2024-06-R',
+    'Health Maintenance, Inc.' => 'HMO-2023-02-R',
+    'Health Plan Philippines, Inc.' => 'HMO-2023-04-R',
+    'IMS Wellth Care, Inc.' => 'HMO-2023-01-R',
+    'Insular Health Care, Inc.' => 'HMO-2023-03-R',
+    'Kaiser International Healthgroup, Inc.' => 'HMO-2023-08-R',
+    'Life & Health HMP, Inc.' => 'HMO-2023-16-R',
+    'Maxicare Healthcare Corp.' => 'HMO-2023-07-R',
+    'Medicard Philippines, Inc.' => 'HMO-2023-12-R',
+    'Medicare Plus, Inc.' => 'HMO-2023-21-R',
+    'Medocare Health Systems, Inc.' => 'HMO-2023-17-R',
+    'Metrocare Health Systems, Incorporated' => 'HMO-2023-11-R',
+    'MI Healthcare Inc.' => 'HMO-2024-05-O',
+    'Optimum Medical and Healthcare Services Inc.' => 'HMO-2023-19-R',
+    'Pacific Cross Health Care, Inc.' => 'HMO-2023-10-R',
+    'PhilhealthCare, Inc. (PhilCare)' => 'HMO-2023-15-R',
+    'Value Care Health Systems, Inc.' => 'HMO-2023-18-R',
+    'Wellcare Health Maintenance Inc.' => 'HMO-2024-02-R',
+];
 
 function booking_payment_label(string $method): string {
     return ['GCash' => 'GCash', 'YAKAP' => 'PhilHealth YAKAP', 'HMO' => 'HMO'][$method] ?? 'Regular Payment';
 }
 
 /** Active HMO providers from Admin > HMO, plus "Other". Falls back to a built-in list. */
-function booking_hmo_provider_list(mysqli $conn): array {
-    $list = [];
+/**
+ * HMO providers for the dropdown: name => Insurance Commission license no. ('' if unknown).
+ * Comes from the active rows of hmo_providers (Admin > HMO); falls back to the built-in list if that is empty.
+ */
+function booking_hmo_providers(mysqli $conn): array {
+    $out = [];
     try {
-        $r = $conn->query("SELECT name FROM hmo_providers WHERE status='Active' ORDER BY name ASC");
-        while ($r && ($row = $r->fetch_assoc())) $list[] = $row['name'];
+        $hasLic = false;
+        $c = $conn->query("SHOW COLUMNS FROM hmo_providers LIKE 'license_no'");
+        if ($c && $c->num_rows > 0) $hasLic = true;
+        $r = $conn->query($hasLic
+            ? "SELECT name, license_no FROM hmo_providers WHERE status='Active' ORDER BY name ASC"
+            : "SELECT name, '' AS license_no FROM hmo_providers WHERE status='Active' ORDER BY name ASC");
+        while ($r && ($row = $r->fetch_assoc())) $out[$row['name']] = (string)($row['license_no'] ?? '');
     } catch (Throwable $e) { /* table missing: use fallback */ }
-    if (!$list) $list = BOOKING_HMO_FALLBACK;
+    return $out ?: BOOKING_HMO_FALLBACK;
+}
+function booking_hmo_provider_list(mysqli $conn): array {
+    $list = array_keys(booking_hmo_providers($conn));
     $list[] = 'Other';
     return $list;
 }

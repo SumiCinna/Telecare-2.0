@@ -9,6 +9,20 @@ require_once '../database/config.php';
 if (!isset($_SESSION['admin_id'])) { header('Location: login.php'); exit; }
 $admin_id = $_SESSION['admin_id'];
 
+// Insurance Commission license number column (added once if it is missing).
+try {
+    $licCol = $conn->query("SHOW COLUMNS FROM hmo_providers LIKE 'license_no'");
+    if ($licCol && $licCol->num_rows === 0) {
+        $conn->query("ALTER TABLE hmo_providers ADD COLUMN license_no VARCHAR(30) NULL AFTER name");
+    }
+} catch (Throwable $ignore) { /* table or permission problem: the page shows its normal error */ }
+
+// Keep only letters, digits and dashes (e.g. HMO-2023-07-R).
+function hmo_clean_license($v) {
+    $v = strtoupper(trim((string)$v));
+    return preg_replace('/[^A-Z0-9\-]/', '', $v) ?? '';
+}
+
 $conn->query("CREATE TABLE IF NOT EXISTS `audit_logs` (
   `id` int NOT NULL AUTO_INCREMENT,
   `admin_id` int NOT NULL,
@@ -39,12 +53,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_provider'])) {
     $contact = trim($_POST['contact_person'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
     $email = trim($_POST['email'] ?? '');
+    $license = hmo_clean_license($_POST['license_no'] ?? '');
+    $license = $license !== '' ? substr($license, 0, 30) : null;
 
     if (!$name) {
         $_SESSION['toast_error'] = 'Provider name is required.';
     } else {
-        $stmt = $conn->prepare("INSERT INTO hmo_providers (name, contact_person, phone, email, status) VALUES (?,?,?,?,'Active')");
-        $stmt->bind_param("ssss", $name, $contact, $phone, $email);
+        $stmt = $conn->prepare("INSERT INTO hmo_providers (name, license_no, contact_person, phone, email, status) VALUES (?,?,?,?,?,'Active')");
+        $stmt->bind_param("sssss", $name, $license, $contact, $phone, $email);
         $stmt->execute();
         $new_id = $conn->insert_id;
         log_audit($conn, $admin_id, 'create', 'hmo_provider', $new_id, null, ['name' => $name]);
@@ -60,12 +76,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_provider'])) {
     $phone = trim($_POST['phone'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $status = $_POST['status'] ?? 'Active';
+    $license = hmo_clean_license($_POST['license_no'] ?? '');
+    $license = $license !== '' ? substr($license, 0, 30) : null;
 
     if (!$name) {
         $_SESSION['toast_error'] = 'Provider name is required.';
     } else {
-        $stmt = $conn->prepare("UPDATE hmo_providers SET name=?, contact_person=?, phone=?, email=?, status=? WHERE id=?");
-        $stmt->bind_param("sssssi", $name, $contact, $phone, $email, $status, $id);
+        $stmt = $conn->prepare("UPDATE hmo_providers SET name=?, license_no=?, contact_person=?, phone=?, email=?, status=? WHERE id=?");
+        $stmt->bind_param("ssssssi", $name, $license, $contact, $phone, $email, $status, $id);
         $stmt->execute();
         log_audit($conn, $admin_id, 'update', 'hmo_provider', $id, null, ['name' => $name]);
         $_SESSION['toast'] = 'Provider updated.';
@@ -187,7 +205,7 @@ $activeNav = 'pos-hmo';
 
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Provider</th><th>Contact Person</th><th>Phone</th><th>Coverage Items</th><th>Status</th><th>Action</th></tr></thead>
+        <thead><tr><th>Provider</th><th>License No.</th><th>Contact Person</th><th>Phone</th><th>Coverage Items</th><th>Status</th><th>Action</th></tr></thead>
         <tbody id="providersTableBody"></tbody>
       </table>
     </div>
@@ -199,7 +217,8 @@ $activeNav = 'pos-hmo';
   <div class="modal">
     <h3>Add HMO Provider</h3>
     <form method="POST">
-      <div class="form-field"><label class="field-label">Provider Name *</label><input type="text" name="name" class="field-input" placeholder="Maxicare" required/></div>
+      <div class="form-field"><label class="field-label">Provider Name *</label><input type="text" name="name" class="field-input" placeholder="Maxicare Healthcare Corp." required/></div>
+      <div class="form-field"><label class="field-label">Insurance Commission License No.</label><input type="text" name="license_no" class="field-input" maxlength="30" placeholder="HMO-2023-07-R"/></div>
       <div class="form-field"><label class="field-label">Contact Person</label><input type="text" name="contact_person" class="field-input"/></div>
       <div class="form-row">
         <div class="form-field"><label class="field-label">Phone</label><input type="text" name="phone" class="field-input"/></div>
@@ -217,6 +236,7 @@ $activeNav = 'pos-hmo';
     <form method="POST">
       <input type="hidden" name="provider_id" id="edit-provider-id"/>
       <div class="form-field"><label class="field-label">Provider Name *</label><input type="text" name="name" id="edit-provider-name" class="field-input" required/></div>
+      <div class="form-field"><label class="field-label">Insurance Commission License No.</label><input type="text" name="license_no" id="edit-provider-license" class="field-input" maxlength="30" placeholder="HMO-2023-07-R"/></div>
       <div class="form-field"><label class="field-label">Contact Person</label><input type="text" name="contact_person" id="edit-provider-contact" class="field-input"/></div>
       <div class="form-row">
         <div class="form-field"><label class="field-label">Phone</label><input type="text" name="phone" id="edit-provider-phone" class="field-input"/></div>
@@ -279,6 +299,7 @@ function renderRows() {
       : `<a href="?restore_provider=${p.id}" class="btn-sm btn-activate" onclick="var el=this;event.preventDefault();showConfirm('Restore ${escAttr(p.name)}?').then(function(ok){if(ok)window.location=el.href});return false;">Restore</a>`;
     return `<tr>
       <td>${escHtml(p.name)}</td>
+      <td>${escHtml(p.license_no || '—')}</td>
       <td>${escHtml(p.contact_person || '—')}</td>
       <td>${escHtml(p.phone || '—')}</td>
       <td>${items.length ? `<span class="badge badge-blue">${items.length} item${items.length>1?'s':''}</span>` : '<span style="color:#9ab0ae;">None</span>'}</td>
@@ -293,6 +314,7 @@ function openEditModal(id) {
   if (!p) return;
   document.getElementById('edit-provider-id').value = p.id;
   document.getElementById('edit-provider-name').value = p.name;
+  document.getElementById('edit-provider-license').value = p.license_no || '';
   document.getElementById('edit-provider-contact').value = p.contact_person || '';
   document.getElementById('edit-provider-phone').value = p.phone || '';
   document.getElementById('edit-provider-email').value = p.email || '';
