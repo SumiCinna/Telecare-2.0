@@ -44,6 +44,13 @@ aside.sidebar .nav-link{
 aside.sidebar .nav-link svg{ width:18px; height:18px; flex-shrink:0; stroke:currentColor; }
 aside.sidebar .nav-link:hover{ background:rgba(21,28,39,0.05); color:var(--tc-ink); }
 aside.sidebar .nav-link.active{ background:var(--tc-red); color:#fff; box-shadow:0 3px 9px rgba(179,17,24,0.22); }
+aside.sidebar .nav-dropdown{ margin:0; }
+aside.sidebar .nav-dropdown summary{ list-style:none; cursor:pointer; }
+aside.sidebar .nav-dropdown summary::-webkit-details-marker{ display:none; }
+aside.sidebar .nav-dropdown .nav-chevron{ width:14px; height:14px; margin-left:auto; transition:transform .2s; }
+aside.sidebar .nav-dropdown[open] .nav-chevron{ transform:rotate(180deg); }
+aside.sidebar .nav-dropdown .nav-link{ font-size:.74rem; }
+aside.sidebar .nav-dropdown .nav-link.active{ background:rgba(179,17,24,0.12); color:var(--tc-red); box-shadow:none; }
 
 aside.sidebar .sidebar-logout{ border-top:1px solid var(--tc-line); padding-top:.6rem; margin-top:.6rem; }
 aside.sidebar .logout-btn{
@@ -98,14 +105,26 @@ aside.sidebar .logout-btn svg{ flex-shrink:0; }
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v20m5-17H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
       Prices
     </a>
-    <a href="hmo.php" class="nav-link <?= $activeNav === 'pos-hmo' ? 'active' : '' ?>">
-      <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-      HMO
-    </a>
     <a href="receipt_config.php" class="nav-link <?= $activeNav === 'pos-receipt' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
       Receipt Config
     </a>
+    <details class="nav-dropdown" <?= strpos($activeNav, 'hmo') === 0 ? 'open' : '' ?>>
+      <summary class="nav-link <?= strpos($activeNav, 'hmo') === 0 ? 'active' : '' ?>">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        HMO Management
+        <svg class="nav-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
+      </summary>
+      <a href="hmo.php" class="nav-link <?= $activeNav === 'hmo-dashboard' ? 'active' : '' ?>">HMO Dashboard</a>
+      <a href="hmo.php#providers" class="nav-link <?= $activeNav === 'hmo-providers' ? 'active' : '' ?>">HMO Providers</a>
+      <a href="hmo.php#coverage-rules" class="nav-link <?= $activeNav === 'hmo-coverage' ? 'active' : '' ?>">Coverage &amp; Authorization Rules</a>
+      <a href="hmo.php#staff-permissions" class="nav-link <?= $activeNav === 'hmo-staff' ? 'active' : '' ?>">Staff &amp; Permissions</a>
+      <a href="hmo.php#transactions" class="nav-link <?= $activeNav === 'hmo-transactions' ? 'active' : '' ?>">Transactions &amp; Authorization</a>
+      <a href="hmo.php#claims" class="nav-link <?= $activeNav === 'hmo-claims' ? 'active' : '' ?>">Claims Management</a>
+      <a href="hmo.php#payments" class="nav-link <?= $activeNav === 'hmo-payments' ? 'active' : '' ?>">Payment &amp; Collection</a>
+      <a href="hmo.php#reports" class="nav-link <?= $activeNav === 'hmo-reports' ? 'active' : '' ?>">Reports &amp; Analytics</a>
+      <a href="hmo.php#audit-logs" class="nav-link <?= $activeNav === 'hmo-audit' ? 'active' : '' ?>">Audit Logs &amp; History</a>
+    </details>
   </nav>
   <div class="sidebar-logout">
     <a href="logout.php" class="logout-btn">
