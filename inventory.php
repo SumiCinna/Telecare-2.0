@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // admin/inventory.php
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -47,22 +47,22 @@ $combined = [
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Inventory — TELE-CARE</title>
+  <title>Inventory â€” TELE-CARE</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
     :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF}
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--green);display:flex;min-height:100vh}
-    h1,h2,h3{font-family:'Playfair Display',serif}
+    body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--green);display:flex;min-height:100vh}
+    h1,h2,h3{font-family:'Poppins',sans-serif}
 
     .sidebar{width:230px;min-width:230px;background:var(--green);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
-    .sidebar-logo{padding:1.8rem 1.5rem 1.2rem;font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:#fff;border-bottom:1px solid rgba(255,255,255,0.08)}
+    .sidebar-logo{padding:1.8rem 1.5rem 1.2rem;font-family:'Poppins',sans-serif;font-size:1.4rem;font-weight:900;color:#fff;border-bottom:1px solid rgba(255,255,255,0.08)}
     .sidebar-logo span{color:var(--red)}
     .sidebar-admin{padding:1rem 1.5rem;font-size:0.78rem;color:rgba(255,255,255,0.45);border-bottom:1px solid rgba(255,255,255,0.08)}
     .sidebar-admin strong{color:rgba(255,255,255,0.8);font-weight:600;display:block;font-size:0.88rem}
     .nav-links{padding:1rem 0;flex:1}
-    .nav-link{display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.5rem;color:rgba(255,255,255,0.55);font-size:0.88rem;font-weight:500;width:100%;text-align:left;font-family:'DM Sans',sans-serif;transition:all 0.2s;border-left:3px solid transparent;text-decoration:none}
+    .nav-link{display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.5rem;color:rgba(255,255,255,0.55);font-size:0.88rem;font-weight:500;width:100%;text-align:left;font-family:'Poppins',sans-serif;transition:all 0.2s;border-left:3px solid transparent;text-decoration:none}
     .nav-link svg{width:18px;height:18px;stroke:currentColor;flex-shrink:0}
     .nav-link:hover{color:#fff;background:rgba(255,255,255,0.06)}
     .nav-link.active{color:#fff;background:rgba(255,255,255,0.1);border-left-color:var(--red)}
@@ -76,7 +76,7 @@ $combined = [
 
     .stat-row{display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap}
     .stat-chip{background:var(--white);border-radius:14px;border:1px solid rgba(36,68,65,0.07);box-shadow:0 2px 10px rgba(0,0,0,0.04);padding:0.9rem 1.3rem;min-width:150px}
-    .stat-chip .num{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;line-height:1}
+    .stat-chip .num{font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:900;line-height:1}
     .stat-chip .lbl{font-size:0.74rem;color:#9ab0ae;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-top:0.2rem}
     .stat-chip.warn .num{color:#d97706}
     .stat-chip.danger .num{color:var(--red)}
@@ -90,7 +90,7 @@ $combined = [
     .module-icon svg{width:24px;height:24px;stroke:#fff}
     .module-icon.pharmacy{background:linear-gradient(135deg,var(--blue),#2563C4)}
     .module-icon.labkits{background:linear-gradient(135deg,var(--green),#0f2624)}
-    .module-title{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:900;margin-bottom:0.3rem}
+    .module-title{font-family:'Poppins',sans-serif;font-size:1.25rem;font-weight:900;margin-bottom:0.3rem}
     .module-sub{font-size:0.82rem;color:#9ab0ae;margin-bottom:1.1rem}
     .module-stats{display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:1.1rem}
     .mini-badge{font-size:0.72rem;font-weight:700;padding:0.25rem 0.6rem;border-radius:50px}
@@ -107,7 +107,7 @@ $combined = [
 </head>
 <body>
 
-<?php if ($toast): ?><div class="toast">✓ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
+<?php if ($toast): ?><div class="toast">âœ“ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
 
 <?php $activeNav = 'inventory'; include 'sidebar.php'; ?>
 
@@ -124,7 +124,7 @@ $combined = [
 
     <div class="stat-row">
       <div class="stat-chip"><div class="num"><?= $combined['total'] ?></div><div class="lbl">Total Items</div></div>
-      <div class="stat-chip warn"><div class="num"><?= $combined['soon'] ?></div><div class="lbl">Expiring ≤30 Days</div></div>
+      <div class="stat-chip warn"><div class="num"><?= $combined['soon'] ?></div><div class="lbl">Expiring â‰¤30 Days</div></div>
       <div class="stat-chip danger"><div class="num"><?= $combined['expired'] ?></div><div class="lbl">Expired</div></div>
       <div class="stat-chip warn"><div class="num"><?= $combined['low'] ?></div><div class="lbl">Low Stock</div></div>
     </div>
@@ -143,7 +143,7 @@ $combined = [
           <?php if ($meds['soon'] > 0): ?><span class="mini-badge warn"><?= $meds['soon'] ?> expiring soon</span><?php endif; ?>
           <?php if ($meds['expired'] == 0 && $meds['low'] == 0 && $meds['soon'] == 0): ?><span class="mini-badge ok">All stock healthy</span><?php endif; ?>
         </div>
-        <div class="module-cta">View Medicine Inventory →</div>
+        <div class="module-cta">View Medicine Inventory â†’</div>
       </a>
 
       <a href="inventory_labkits.php" class="module-card">
@@ -158,7 +158,7 @@ $combined = [
           <?php if ($kits['soon'] > 0): ?><span class="mini-badge warn"><?= $kits['soon'] ?> expiring soon</span><?php endif; ?>
           <?php if ($kits['expired'] == 0 && $kits['low'] == 0 && $kits['soon'] == 0): ?><span class="mini-badge ok">All stock healthy</span><?php endif; ?>
         </div>
-        <div class="module-cta">View Lab Kits Inventory →</div>
+        <div class="module-cta">View Lab Kits Inventory â†’</div>
       </a>
 
     </div>

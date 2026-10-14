@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // doctor/setup.php
 // doctor/setup.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
@@ -91,14 +91,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Set Your Password — TELE-CARE</title>
+  <title>Set Your Password â€” TELE-CARE</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
     :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF}
     *{box-sizing:border-box}
-    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--green);min-height:100vh;display:flex}
-    h1,h2{font-family:'Playfair Display',serif}
+    body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--green);min-height:100vh;display:flex}
+    h1,h2{font-family:'Poppins',sans-serif}
     .left-panel{width:40%;background:linear-gradient(160deg,var(--green) 0%,#1a3330 100%);display:flex;flex-direction:column;justify-content:center;padding:3rem;position:sticky;top:0;height:100vh;overflow:hidden}
     .left-panel::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(63,130,227,0.08) 1px,transparent 1px),linear-gradient(90deg,rgba(63,130,227,0.08) 1px,transparent 1px);background-size:44px 44px;animation:gridMove 20s linear infinite}
     @keyframes gridMove{from{transform:translateY(0)}to{transform:translateY(44px)}}
@@ -107,13 +107,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
     .right-panel{flex:1;display:flex;align-items:center;justify-content:center;padding:3rem 4%}
     .form-wrap{max-width:440px;width:100%}
     .field-label{display:block;font-size:0.72rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#5a7a77;margin-bottom:0.4rem}
-    .field-input{width:100%;padding:0.78rem 1rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--green);outline:none;transition:border-color 0.2s;background:var(--white)}
+    .field-input{width:100%;padding:0.78rem 1rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:12px;font-family:'Poppins',sans-serif;font-size:0.9rem;color:var(--green);outline:none;transition:border-color 0.2s;background:var(--white)}
     .field-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(63,130,227,0.1)}
     .form-field{margin-bottom:1rem}
     .pw-wrap{position:relative}
     .pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ab0ae;padding:0}
     .pw-toggle:hover{color:var(--green)}
-    .btn-submit{width:100%;padding:0.9rem;border-radius:50px;background:var(--red);color:#fff;font-weight:700;font-size:0.95rem;border:none;cursor:pointer;transition:all 0.3s;box-shadow:0 6px 18px rgba(195,54,67,0.25);margin-top:0.5rem;font-family:'DM Sans',sans-serif}
+    .btn-submit{width:100%;padding:0.9rem;border-radius:50px;background:var(--red);color:#fff;font-weight:700;font-size:0.95rem;border:none;cursor:pointer;transition:all 0.3s;box-shadow:0 6px 18px rgba(195,54,67,0.25);margin-top:0.5rem;font-family:'Poppins',sans-serif}
     .btn-submit:hover{background:#a82d38;transform:translateY(-2px)}
     .alert-error{background:rgba(195,54,67,0.08);border:1px solid rgba(195,54,67,0.2);color:var(--red);border-radius:12px;padding:0.75rem 1rem;font-size:0.86rem;margin-bottom:1.2rem}
     .skip-note{font-size:0.78rem;color:#9ab0ae;text-align:center;margin-top:0.9rem;line-height:1.5}
@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
   <div class="orb" style="width:300px;height:300px;background:radial-gradient(circle,rgba(63,130,227,0.2) 0%,transparent 70%);top:-60px;right:-60px;"></div>
   <div class="orb" style="width:200px;height:200px;background:radial-gradient(circle,rgba(195,54,67,0.15) 0%,transparent 70%);bottom:60px;left:20px;animation-delay:3s;"></div>
   <div style="position:relative;z-index:2;">
-    <div style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;color:#fff;letter-spacing:0.04em;">TELE<span style="color:var(--red)">-</span>CARE</div>
+    <div style="font-family:'Poppins',sans-serif;font-size:1.5rem;font-weight:900;color:#fff;letter-spacing:0.04em;">TELE<span style="color:var(--red)">-</span>CARE</div>
     <div style="margin-top:3rem;">
       <h1 style="font-size:2rem;color:#fff;line-height:1.2;margin-bottom:0.8rem;">Welcome<?= $doctor ? ', Dr. ' . htmlspecialchars(explode(' ', $doctor['full_name'])[0]) : '' ?></h1>
       <p style="color:rgba(255,255,255,0.55);font-size:0.88rem;line-height:1.75;">Your profile has already been set up by the admin. Just choose a password to activate your account.</p>
@@ -149,17 +149,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
 
     <?php if ($error && !$doctor): ?>
     <div style="text-align:center;">
-      <div style="font-size:3rem;margin-bottom:1rem;">⚠️</div>
+      <div style="font-size:3rem;margin-bottom:1rem;">âš ï¸</div>
       <h2 style="font-size:1.5rem;margin-bottom:0.6rem;">Invalid Setup Link</h2>
       <p style="color:#6b8a87;font-size:0.9rem;"><?= htmlspecialchars($error) ?></p>
-      <a href="../index.php" style="display:inline-block;margin-top:1.5rem;font-size:0.85rem;color:var(--blue);">← Back to home</a>
+      <a href="../index.php" style="display:inline-block;margin-top:1.5rem;font-size:0.85rem;color:var(--blue);">â† Back to home</a>
     </div>
 
     <?php else: ?>
 
     <div style="margin-bottom:2rem;">
       <h2 style="font-size:1.6rem;margin-bottom:0.3rem;">Set Your Password</h2>
-      <p style="color:#6b8a87;font-size:0.88rem;">This is the last step — you'll go straight to your dashboard after.</p>
+      <p style="color:#6b8a87;font-size:0.88rem;">This is the last step â€” you'll go straight to your dashboard after.</p>
     </div>
 
     <?php if ($error): ?><div class="alert-error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
@@ -188,12 +188,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
       </div>
 
       <div class="form-field">
-        <label class="field-label">Profile Photo <span style="font-weight:400;text-transform:none;font-size:0.7rem;">(optional — can be added later)</span></label>
+        <label class="field-label">Profile Photo <span style="font-weight:400;text-transform:none;font-size:0.7rem;">(optional â€” can be added later)</span></label>
         <input type="file" name="profile_photo" class="field-input" accept="image/*" style="padding:0.5rem;"/>
       </div>
 
       <button type="submit" class="btn-submit">Finish &amp; Go to Dashboard</button>
-      <p class="skip-note">You can skip the profile photo for now — everything else in your profile has already been set up by the admin.</p>
+      <p class="skip-note">You can skip the profile photo for now â€” everything else in your profile has already been set up by the admin.</p>
     </form>
     <?php endif; ?>
   </div>
@@ -210,14 +210,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
   document.getElementById('pw2')?.addEventListener('input', function () {
     const m = document.getElementById('pw-match');
     if (this.value === document.getElementById('pw').value) {
-      m.textContent = '✓ Passwords match'; m.style.color = 'var(--green)';
+      m.textContent = 'âœ“ Passwords match'; m.style.color = 'var(--green)';
     } else {
-      m.textContent = '✗ Does not match';  m.style.color = 'var(--red)';
+      m.textContent = 'âœ— Does not match';  m.style.color = 'var(--red)';
     }
   });
 </script>
 </body>
 </html>
+
 
 
 

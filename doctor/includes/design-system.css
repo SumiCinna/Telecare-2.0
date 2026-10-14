@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --seed-color: #B31118;
   --primary: #B31118;
   --primary-dark: #8A000B;
@@ -39,7 +39,7 @@
 body {
   background: var(--page-background);
   color: var(--neutral-900);
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
 }
 
 button,
@@ -53,3 +53,4 @@ textarea {
   outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
+

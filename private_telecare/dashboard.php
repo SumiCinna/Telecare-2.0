@@ -1,13 +1,13 @@
-<?php
+﻿<?php
 // private_telecare/dashboard.php
 require_once __DIR__ . '/../includes/auth.php';
 // dashboard.php - Patient's dashboard
-// ── Stats ──
+// â”€â”€ Stats â”€â”€
 $upcoming_count     = $conn->query("SELECT COUNT(*) c FROM appointments WHERE patient_id=$patient_id AND status IN ('Pending','Confirmed') AND appointment_date >= CURDATE()")->fetch_assoc()['c'];
 $prescription_count = $conn->query("SELECT COUNT(*) c FROM prescriptions WHERE patient_id=$patient_id AND status='Active'")->fetch_assoc()['c'];
 $completed_count    = $conn->query("SELECT COUNT(*) c FROM appointments WHERE patient_id=$patient_id AND status='Completed'")->fetch_assoc()['c'];
 
-// ── Upcoming appointments (max 3) ──
+// â”€â”€ Upcoming appointments (max 3) â”€â”€
 $upcoming = $conn->query("
     SELECT a.*, d.full_name AS doctor_name, d.specialty
     FROM appointments a JOIN doctors d ON d.id = a.doctor_id
@@ -17,7 +17,7 @@ $upcoming = $conn->query("
 
 
 
-$page_title = 'Home — TELE-CARE';
+$page_title = 'Home â€” TELE-CARE';
 $active_nav = 'home';
 require_once __DIR__ . '/../includes/header.php';
 
@@ -26,7 +26,7 @@ $firstName = $parts[0];
 ?>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 
 :root{
   --tc-red:#B31118; --tc-red-dark:#8a000b;
@@ -36,14 +36,14 @@ $firstName = $parts[0];
   --tc-red-tint:#FEF2F2; --tc-teal-tint:#ECFDF5;
 }
 
-/* ── PAGE LAYOUT ── */
+/* â”€â”€ PAGE LAYOUT â”€â”€ */
 .page {
   max-width: 1320px !important;
   margin: 0 auto !important;
   padding: 1.8rem 2rem 5rem !important;
   background: transparent !important;
   overflow-x: clip;
-  font-family:'Inter',sans-serif;
+  font-family:'Poppins',sans-serif;
 }
 .page-head{
   display:flex; align-items:center; justify-content:space-between; gap:1rem;
@@ -51,7 +51,7 @@ $firstName = $parts[0];
 }
 .page-head-copy{ min-width:0; }
 .page-title{
-  font-family:'Inter',sans-serif; font-weight:800; font-size:1.9rem;
+  font-family:'Poppins',sans-serif; font-weight:800; font-size:1.9rem;
   color:var(--tc-ink); line-height:1.15; margin-bottom:0.3rem;
 }
 .page-sub{ color:var(--tc-muted); font-size:0.92rem; }
@@ -74,7 +74,7 @@ $firstName = $parts[0];
 .patient-strip-status { display:flex; align-items:center; gap:.35rem; margin-top:.2rem; color:var(--tc-teal); font-size:.72rem; }
 .patient-strip-status::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--tc-teal-light); }
 
-/* ── DASHBOARD GRID ── */
+/* â”€â”€ DASHBOARD GRID â”€â”€ */
 .db-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -96,7 +96,7 @@ $firstName = $parts[0];
 .welcome-btn:hover { background: var(--tc-red-dark); transform: translateY(-2px); }
 .welcome-btn svg { flex-shrink: 0; }
 
-/* ── STATS ROW ── */
+/* â”€â”€ STATS ROW â”€â”€ */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -132,7 +132,7 @@ $firstName = $parts[0];
 .si-green { background: var(--tc-red-tint); color: var(--tc-red); }
 .si-red   { background: var(--tc-teal-tint);  color: var(--tc-teal-light); }
 .stat-num {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 1.9rem; font-weight: 800; line-height: 1;
   color: var(--tc-ink);
 }
@@ -144,7 +144,7 @@ $firstName = $parts[0];
   font-weight: 600;
 }
 
-/* ── SECTION CARDS ── */
+/* â”€â”€ SECTION CARDS â”€â”€ */
 .db-card {
   background: #fff;
   border-radius: 16px;
@@ -177,7 +177,7 @@ $firstName = $parts[0];
 .db-card-link svg { width: 12px; height: 12px; }
 .db-card-body { padding: 0.9rem 1.4rem 1.4rem; flex: 1; }
 
-/* ── APPOINTMENT ITEMS ── */
+/* â”€â”€ APPOINTMENT ITEMS â”€â”€ */
 .appt-item {
   display: flex; align-items: center; gap: 1rem;
   padding: 0.85rem 0;
@@ -193,7 +193,7 @@ $firstName = $parts[0];
   align-items: center; justify-content: center;
 }
 .appt-date-box .day {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 1.2rem; font-weight: 800;
   color: var(--tc-teal); line-height: 1.1;
 }
@@ -210,7 +210,7 @@ $firstName = $parts[0];
 }
 .appt-meta svg { width: 11px; height: 11px; flex-shrink: 0; }
 
-/* ── BADGES ── */
+/* â”€â”€ BADGES â”€â”€ */
 .badge {
   font-size: 0.64rem; font-weight: 700; letter-spacing: 0.05em;
   text-transform: uppercase; padding: 0.22rem 0.65rem; border-radius: 50px;
@@ -220,7 +220,7 @@ $firstName = $parts[0];
 .badge-orange { background: rgba(234,179,8,0.12);  color: #ca8a04; }
 .badge-red    { background: var(--tc-red-tint);   color: var(--tc-red); }
 
-/* ── EMPTY STATE ── */
+/* â”€â”€ EMPTY STATE â”€â”€ */
 .empty-state {
   display: flex; flex-direction: column; align-items: center;
   justify-content: center; text-align: center;
@@ -230,7 +230,7 @@ $firstName = $parts[0];
 .empty-state svg { width: 34px; height: 34px; opacity: 0.5; }
 .empty-state p { font-size: 0.85rem; font-weight: 500; }
 
-/* ── DOCTOR ITEMS ── */
+/* â”€â”€ DOCTOR ITEMS â”€â”€ */
 .doc-item {
   display: flex; align-items: center; gap: 1rem;
   padding: 0.85rem 0;
@@ -266,7 +266,7 @@ $firstName = $parts[0];
 .doc-right { text-align: right; flex-shrink: 0; }
 .doc-fee {
   font-size: 0.85rem; font-weight: 800; color: var(--tc-ink);
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
 }
 .doc-avail {
   display: inline-block; margin-top: 0.28rem;
@@ -276,7 +276,7 @@ $firstName = $parts[0];
   text-transform: uppercase;
 }
 
-/* ── RESPONSIVE ── */
+/* â”€â”€ RESPONSIVE â”€â”€ */
 @media (max-width: 900px) {
   .topbar{ padding: 1rem 1.1rem; }
   .topbar-search{ max-width: none; }
@@ -354,7 +354,7 @@ $firstName = $parts[0];
 
 <div class="db-grid">
 
-  <!-- ══ STATS ══ -->
+  <!-- â•â• STATS â•â• -->
   <div class="db-stats">
     <div class="stats-row">
 
@@ -391,7 +391,7 @@ $firstName = $parts[0];
     </div>
   </div>
 
-  <!-- ══ UPCOMING APPOINTMENTS ══ -->
+  <!-- â•â• UPCOMING APPOINTMENTS â•â• -->
   <div class="db-appts">
     <div class="db-card">
       <div class="db-card-head">
@@ -446,7 +446,7 @@ $firstName = $parts[0];
 </div><!-- /page -->
 
 <script>
-/* ── Stat counter animation ── */
+/* â”€â”€ Stat counter animation â”€â”€ */
 document.querySelectorAll('.stat-num').forEach(el => {
   const target = parseInt(el.textContent, 10);
   if (isNaN(target) || target === 0) return;
@@ -464,6 +464,8 @@ document.querySelectorAll('.stat-num').forEach(el => {
 <?php require_once __DIR__ . '/../includes/nav.php'; ?>
 </body>
 </html>
+
+
 
 
 

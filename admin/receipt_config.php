@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // admin/receipt_config.php
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -71,8 +71,8 @@ $activeNav = 'pos-receipt';
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Receipt Configuration — TELE-CARE</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <title>Receipt Configuration â€” TELE-CARE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link href="assets/admin.css" rel="stylesheet"/>
   <style>
     
@@ -83,7 +83,7 @@ $activeNav = 'pos-receipt';
 
     .card{background:var(--white);border-radius:16px;border:1px solid rgba(36,68,65,0.07);box-shadow:0 2px 10px rgba(0,0,0,0.04);padding:1.8rem}
     .field-label{display:block;font-size:0.72rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#9ab0ae;margin-bottom:0.4rem}
-    .field-input{width:100%;padding:0.72rem 0.9rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--green);outline:none}
+    .field-input{width:100%;padding:0.72rem 0.9rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:12px;font-family:'Poppins',sans-serif;font-size:0.9rem;color:var(--green);outline:none}
     .form-field{margin-bottom:1rem}
     .checkbox-row{display:flex;align-items:center;gap:0.6rem;margin-bottom:1.2rem}
     .checkbox-row input{width:18px;height:18px}
@@ -104,8 +104,8 @@ $activeNav = 'pos-receipt';
 </head>
 <body>
 
-<?php if ($toast): ?><div class="toast">✓ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
-<?php if ($toast_error): ?><div class="toast error">✕ <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
+<?php if ($toast): ?><div class="toast">âœ“ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
+<?php if ($toast_error): ?><div class="toast error">âœ• <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
 
 <?php include 'sidebar.php'; ?>
 
@@ -134,16 +134,16 @@ $activeNav = 'pos-receipt';
     <div>
       <div class="preview-label">Live Preview</div>
       <div class="receipt-preview">
-        <div class="center" id="p-logo" style="<?= $settingsRow['show_logo'] ? '' : 'display:none;' ?>">🏥</div>
+        <div class="center" id="p-logo" style="<?= $settingsRow['show_logo'] ? '' : 'display:none;' ?>">ðŸ¥</div>
         <div class="center" style="font-weight:700;" id="p-clinic-name"><?= htmlspecialchars($settingsRow['clinic_name']) ?></div>
         <div class="center" id="p-address"><?= htmlspecialchars($settingsRow['address'] ?? '') ?></div>
         <div class="center" id="p-phone"><?= htmlspecialchars($settingsRow['phone'] ?? '') ?></div>
         <div class="center" id="p-tin">TIN: <?= htmlspecialchars($settingsRow['tin'] ?? '') ?></div>
         <hr/>
-        <div class="row"><span>Paracetamol 500mg x2</span><span>₱20.00</span></div>
-        <div class="row"><span>CBC Test</span><span>₱350.00</span></div>
+        <div class="row"><span>Paracetamol 500mg x2</span><span>â‚±20.00</span></div>
+        <div class="row"><span>CBC Test</span><span>â‚±350.00</span></div>
         <hr/>
-        <div class="row" style="font-weight:700;"><span>TOTAL</span><span>₱370.00</span></div>
+        <div class="row" style="font-weight:700;"><span>TOTAL</span><span>â‚±370.00</span></div>
         <hr/>
         <div class="center" id="p-footer"><?= htmlspecialchars($settingsRow['footer_note'] ?? '') ?></div>
       </div>

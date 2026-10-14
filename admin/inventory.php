@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // admin/inventory.php
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -9,11 +9,11 @@ require_once '../database/config.php';
 if (!isset($_SESSION['admin_id'])) { header('Location: login.php'); exit; }
 $admin_id = $_SESSION['admin_id'];
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    INVENTORY TYPE (Medicine vs Testing Kits)
    Everything below this block is scoped to ONE
-   category only — chosen on inventory_select.php.
-   ══════════════════════════════════════════════ */
+   category only â€” chosen on inventory_select.php.
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 $TYPE_MAP = [
     'medicine'      => 'Medicine',
     'testing-kits'  => 'Testing Kits',
@@ -31,7 +31,7 @@ $currentCategory = $TYPE_MAP[$typeSlug]; // 'Medicine' or 'Testing Kits'
 
 $UNITS = ['Tablet', 'Capsule', 'Bottle', 'Box', 'Vial', 'Piece', 'Pack', 'Syrup', 'Kit', 'Set'];
 
-// ── Ensure audit_logs table exists (same fallback as Users.php) ──
+// â”€â”€ Ensure audit_logs table exists (same fallback as Users.php) â”€â”€
 $conn->query("CREATE TABLE IF NOT EXISTS `audit_logs` (
   `id` int NOT NULL AUTO_INCREMENT,
   `admin_id` int NOT NULL,
@@ -56,14 +56,14 @@ if (!function_exists('log_audit')) {
     }
 }
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    ACTIONS
    (redirect_url always keeps ?type= so the admin
    lands back on the SAME inventory page)
-   ══════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 $redirect_url = 'inventory.php?type=' . urlencode($typeSlug);
 
-// ── Add product ──
+// â”€â”€ Add product â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
     $name          = trim($_POST['name'] ?? '');
     $category      = $currentCategory; // locked to the page's current type
@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
     header('Location: ' . $redirect_url); exit;
 }
 
-// ── Edit product ──
+// â”€â”€ Edit product â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_product'])) {
     $id            = (int)($_POST['product_id'] ?? 0);
     $name          = trim($_POST['name'] ?? '');
@@ -142,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_product'])) {
     header('Location: ' . $redirect_url); exit;
 }
 
-// ── Archive product ──
+// â”€â”€ Archive product â”€â”€
 if (isset($_GET['archive_product'])) {
     $id = (int)$_GET['archive_product'];
     $conn->query("UPDATE products SET status='Archived' WHERE id=$id");
@@ -151,7 +151,7 @@ if (isset($_GET['archive_product'])) {
     header('Location: ' . $redirect_url); exit;
 }
 
-// ── Restore product ──
+// â”€â”€ Restore product â”€â”€
 if (isset($_GET['restore_product'])) {
     $id = (int)$_GET['restore_product'];
     $conn->query("UPDATE products SET status='Active' WHERE id=$id");
@@ -164,9 +164,9 @@ $toast       = $_SESSION['toast'] ?? null;
 $toast_error = $_SESSION['toast_error'] ?? null;
 unset($_SESSION['toast'], $_SESSION['toast_error']);
 
-/* ══════════════════════════════════════════════
-   FETCH PRODUCTS — scoped to $currentCategory only
-   ══════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   FETCH PRODUCTS â€” scoped to $currentCategory only
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 $allProducts = [];
 $pstmt = $conn->prepare("SELECT * FROM products WHERE category = ? ORDER BY name ASC");
 $pstmt->bind_param("s", $currentCategory);
@@ -186,8 +186,8 @@ $pageLabel = $currentCategory === 'Medicine' ? 'Medicine Inventory' : 'Testing K
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title><?= htmlspecialchars($pageLabel) ?> — TELE-CARE</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <title><?= htmlspecialchars($pageLabel) ?> â€” TELE-CARE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link href="assets/admin.css" rel="stylesheet"/>
   <style>
     .modal{background:var(--white);border-radius:20px;padding:2rem;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;animation:fadeUp 0.3s ease}
@@ -206,8 +206,8 @@ $pageLabel = $currentCategory === 'Medicine' ? 'Medicine Inventory' : 'Testing K
 </head>
 <body>
 
-<?php if ($toast): ?><div class="toast">✓ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
-<?php if ($toast_error): ?><div class="toast error">✕ <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
+<?php if ($toast): ?><div class="toast">âœ“ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
+<?php if ($toast_error): ?><div class="toast error">âœ• <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
 
 <?php $activeNav = 'pos-products'; include 'sidebar.php'; ?>
 
@@ -278,7 +278,7 @@ $pageLabel = $currentCategory === 'Medicine' ? 'Medicine Inventory' : 'Testing K
             <?php foreach ($UNITS as $u): ?><option value="<?= htmlspecialchars($u) ?>"><?= htmlspecialchars($u) ?></option><?php endforeach; ?>
           </select>
         </div>
-        <div class="form-field"><label class="field-label">Selling Price (₱) *</label><input type="number" step="0.01" min="0" name="price" class="field-input" required/></div>
+        <div class="form-field"><label class="field-label">Selling Price (â‚±) *</label><input type="number" step="0.01" min="0" name="price" class="field-input" required/></div>
       </div>
       <div class="form-row">
         <div class="form-field"><label class="field-label">Starting Quantity *</label><input type="number" min="0" name="stock_quantity" class="field-input" value="0" required/></div>
@@ -309,7 +309,7 @@ $pageLabel = $currentCategory === 'Medicine' ? 'Medicine Inventory' : 'Testing K
             <?php foreach ($UNITS as $u): ?><option value="<?= htmlspecialchars($u) ?>"><?= htmlspecialchars($u) ?></option><?php endforeach; ?>
           </select>
         </div>
-        <div class="form-field"><label class="field-label">Selling Price (₱) *</label><input type="number" step="0.01" min="0" name="price" id="edit-product-price" class="field-input" required/></div>
+        <div class="form-field"><label class="field-label">Selling Price (â‚±) *</label><input type="number" step="0.01" min="0" name="price" id="edit-product-price" class="field-input" required/></div>
       </div>
       <div class="form-row">
         <div class="form-field"><label class="field-label">Quantity *</label><input type="number" min="0" name="stock_quantity" id="edit-product-stock" class="field-input" required/></div>
@@ -392,7 +392,7 @@ function renderRows(rows) {
     return `<tr>
       <td>${escHtml(p.name)}</td>
       <td>${escHtml(p.unit)}</td>
-      <td>₱${Number(p.price).toFixed(2)}</td>
+      <td>â‚±${Number(p.price).toFixed(2)}</td>
       <td>${p.stock_quantity}${low && p.status === 'Active' ? ' <span class="badge badge-orange">Low</span>' : ''}</td>
       <td>${statusBadge(p.status)}</td>
       <td><div class="actions-cell">${actions}</div></td>
@@ -419,7 +419,7 @@ function openViewModal(id) {
   document.getElementById('vpr-title').textContent = p.name;
   document.getElementById('vpr-category').textContent = p.category;
   document.getElementById('vpr-unit').textContent = p.unit;
-  document.getElementById('vpr-price').textContent = '₱' + Number(p.price).toFixed(2);
+  document.getElementById('vpr-price').textContent = 'â‚±' + Number(p.price).toFixed(2);
   document.getElementById('vpr-stock').textContent = p.stock_quantity;
   document.getElementById('vpr-reorder').textContent = p.reorder_level;
   document.getElementById('vpr-status').textContent = p.status;

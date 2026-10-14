@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // auth/reset_password.php
 require_once '../database/config.php';
 
@@ -46,22 +46,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $patient) {
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Reset Password — TELE-CARE</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <title>Reset Password â€” TELE-CARE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
     :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF}
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'DM Sans',sans-serif;background:linear-gradient(160deg,var(--green) 0%,#1a3330 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;}
+    body{font-family:'Poppins',sans-serif;background:linear-gradient(160deg,var(--green) 0%,#1a3330 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;}
     body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(63,130,227,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(63,130,227,0.06) 1px,transparent 1px);background-size:44px 44px;animation:gridMove 20s linear infinite;pointer-events:none;}
     @keyframes gridMove{from{transform:translateY(0)}to{transform:translateY(44px)}}
     .card{background:#fff;border-radius:24px;padding:2.5rem 2rem;width:100%;max-width:420px;position:relative;z-index:1;box-shadow:0 30px 80px rgba(0,0,0,0.25);animation:fadeUp 0.5s ease;}
     @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-    .logo{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:var(--green);text-decoration:none;display:block;margin-bottom:2rem;}
+    .logo{font-family:'Poppins',sans-serif;font-size:1.4rem;font-weight:900;color:var(--green);text-decoration:none;display:block;margin-bottom:2rem;}
     .logo span{color:var(--red)}
     .field-label{display:block;font-size:0.78rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#5a7a77;margin-bottom:0.45rem;}
-    .field-input{width:100%;padding:0.8rem 1rem;border:1.5px solid rgba(36,68,65,0.15);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.95rem;background:var(--white);color:var(--green);outline:none;transition:border-color 0.25s,box-shadow 0.25s;}
+    .field-input{width:100%;padding:0.8rem 1rem;border:1.5px solid rgba(36,68,65,0.15);border-radius:12px;font-family:'Poppins',sans-serif;font-size:0.95rem;background:var(--white);color:var(--green);outline:none;transition:border-color 0.25s,box-shadow 0.25s;}
     .field-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(63,130,227,0.12);}
-    .btn{width:100%;padding:0.9rem;border-radius:50px;background:var(--red);color:#fff;font-weight:600;font-size:0.95rem;border:none;cursor:pointer;transition:all 0.3s;box-shadow:0 6px 20px rgba(195,54,67,0.3);margin-top:1.2rem;font-family:'DM Sans',sans-serif;}
+    .btn{width:100%;padding:0.9rem;border-radius:50px;background:var(--red);color:#fff;font-weight:600;font-size:0.95rem;border:none;cursor:pointer;transition:all 0.3s;box-shadow:0 6px 20px rgba(195,54,67,0.3);margin-top:1.2rem;font-family:'Poppins',sans-serif;}
     .btn:hover{background:#a82d38;transform:translateY(-2px);}
     .alert-error{background:rgba(195,54,67,0.08);border:1px solid rgba(195,54,67,0.25);color:var(--red);border-radius:12px;padding:0.85rem 1rem;font-size:0.88rem;margin-bottom:1.2rem;}
     .pw-wrap{position:relative;}
@@ -79,17 +79,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $patient) {
   <?php if ($success): ?>
     <!-- Success state -->
     <div style="text-align:center;">
-      <div style="font-size:3rem;margin-bottom:1rem;">✅</div>
-      <h2 style="font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--green);margin-bottom:0.5rem;">Password Updated!</h2>
+      <div style="font-size:3rem;margin-bottom:1rem;">âœ…</div>
+      <h2 style="font-family:'Poppins',sans-serif;font-size:1.6rem;color:var(--green);margin-bottom:0.5rem;">Password Updated!</h2>
       <p style="color:#6b8a87;font-size:0.9rem;line-height:1.7;margin-bottom:1.5rem;">Your password has been changed successfully. You can now log in with your new password.</p>
-      <a href="login.php" style="display:inline-block;padding:0.9rem 2.5rem;border-radius:50px;background:var(--red);color:#fff;font-weight:600;text-decoration:none;box-shadow:0 6px 20px rgba(195,54,67,0.3);">Go to Login →</a>
+      <a href="login.php" style="display:inline-block;padding:0.9rem 2.5rem;border-radius:50px;background:var(--red);color:#fff;font-weight:600;text-decoration:none;box-shadow:0 6px 20px rgba(195,54,67,0.3);">Go to Login â†’</a>
     </div>
 
   <?php elseif ($error && !$patient): ?>
     <!-- Invalid token state -->
     <div style="text-align:center;">
-      <div style="font-size:3rem;margin-bottom:1rem;">❌</div>
-      <h2 style="font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--green);margin-bottom:0.5rem;">Link Expired</h2>
+      <div style="font-size:3rem;margin-bottom:1rem;">âŒ</div>
+      <h2 style="font-family:'Poppins',sans-serif;font-size:1.6rem;color:var(--green);margin-bottom:0.5rem;">Link Expired</h2>
       <p style="color:#6b8a87;font-size:0.9rem;line-height:1.7;margin-bottom:1.5rem;"><?= htmlspecialchars($error) ?></p>
       <a href="forgot_password.php" style="display:inline-block;padding:0.9rem 2.5rem;border-radius:50px;background:var(--red);color:#fff;font-weight:600;text-decoration:none;box-shadow:0 6px 20px rgba(195,54,67,0.3);">Request New Link</a>
     </div>
@@ -97,8 +97,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $patient) {
   <?php else: ?>
     <!-- Reset form -->
     <div style="margin-bottom:1.8rem;">
-      <div style="width:52px;height:52px;border-radius:14px;background:rgba(63,130,227,0.08);border:1px solid rgba(63,130,227,0.15);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:1rem;">🔑</div>
-      <h2 style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:var(--green);margin-bottom:0.3rem;">Set New Password</h2>
+      <div style="width:52px;height:52px;border-radius:14px;background:rgba(63,130,227,0.08);border:1px solid rgba(63,130,227,0.15);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:1rem;">ðŸ”‘</div>
+      <h2 style="font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:900;color:var(--green);margin-bottom:0.3rem;">Set New Password</h2>
       <p style="color:#6b8a87;font-size:0.88rem;line-height:1.6;">Hi <strong><?= htmlspecialchars($patient['full_name']) ?></strong>, enter your new password below.</p>
     </div>
 
@@ -133,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $patient) {
     </form>
 
     <p style="text-align:center;margin-top:1.5rem;font-size:0.85rem;color:#9ab0ae;">
-      <a href="login.php" style="color:var(--green);font-weight:600;text-decoration:none;">← Back to Login</a>
+      <a href="login.php" style="color:var(--green);font-weight:600;text-decoration:none;">â† Back to Login</a>
     </p>
   <?php endif ?>
 </div>
@@ -158,12 +158,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $patient) {
   if(pw2){
     pw2.addEventListener('input',function(){
       const m=document.getElementById('pw-match');
-      if(this.value===document.getElementById('pw').value){m.textContent='✓ Passwords match';m.style.color='var(--green)';}
-      else{m.textContent='✗ Passwords do not match';m.style.color='var(--red)';}
+      if(this.value===document.getElementById('pw').value){m.textContent='âœ“ Passwords match';m.style.color='var(--green)';}
+      else{m.textContent='âœ— Passwords do not match';m.style.color='var(--red)';}
     });
   }
 </script>
 </body>
 </html>
+
 
 

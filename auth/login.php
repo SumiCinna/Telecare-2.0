@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // auth/login.php
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 require_once '../database/config.php';
@@ -102,14 +102,14 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Log In - TELE-CARE AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
     :root { --red:#bd0f18; --red-dark:#a20c14; --ink:#101827; --line:#efc9c9; --panel:#fff; }
     * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem 1rem; font-family:'DM Sans',sans-serif; color:var(--ink); background:linear-gradient(125deg,#eef1ff 0%,#faf4f8 52%,#dff8ff 100%); }
+    body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem 1rem; font-family:'Poppins',sans-serif; color:var(--ink); background:linear-gradient(125deg,#eef1ff 0%,#faf4f8 52%,#dff8ff 100%); }
     .page { width:min(100%, 500px); text-align:center; }
     .brand-mark { display:block; width:88px; height:88px; margin:0 auto .6rem; object-fit:contain; }
-    .brand-name { margin:0; color:#a70009; font-family:'Plus Jakarta Sans',sans-serif; font-size:1.8rem; letter-spacing:-.03em; }
+    .brand-name { margin:0; color:#a70009; font-family:'Poppins',sans-serif; font-size:1.8rem; letter-spacing:-.03em; }
     .brand-subtitle { margin:.3rem 0 1.8rem; color:#62353b; font-size:.88rem; }
     .login-card { overflow:hidden; text-align:left; background:var(--panel); border:1px solid var(--line); border-radius:12px; box-shadow:0 10px 18px rgba(62,32,42,.12); }
     .card-body { padding:1.85rem 1.75rem 1.7rem; }
@@ -275,3 +275,4 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
   </script>
 </body>
 </html>
+

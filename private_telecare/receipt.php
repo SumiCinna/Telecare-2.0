@@ -1,9 +1,9 @@
-<?php
+﻿<?php
 // private_telecare/receipt.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../includes/auth.php';
 
-// receipt.php — Shared receipt accessible by patient, doctor (via doctor/receipt.php symlink), or staff
+// receipt.php â€” Shared receipt accessible by patient, doctor (via doctor/receipt.php symlink), or staff
 
 $appt_id = (int)($_GET['appt_id'] ?? 0);
 if (!$appt_id) { header('Location: visits.php'); exit; }
@@ -80,7 +80,7 @@ $back_url = match($role) {
     default  => 'router.php?page=visits',
 };
 
-$page_title = 'Payment Receipt — TELE-CARE';
+$page_title = 'Payment Receipt â€” TELE-CARE';
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -96,7 +96,7 @@ require_once __DIR__ . '/../includes/header.php';
     background-size:20px 20px;background-position:0 0,10px 0;}
 
   .receipt-logo{font-size:0.72rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;opacity:0.7;margin-bottom:0.5rem;}
-  .receipt-title{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:800;margin-bottom:0.3rem;}
+  .receipt-title{font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:0.3rem;}
   .receipt-subtitle{font-size:0.78rem;opacity:0.75;}
 
   .receipt-body{padding:1.8rem 1.4rem 0;}
@@ -107,7 +107,7 @@ require_once __DIR__ . '/../includes/header.php';
 
   .receipt-no{text-align:center;margin-bottom:1.2rem;}
   .receipt-no-label{font-size:0.65rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.2rem;}
-  .receipt-no-val{font-size:1.15rem;font-weight:800;color:var(--green);letter-spacing:0.05em;font-family:'DM Mono',monospace,sans-serif;}
+  .receipt-no-val{font-size:1.15rem;font-weight:800;color:var(--green);letter-spacing:0.05em;font-family:'Poppins',sans-serif,sans-serif;}
 
   .receipt-divider{border:none;border-top:1.5px dashed rgba(36,68,65,0.12);margin:1rem 0;}
 
@@ -129,7 +129,7 @@ require_once __DIR__ . '/../includes/header.php';
   .receipt-footer-text{font-size:0.72rem;color:var(--muted);line-height:1.6;}
   .receipt-qr-placeholder{width:64px;height:64px;background:rgba(36,68,65,0.06);border-radius:10px;margin:0.6rem auto;display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:var(--muted);}
 
-  .btn-print{display:inline-flex;align-items:center;gap:0.4rem;background:var(--green);color:#fff;padding:0.65rem 1.4rem;border-radius:50px;font-size:0.82rem;font-weight:700;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:1rem;text-decoration:none;}
+  .btn-print{display:inline-flex;align-items:center;gap:0.4rem;background:var(--green);color:#fff;padding:0.65rem 1.4rem;border-radius:50px;font-size:0.82rem;font-weight:700;border:none;cursor:pointer;font-family:'Poppins',sans-serif;margin-top:1rem;text-decoration:none;}
   .btn-back-link{display:inline-flex;align-items:center;gap:0.35rem;color:var(--muted);font-size:0.8rem;font-weight:600;text-decoration:none;margin-top:0.6rem;}
   .toast-bar{position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);z-index:400;padding:0.75rem 1.4rem;border-radius:16px;font-size:0.82rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.15);white-space:normal;max-width:88vw;text-align:center;}
   .toast-bar.success{background:var(--green);color:#fff;animation:toastOut 0.4s 3.5s ease forwards;}
@@ -174,8 +174,8 @@ require_once __DIR__ . '/../includes/header.php';
   }
 </style>
 
-<?php if ($toast): ?><div class="toast-bar success">✓ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
-<?php if ($toast_error): ?><div class="toast-bar error">✕ <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
+<?php if ($toast): ?><div class="toast-bar success">âœ“ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
+<?php if ($toast_error): ?><div class="toast-bar error">âœ• <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
 
 <div class="page">
 <div class="receipt-wrap">
@@ -190,7 +190,7 @@ require_once __DIR__ . '/../includes/header.php';
 
     <!-- Header -->
     <div class="receipt-top">
-      <div class="receipt-logo">🏥 Tele-Care</div>
+      <div class="receipt-logo">ðŸ¥ Tele-Care</div>
       <div class="receipt-title">Payment Receipt</div>
       <div class="receipt-subtitle">Official Consultation Receipt</div>
     </div>
@@ -204,7 +204,7 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
         <div>
           <div class="receipt-status-text">Payment Successful</div>
-          <div class="receipt-status-sub"><?= $paid_at->format('F j, Y · g:i A') ?></div>
+          <div class="receipt-status-sub"><?= $paid_at->format('F j, Y Â· g:i A') ?></div>
         </div>
       </div>
 
@@ -233,15 +233,15 @@ require_once __DIR__ . '/../includes/header.php';
       </div>
       <div class="receipt-row">
         <span class="receipt-row-label">Specialty</span>
-        <span class="receipt-row-val"><?= htmlspecialchars($appt['specialty'] ?? '—') ?></span>
+        <span class="receipt-row-val"><?= htmlspecialchars($appt['specialty'] ?? 'â€”') ?></span>
       </div>
       <div class="receipt-row">
         <span class="receipt-row-label">Appointment</span>
-        <span class="receipt-row-val"><?= $appt_date->format('F j, Y') ?> · <?= date('g:i A', strtotime($appt['appointment_time'])) ?></span>
+        <span class="receipt-row-val"><?= $appt_date->format('F j, Y') ?> Â· <?= date('g:i A', strtotime($appt['appointment_time'])) ?></span>
       </div>
       <div class="receipt-row">
         <span class="receipt-row-label">Type</span>
-        <span class="receipt-row-val">📹 <?= htmlspecialchars($appt['type']) ?></span>
+        <span class="receipt-row-val">ðŸ“¹ <?= htmlspecialchars($appt['type']) ?></span>
       </div>
 
       <hr class="receipt-divider"/>
@@ -249,7 +249,7 @@ require_once __DIR__ . '/../includes/header.php';
       <!-- Amount -->
       <div class="receipt-amount-box">
         <div class="receipt-amount-label">Total Amount Paid</div>
-        <div class="receipt-amount-val">₱<?= number_format($amount, 2) ?></div>
+        <div class="receipt-amount-val">â‚±<?= number_format($amount, 2) ?></div>
         <div>
           <span class="receipt-amount-status">
             <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -301,6 +301,8 @@ require_once __DIR__ . '/../includes/header.php';
 <?php require_once __DIR__ . '/../includes/nav.php'; ?>
 </body>
 </html>
+
+
 
 
 

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // admin/Users.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -10,7 +10,7 @@ require_once __DIR__ . '/../private_telecare/booking/booking_helpers.php';
 if (!isset($_SESSION['admin_id'])) { header('Location: login.php'); exit; }
 $admin_id = $_SESSION['admin_id'];
 
-// ── Ensure audit_logs table exists (fallback if the SQL file was not run) ──
+// â”€â”€ Ensure audit_logs table exists (fallback if the SQL file was not run) â”€â”€
 $conn->query("CREATE TABLE IF NOT EXISTS `audit_logs` (
   `id` int NOT NULL AUTO_INCREMENT,
   `admin_id` int NOT NULL,
@@ -25,7 +25,7 @@ $conn->query("CREATE TABLE IF NOT EXISTS `audit_logs` (
   KEY `entity` (`entity_type`,`entity_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-// ── Audit logging helper ──
+// â”€â”€ Audit logging helper â”€â”€
 function log_audit($conn, $admin_id, $action, $entity_type, $entity_id, $old = null, $new = null) {
     $old_json = $old === null ? null : json_encode($old, JSON_UNESCAPED_SLASHES);
     $new_json = $new === null ? null : json_encode($new, JSON_UNESCAPED_SLASHES);
@@ -34,11 +34,11 @@ function log_audit($conn, $admin_id, $action, $entity_type, $entity_id, $old = n
     $stmt->execute();
 }
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    ACTIONS
-   ══════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-// ── Create doctor (simple account — full profile filled in by the doctor later) ──
+// â”€â”€ Create doctor (simple account â€” full profile filled in by the doctor later) â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_doctor'])) {
         $fn   = trim($_POST['full_name'] ?? '');
     $em   = trim($_POST['email'] ?? '');
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_doctor'])) {
         header('Location: Users.php'); exit;
     }
 
-    // No password is set yet — the doctor authenticates via the emailed setup
+    // No password is set yet â€” the doctor authenticates via the emailed setup
     // link (token below), not by typing a password anywhere. A random,
     // never-shared placeholder hash just satisfies the NOT NULL column.
     $placeholder = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_doctor'])) {
     header('Location: Users.php'); exit;
 }
 
-// ── Resend a doctor's setup link (regenerates the token) ──
+// â”€â”€ Resend a doctor's setup link (regenerates the token) â”€â”€
 if (isset($_GET['resend_invite'])) {
     $did     = (int)$_GET['resend_invite'];
     $token   = bin2hex(random_bytes(32));
@@ -108,7 +108,7 @@ if (isset($_GET['resend_invite'])) {
     header('Location: Users.php'); exit;
 }
 
-// ── Toggle doctor active/inactive ──
+// â”€â”€ Toggle doctor active/inactive â”€â”€
 if (isset($_GET['toggle_doctor'])) {
     $did = (int)$_GET['toggle_doctor'];
     $oldRow = $conn->query("SELECT status FROM doctors WHERE id=$did")->fetch_assoc();
@@ -119,7 +119,7 @@ if (isset($_GET['toggle_doctor'])) {
     header('Location: Users.php'); exit;
 }
 
-// ── Toggle patient active/inactive ──
+// â”€â”€ Toggle patient active/inactive â”€â”€
 if (isset($_GET['toggle_patient'])) {
     $pid = (int)$_GET['toggle_patient'];
     $cur = (int)($_GET['active'] ?? 1);
@@ -130,7 +130,7 @@ if (isset($_GET['toggle_patient'])) {
     header('Location: Users.php'); exit;
 }
 
-// ── Toggle staff active/inactive ──
+// â”€â”€ Toggle staff active/inactive â”€â”€
 if (isset($_GET['toggle_staff'])) {
     $sid = (int)$_GET['toggle_staff'];
     $oldRow = $conn->query("SELECT status FROM staff_accounts WHERE id=$sid")->fetch_assoc();
@@ -142,7 +142,7 @@ if (isset($_GET['toggle_staff'])) {
     header('Location: Users.php'); exit;
 }
 
-// ── Create staff account ──
+// â”€â”€ Create staff account â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_staff'])) {
     $fn   = trim($_POST['staff_full_name'] ?? '');
     $em   = trim($_POST['staff_email'] ?? '');
@@ -172,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_staff'])) {
     header('Location: Users.php'); exit;
 }
 
-// ── Verify doctor ──
+// â”€â”€ Verify doctor â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_doctor'])) {
     $did     = (int)$_POST['doctor_id'];
     $license = strtoupper(trim($_POST['license_number'] ?? ''));
@@ -224,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_doctor'])) {
     header('Location: Users.php'); exit;
 }
 
-// ── Update doctor ──
+// â”€â”€ Update doctor â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_doctor'])) {
         $did = (int)$_POST['doctor_id'];
     $fn = trim($_POST['full_name'] ?? '');
@@ -263,7 +263,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_doctor'])) {
     header('Location: Users.php'); exit;
 }
 
-// ── Update patient ──
+// â”€â”€ Update patient â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_patient'])) {
     $pid = (int)$_POST['patient_id'];
     $fn = trim($_POST['full_name'] ?? '');
@@ -301,7 +301,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_patient'])) {
     header('Location: Users.php'); exit;
 }
 
-// ── Update staff ──
+// â”€â”€ Update staff â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_staff'])) {
     $sid = (int)$_POST['staff_id'];
     $fn = trim($_POST['full_name'] ?? '');
@@ -337,9 +337,9 @@ $invite_email = $_SESSION['invite_email'] ?? null;
 $invite_name  = $_SESSION['invite_name'] ?? null;
 unset($_SESSION['toast'], $_SESSION['toast_error'], $_SESSION['invite_link'], $_SESSION['invite_email'], $_SESSION['invite_name']);
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    FETCH DOCTORS (+ schedules)
-   ══════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 $dres = $conn->query("SELECT d.* FROM doctors d ORDER BY d.created_at DESC");
 $doctors = [];
 if ($dres) { while ($row = $dres->fetch_assoc()) $doctors[] = $row; }
@@ -366,23 +366,23 @@ if (count($doctors) > 0) {
 foreach ($doctors as &$doc) { $doc['_schedules'] = $scheduleMap[(int)$doc['id']] ?? []; $doc['_type'] = 'doctor'; }
 unset($doc);
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    FETCH PATIENTS
-   ══════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 $pres = $conn->query("SELECT * FROM patients ORDER BY created_at DESC");
 $patients = [];
 if ($pres) { while ($row = $pres->fetch_assoc()) { $row['_type'] = 'patient'; $patients[] = $row; } }
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    FETCH STAFF
-   ══════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 $sres = $conn->query("SELECT id, full_name, email, status, created_at FROM staff_accounts ORDER BY created_at DESC");
 $staff = [];
 if ($sres) { while ($row = $sres->fetch_assoc()) { $row['_type'] = 'staff'; $staff[] = $row; } }
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    UNIFIED LIST FOR THE TABLE / JS
-   ══════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 $allUsers = [];
 foreach ($doctors as $d) {
     $status = $d['status'] === 'active' ? 'active' : ($d['status'] === 'pending' ? 'pending' : 'inactive');
@@ -408,9 +408,9 @@ foreach ($staff as $s) {
     ];
 }
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    FETCH AUDIT LOGS (account change history)
-   ══════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 $auditLogs = [];
 $alog = $conn->query(
     "SELECT a.*, adm.full_name AS admin_name
@@ -430,15 +430,15 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>User Management — TELE-CARE</title>
+  <title>User Management â€” TELE-CARE</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link href="assets/admin.css" rel="stylesheet"/>
   <style>
 
 
-    /* ── Controls bar: search + filters ── */
+    /* â”€â”€ Controls bar: search + filters â”€â”€ */
 
     .role-pill{display:inline-block;padding:0.2rem 0.6rem;border-radius:50px;font-size:0.7rem;font-weight:700;letter-spacing:0.03em}
 
@@ -463,7 +463,7 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
     .invite-box code{font-size:0.75rem;word-break:break-all;color:var(--green);background:rgba(36,68,65,0.06);padding:0.4rem 0.6rem;border-radius:8px;display:block}
 
     .role-select{display:flex;gap:0.5rem;margin-bottom:1.2rem}
-    .role-select button{flex:1;padding:0.6rem;border-radius:12px;border:1.5px solid rgba(36,68,65,0.12);background:var(--white);color:var(--green);font-weight:600;font-size:0.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+    .role-select button{flex:1;padding:0.6rem;border-radius:12px;border:1.5px solid rgba(36,68,65,0.12);background:var(--white);color:var(--green);font-weight:600;font-size:0.82rem;cursor:pointer;font-family:'Poppins',sans-serif;transition:all 0.2s}
     .role-select button.active{background:var(--green);border-color:var(--green);color:#fff}
     .role-select button:disabled{opacity:0.4;cursor:not-allowed}
     .role-note{font-size:0.75rem;color:#9ab0ae;margin-bottom:1rem;line-height:1.4}
@@ -475,8 +475,8 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
 </head>
 <body>
 
-<?php if ($toast): ?><div class="toast">✓ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
-<?php if ($toast_error): ?><div class="toast error">✕ <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
+<?php if ($toast): ?><div class="toast">âœ“ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
+<?php if ($toast_error): ?><div class="toast error">âœ• <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
 
 <?php $activeNav = 'users'; include 'sidebar.php'; ?>
 
@@ -513,7 +513,7 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
 
     <?php if ($invite_link): ?>
     <div class="invite-box">
-      <p>📧 Setup email sent to <strong><?= htmlspecialchars($invite_email) ?></strong> — link also shown below:</p>
+      <p>ðŸ“§ Setup email sent to <strong><?= htmlspecialchars($invite_email) ?></strong> â€” link also shown below:</p>
       <code id="inviteCode"><?= htmlspecialchars($invite_link) ?></code>
       <button onclick="copyInvite()" style="margin-top:0.5rem;font-size:0.75rem;color:var(--blue);background:none;border:none;cursor:pointer;font-weight:600;">Copy link</button>
     </div>
@@ -528,7 +528,7 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
     </script>
     <?php endif; ?>
 
-    <!-- ── Search + Filter Controls ── -->
+    <!-- â”€â”€ Search + Filter Controls â”€â”€ -->
     <div class="controls-bar">
       <div class="search-wrap">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
@@ -543,7 +543,7 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
       </div>
     </div>
 
-    <!-- ── Unified User Table ── -->
+    <!-- â”€â”€ Unified User Table â”€â”€ -->
     <div class="table-wrap">
       <table>
         <thead>
@@ -559,23 +559,23 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      MODAL: Create Account
-     ══════════════════════════════════════════════ -->
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="modal-overlay" id="modal-create-doctor">
   <div class="modal">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;">
       <h3 style="margin-bottom:0;">Add Doctor</h3>
       <button type="button" onclick="closeModal('modal-create-doctor')" style="background:none;border:none;cursor:pointer;font-size:1.3rem;color:#9ab0ae;line-height:1;">&times;</button>
     </div>
-    <p style="font-size:0.82rem;color:#9ab0ae;margin-bottom:1.2rem;">Fill in the doctor's basic details. A setup link will be emailed to them automatically — they click it, set their own password, and fill in the rest of their profile themselves.</p>
+    <p style="font-size:0.82rem;color:#9ab0ae;margin-bottom:1.2rem;">Fill in the doctor's basic details. A setup link will be emailed to them automatically â€” they click it, set their own password, and fill in the rest of their profile themselves.</p>
     <form method="POST" id="create-doctor-form">
       <div class="form-field"><label class="field-label">Full Name *</label><input type="text" name="full_name" class="field-input" placeholder="e.g. Maria Santos" required/></div>
       <div class="form-field"><label class="field-label">Email Address *</label><input type="email" name="email" class="field-input" placeholder="doctor@email.com" required/></div>
             <div class="form-field">
         <label class="field-label">Department *</label>
         <select name="department" class="field-input" required>
-          <option value="">— Select —</option>
+          <option value="">â€” Select â€”</option>
           <?php foreach (array_keys(BOOKING_DEPARTMENTS) as $dep): ?>
             <option value="<?= htmlspecialchars($dep) ?>"><?= htmlspecialchars($dep) ?></option>
           <?php endforeach; ?>
@@ -603,9 +603,9 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      MODAL: View Doctor Details
-     ══════════════════════════════════════════════ -->
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="modal-overlay" id="modal-view-doctor">
   <div class="modal modal-details">
     <div class="details-header">
@@ -672,9 +672,9 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      MODAL: View Patient Details (lightweight)
-     ══════════════════════════════════════════════ -->
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="modal-overlay" id="modal-view-patient">
   <div class="modal">
     <h3 id="vp-title">Patient Details</h3>
@@ -688,9 +688,9 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      MODAL: View Staff Details (lightweight)
-     ══════════════════════════════════════════════ -->
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="modal-overlay" id="modal-view-staff">
   <div class="modal">
     <h3 id="vs-title">Staff Details</h3>
@@ -703,9 +703,9 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      MODAL: Verify Doctor
-     ══════════════════════════════════════════════ -->
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="modal-overlay" id="modal-verify-doctor">
   <div class="modal">
     <h3>Verify Doctor</h3>
@@ -742,9 +742,9 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      MODAL: Edit Doctor
-     ══════════════════════════════════════════════ -->
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="modal-overlay" id="modal-edit-doctor">
   <div class="modal">
     <h3>Edit Doctor</h3>
@@ -756,7 +756,7 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
       <div class="form-field">
         <label class="field-label">Department *</label>
         <select name="department" id="edit-doctor-department" class="field-input" required>
-          <option value="">— Select —</option>
+          <option value="">â€” Select â€”</option>
           <?php foreach (array_keys(BOOKING_DEPARTMENTS) as $dep): ?>
             <option value="<?= htmlspecialchars($dep) ?>"><?= htmlspecialchars($dep) ?></option>
           <?php endforeach; ?>
@@ -769,7 +769,7 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
       <div class="form-field"><label class="field-label">Clinic Name</label><input type="text" name="clinic_name" id="edit-doctor-clinic" class="field-input"/></div>
       <div class="form-row">
         <div class="form-field"><label class="field-label">Phone Number</label><input type="text" name="phone_number" id="edit-doctor-phone" class="field-input"/></div>
-        <div class="form-field"><label class="field-label">Consultation Fee (₱)</label><input type="number" step="0.01" min="0" name="consultation_fee" id="edit-doctor-fee" class="field-input"/></div>
+        <div class="form-field"><label class="field-label">Consultation Fee (â‚±)</label><input type="number" step="0.01" min="0" name="consultation_fee" id="edit-doctor-fee" class="field-input"/></div>
       </div>
       <div class="form-field"><label class="field-label">Languages Spoken</label><input type="text" name="languages_spoken" id="edit-doctor-langs" class="field-input" placeholder="e.g. English, Tagalog"/></div>
       <button type="submit" name="update_doctor" class="btn-submit">Save Changes</button>
@@ -778,9 +778,9 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      MODAL: Edit Patient
-     ══════════════════════════════════════════════ -->
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="modal-overlay" id="modal-edit-patient">
   <div class="modal">
     <h3>Edit Patient</h3>
@@ -794,7 +794,7 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
         <div class="form-field">
           <label class="field-label">Gender</label>
           <select name="gender" id="edit-patient-gender" class="field-input">
-            <option value="">—</option>
+            <option value="">â€”</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
             <option value="Other">Other</option>
@@ -823,9 +823,9 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      MODAL: Edit Staff
-     ══════════════════════════════════════════════ -->
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="modal-overlay" id="modal-edit-staff">
   <div class="modal">
     <h3>Edit Staff</h3>
@@ -840,9 +840,9 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      MODAL: Audit Log History
-     ══════════════════════════════════════════════ -->
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="modal-overlay" id="modal-audit-logs" style="align-items:flex-start;padding-top:2rem;padding-bottom:2rem;">
   <div class="modal" style="max-width:480px;max-height:none;overflow:visible;padding:1.4rem;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;">
@@ -854,18 +854,18 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
   </div>
 </div>
 
-<!-- ── Data for JS ── -->
+<!-- â”€â”€ Data for JS â”€â”€ -->
 <script>
 const ALL_USERS = <?= json_encode(array_values($allUsers), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const AUDIT_LOGS = <?= json_encode($auditLogs, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 
 let currentFilter = 'all';
 
-// ── Modal helpers ──
+// â”€â”€ Modal helpers â”€â”€
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-// ── Filters ──
+// â”€â”€ Filters â”€â”€
 function setFilter(f) {
   currentFilter = f;
   document.querySelectorAll('.filter-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.filter === f));
@@ -948,14 +948,14 @@ function renderRows(rows) {
     return `<tr>
       <td><span class="row-avatar">${initials(u.full_name)}</span>${escHtml(u.full_name)}</td>
       <td>${rolePill(u.type)}</td>
-      <td style="color:#9ab0ae;">${escHtml(u.email || '—')}</td>
+      <td style="color:#9ab0ae;">${escHtml(u.email || 'â€”')}</td>
       <td>${statusBadge(u.status)}</td>
       <td><div class="actions-cell">${actions}</div></td>
     </tr>`;
   }).join('');
 }
 
-// ── Verify modal ──
+// â”€â”€ Verify modal â”€â”€
 function openVerifyModal(id, name) {
   const form = document.getElementById('verify-form');
   if (form) form.reset();
@@ -1049,7 +1049,7 @@ if (verifyForm) {
   });
 }
 
-// ── Edit Doctor modal ──
+// â”€â”€ Edit Doctor modal â”€â”€
 function openEditDoctorModal(id) {
   const u = ALL_USERS.find(x => x.type === 'doctor' && x.id == id);
   if (!u) return;
@@ -1085,7 +1085,7 @@ function validateEditDoctor() {
   return ok;
 }
 
-// ── Edit Patient modal ──
+// â”€â”€ Edit Patient modal â”€â”€
 function openEditPatientModal(id) {
   const u = ALL_USERS.find(x => x.type === 'patient' && x.id == id);
   if (!u) return;
@@ -1118,7 +1118,7 @@ function validateEditPatient() {
   return ok;
 }
 
-// ── Edit Staff modal ──
+// â”€â”€ Edit Staff modal â”€â”€
 function openEditStaffModal(id) {
   const u = ALL_USERS.find(x => x.type === 'staff' && x.id == id);
   if (!u) return;
@@ -1172,7 +1172,7 @@ function clearEditWarnings(prefix) {
   });
 }
 
-// ── Audit log history ──
+// â”€â”€ Audit log history â”€â”€
 let auditPage = 0;
 const AUDIT_PAGE_SIZE = 4;
 
@@ -1207,7 +1207,7 @@ function renderAuditLogs() {
       diff = '<div style="margin-top:0.5rem;font-size:0.78rem;color:#9ab0ae;">';
       for (const k in newVals) {
         if (String(oldVals[k]) !== String(newVals[k])) {
-          diff += `<div><span style="color:var(--red);">− ${escHtml(fieldLabel(k))}:</span> ${escHtml(oldVals[k] ?? '')}</div>`;
+          diff += `<div><span style="color:var(--red);">âˆ’ ${escHtml(fieldLabel(k))}:</span> ${escHtml(oldVals[k] ?? '')}</div>`;
           diff += `<div><span style="color:#16a34a;">+ ${escHtml(fieldLabel(k))}:</span> ${escHtml(newVals[k] ?? '')}</div>`;
         }
       }
@@ -1246,31 +1246,31 @@ function changeAuditPage(delta) {
   renderAuditLogs();
 }
 
-// ── Copy setup link ──
+// â”€â”€ Copy setup link â”€â”€
 function copyInvite() {
   const c = document.getElementById('inviteCode')?.textContent;
   if (c) { navigator.clipboard.writeText(c); alert('Setup link copied!'); }
 }
 
-// ── Doctor details modal ──
+// â”€â”€ Doctor details modal â”€â”€
 function openDetailsModal(id) {
   const u = ALL_USERS.find(x => x.type === 'doctor' && x.id == id);
   if (!u) return;
   const d = u.raw;
 
-  const val = (v, fallback='—') => (v && String(v).trim() !== '') ? v : fallback;
+  const val = (v, fallback='â€”') => (v && String(v).trim() !== '') ? v : fallback;
   const emptySpan = (v, fallback='Not provided') =>
     (v && String(v).trim() !== '') ? `<span>${escHtml(v)}</span>` : `<span class="empty">${fallback}</span>`;
 
   document.getElementById('vd-avatar').textContent  = initials(d.full_name);
   document.getElementById('vd-name').textContent    = 'Dr. ' + val(d.full_name, 'Unknown');
-  document.getElementById('vd-specialty').textContent = [d.specialty, d.subspecialty].filter(Boolean).join(' · ') || 'Specialty not set';
+  document.getElementById('vd-specialty').textContent = [d.specialty, d.subspecialty].filter(Boolean).join(' Â· ') || 'Specialty not set';
 
   const badgeEl = document.getElementById('vd-badges');
   let badges = '';
   const statusCls = d.status==='active'?'badge-green':d.status==='pending'?'badge-orange':'badge-gray';
   badges += `<span class="badge ${statusCls}">${ucFirst(d.status)}</span>`;
-  if (d.is_verified)     badges += `<span class="badge badge-green">✓ Verified</span>`;
+  if (d.is_verified)     badges += `<span class="badge badge-green">âœ“ Verified</span>`;
   if (!d.setup_complete) badges += `<span class="badge badge-orange">Setup pending</span>`;
   if (d.is_available)    badges += `<span class="badge badge-blue">Available</span>`;
   badgeEl.innerHTML = badges;
@@ -1282,7 +1282,7 @@ function openDetailsModal(id) {
   document.getElementById('vd-license').innerHTML    = emptySpan(d.license_number);
   document.getElementById('vd-board').innerHTML      = emptySpan(d.issuing_board);
   document.getElementById('vd-experience').innerHTML = d.years_experience ? `<span>${escHtml(d.years_experience)} year(s)</span>` : `<span class="empty">Not provided</span>`;
-  document.getElementById('vd-fee').innerHTML = d.consultation_fee ? `<span>₱ ${parseFloat(d.consultation_fee).toLocaleString()}</span>` : `<span class="empty">Not set</span>`;
+  document.getElementById('vd-fee').innerHTML = d.consultation_fee ? `<span>â‚± ${parseFloat(d.consultation_fee).toLocaleString()}</span>` : `<span class="empty">Not set</span>`;
   document.getElementById('vd-bio').innerHTML = emptySpan(d.bio || d.about, 'No bio provided');
 
   const schedRows = d._schedules || [];
@@ -1293,8 +1293,8 @@ function openDetailsModal(id) {
       const end   = row.end_time   || row.end   || '';
       schedHtml += `<tr>
         <td class="sched-day">${escHtml(row.day_of_week || row.day || '')}</td>
-        <td>${start ? escHtml(fmt12h(start)) : '<span class="sched-off">—</span>'}</td>
-        <td>${end   ? escHtml(fmt12h(end))   : '<span class="sched-off">—</span>'}</td>
+        <td>${start ? escHtml(fmt12h(start)) : '<span class="sched-off">â€”</span>'}</td>
+        <td>${end   ? escHtml(fmt12h(end))   : '<span class="sched-off">â€”</span>'}</td>
         <td><span class="badge badge-green" style="font-size:0.65rem;">Available</span></td>
       </tr>`;
     });
@@ -1303,29 +1303,29 @@ function openDetailsModal(id) {
     schedHtml || `<tr><td colspan="4" style="padding:1rem;text-align:center;color:#c0cece;font-style:italic;font-size:0.82rem;">No schedule set yet</td></tr>`;
 
   document.getElementById('vd-license-file').innerHTML =
-    d.license_file ? `<a href="/${d.license_file}" target="_blank" class="doc-link">📄 View File</a>` : `<span class="empty">Not uploaded</span>`;
+    d.license_file ? `<a href="/${d.license_file}" target="_blank" class="doc-link">ðŸ“„ View File</a>` : `<span class="empty">Not uploaded</span>`;
   document.getElementById('vd-cert-file').innerHTML =
-    d.board_cert_file ? `<a href="/${d.board_cert_file}" target="_blank" class="doc-link">📄 View File</a>` : `<span class="empty">Not uploaded</span>`;
+    d.board_cert_file ? `<a href="/${d.board_cert_file}" target="_blank" class="doc-link">ðŸ“„ View File</a>` : `<span class="empty">Not uploaded</span>`;
   document.getElementById('vd-photo').innerHTML =
-    (d.profile_photo || d.photo) ? `<a href="/${d.profile_photo||d.photo}" target="_blank" class="doc-link">🖼 View Photo</a>` : `<span class="empty">Not uploaded</span>`;
+    (d.profile_photo || d.photo) ? `<a href="/${d.profile_photo||d.photo}" target="_blank" class="doc-link">ðŸ–¼ View Photo</a>` : `<span class="empty">Not uploaded</span>`;
   document.getElementById('vd-verified-at').innerHTML =
     d.verified_at ? `<span>${fmtDate(d.verified_at)}</span>` : `<span class="empty">Not yet verified</span>`;
 
   document.getElementById('vd-created').innerHTML   = `<span>${fmtDate(d.created_at)}</span>`;
-  document.getElementById('vd-setup').innerHTML     = d.setup_complete ? `<span style="color:#16a34a;font-weight:700;">✓ Complete</span>` : `<span style="color:#d97706;font-weight:700;">Pending</span>`;
+  document.getElementById('vd-setup').innerHTML     = d.setup_complete ? `<span style="color:#16a34a;font-weight:700;">âœ“ Complete</span>` : `<span style="color:#d97706;font-weight:700;">Pending</span>`;
   document.getElementById('vd-available').innerHTML = d.is_available ? `<span style="color:#16a34a;font-weight:700;">Available</span>` : `<span style="color:#d97706;">Unavailable</span>`;
 
   openModal('modal-view-doctor');
 }
 
-// ── Patient details modal ──
+// â”€â”€ Patient details modal â”€â”€
 function openPatientModal(id) {
   const u = ALL_USERS.find(x => x.type === 'patient' && x.id == id);
   if (!u) return;
   const p = u.raw;
   document.getElementById('vp-title').textContent = p.full_name || 'Patient Details';
-  document.getElementById('vp-email').textContent = p.email || '—';
-  document.getElementById('vp-phone').textContent = p.phone_number || '—';
+  document.getElementById('vp-email').textContent = p.email || 'â€”';
+  document.getElementById('vp-phone').textContent = p.phone_number || 'â€”';
   document.getElementById('vp-created').textContent = fmtDate(p.created_at);
   const isActive = u.status === 'active';
   document.getElementById('vp-status').innerHTML = isActive
@@ -1334,13 +1334,13 @@ function openPatientModal(id) {
   openModal('modal-view-patient');
 }
 
-// ── Staff details modal ──
+// â”€â”€ Staff details modal â”€â”€
 function openStaffModal(id) {
   const u = ALL_USERS.find(x => x.type === 'staff' && x.id == id);
   if (!u) return;
   const s = u.raw;
   document.getElementById('vs-title').textContent = s.full_name || 'Staff Details';
-  document.getElementById('vs-email').textContent = s.email || '—';
+  document.getElementById('vs-email').textContent = s.email || 'â€”';
   document.getElementById('vs-created').textContent = fmtDate(s.created_at);
   const isActive = u.status === 'active';
   document.getElementById('vs-status').innerHTML = isActive
@@ -1349,7 +1349,7 @@ function openStaffModal(id) {
   openModal('modal-view-staff');
 }
 
-// ── Helpers ──
+// â”€â”€ Helpers â”€â”€
 const FIELD_LABELS = {
   full_name: 'Full Name',
   email: 'Email',
@@ -1374,7 +1374,7 @@ function escHtml(str) {
 function escAttr(str) { return escHtml(str).replace(/'/g, "\\'"); }
 function ucFirst(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
 function fmtDate(s) {
-  if (!s) return '—';
+  if (!s) return 'â€”';
   const d = new Date(s);
   if (isNaN(d)) return s;
   return d.toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
@@ -1388,7 +1388,7 @@ function fmt12h(t) {
   return `${hr}:${String(m||0).padStart(2,'0')} ${ampm}`;
 }
 
-// ── Init ──
+// â”€â”€ Init â”€â”€
 renderRows(ALL_USERS);
 setTimeout(() => { const t = document.querySelector('.toast'); if (t) t.remove(); }, 3500);
 </script>

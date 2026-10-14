@@ -1,5 +1,5 @@
-<?php
-// admin/hmo.php — template module: Providers + Coverage
+﻿<?php
+// admin/hmo.php â€” template module: Providers + Coverage
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
@@ -47,7 +47,7 @@ if (!function_exists('log_audit')) {
     }
 }
 
-/* ── Providers ── */
+/* â”€â”€ Providers â”€â”€ */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_provider'])) {
     $name = trim($_POST['name'] ?? '');
     $contact = trim($_POST['contact_person'] ?? '');
@@ -106,7 +106,7 @@ if (isset($_GET['restore_provider'])) {
     header('Location: hmo.php'); exit;
 }
 
-/* ── Coverage ── */
+/* â”€â”€ Coverage â”€â”€ */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_coverage'])) {
     $provider_id = (int)($_POST['provider_id'] ?? 0);
     $desc = trim($_POST['description'] ?? '');
@@ -159,8 +159,8 @@ $activeNav = 'pos-hmo';
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>HMO — TELE-CARE</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <title>HMO â€” TELE-CARE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link href="assets/admin.css" rel="stylesheet"/>
   <style>
     
@@ -172,7 +172,7 @@ $activeNav = 'pos-hmo';
     .modal{background:var(--white);border-radius:20px;padding:2rem;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;animation:fadeUp 0.3s ease}
     .modal h3{font-size:1.3rem;margin-bottom:0.3rem}
     .modal .sub{font-size:0.8rem;color:#9ab0ae;margin-bottom:1.2rem}
-    .field-input{width:100%;padding:0.72rem 0.9rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--green);outline:none}
+    .field-input{width:100%;padding:0.72rem 0.9rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:12px;font-family:'Poppins',sans-serif;font-size:0.9rem;color:var(--green);outline:none}
     .btn-submit{width:100%;padding:0.85rem;border-radius:50px;background:var(--red);color:#fff;font-weight:700;font-size:0.93rem;border:none;cursor:pointer;margin-top:0.5rem}
     .btn-cancel{width:100%;padding:0.7rem;border-radius:50px;background:transparent;color:var(--green);font-weight:600;font-size:0.88rem;border:1.5px solid rgba(36,68,65,0.15);cursor:pointer;margin-top:0.5rem}
 
@@ -183,8 +183,8 @@ $activeNav = 'pos-hmo';
 </head>
 <body>
 
-<?php if ($toast): ?><div class="toast">✓ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
-<?php if ($toast_error): ?><div class="toast error">✕ <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
+<?php if ($toast): ?><div class="toast">âœ“ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
+<?php if ($toast_error): ?><div class="toast error">âœ• <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
 
 <?php include 'sidebar.php'; ?>
 
@@ -201,7 +201,7 @@ $activeNav = 'pos-hmo';
   </div>
 
   <div class="page-content">
-    <div class="template-note">Template module — basic Provider + Coverage tracking. Claims workflow, patient card verification, and billing integration are not built yet.</div>
+    <div class="template-note">Template module â€” basic Provider + Coverage tracking. Claims workflow, patient card verification, and billing integration are not built yet.</div>
 
     <div class="table-wrap">
       <table>
@@ -299,9 +299,14 @@ function renderRows() {
       : `<a href="?restore_provider=${p.id}" class="btn-sm btn-activate" onclick="var el=this;event.preventDefault();showConfirm('Restore ${escAttr(p.name)}?').then(function(ok){if(ok)window.location=el.href});return false;">Restore</a>`;
     return `<tr>
       <td>${escHtml(p.name)}</td>
+<<<<<<< HEAD
       <td>${escHtml(p.license_no || '—')}</td>
       <td>${escHtml(p.contact_person || '—')}</td>
       <td>${escHtml(p.phone || '—')}</td>
+=======
+      <td>${escHtml(p.contact_person || 'â€”')}</td>
+      <td>${escHtml(p.phone || 'â€”')}</td>
+>>>>>>> e79f1b14fb431de05154e675f9719e9a79bf68c3
       <td>${items.length ? `<span class="badge badge-blue">${items.length} item${items.length>1?'s':''}</span>` : '<span style="color:#9ab0ae;">None</span>'}</td>
       <td>${statusBadge(p.status)}</td>
       <td><div class="actions-cell">${actions}</div></td>
@@ -336,14 +341,14 @@ function renderCoverageList(providerId) {
   const list = document.getElementById('coverage-list');
   list.innerHTML = items.length
     ? items.map(c => {
-        const valueDisplay = c.coverage_type === 'Percentage' ? `${Number(c.coverage_value)}%` : `₱${Number(c.coverage_value).toFixed(2)}`;
+        const valueDisplay = c.coverage_type === 'Percentage' ? `${Number(c.coverage_value)}%` : `â‚±${Number(c.coverage_value).toFixed(2)}`;
         return `<div class="req-row">
           <div class="req-name">${escHtml(c.description)}<br/><span class="req-notes">${escHtml(c.notes || '')}</span></div>
           <div>${valueDisplay}</div>
           <a href="?remove_coverage=${c.id}&provider_id=${providerId}" class="btn-sm btn-red" onclick="return confirm('Remove ${escAttr(c.description)}?')">Remove</a>
         </div>`;
       }).join('')
-    : `<div class="req-empty">No coverage items yet — add one below.</div>`;
+    : `<div class="req-empty">No coverage items yet â€” add one below.</div>`;
 }
 
 function escHtml(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }

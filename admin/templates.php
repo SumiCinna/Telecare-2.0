@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // admin/templates.php
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -191,7 +191,7 @@ $res = $conn->query("SELECT * FROM document_templates ORDER BY doc_type, is_defa
 if ($res) { while ($r = $res->fetch_assoc()) { $allTemplates[] = $r; } }
 
 // The main form always starts blank (each save creates a new template, unless editing
-// an existing one via the Saved Templates modal) — except right after a failed
+// an existing one via the Saved Templates modal) â€” except right after a failed
 // validation attempt, where we restore exactly what the admin typed.
 $blank = [
     'template_id' => 0, 'template_name' => '', 'clinic_name' => '', 'address' => '',
@@ -225,8 +225,8 @@ $activeNav = 'pos-templates';
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Templates — TELE-CARE</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <title>Templates â€” TELE-CARE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link href="assets/admin.css" rel="stylesheet"/>
   <style>
     .main{flex:1;overflow-y:auto;margin-left:230px}
@@ -234,7 +234,7 @@ $activeNav = 'pos-templates';
     .page-content{padding:2rem}
 
     .doc-tabs{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.5rem}
-    .doc-tab{padding:0.6rem 1.2rem;border-radius:50px;font-size:0.83rem;font-weight:700;border:1.5px solid rgba(36,68,65,0.12);background:var(--white);color:var(--green);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+    .doc-tab{padding:0.6rem 1.2rem;border-radius:50px;font-size:0.83rem;font-weight:700;border:1.5px solid rgba(36,68,65,0.12);background:var(--white);color:var(--green);cursor:pointer;font-family:'Poppins',sans-serif;transition:all 0.2s}
     .doc-tab:hover{border-color:var(--blue)}
     .doc-tab.active{background:var(--green);border-color:var(--green);color:#fff}
 
@@ -249,16 +249,16 @@ $activeNav = 'pos-templates';
     .card h3{font-size:1.05rem;margin-bottom:0.3rem}
     .card .card-sub{font-size:0.8rem;color:#9ab0ae;margin-bottom:1.3rem}
     .field-label{display:block;font-size:0.72rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#9ab0ae;margin-bottom:0.4rem}
-    .field-input{width:100%;padding:0.72rem 0.9rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--green);outline:none}
+    .field-input{width:100%;padding:0.72rem 0.9rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:12px;font-family:'Poppins',sans-serif;font-size:0.9rem;color:var(--green);outline:none}
     .field-input:focus{border-color:var(--blue)}
     .form-field{margin-bottom:1rem}
     .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
     @media(max-width:520px){.form-row{grid-template-columns:1fr}}
-    .btn-submit{padding:0.85rem 1.6rem;border-radius:50px;background:var(--red);color:#fff;font-weight:700;font-size:0.93rem;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+    .btn-submit{padding:0.85rem 1.6rem;border-radius:50px;background:var(--red);color:#fff;font-weight:700;font-size:0.93rem;border:none;cursor:pointer;font-family:'Poppins',sans-serif}
     .btn-submit:hover{background:#a82d38}
 
     .editing-banner{display:none;align-items:center;justify-content:space-between;gap:0.6rem;background:rgba(63,130,227,0.08);border:1px solid rgba(63,130,227,0.25);color:var(--blue);padding:0.65rem 1rem;border-radius:12px;font-size:0.8rem;font-weight:600;margin-bottom:1.1rem}
-    .editing-banner button{background:none;border:none;color:var(--blue);font-weight:700;cursor:pointer;text-decoration:underline;font-size:0.78rem;font-family:'DM Sans',sans-serif;padding:0}
+    .editing-banner button{background:none;border:none;color:var(--blue);font-weight:700;cursor:pointer;text-decoration:underline;font-size:0.78rem;font-family:'Poppins',sans-serif;padding:0}
     .form-error{display:none;background:rgba(195,54,67,0.08);border:1px solid rgba(195,54,67,0.25);color:var(--red);padding:0.65rem 1rem;border-radius:10px;font-size:0.78rem;margin-bottom:1.1rem;line-height:1.4}
 
     .doctor-info-note{display:flex;gap:0.6rem;align-items:flex-start;background:rgba(36,68,65,0.05);border:1px solid rgba(36,68,65,0.1);color:var(--green);padding:0.7rem 0.9rem;border-radius:12px;font-size:0.78rem;line-height:1.45;margin-bottom:1.2rem}
@@ -266,9 +266,9 @@ $activeNav = 'pos-templates';
 
     .preview-wrap{position:sticky;top:96px}
     .preview-label{font-size:0.72rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#9ab0ae;margin-bottom:0.6rem;display:flex;justify-content:space-between;align-items:center}
-    .doc-preview{background:#fff;border:1px dashed rgba(36,68,65,0.25);border-radius:12px;padding:2.2rem 2rem;font-size:0.88rem;color:#222;font-family:'DM Sans',sans-serif;min-height:560px;box-shadow:0 4px 20px rgba(0,0,0,0.05)}
+    .doc-preview{background:#fff;border:1px dashed rgba(36,68,65,0.25);border-radius:12px;padding:2.2rem 2rem;font-size:0.88rem;color:#222;font-family:'Poppins',sans-serif;min-height:560px;box-shadow:0 4px 20px rgba(0,0,0,0.05)}
     .doc-preview .ph-head{text-align:center;margin-bottom:1.2rem;padding-bottom:1rem;border-bottom:1.5px solid #222}
-    .doc-preview .ph-clinic{font-weight:700;font-size:1.15rem;font-family:'Playfair Display',serif}
+    .doc-preview .ph-clinic{font-weight:700;font-size:1.15rem;font-family:'Poppins',sans-serif}
     .doc-preview .ph-line{color:#555;font-size:0.85rem;margin-top:0.15rem}
     .doc-preview .ph-title{text-align:center;font-weight:700;letter-spacing:0.05em;margin:1.1rem 0;font-size:0.95rem}
     .doc-preview .ph-meta{display:flex;justify-content:space-between;font-size:0.84rem;color:#555;margin-bottom:0.8rem;flex-wrap:wrap;gap:0.3rem}
@@ -291,8 +291,8 @@ $activeNav = 'pos-templates';
 </head>
 <body>
 
-<?php if ($toast): ?><div class="toast">✓ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
-<?php if ($toast_error): ?><div class="toast error">✕ <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
+<?php if ($toast): ?><div class="toast">âœ“ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
+<?php if ($toast_error): ?><div class="toast error">âœ• <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
 
 <?php include 'sidebar.php'; ?>
 
@@ -324,7 +324,7 @@ $activeNav = 'pos-templates';
         </div>
         <div class="doctor-info-note">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span>Doctor name, credentials, license no. and PTR no. are no longer set here — they're pulled automatically from each doctor's own verified account when they send a prescription.</span>
+          <span>Doctor name, credentials, license no. and PTR no. are no longer set here â€” they're pulled automatically from each doctor's own verified account when they send a prescription.</span>
         </div>
         <div class="editing-banner" id="prescription-editing-banner">
           <span>Editing "<span class="editing-name"></span>"</span>
@@ -354,7 +354,7 @@ $activeNav = 'pos-templates';
           <div class="ph-meta"><span>Address: ____________</span><span>Date: ______</span></div>
           <div class="ph-body">Rx<br/>[MEDICATION NAME / STRENGTH / FORM]<br/>[INSTRUCTIONS / DOSAGE]<br/>Dispense: [QUANTITY / VOLUME]<br/>Label: [DIRECTIONS FOR USE]</div>
           <div class="ph-sign">
-            <div class="name">[Doctor name, credentials — from doctor account]</div>
+            <div class="name">[Doctor name, credentials â€” from doctor account]</div>
             <div class="lic">License No.: [from doctor account]</div>
             <div class="lic">PTR No.: [from doctor account]</div>
             <div class="doctor-tag">Auto-filled when the doctor sends this document</div>
@@ -409,7 +409,7 @@ $activeNav = 'pos-templates';
           <div class="ph-meta"><span>Address: ____________</span><span>Date: ______</span></div>
           <div class="ph-body">Blood Chemistry (FBS, BUN, Crea, SGPT, SGOT, Lipid Profile, Uric Acid, Na, K)<br/>Other Tests (CBC, Platelet, Urinalysis, Fecalysis, Dengue NS1/IgM/IgG, HbA1c, FT3, FT4, TSH, Chest X-ray, 12-L ECG)</div>
           <div class="ph-sign">
-            <div class="name">[Requesting physician — from doctor account]</div>
+            <div class="name">[Requesting physician â€” from doctor account]</div>
             <div class="lic">License No.: [from doctor account]</div>
             <div class="doctor-tag">Auto-filled when the doctor sends this document</div>
           </div>
@@ -462,7 +462,7 @@ $activeNav = 'pos-templates';
           <div class="ph-body">To whom it may concern:<br/><br/>This is to certify that [PATIENT NAME], presently residing at [PATIENT ADDRESS], is [AGE] years old, [SEX], and was [CONSULTED/EXAMINED/TREATED] on [DATE/PERIOD] and advised to rest for [NUMBER OF DAYS/PERIOD].<br/><br/>Assessment/Impression: [ASSESSMENT/IMPRESSION]<br/>Recommendations/Remarks: [RECOMMENDATIONS/REMARKS]</div>
           <div class="ph-footnote" id="med_cert-footer">This document can be used for non-medico-legal purposes only.</div>
           <div class="ph-sign">
-            <div class="name">[Physician name — from doctor account]</div>
+            <div class="name">[Physician name â€” from doctor account]</div>
             <div class="lic">License No.: [from doctor account]</div>
             <div class="doctor-tag">Auto-filled when the doctor sends this document</div>
           </div>
@@ -552,7 +552,7 @@ function validateForm(tab, e) {
 
 // ---------------- Saved Templates modal ----------------
 function openTemplatesModal(docType) {
-  document.getElementById('templatesModalTitle').textContent = DOC_TYPES[docType] + ' — Saved Templates';
+  document.getElementById('templatesModalTitle').textContent = DOC_TYPES[docType] + ' â€” Saved Templates';
   document.getElementById('templatesModalSub').textContent = 'View, edit, set as default, or archive saved ' + DOC_TYPES[docType].toLowerCase() + ' templates.';
   renderTemplatesList(docType);
   openModal('modal-saved-templates');

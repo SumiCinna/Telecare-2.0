@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // staff/appointments.php
 require_once 'includes/auth.php';
 require_once 'includes/functions.php';
@@ -6,7 +6,7 @@ require_once 'includes/functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // ── Approve / Reject / Cancel / Complete ──
+    // â”€â”€ Approve / Reject / Cancel / Complete â”€â”€
     if (isset($_POST['action'], $_POST['appt_id'])) {
         $aid    = (int)$_POST['appt_id'];
         $action = $_POST['action'];
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $chk->execute();
                 $cur = $chk->get_result()->fetch_assoc();
                 if (!$cur || $cur['status'] !== 'DoctorApproved') {
-                    $_SESSION['toast_error'] = "Cannot act on this appointment — waiting for doctor's acceptance first.";
+                    $_SESSION['toast_error'] = "Cannot act on this appointment â€” waiting for doctor's acceptance first.";
                     header('Location: appointments.php?tab=' . urlencode($tab)); exit;
                 }
             }
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // ── Create appointment ──
+    // â”€â”€ Create appointment â”€â”€
     if (isset($_POST['create_appt'])) {
         $pid   = (int)$_POST['patient_id'];
         $did   = (int)$_POST['doctor_id'];
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: appointments.php?ca_open=1'); exit;
     }
 
-    // ── Reschedule ──
+    // â”€â”€ Reschedule â”€â”€
     if (isset($_POST['reschedule'])) {
         $aid  = (int)$_POST['appt_id'];
         $date = trim($_POST['new_date'] ?? '');
@@ -128,11 +128,11 @@ $ca_open  = (int)($_GET['ca_open'] ?? 0);
 $active_tab  = htmlspecialchars($_GET['tab'] ?? 'All');
 $active_page = 'appointments';
 
-// ── Counts ──
+// â”€â”€ Counts â”€â”€
 $stat_pending         = (int)$conn->query("SELECT COUNT(*) c FROM appointments WHERE status='Pending'")->fetch_assoc()['c'];
 $stat_doctor_approved = (int)$conn->query("SELECT COUNT(*) c FROM appointments WHERE status='DoctorApproved'")->fetch_assoc()['c'];
 
-// ── Fetch ALL rows (we do pagination in JS) ──
+// â”€â”€ Fetch ALL rows (we do pagination in JS) â”€â”€
 $all_appts = $conn->query("
     SELECT a.*, p.full_name AS patient_name,
            d.full_name AS doctor_name, d.specialty, d.id AS doctor_id,
@@ -155,15 +155,15 @@ require_once 'includes/header.php';
 ?>
 
 <style>
-/* ── Appointments page refresh (scoped additions, doesn't touch style.css) ── */
+/* â”€â”€ Appointments page refresh (scoped additions, doesn't touch style.css) â”€â”€ */
 .ap-page-head{margin-bottom:1.4rem}
 .sec-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.1rem}
-.sec-head h2{font-family:'Playfair Display',serif;font-size:1.55rem;font-weight:800;color:var(--text,#1a1a1a);margin:0}
-.search-bar{border:1.5px solid var(--border,#e5e7eb);border-radius:12px;padding:.6rem 1rem;font-family:'DM Sans',sans-serif;font-size:.85rem;min-width:260px;outline:none;transition:border-color .2s,box-shadow .2s;background:#fff}
+.sec-head h2{font-family:'Poppins',sans-serif;font-size:1.55rem;font-weight:800;color:var(--text,#1a1a1a);margin:0}
+.search-bar{border:1.5px solid var(--border,#e5e7eb);border-radius:12px;padding:.6rem 1rem;font-family:'Poppins',sans-serif;font-size:.85rem;min-width:260px;outline:none;transition:border-color .2s,box-shadow .2s;background:#fff}
 .search-bar:focus{border-color:var(--red,#8B1E2B);box-shadow:0 0 0 3px rgba(139,30,43,.1)}
 
 .ap-tabs{display:flex;gap:.5rem;margin-bottom:1.2rem;flex-wrap:wrap}
-.ap-tab{border:1.5px solid var(--border,#e5e7eb);background:#fff;color:var(--muted,#6b7280);border-radius:50px;padding:.5rem 1.1rem;font-size:.82rem;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:.4rem}
+.ap-tab{border:1.5px solid var(--border,#e5e7eb);background:#fff;color:var(--muted,#6b7280);border-radius:50px;padding:.5rem 1.1rem;font-size:.82rem;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:.4rem}
 .ap-tab:hover{border-color:var(--red,#8B1E2B);color:var(--red,#8B1E2B)}
 .ap-tab.active{background:var(--red,#8B1E2B);border-color:var(--red,#8B1E2B);color:#fff;box-shadow:0 4px 14px rgba(139,30,43,.25)}
 .ap-tab .cnt{background:rgba(255,255,255,.25);border-radius:50%;min-width:19px;height:19px;font-size:.68rem;display:inline-flex;align-items:center;justify-content:center;padding:0 .3rem}
@@ -185,7 +185,7 @@ require_once 'includes/header.php';
 .bg-blue{background:rgba(63,130,227,.12);color:#1d4ed8}
 .bg-red{background:rgba(239,68,68,.12);color:#b91c1c}
 
-.btn-sm{border:none;border-radius:50px;padding:.42rem .85rem;font-size:.76rem;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:transform .15s,opacity .15s}
+.btn-sm{border:none;border-radius:50px;padding:.42rem .85rem;font-size:.76rem;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer;transition:transform .15s,opacity .15s}
 .btn-sm:hover{transform:translateY(-1px)}
 .btn-green{background:#16a34a;color:#fff}
 .btn-red{background:#ef4444;color:#fff}
@@ -206,18 +206,18 @@ require_once 'includes/header.php';
 .pg-ellipsis{color:var(--muted,#6b7280);padding:0 .2rem}
 .empty-row{text-align:center;padding:2.5rem 1rem;color:var(--muted,#6b7280);font-size:.88rem}
 
-/* ── Modals ── */
+/* â”€â”€ Modals â”€â”€ */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,20,20,.5);z-index:9998;align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
 .modal{background:#fff;border-radius:18px;padding:1.6rem;max-width:480px;width:92%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
-.modal h3{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:800;margin:0 0 1rem}
+.modal h3{font-family:'Poppins',sans-serif;font-size:1.25rem;font-weight:800;margin:0 0 1rem}
 .f-label{display:block;font-size:.75rem;font-weight:700;color:var(--muted,#6b7280);margin:.8rem 0 .35rem;text-transform:uppercase;letter-spacing:.04em}
-.f-input{width:100%;padding:.65rem .85rem;border:1.5px solid var(--border,#e5e7eb);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none}
+.f-input{width:100%;padding:.65rem .85rem;border:1.5px solid var(--border,#e5e7eb);border-radius:10px;font-family:'Poppins',sans-serif;font-size:.88rem;outline:none}
 .f-input:focus{border-color:var(--red,#8B1E2B);box-shadow:0 0 0 3px rgba(139,30,43,.1)}
 .btn-submit{width:100%;background:var(--red,#8B1E2B);color:#fff;border:none;border-radius:50px;padding:.75rem;font-weight:700;font-size:.88rem;cursor:pointer;margin-top:1.1rem}
 .btn-cancel-modal{width:100%;background:transparent;border:1.5px solid var(--border,#e5e7eb);border-radius:50px;padding:.7rem;font-weight:700;font-size:.85rem;cursor:pointer;margin-top:.55rem;color:var(--muted,#6b7280)}
 
-/* ── Calendar picker ── */
+/* â”€â”€ Calendar picker â”€â”€ */
 .cal-wrap{border:1.5px solid var(--border,#e5e7eb);border-radius:12px;padding:.8rem;margin-top:.3rem}
 .cal-wrap.cal-disabled{opacity:.5;pointer-events:none}
 .cal-placeholder{text-align:center;color:var(--muted,#6b7280);font-size:.82rem;padding:1rem 0}
@@ -238,13 +238,13 @@ require_once 'includes/header.php';
 .cal-legend{margin-top:.6rem;padding-top:.6rem;border-top:1px dashed var(--border,#e5e7eb);font-size:.72rem;color:var(--muted,#6b7280);line-height:1.7}
 .cal-legend-title{font-weight:700;color:var(--text,#1a1a1a);margin-bottom:.2rem}
 
-/* ══════════════ RECEIPT — redesigned ══════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â• RECEIPT â€” redesigned â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .rcpt-modal{padding:0 !important;border-radius:22px !important;overflow-y:auto !important;overflow-x:hidden;max-height:90vh}
 .rcpt-hero{background:linear-gradient(135deg,var(--red,#8B1E2B) 0%,#5c131c 100%);padding:1.9rem 1.6rem 1.6rem;text-align:center;position:relative;color:#fff}
 .rcpt-hero-close{position:absolute;top:.9rem;right:.9rem;background:rgba(255,255,255,.18);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .rcpt-hero-close:hover{background:rgba(255,255,255,.3)}
 .rcpt-brand{font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.8;margin-bottom:.5rem;display:flex;align-items:center;justify-content:center;gap:.35rem}
-.rcpt-title{font-family:'Playfair Display',serif;font-size:1.55rem;font-weight:800;margin-bottom:.2rem}
+.rcpt-title{font-family:'Poppins',sans-serif;font-size:1.55rem;font-weight:800;margin-bottom:.2rem}
 .rcpt-sub{font-size:.76rem;opacity:.8}
 
 .rcpt-body{padding:1.7rem 1.5rem 0}
@@ -274,7 +274,7 @@ require_once 'includes/header.php';
 
 .rcpt-footer{border-top:1.5px dashed var(--border,#e5e7eb);margin-top:1rem;padding:1rem 1.5rem 1.5rem;text-align:center}
 .rcpt-footer-text{font-size:.72rem;color:var(--muted,#6b7280);line-height:1.7}
-.rcpt-print-btn{display:inline-flex;align-items:center;gap:.4rem;background:var(--red,#8B1E2B);color:#fff;padding:.65rem 1.5rem;border-radius:50px;font-size:.82rem;font-weight:700;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:.9rem}
+.rcpt-print-btn{display:inline-flex;align-items:center;gap:.4rem;background:var(--red,#8B1E2B);color:#fff;padding:.65rem 1.5rem;border-radius:50px;font-size:.82rem;font-weight:700;border:none;cursor:pointer;font-family:'Poppins',sans-serif;margin-top:.9rem}
 .rcpt-print-btn:hover{background:#5c131c}
 </style>
 
@@ -282,7 +282,7 @@ require_once 'includes/header.php';
 <div class="sec-head">
   <h2>Appointment Management</h2>
   <div style="display:flex;gap:.6rem">
-    <input class="search-bar" id="appt-search" placeholder="Search ID, patient or doctor…" oninput="onSearchInput(this.value)"/>
+    <input class="search-bar" id="appt-search" placeholder="Search ID, patient or doctorâ€¦" oninput="onSearchInput(this.value)"/>
     <button class="btn-primary" onclick="openModal('modal-create')">+ Create Appointment</button>
   </div>
 </div>
@@ -297,9 +297,9 @@ require_once 'includes/header.php';
     <div style="font-weight:700;font-size:0.88rem;color:#1d4ed8;">
       <?= $stat_doctor_approved ?> appointment<?= $stat_doctor_approved > 1 ? 's' : '' ?> awaiting your confirmation
     </div>
-    <div style="font-size:0.77rem;color:#3b82f6;margin-top:0.1rem;">Doctor has accepted these — confirm them to notify the patient to pay.</div>
+    <div style="font-size:0.77rem;color:#3b82f6;margin-top:0.1rem;">Doctor has accepted these â€” confirm them to notify the patient to pay.</div>
   </div>
-  <button onclick="filterStatus('DoctorApproved')" style="background:var(--blue);color:#fff;border:none;border-radius:50px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">Review Now</button>
+  <button onclick="filterStatus('DoctorApproved')" style="background:var(--blue);color:#fff;border:none;border-radius:50px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;">Review Now</button>
 </div>
 <?php endif; ?>
 
@@ -442,16 +442,16 @@ require_once 'includes/header.php';
     <form method="POST" id="ca-form">
       <label class="f-label">Patient</label>
       <select name="patient_id" class="f-input" required>
-        <option value="">Select patient…</option>
+        <option value="">Select patientâ€¦</option>
         <?php $pts2 = $conn->query("SELECT id, full_name FROM patients ORDER BY full_name ASC"); while ($r = $pts2->fetch_assoc()): ?>
         <option value="<?= $r['id'] ?>"><?= htmlspecialchars($r['full_name']) ?></option>
         <?php endwhile ?>
       </select>
       <label class="f-label">Doctor</label>
       <select name="doctor_id" id="ca-doctor" class="f-input" required onchange="onCaDoctorChange()">
-        <option value="">Select doctor…</option>
+        <option value="">Select doctorâ€¦</option>
         <?php $docs2 = $conn->query("SELECT id, full_name, specialty FROM doctors WHERE status='active' ORDER BY full_name ASC"); while ($r = $docs2->fetch_assoc()): ?>
-        <option value="<?= $r['id'] ?>">Dr. <?= htmlspecialchars($r['full_name']) ?> — <?= htmlspecialchars($r['specialty'] ?? '') ?></option>
+        <option value="<?= $r['id'] ?>">Dr. <?= htmlspecialchars($r['full_name']) ?> â€” <?= htmlspecialchars($r['specialty'] ?? '') ?></option>
         <?php endwhile ?>
       </select>
       <input type="hidden" name="appt_date" id="ca-date"/>
@@ -459,10 +459,10 @@ require_once 'includes/header.php';
       <div id="ca-cal-wrap" class="cal-wrap cal-disabled"><div class="cal-placeholder">Select a doctor to see available dates</div></div>
       <div id="ca-date-error" style="display:none;font-size:.75rem;color:#c33643;margin-top:-.4rem;margin-bottom:.5rem"></div>
       <label class="f-label">Time</label>
-      <select name="appt_time" id="ca-time" class="f-input" required><option value="">Select a date first…</option></select>
+      <select name="appt_time" id="ca-time" class="f-input" required><option value="">Select a date firstâ€¦</option></select>
       <div id="ca-client-error" style="display:none;background:rgba(195,54,67,.08);border:1px solid rgba(195,54,67,.2);color:#c33643;border-radius:10px;padding:.6rem .85rem;font-size:.81rem;margin-bottom:.6rem"></div>
       <label class="f-label">Notes</label>
-      <textarea name="notes" class="f-input" rows="2" placeholder="Reason for visit…"></textarea>
+      <textarea name="notes" class="f-input" rows="2" placeholder="Reason for visitâ€¦"></textarea>
       <button type="submit" name="create_appt" class="btn-submit">Create Appointment</button>
       <button type="button" class="btn-cancel-modal" onclick="closeModal('modal-create')">Cancel</button>
     </form>
@@ -482,10 +482,10 @@ require_once 'includes/header.php';
       <input type="hidden" name="active_tab" id="rs-tab"/>
       <input type="hidden" name="new_date"   id="rs-date"/>
       <label class="f-label">New Date <span id="rs-date-hint" style="font-weight:400;color:#9ab0ae;font-size:.75rem;margin-left:.4rem"></span></label>
-      <div id="rs-cal-wrap" class="cal-wrap"><div class="cal-placeholder">Loading schedule…</div></div>
+      <div id="rs-cal-wrap" class="cal-wrap"><div class="cal-placeholder">Loading scheduleâ€¦</div></div>
       <div id="rs-date-error" style="display:none;font-size:.75rem;color:#c33643;margin-top:-.4rem;margin-bottom:.5rem"></div>
       <label class="f-label">New Time</label>
-      <select name="new_time" id="rs-time" class="f-input" required><option value="">Pick a date first…</option></select>
+      <select name="new_time" id="rs-time" class="f-input" required><option value="">Pick a date firstâ€¦</option></select>
       <div id="rs-client-error" style="display:none;background:rgba(195,54,67,.08);border:1px solid rgba(195,54,67,.2);color:#c33643;border-radius:10px;padding:.6rem .85rem;font-size:.81rem;margin-bottom:.6rem"></div>
       <button type="submit" class="btn-submit">Confirm Reschedule</button>
       <button type="button" class="btn-cancel-modal" onclick="closeModal('modal-reschedule')">Cancel</button>
@@ -562,7 +562,7 @@ const DAY_NAMES   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday'
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const TODAY_STR   = new Date().toISOString().slice(0, 10);
 
-// ── Pagination State ──────────────────────────────────────────────────────────
+// â”€â”€ Pagination State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const PER_PAGE  = 10;
 let _activeTab  = '<?= $active_tab ?>';
 let _searchQuery = '';
@@ -613,7 +613,7 @@ function renderPagination(total, totalPages) {
 
   info.textContent = total === 0
     ? 'No results'
-    : `Showing ${start}–${end} of ${total} appointment${total !== 1 ? 's' : ''}`;
+    : `Showing ${start}â€“${end} of ${total} appointment${total !== 1 ? 's' : ''}`;
 
   btns.innerHTML = '';
   if (totalPages <= 1) return;
@@ -621,7 +621,7 @@ function renderPagination(total, totalPages) {
   // Prev button
   const prev = document.createElement('button');
   prev.className = 'pg-btn';
-  prev.textContent = '‹ Prev';
+  prev.textContent = 'â€¹ Prev';
   prev.disabled = _currentPage === 1;
   prev.onclick = () => goPage(_currentPage - 1);
   btns.appendChild(prev);
@@ -629,10 +629,10 @@ function renderPagination(total, totalPages) {
   // Page number buttons with ellipsis
   const pages = buildPageList(_currentPage, totalPages);
   pages.forEach(p => {
-    if (p === '…') {
+    if (p === 'â€¦') {
       const sp = document.createElement('span');
       sp.className = 'pg-ellipsis';
-      sp.textContent = '…';
+      sp.textContent = 'â€¦';
       btns.appendChild(sp);
     } else {
       const btn = document.createElement('button');
@@ -646,7 +646,7 @@ function renderPagination(total, totalPages) {
   // Next button
   const next = document.createElement('button');
   next.className = 'pg-btn';
-  next.textContent = 'Next ›';
+  next.textContent = 'Next â€º';
   next.disabled = _currentPage === totalPages;
   next.onclick = () => goPage(_currentPage + 1);
   btns.appendChild(next);
@@ -656,11 +656,11 @@ function buildPageList(current, total) {
   if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
   const pages = [];
   pages.push(1);
-  if (current > 3) pages.push('…');
+  if (current > 3) pages.push('â€¦');
   for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) {
     pages.push(p);
   }
-  if (current < total - 2) pages.push('…');
+  if (current < total - 2) pages.push('â€¦');
   pages.push(total);
   return pages;
 }
@@ -672,7 +672,7 @@ function goPage(p) {
   document.querySelector('.tbl-wrap').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// ── Filter & Search ───────────────────────────────────────────────────────────
+// â”€â”€ Filter & Search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function filterStatus(status) {
   _activeTab   = status;
   _currentPage = 1;
@@ -688,7 +688,7 @@ function onSearchInput(val) {
   renderTable();
 }
 
-// ── Calendar helpers (unchanged) ──────────────────────────────────────────────
+// â”€â”€ Calendar helpers (unchanged) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function fmt12(hhmm) {
   const [h, m] = hhmm.split(':').map(Number);
   return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
@@ -711,14 +711,14 @@ function buildScheduleLegendHTML(doctorId) {
   const slots = DOCTOR_SCHEDULES[doctorId] || [];
   if (!slots.length) return '';
   const byDay = {};
-  slots.forEach(s => (byDay[s.day] = byDay[s.day] || []).push(`${fmt12(s.start)} – ${fmt12(s.end)}`));
+  slots.forEach(s => (byDay[s.day] = byDay[s.day] || []).push(`${fmt12(s.start)} â€“ ${fmt12(s.end)}`));
   return '<div class="cal-legend-title">Available Hours</div>' +
     Object.entries(byDay).map(([day, times]) =>
       `<div><strong style="display:inline-block;min-width:2.6rem">${day.slice(0,3)}</strong>${times.join(' &nbsp;|&nbsp; ')}</div>`
     ).join('');
 }
 function populateTimeSelect(selEl, errEl, dateStr, doctorId, preselectHHMM = null) {
-  selEl.innerHTML = '<option value="">Select a time…</option>';
+  selEl.innerHTML = '<option value="">Select a timeâ€¦</option>';
   if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
   if (!dateStr || !doctorId) return 0;
   const dayName   = DAY_NAMES[new Date(dateStr + 'T00:00:00').getDay()];
@@ -767,7 +767,7 @@ class CalendarPicker {
     this.doctorId     = doctorId || null;
     this.selectedDate = null;
     this.hiddenInput.value = '';
-    if (this.timeSel) this.timeSel.innerHTML = '<option value="">Select a date first…</option>';
+    if (this.timeSel) this.timeSel.innerHTML = '<option value="">Select a date firstâ€¦</option>';
     if (this.errEl)   { this.errEl.textContent = ''; this.errEl.style.display = 'none'; }
     if (preselectDate) { const d = new Date(preselectDate+'T00:00:00'); this.viewYear=d.getFullYear(); this.viewMonth=d.getMonth(); }
     else { const now=new Date(); this.viewYear=now.getFullYear(); this.viewMonth=now.getMonth(); }
@@ -893,7 +893,7 @@ function quickAction(id, action) {
   document.getElementById('quick-form').submit();
 }
 
-// ── Modal open/close (in case not already defined globally in style.css/sidebar.php) ──
+// â”€â”€ Modal open/close (in case not already defined globally in style.css/sidebar.php) â”€â”€
 if (typeof openModal !== 'function') {
   window.openModal = function(id) {
     const el = document.getElementById(id);
@@ -907,7 +907,7 @@ if (typeof closeModal !== 'function') {
   };
 }
 
-// ── Receipt ───────────────────────────────────────────────────────────────────
+// â”€â”€ Receipt â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function openReceiptModal(apptId, patient, doctor, specialty, apptDate, apptTime, amount, receiptNo, paidAt) {
   document.getElementById('rm-receipt-no').textContent = receiptNo;
   const paidDate = paidAt ? new Date(paidAt) : new Date();
@@ -915,7 +915,7 @@ function openReceiptModal(apptId, patient, doctor, specialty, apptDate, apptTime
     month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'
   });
   document.getElementById('rm-appt-id').textContent = '#' + apptId;
-  document.getElementById('rm-amount').textContent = '₱' + parseFloat(amount).toLocaleString('en-PH', {
+  document.getElementById('rm-amount').textContent = 'â‚±' + parseFloat(amount).toLocaleString('en-PH', {
     minimumFractionDigits: 2, maximumFractionDigits: 2
   });
   const apptDateFmt = new Date(apptDate + 'T00:00:00').toLocaleDateString('en-PH', {
@@ -926,8 +926,8 @@ function openReceiptModal(apptId, patient, doctor, specialty, apptDate, apptTime
   const rows = [
     ['Patient',     patient],
     ['Doctor',      'Dr. ' + doctor],
-    ['Specialty',   specialty || '—'],
-    ['Appointment', apptDateFmt + ' · ' + timeFmt],
+    ['Specialty',   specialty || 'â€”'],
+    ['Appointment', apptDateFmt + ' Â· ' + timeFmt],
   ];
   document.getElementById('rm-rows').innerHTML = rows.map(([label, val]) => `
     <div class="rcpt-detail-row">
@@ -953,14 +953,14 @@ function printReceipt() {
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">' +
     '<title>Payment Receipt</title>' +
-    '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">' +
+    '<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">' +
     '<style>' +
     '*{box-sizing:border-box;}' +
-    'body{font-family:"DM Sans",sans-serif;margin:0;padding:20px;background:#f4f4f4;color:#1a1a1a;}' +
+    'body{font-family:"Poppins",sans-serif;margin:0;padding:20px;background:#f4f4f4;color:#1a1a1a;}' +
     '.card{max-width:440px;margin:0 auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.08);}' +
     '.hdr{background:linear-gradient(135deg,#8B1E2B,#5c131c);color:#fff;text-align:center;padding:1.7rem 1.2rem 1.3rem;}' +
     '.brand{font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.8;margin-bottom:.5rem;}' +
-    '.title{font-family:"Playfair Display",Georgia,serif;font-size:1.5rem;font-weight:800;margin-bottom:.2rem;}' +
+    '.title{font-family:"Poppins",Georgia,serif;font-size:1.5rem;font-weight:800;margin-bottom:.2rem;}' +
     '.sub{font-size:.76rem;opacity:.8;}' +
     '.body{padding:1.5rem 1.3rem 0;}' +
     '.success-bar{display:flex;align-items:center;gap:.7rem;background:rgba(34,197,94,.08);border:1.5px solid rgba(34,197,94,.25);border-radius:14px;padding:.75rem 1rem;margin-bottom:1.2rem;}' +
@@ -1045,7 +1045,7 @@ function handleReceiptClick(btn) {
   );
 }
 
-// ── Boot ──────────────────────────────────────────────────────────────────────
+// â”€â”€ Boot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 filterStatus(_activeTab);  // sets tab highlight + calls renderTable()
 
 <?php if ($rs_open): ?>openModal('modal-reschedule');<?php endif ?>

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // doctor/reviews.php
 require_once 'includes/auth.php';
 
@@ -50,7 +50,7 @@ function reviewerInitials($name) {
     return strtoupper(substr($parts[0] ?? 'P', 0, 1) . substr(end($parts) ?: '', 0, 1));
 }
 
-$page_title = 'Reviews — TELE-CARE';
+$page_title = 'Reviews â€” TELE-CARE';
 $page_title_short = 'Reviews';
 $active_nav = 'reviews';
 
@@ -65,7 +65,7 @@ require_once 'includes/header.php';
 
 .reviews-summary-card{display:flex;gap:2rem;flex-wrap:wrap;padding:20px;border:1px solid var(--border-color);border-radius:14px;background:#fff;box-shadow:var(--shadow-sm);margin-bottom:20px}
 .summary-avg{text-align:center;min-width:140px}
-.summary-avg .num{font-size:2.6rem;font-weight:800;color:var(--neutral-900);line-height:1;font-family:'Inter',sans-serif}
+.summary-avg .num{font-size:2.6rem;font-weight:800;color:var(--neutral-900);line-height:1;font-family:'Poppins',sans-serif}
 .summary-avg .stars{color:#ca8a04;font-size:1.1rem;margin:.4rem 0}
 .summary-avg .count{font-size:.72rem;color:var(--neutral-500)}
 .summary-bars{flex:1;min-width:220px;display:grid;gap:.35rem;align-content:center}
@@ -108,7 +108,7 @@ require_once 'includes/header.php';
 
 <section class="reviews-summary-card">
   <div class="summary-avg">
-    <div class="num"><?= $rating_count ? number_format($avg_rating, 1) : '—' ?></div>
+    <div class="num"><?= $rating_count ? number_format($avg_rating, 1) : 'â€”' ?></div>
     <?php
       $full = (int)floor($avg_rating);
       $half = ($avg_rating - $full) >= 0.5;
@@ -172,3 +172,4 @@ require_once 'includes/header.php';
 <?php require_once 'includes/nav.php'; ?>
 </body>
 </html>
+

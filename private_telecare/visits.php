@@ -1,13 +1,13 @@
-<?php
+﻿<?php
 // private_telecare/visits.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../includes/auth.php';
 // visits.php (for patients)
 
-// ── Auto-cancel any Pending/Unpaid appointment past its 10-minute payment window ──
+// â”€â”€ Auto-cancel any Pending/Unpaid appointment past its 10-minute payment window â”€â”€
 $conn->query("UPDATE appointments SET status='Cancelled' WHERE status='Pending' AND payment_status='Unpaid' AND created_at < (NOW() - INTERVAL 10 MINUTE)");
 
-// ── Handle new booking ──
+// â”€â”€ Handle new booking â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) {
     $did   = (int)($_POST['doctor_id']   ?? 0);
     $date  = trim($_POST['appt_date']    ?? '');
@@ -61,8 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
     header('Location: router.php?page=visits'); exit;
 }
 
-// ── Fetch visits ──
-// PENDING: booked but not yet paid — still inside the 10-minute window (anything past it was
+// â”€â”€ Fetch visits â”€â”€
+// PENDING: booked but not yet paid â€” still inside the 10-minute window (anything past it was
 // already flipped to Cancelled by the auto-cancel query above).
 $visits_pending = $conn->query("
     SELECT a.*, d.full_name AS doctor_name, d.specialty, d.consultation_fee
@@ -82,7 +82,7 @@ $visits_upcoming = $conn->query("
     ORDER BY a.appointment_date ASC
 ");
 
-// PAST: completed, past-dated, or cancelled — cancelled ones show here regardless of date so
+// PAST: completed, past-dated, or cancelled â€” cancelled ones show here regardless of date so
 // they don't just disappear from the patient's view.
 $visits_past = $conn->query("
     SELECT a.*, d.full_name AS doctor_name, d.specialty
@@ -96,7 +96,7 @@ $visits_past = $conn->query("
     ORDER BY a.appointment_date DESC, a.appointment_time DESC
 ");
 
-// ── Fetch ALL active doctors + their schedules ──
+// â”€â”€ Fetch ALL active doctors + their schedules â”€â”€
 $all_doctors = [];
 $dres = $conn->query("SELECT id, full_name, specialty, subspecialty, consultation_fee, profile_photo, is_available FROM doctors WHERE status = 'active' ORDER BY full_name ASC");
 if ($dres) {
@@ -109,7 +109,7 @@ if ($dres) {
     }
 }
 
-// ── Stat counts ──
+// â”€â”€ Stat counts â”€â”€
 $stat_pending   = $visits_pending  ? $visits_pending->num_rows  : 0;
 $stat_upcoming  = $visits_upcoming ? $visits_upcoming->num_rows : 0;
 $stat_completed = $conn->query("SELECT COUNT(*) c FROM appointments WHERE patient_id=$patient_id AND status='Completed'")->fetch_assoc()['c'] ?? 0;
@@ -119,7 +119,7 @@ $toast       = $_SESSION['toast']       ?? null;
 $toast_error = $_SESSION['toast_error'] ?? null;
 unset($_SESSION['toast'], $_SESSION['toast_error']);
 
-$page_title = 'My Visits — TELE-CARE';
+$page_title = 'My Visits â€” TELE-CARE';
 $active_nav = 'visits';
 require_once __DIR__ . '/../includes/header.php';
 
@@ -131,7 +131,7 @@ function isCallActive(string $date, string $time): bool {
 ?>
 
 <style>
-/* ── PAGE LAYOUT ── */
+/* â”€â”€ PAGE LAYOUT â”€â”€ */
 .page {
   max-width: 1320px !important;
   margin: 0 auto !important;
@@ -148,18 +148,18 @@ function isCallActive(string $date, string $time): bool {
 .breadcrumbs-separator { color:rgba(36,68,65,.3); }
 .breadcrumbs-current { color:#244441; }
 
-/* ── PAGE HEADER ── */
+/* â”€â”€ PAGE HEADER â”€â”€ */
 .visits-header {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 1.4rem;
   flex-wrap: wrap; gap: 1rem;
 }
 .visits-title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 1.9rem; font-weight: 900; color: #244441; line-height: 1;
 }
 .visits-title span {
-  display: block; font-family: 'DM Sans', sans-serif;
+  display: block; font-family: 'Poppins', sans-serif;
   font-size: 0.85rem; font-weight: 500; color: #9ab0ae;
   margin-top: 0.4rem; letter-spacing: 0;
 }
@@ -169,7 +169,7 @@ function isCallActive(string $date, string $time): bool {
   padding: 0.72rem 1.5rem; border-radius: 50px;
   font-size: 0.85rem; font-weight: 700;
   border: none; cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Poppins', sans-serif;
   box-shadow: 0 4px 16px rgba(195,54,67,0.28);
   transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
   text-decoration: none;
@@ -177,7 +177,7 @@ function isCallActive(string $date, string $time): bool {
 .book-btn:hover { background: #a82d38; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(195,54,67,0.38); }
 .book-btn svg { flex-shrink: 0; }
 
-/* ── STAT CARDS ── */
+/* â”€â”€ STAT CARDS â”€â”€ */
 .stat-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -211,9 +211,9 @@ function isCallActive(string $date, string $time): bool {
   font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em;
   text-transform: uppercase; color: #9ab0ae; margin-bottom: 0.15rem;
 }
-.stat-value { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 900; color: #244441; }
+.stat-value { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 900; color: #244441; }
 
-/* ── SEARCH + FILTER BAR ── */
+/* â”€â”€ SEARCH + FILTER BAR â”€â”€ */
 .controls-bar {
   display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem;
   margin-bottom: 1.3rem;
@@ -221,7 +221,7 @@ function isCallActive(string $date, string $time): bool {
 .filter-select, .filter-date {
   height:36px; padding:0 .8rem; border:1.5px solid rgba(36,68,65,.1);
   border-radius:8px; background:#fff; color:#244441;
-  font:500 .78rem 'DM Sans',sans-serif; outline:none;
+  font:500 .78rem 'Poppins',sans-serif; outline:none;
 }
 .filter-select:focus, .filter-date:focus { border-color:#3F82E3; }
 .filter-select { min-width:118px; }
@@ -234,12 +234,12 @@ function isCallActive(string $date, string $time): bool {
 .search-input {
   width: 100%; padding: 0.68rem 1rem 0.68rem 2.4rem;
   border: 1.5px solid rgba(36,68,65,0.1); border-radius: 50px;
-  font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: #244441;
+  font-family: 'Poppins', sans-serif; font-size: 0.85rem; color: #244441;
   outline: none; background: #fff; transition: border-color 0.2s;
 }
 .search-input:focus { border-color: #3F82E3; }
 
-/* ── TABS ── */
+/* â”€â”€ TABS â”€â”€ */
 .inner-tabs {
   display: flex; gap: 0; margin-bottom: 1.2rem;
   background: rgba(36,68,65,0.05); border-radius: 12px; padding: 4px;
@@ -248,7 +248,7 @@ function isCallActive(string $date, string $time): bool {
 .inner-tab {
   padding: 0.52rem 1.5rem; border-radius: 9px;
   border: none; background: transparent;
-  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  cursor: pointer; font-family: 'Poppins', sans-serif;
   font-size: 0.84rem; font-weight: 600;
   color: #9ab0ae; transition: all 0.2s;
   display: inline-flex; align-items: center; gap: 0.4rem;
@@ -263,7 +263,7 @@ function isCallActive(string $date, string $time): bool {
 }
 .inner-tab.active .tab-count { background: rgba(195,54,67,0.12); color: #C33643; }
 
-/* ── APPOINTMENT ROW CARD ── */
+/* â”€â”€ APPOINTMENT ROW CARD â”€â”€ */
 .appt-card {
   background: #fff;
   border: 1px solid rgba(36,68,65,0.08);
@@ -339,7 +339,7 @@ function isCallActive(string $date, string $time): bool {
   display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem;
 }
 
-/* ── BADGES ── */
+/* â”€â”€ BADGES â”€â”€ */
 .badge {
   font-size: 0.64rem; font-weight: 700; letter-spacing: 0.05em;
   text-transform: uppercase; padding: 0.24rem 0.65rem; border-radius: 50px;
@@ -351,13 +351,13 @@ function isCallActive(string $date, string $time): bool {
 .badge-blue   { background: rgba(63,130,227,0.1);  color: #2563eb; }
 .badge-gray   { background: rgba(36,68,65,0.08);   color: #6b8886; }
 
-/* ── ACTION BUTTONS ── */
+/* â”€â”€ ACTION BUTTONS â”€â”€ */
 .btn-pill {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
   padding: 0.55rem 1.05rem; border-radius: 50px;
   font-size: 0.78rem; font-weight: 700; text-decoration: none;
   border: 1.5px solid transparent; cursor: pointer;
-  font-family: 'DM Sans', sans-serif; transition: all 0.2s; white-space: nowrap;
+  font-family: 'Poppins', sans-serif; transition: all 0.2s; white-space: nowrap;
   line-height: 1;
 }
 .btn-pill svg { width: 13px; height: 13px; flex-shrink: 0; display: block; }
@@ -375,11 +375,11 @@ function isCallActive(string $date, string $time): bool {
 .btn-pill.outline-gold{ background:#fff; border-color: rgba(202,138,4,0.35); color:#ca8a04; }
 .btn-pill.outline-gold:hover{ background: rgba(202,138,4,0.08); }
 
-/* ── RATE DOCTOR MODAL ── */
+/* â”€â”€ RATE DOCTOR MODAL â”€â”€ */
 .rate-modal-backdrop{display:none;position:fixed;inset:0;background:rgba(15,25,24,.55);z-index:1000;align-items:center;justify-content:center;padding:1rem}
 .rate-modal-backdrop.open{display:flex}
 .rate-modal{background:#fff;border-radius:14px;max-width:420px;width:100%;padding:1.3rem 1.4rem}
-.rate-modal h3{font-family:'DM Sans',sans-serif;color:var(--green);margin:0 0 .2rem;font-size:1.02rem;display:flex;justify-content:space-between;align-items:center}
+.rate-modal h3{font-family:'Poppins',sans-serif;color:var(--green);margin:0 0 .2rem;font-size:1.02rem;display:flex;justify-content:space-between;align-items:center}
 .rate-modal h3 button{background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--muted)}
 .rate-modal .rate-sub{font-size:.75rem;color:var(--muted);margin-bottom:1rem}
 .star-input{display:flex;gap:.35rem;justify-content:center;font-size:2rem;margin:.4rem 0 1rem;cursor:pointer;user-select:none}
@@ -404,7 +404,7 @@ function isCallActive(string $date, string $time): bool {
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin-icon { animation: spin 1.4s linear infinite; display: inline-block; }
 
-/* ── PENDING NOTICE STRIP w/ countdown ── */
+/* â”€â”€ PENDING NOTICE STRIP w/ countdown â”€â”€ */
 .pending-notice {
   background: linear-gradient(135deg, rgba(217,119,6,0.08), rgba(217,119,6,0.03));
   border-top: 1px solid rgba(217,119,6,0.15);
@@ -418,12 +418,12 @@ function isCallActive(string $date, string $time): bool {
 }
 .pending-notice-text svg { width: 14px; height: 14px; flex-shrink: 0; color: #d97706; }
 .countdown-chip {
-  font-family: 'Playfair Display', serif; font-weight: 900; font-size: 0.9rem;
+  font-family: 'Poppins', sans-serif; font-weight: 900; font-size: 0.9rem;
   color: #d97706; background: rgba(217,119,6,0.12);
   padding: 0.25rem 0.7rem; border-radius: 50px;
 }
 
-/* ── EMPTY STATE ── */
+/* â”€â”€ EMPTY STATE â”€â”€ */
 .empty-state {
   display: flex; flex-direction: column; align-items: center;
   justify-content: center; text-align: center;
@@ -432,7 +432,7 @@ function isCallActive(string $date, string $time): bool {
 .empty-state svg { width: 42px; height: 42px; opacity: 0.3; }
 .empty-state p { font-size: 0.88rem; font-weight: 500; }
 
-/* ── TOAST ── */
+/* â”€â”€ TOAST â”€â”€ */
 .toast-bar {
   position: fixed; bottom: 5.5rem; left: 50%;
   transform: translateX(-50%); z-index: 400;
@@ -448,7 +448,7 @@ function isCallActive(string $date, string $time): bool {
 @keyframes toastIn  { from { opacity:0; transform:translateX(-50%) translateY(12px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
 @keyframes toastOut { from { opacity:1; } to { opacity:0; pointer-events:none; } }
 
-/* ── RESPONSIVE ── */
+/* â”€â”€ RESPONSIVE â”€â”€ */
 @media (max-width: 900px) {
   .page { padding: 1rem 1rem 5rem !important; }
   .visits-sticky { top:59px; margin:0 -1rem 1rem; padding:0 1rem .55rem; }
@@ -490,7 +490,7 @@ function isCallActive(string $date, string $time): bool {
     <span class="breadcrumbs-current">Appointments</span>
   </nav>
 
-  <!-- ══ PAGE HEADER ══ -->
+  <!-- â•â• PAGE HEADER â•â• -->
   <div class="visits-header">
     <div class="visits-title">
       Appointments
@@ -503,7 +503,7 @@ function isCallActive(string $date, string $time): bool {
   </div>
 
   <div class="visits-sticky">
-  <!-- ══ STAT CARDS ══ -->
+  <!-- â•â• STAT CARDS â•â• -->
   <div class="stat-row">
     <div class="stat-card">
       <div class="stat-icon upcoming">
@@ -534,7 +534,7 @@ function isCallActive(string $date, string $time): bool {
     </div>
   </div>
 
-  <!-- ══ SEARCH BAR ══ -->
+  <!-- â•â• SEARCH BAR â•â• -->
   <div class="controls-bar">
     <div class="search-wrap">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
@@ -555,14 +555,14 @@ function isCallActive(string $date, string $time): bool {
   </div>
   </div>
 
-  <!-- ══ TABS ══ -->
+  <!-- â•â• TABS â•â• -->
   <div class="inner-tabs">
     <button class="inner-tab active" id="btn-pending" onclick="switchTab('pending')">Pending <span class="tab-count"><?= (int)$stat_pending ?></span></button>
     <button class="inner-tab" id="btn-upcoming" onclick="switchTab('upcoming')">Upcoming <span class="tab-count"><?= (int)$stat_upcoming ?></span></button>
     <button class="inner-tab" id="btn-past" onclick="switchTab('past')">Past</button>
   </div>
 
-  <!-- ══ PENDING ══ -->
+  <!-- â•â• PENDING â•â• -->
   <div id="visits-pending">
     <?php
     $has = false;
@@ -583,7 +583,7 @@ function isCallActive(string $date, string $time): bool {
             <span class="badge badge-orange">Pending Payment</span>
           </div>
           <div class="appt-sub">
-            <?= !empty($a['specialty']) ? htmlspecialchars($a['specialty']).' · ' : '' ?><?= htmlspecialchars($a['type']) ?>
+            <?= !empty($a['specialty']) ? htmlspecialchars($a['specialty']).' Â· ' : '' ?><?= htmlspecialchars($a['type']) ?>
           </div>
           <div class="appt-meta-row">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -634,7 +634,7 @@ function isCallActive(string $date, string $time): bool {
     <?php endif; ?>
   </div>
 
-  <!-- ══ UPCOMING ══ -->
+  <!-- â•â• UPCOMING â•â• -->
   <div id="visits-upcoming" style="display:none;">
     <?php
     $has = false;
@@ -661,7 +661,7 @@ function isCallActive(string $date, string $time): bool {
             <span class="badge badge-green">Paid</span>
           </div>
           <div class="appt-sub">
-            <?= !empty($a['specialty']) ? htmlspecialchars($a['specialty']).' · ' : '' ?><?= htmlspecialchars($a['type']) ?>
+            <?= !empty($a['specialty']) ? htmlspecialchars($a['specialty']).' Â· ' : '' ?><?= htmlspecialchars($a['type']) ?>
           </div>
           <div class="appt-meta-row">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -727,14 +727,14 @@ function isCallActive(string $date, string $time): bool {
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.4" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
       </svg>
       <p>No upcoming (paid) appointments.</p>
-      <a href="router.php?page=booking/step1_details" style="margin-top:0.5rem;padding:0.55rem 1.4rem;background:#3F82E3;color:#fff;border:none;border-radius:50px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 4px 14px rgba(63,130,227,0.28);text-decoration:none;">
+      <a href="router.php?page=booking/step1_details" style="margin-top:0.5rem;padding:0.55rem 1.4rem;background:#3F82E3;color:#fff;border:none;border-radius:50px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;box-shadow:0 4px 14px rgba(63,130,227,0.28);text-decoration:none;">
         Book Now
       </a>
     </div>
     <?php endif; ?>
   </div>
 
-  <!-- ══ PAST ══ -->
+  <!-- â•â• PAST â•â• -->
   <div id="visits-past" style="display:none;">
     <?php
     $has = false;
@@ -757,7 +757,7 @@ function isCallActive(string $date, string $time): bool {
             <span class="badge <?= $paid?'badge-green':'badge-gray' ?>"><?= $a['payment_status'] ?></span>
           </div>
           <div class="appt-sub">
-            <?= !empty($a['specialty']) ? htmlspecialchars($a['specialty']).' · ' : '' ?><?= htmlspecialchars($a['type']) ?>
+            <?= !empty($a['specialty']) ? htmlspecialchars($a['specialty']).' Â· ' : '' ?><?= htmlspecialchars($a['type']) ?>
           </div>
           <div class="appt-meta-row">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -834,7 +834,7 @@ function filterVisitRows(query) {
 document.querySelectorAll('.toast-bar.success').forEach(t => setTimeout(() => t.remove(), 3500));
 document.querySelectorAll('.toast-bar.error').forEach(t => { t.style.cursor='pointer'; t.addEventListener('click', () => t.remove()); });
 
-// ── Countdown chips for pending appointments ──
+// â”€â”€ Countdown chips for pending appointments â”€â”€
 (function(){
   const chips = document.querySelectorAll('.countdown-chip[data-deadline]');
   if (!chips.length) return;
@@ -862,7 +862,7 @@ document.querySelectorAll('.toast-bar.error').forEach(t => { t.style.cursor='poi
 })();
 </script>
 
-<!-- ══ Rate Doctor modal ══ -->
+<!-- â•â• Rate Doctor modal â•â• -->
 <div class="rate-modal-backdrop" id="rateBackdrop" onclick="if(event.target===this) closeRateModal()">
   <div class="rate-modal">
     <h3><span id="rateDoctorName">Rate Doctor</span> <button type="button" onclick="closeRateModal()">&times;</button></h3>
@@ -876,7 +876,7 @@ document.querySelectorAll('.toast-bar.error').forEach(t => { t.style.cursor='poi
       <span data-star="4">&#9733;</span>
       <span data-star="5">&#9733;</span>
     </div>
-    <textarea id="rateComment" placeholder="Optional — share your experience with this doctor…" maxlength="1000"></textarea>
+    <textarea id="rateComment" placeholder="Optional â€” share your experience with this doctorâ€¦" maxlength="1000"></textarea>
     <div class="rate-modal-actions">
       <button type="button" class="btn-pill outline-neutral" onclick="closeRateModal()">Cancel</button>
       <button type="button" class="btn-pill solid-purple" id="rateSubmitBtn" onclick="submitRating()">Submit Rating</button>
@@ -943,7 +943,7 @@ function submitRating() {
 
   const btn = document.getElementById('rateSubmitBtn');
   btn.disabled = true;
-  btn.textContent = 'Saving…';
+  btn.textContent = 'Savingâ€¦';
 
   const body = new URLSearchParams();
   body.set('doctor_id', currentRateDoctorId);
@@ -975,7 +975,7 @@ function submitRating() {
     .catch(err => {
       btn.disabled = false;
       btn.textContent = 'Submit Rating';
-      errEl.textContent = err.message || 'Network error — please try again.';
+      errEl.textContent = err.message || 'Network error â€” please try again.';
       errEl.style.display = 'block';
     });
 }

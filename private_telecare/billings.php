@@ -1,13 +1,13 @@
-<?php
+﻿<?php
 // private_telecare/billings.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../includes/auth.php';
-// billings.php — Patient's billing & payment history
+// billings.php â€” Patient's billing & payment history
 
-// ── Auto-cancel any Pending/Unpaid appointment past its 10-minute payment window ──
+// â”€â”€ Auto-cancel any Pending/Unpaid appointment past its 10-minute payment window â”€â”€
 $conn->query("UPDATE appointments SET status='Cancelled' WHERE status='Pending' AND payment_status='Unpaid' AND created_at < (NOW() - INTERVAL 10 MINUTE)");
 
-// ── Summary stats ──
+// â”€â”€ Summary stats â”€â”€
 $stats_stmt = $conn->prepare("
     SELECT
       COALESCE(SUM(CASE WHEN a.payment_status='Unpaid' AND a.status='Pending' THEN d.consultation_fee ELSE 0 END),0) AS balance,
@@ -21,7 +21,7 @@ $stats_stmt->bind_param("i", $patient_id);
 $stats_stmt->execute();
 $stats = $stats_stmt->get_result()->fetch_assoc();
 
-// ── Oldest unpaid appointment (powers the "Pay Now" shortcut) ──
+// â”€â”€ Oldest unpaid appointment (powers the "Pay Now" shortcut) â”€â”€
 $due_stmt = $conn->prepare("
     SELECT a.id, d.consultation_fee
     FROM appointments a
@@ -33,7 +33,7 @@ $due_stmt->bind_param("i", $patient_id);
 $due_stmt->execute();
 $due = $due_stmt->get_result()->fetch_assoc();
 
-// ── Transaction history: anything actually paid, or still awaiting payment ──
+// â”€â”€ Transaction history: anything actually paid, or still awaiting payment â”€â”€
 $tx_stmt = $conn->prepare("
     SELECT a.id, a.reference_no, a.appointment_date, a.appointment_time, a.type, a.status,
            a.payment_status, a.paid_at, a.created_at, a.receipt_number,
@@ -51,13 +51,13 @@ $toast       = $_SESSION['toast']       ?? null;
 $toast_error = $_SESSION['toast_error'] ?? null;
 unset($_SESSION['toast'], $_SESSION['toast_error']);
 
-$page_title = 'Billing — TELE-CARE';
+$page_title = 'Billing â€” TELE-CARE';
 $active_nav = 'billing';
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 
 :root{
   --tc-red:#B31118; --tc-red-dark:#8a000b;
@@ -73,11 +73,11 @@ require_once __DIR__ . '/../includes/header.php';
   padding: 1.8rem 2rem 5rem !important;
   background: transparent !important;
   overflow-x: clip;
-  font-family:'Inter',sans-serif;
+  font-family:'Poppins',sans-serif;
 }
 .page-head{ margin-bottom:1.25rem; }
 .page-title{
-  font-family:'Inter',sans-serif; font-weight:800; font-size:1.9rem;
+  font-family:'Poppins',sans-serif; font-weight:800; font-size:1.9rem;
   color:var(--tc-ink); line-height:1.15; margin-bottom:0.3rem;
 }
 .page-sub{ color:var(--tc-muted); font-size:0.92rem; }
@@ -87,7 +87,7 @@ require_once __DIR__ . '/../includes/header.php';
 .toast-bar.error{background:#C33643;color:#fff;}
 @keyframes toastOut{from{opacity:1}to{opacity:0;pointer-events:none}}
 
-/* ── STATS ROW ── */
+/* â”€â”€ STATS ROW â”€â”€ */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -119,7 +119,7 @@ require_once __DIR__ . '/../includes/header.php';
 .si-red  { background: var(--tc-red-tint);  color: var(--tc-red); }
 .si-teal { background: var(--tc-teal-tint); color: var(--tc-teal); }
 .stat-num {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 1.75rem; font-weight: 800; line-height: 1;
   color: var(--tc-ink);
 }
@@ -137,7 +137,7 @@ require_once __DIR__ . '/../includes/header.php';
 .stat-pay-btn:hover{ background:var(--tc-red-dark); transform:translateY(-1px); }
 .stat-note{ font-size:0.72rem; color:var(--tc-muted); margin-top:0.2rem; }
 
-/* ── LAYOUT ── */
+/* â”€â”€ LAYOUT â”€â”€ */
 .bill-grid{ display:grid; grid-template-columns: 2fr 1fr; gap: 1.1rem; align-items:start; }
 
 .bx-card {
@@ -159,7 +159,7 @@ require_once __DIR__ . '/../includes/header.php';
 .bx-title svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--tc-red); }
 .bx-body { padding: 0.9rem 1.4rem 1.4rem; }
 
-/* ── FILTER TABS ── */
+/* â”€â”€ FILTER TABS â”€â”€ */
 .tx-tabs{ display:flex; gap:0.4rem; padding:1rem 1.4rem 0; }
 .tx-tab{
   border:1px solid var(--tc-line); background:#fff; color:var(--tc-muted);
@@ -168,7 +168,7 @@ require_once __DIR__ . '/../includes/header.php';
 }
 .tx-tab.active{ background:var(--tc-red); border-color:var(--tc-red); color:#fff; }
 
-/* ── TABLE ── */
+/* â”€â”€ TABLE â”€â”€ */
 .tx-table-wrap{ overflow-x:auto; }
 .tx-table{ width:100%; border-collapse:collapse; font-size:0.83rem; }
 .tx-table th{
@@ -183,7 +183,7 @@ require_once __DIR__ . '/../includes/header.php';
 .tx-table tr:last-child td{ border-bottom:none; }
 .tx-desc-main{ font-weight:700; font-size:0.85rem; }
 .tx-desc-sub{ font-size:0.74rem; color:var(--tc-muted); margin-top:0.1rem; }
-.tx-amount{ font-weight:800; font-family:'Inter',sans-serif; white-space:nowrap; }
+.tx-amount{ font-weight:800; font-family:'Poppins',sans-serif; white-space:nowrap; }
 .tx-pay{ display:flex; align-items:center; gap:0.35rem; color:var(--tc-muted); font-size:0.78rem; white-space:nowrap; }
 .tx-pay svg{ width:13px; height:13px; flex-shrink:0; }
 
@@ -203,7 +203,7 @@ require_once __DIR__ . '/../includes/header.php';
 .tx-action-view{ color:var(--tc-teal); }
 .tx-action-pay{ color:var(--tc-red); }
 
-/* ── INVOICES SIDE CARD ── */
+/* â”€â”€ INVOICES SIDE CARD â”€â”€ */
 .inv-item{
   display:flex; align-items:center; justify-content:space-between; gap:0.6rem;
   padding:0.75rem 0; border-bottom:1px solid rgba(21,28,39,0.05);
@@ -219,7 +219,7 @@ require_once __DIR__ . '/../includes/header.php';
 }
 .inv-view svg{ width:15px; height:15px; }
 
-/* ── EMPTY STATE ── */
+/* â”€â”€ EMPTY STATE â”€â”€ */
 .empty-state {
   display: flex; flex-direction: column; align-items: center;
   justify-content: center; text-align: center;
@@ -240,8 +240,8 @@ require_once __DIR__ . '/../includes/header.php';
 }
 </style>
 
-<?php if ($toast): ?><div class="toast-bar success">✓ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
-<?php if ($toast_error): ?><div class="toast-bar error">✕ <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
+<?php if ($toast): ?><div class="toast-bar success">âœ“ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
+<?php if ($toast_error): ?><div class="toast-bar error">âœ• <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
 
 <div class="page">
 
@@ -250,7 +250,7 @@ require_once __DIR__ . '/../includes/header.php';
     <p class="page-sub">View and manage your medical invoices, payments, and consultation history.</p>
   </div>
 
-  <!-- ══ STATS ══ -->
+  <!-- â•â• STATS â•â• -->
   <div class="stats-row">
 
     <div class="stat-card s-balance">
@@ -259,7 +259,7 @@ require_once __DIR__ . '/../includes/header.php';
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/></svg>
         </div>
         <div>
-          <div class="stat-num red">₱<?= number_format($stats['balance'], 2) ?></div>
+          <div class="stat-num red">â‚±<?= number_format($stats['balance'], 2) ?></div>
           <div class="stat-lbl">Current Balance</div>
         </div>
       </div>
@@ -279,7 +279,7 @@ require_once __DIR__ . '/../includes/header.php';
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8c-1.66 0-3 .9-3 2s1.34 2 3 2 3 .9 3 2-1.34 2-3 2m0-8V6m0 12v-2m0-8c1.11 0 2.08.402 2.6 1"/><circle cx="12" cy="12" r="9"/></svg>
         </div>
         <div>
-          <div class="stat-num teal">₱<?= number_format($stats['total_paid'], 2) ?></div>
+          <div class="stat-num teal">â‚±<?= number_format($stats['total_paid'], 2) ?></div>
           <div class="stat-lbl">Total Paid (All Time)</div>
         </div>
       </div>
@@ -301,7 +301,7 @@ require_once __DIR__ . '/../includes/header.php';
 
   <div class="bill-grid">
 
-    <!-- ══ TRANSACTIONS ══ -->
+    <!-- â•â• TRANSACTIONS â•â• -->
     <div class="bx-card">
       <div class="bx-head">
         <div class="bx-title">
@@ -342,9 +342,9 @@ require_once __DIR__ . '/../includes/header.php';
               <td><?= $rowDate->format('M j, Y') ?></td>
               <td>
                 <div class="tx-desc-main"><?= htmlspecialchars($t['type']) ?> Consultation</div>
-                <div class="tx-desc-sub">Dr. <?= htmlspecialchars($t['doctor_name']) ?><?= !empty($t['specialty']) ? ' · '.htmlspecialchars($t['specialty']) : '' ?></div>
+                <div class="tx-desc-sub">Dr. <?= htmlspecialchars($t['doctor_name']) ?><?= !empty($t['specialty']) ? ' Â· '.htmlspecialchars($t['specialty']) : '' ?></div>
               </td>
-              <td class="tx-amount">₱<?= number_format($fee, 2) ?></td>
+              <td class="tx-amount">â‚±<?= number_format($fee, 2) ?></td>
               <td>
                 <?php if ($isPaid): ?>
                 <span class="tx-pay">
@@ -352,7 +352,7 @@ require_once __DIR__ . '/../includes/header.php';
                   PayMongo
                 </span>
                 <?php else: ?>
-                <span class="tx-pay">—</span>
+                <span class="tx-pay">â€”</span>
                 <?php endif; ?>
               </td>
               <td>
@@ -393,7 +393,7 @@ require_once __DIR__ . '/../includes/header.php';
       </div>
     </div>
 
-    <!-- ══ INVOICES & RECEIPTS ══ -->
+    <!-- â•â• INVOICES & RECEIPTS â•â• -->
     <div class="bx-card">
       <div class="bx-head">
         <div class="bx-title">
@@ -418,8 +418,8 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="inv-item">
           <div>
             <div class="inv-no"><?= htmlspecialchars($invNo) ?></div>
-            <div class="inv-meta"><?= $paidAt->format('M j, Y') ?> · Dr. <?= htmlspecialchars($t['doctor_name']) ?></div>
-            <div class="inv-amt">₱<?= number_format($fee, 2) ?></div>
+            <div class="inv-meta"><?= $paidAt->format('M j, Y') ?> Â· Dr. <?= htmlspecialchars($t['doctor_name']) ?></div>
+            <div class="inv-amt">â‚±<?= number_format($fee, 2) ?></div>
           </div>
           <a href="router.php?page=receipt&appt_id=<?= (int)$t['id'] ?>" class="inv-view" title="View receipt">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -463,3 +463,4 @@ require_once __DIR__ . '/../includes/header.php';
 <?php require_once __DIR__ . '/../includes/nav.php'; ?>
 </body>
 </html>
+

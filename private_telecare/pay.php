@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // private_telecare/pay.php
 // Pay step of the booking flow:  Method -> Review -> Payment
 // Methods: GCash (PayMongo), PhilHealth YAKAP, HMO.  (No card payments.)
@@ -8,7 +8,7 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/legal_policy_helper.php';
 require_once __DIR__ . '/booking/booking_helpers.php';
 if (!isset($patient_id)) {
-    die('❌ $patient_id is not set. Check auth.php — session key may differ.');
+    die('âŒ $patient_id is not set. Check auth.php â€” session key may differ.');
 }
 
 $paymongoSecretKey = $_ENV['PAYMONGO_SECRET_KEY'] ?? ($_SERVER['PAYMONGO_SECRET_KEY'] ?? getenv('PAYMONGO_SECRET_KEY') ?: '');
@@ -27,7 +27,7 @@ $stmt = $conn->prepare("
     JOIN patients p ON p.id = a.patient_id
     WHERE a.id = ? AND a.patient_id = ? AND a.status = 'Pending' AND a.payment_status = 'Unpaid'
 ");
-if ($stmt === false) { die('❌ Prepare failed: ' . htmlspecialchars($conn->error)); }
+if ($stmt === false) { die('âŒ Prepare failed: ' . htmlspecialchars($conn->error)); }
 $stmt->bind_param("ii", $appt_id, $patient_id);
 $stmt->execute();
 $appt = $stmt->get_result()->fetch_assoc();
@@ -54,7 +54,7 @@ $formErrors  = [];
 $postedMeth  = '';
 $isRepost    = false;
 
-// ── Handle POST ──
+// â”€â”€ Handle POST â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_method'])) {
     while (ob_get_level()) ob_end_clean();
 
@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_method'])) {
 
     $method = (string)$_POST['pay_method'];
 
-    // ── PhilHealth YAKAP / HMO: save the details, confirm the appointment ──
+    // â”€â”€ PhilHealth YAKAP / HMO: save the details, confirm the appointment â”€â”€
     if ($method === 'yakap' || $method === 'hmo') {
         $res = booking_save_coverage($conn, $patient_id, $appt_id, $method, $_POST);
         if (!empty($res['ok'])) {
@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_method'])) {
         $postedMeth = $method;
         $isRepost   = true;   // fall through and show the page again with the errors
 
-    // ── GCash ──
+    // â”€â”€ GCash â”€â”€
     } elseif ($method === 'gcash') {
         $name         = trim((string)$appt['patient_name']);
         $email        = trim((string)$appt['patient_email']);
@@ -147,7 +147,7 @@ $e         = fn($x) => htmlspecialchars((string)$x, ENT_QUOTES);
 $old       = fn(string $k, string $d = '') => $e($isRepost ? (string)($_POST[$k] ?? '') : $d);
 $checked   = fn(string $k, string $v) => ($isRepost && (string)($_POST[$k] ?? '') === $v) ? 'checked' : '';
 $fee       = floatval($appt['consultation_fee']);
-$fee_fmt   = '₱' . number_format($fee, 2);
+$fee_fmt   = 'â‚±' . number_format($fee, 2);
 $doc_name  = 'Dr. ' . $e($appt['doctor_name']);
 $hmoMap    = booking_hmo_providers($conn);   // name => license no.
 $hmoList   = array_merge(array_keys($hmoMap), ['Other']);
@@ -168,9 +168,9 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Pay · TELE-CARE</title>
+  <title>Pay Â· TELE-CARE</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -178,7 +178,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
       --muted: #6b7280; --border: #e5e7eb; --bg: #f9fafb;
       --white: #ffffff; --text: #111827; --radius: 12px; --red: #ef4444;
     }
-    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    body { font-family:'Poppins',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
 
     .toast-container { position:fixed; top:1rem; left:50%; transform:translateX(-50%); width:90%; max-width:500px; z-index:9999; display:none; }
     .toast { padding:1rem 1.5rem; border-radius:10px; color:#fff; font-weight:600; font-size:0.9rem; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; align-items:center; gap:0.75rem; }
@@ -186,7 +186,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     .toast.success { background:var(--green); }
 
     .checkout-header { background:linear-gradient(135deg,#0d9488 0%,#0f766e 60%,#134e4a 100%); padding:1.5rem 1rem 1.2rem; text-align:center; }
-    .checkout-header h1 { font-family:'Plus Jakarta Sans',sans-serif; font-size:1.6rem; font-weight:800; color:#fff; }
+    .checkout-header h1 { font-family:'Poppins',sans-serif; font-size:1.6rem; font-weight:800; color:#fff; }
     .checkout-header .tagline { font-size:0.72rem; color:rgba(255,255,255,0.65); margin-top:0.15rem; letter-spacing:0.04em; }
 
     .ref-bar { background:var(--white); border-bottom:1px solid var(--border); padding:0.6rem 1rem; display:flex; align-items:center; gap:0.6rem; font-size:0.78rem; color:var(--muted); flex-wrap:wrap; }
@@ -205,11 +205,11 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     .step-line.done { background:var(--teal); }
 
     .checkout-body { max-width:600px; margin:0 auto; padding:1.2rem 1rem 5rem; }
-    .section-heading { font-family:'Plus Jakarta Sans',sans-serif; font-size:1rem; font-weight:800; color:var(--text); margin-bottom:0.8rem; }
+    .section-heading { font-family:'Poppins',sans-serif; font-size:1rem; font-weight:800; color:var(--text); margin-bottom:0.8rem; }
 
     .amount-display { text-align:center; margin-bottom:1.5rem; }
     .amount-desc  { font-size:0.85rem; color:var(--muted); margin-bottom:0.3rem; }
-    .amount-big   { font-family:'Plus Jakarta Sans',sans-serif; font-size:2.8rem; font-weight:800; color:var(--text); letter-spacing:-0.03em; line-height:1; }
+    .amount-big   { font-family:'Poppins',sans-serif; font-size:2.8rem; font-weight:800; color:var(--text); letter-spacing:-0.03em; line-height:1; }
     .amount-big .currency { font-size:1.5rem; vertical-align:top; margin-top:0.4rem; display:inline-block; }
     .amount-label { font-size:0.72rem; color:var(--muted); margin-top:0.3rem; }
 
@@ -233,11 +233,11 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     .form-group { margin-bottom:1rem; }
     .form-label { display:block; font-size:0.75rem; font-weight:700; color:var(--text); margin-bottom:0.35rem; }
     .form-label .req { color:#ef4444; }
-    .form-input { width:100%; padding:0.7rem 0.9rem; border:1.5px solid var(--border); border-radius:var(--radius); font-family:'DM Sans',sans-serif; font-size:0.88rem; color:var(--text); background:var(--white); outline:none; transition:border-color 0.2s,box-shadow 0.2s; }
+    .form-input { width:100%; padding:0.7rem 0.9rem; border:1.5px solid var(--border); border-radius:var(--radius); font-family:'Poppins',sans-serif; font-size:0.88rem; color:var(--text); background:var(--white); outline:none; transition:border-color 0.2s,box-shadow 0.2s; }
     .form-input:focus { border-color:var(--teal); box-shadow:0 0 0 3px rgba(13,148,136,0.1); }
 
     .summary-block { background:var(--white); border:1.5px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:1.2rem; }
-    .summary-block-title { font-weight:800; font-size:0.88rem; color:var(--text); padding:0.7rem 0.9rem 0.3rem; font-family:'Plus Jakarta Sans',sans-serif; }
+    .summary-block-title { font-weight:800; font-size:0.88rem; color:var(--text); padding:0.7rem 0.9rem 0.3rem; font-family:'Poppins',sans-serif; }
     .summary-table { width:100%; border-collapse:collapse; font-size:0.85rem; margin-bottom:1.2rem; }
     .summary-table td { padding:0.7rem 0.9rem; border-bottom:1px solid var(--border); }
     .summary-table td:first-child { color:var(--muted); font-weight:500; width:40%; }
@@ -248,9 +248,9 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     .privacy-note a { color:var(--teal); text-decoration:none; font-weight:600; }
 
     .nav-row { display:flex; align-items:center; gap:0.8rem; padding:1rem; position:fixed; bottom:0; left:0; right:0; background:var(--white); border-top:1px solid var(--border); z-index:10; }
-    .btn-back { padding:0.7rem 1.4rem; border:1.5px solid var(--border); border-radius:50px; background:var(--white); font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:600; color:var(--muted); cursor:pointer; transition:all 0.2s; }
+    .btn-back { padding:0.7rem 1.4rem; border:1.5px solid var(--border); border-radius:50px; background:var(--white); font-family:'Poppins',sans-serif; font-size:0.85rem; font-weight:600; color:var(--muted); cursor:pointer; transition:all 0.2s; }
     .btn-back:hover { border-color:var(--teal); color:var(--teal); }
-    .btn-next { flex:1; padding:0.8rem 1.4rem; border-radius:50px; border:none; background:var(--teal); color:#fff; font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:700; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 14px rgba(13,148,136,0.3); }
+    .btn-next { flex:1; padding:0.8rem 1.4rem; border-radius:50px; border:none; background:var(--teal); color:#fff; font-family:'Poppins',sans-serif; font-size:0.9rem; font-weight:700; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 14px rgba(13,148,136,0.3); }
     .btn-next:hover:not(:disabled) { background:var(--teal2); transform:translateY(-1px); }
     .btn-next:disabled { background:#d1d5db; color:#9ca3af; box-shadow:none; cursor:not-allowed; }
 
@@ -261,12 +261,12 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
 
     @keyframes spin { to { transform:rotate(360deg); } }
 
-    /* ── Privacy Modal ── */
+    /* â”€â”€ Privacy Modal â”€â”€ */
     .policy-modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9998; }
     .policy-modal.visible { display:flex; align-items:center; justify-content:center; }
     .policy-modal-content { background:var(--white); border-radius:16px; max-width:650px; max-height:85vh; overflow-y:auto; padding:2rem; box-shadow:0 20px 60px rgba(0,0,0,0.3); position:relative; }
     .policy-modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:1.5px solid var(--border); }
-    .policy-modal-header h2 { font-family:'Plus Jakarta Sans',sans-serif; font-size:1.4rem; font-weight:800; color:var(--text); margin:0; }
+    .policy-modal-header h2 { font-family:'Poppins',sans-serif; font-size:1.4rem; font-weight:800; color:var(--text); margin:0; }
     .policy-modal-close { background:none; border:none; font-size:1.8rem; color:var(--muted); cursor:pointer; padding:0; width:32px; height:32px; display:flex; align-items:center; justify-content:center; transition:color 0.2s; }
     .policy-modal-close:hover { color:var(--text); }
     .policy-modal-body { font-size:0.92rem; color:var(--text); line-height:1.7; }
@@ -275,7 +275,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     .policy-modal-body li { margin-bottom:0.5rem; }
     .policy-modal-body .highlight { background:rgba(13,148,136,0.08); border-left:3px solid var(--teal); padding:1rem; border-radius:6px; margin:1rem 0; }
     .policy-modal-footer { display:flex; gap:0.8rem; margin-top:2rem; padding-top:1rem; border-top:1.5px solid var(--border); }
-    .policy-modal-footer button { flex:1; padding:0.8rem 1.2rem; border:none; border-radius:50px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:0.88rem; transition:all 0.2s; }
+    .policy-modal-footer button { flex:1; padding:0.8rem 1.2rem; border:none; border-radius:50px; font-weight:700; cursor:pointer; font-family:'Poppins',sans-serif; font-size:0.88rem; transition:all 0.2s; }
     .btn-policy-close { background:var(--border); color:var(--muted); }
     .btn-policy-close:hover { background:#d1d5db; }
     .btn-policy-agree { background:var(--teal); color:#fff; box-shadow:0 4px 12px rgba(13,148,136,0.3); }
@@ -291,7 +291,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     .cov-form { display:none; background:var(--white); border:1.5px solid var(--border); border-radius:var(--radius); padding:1rem; margin-bottom:1rem; }
     .cov-form.visible { display:block; }
     .cov-form fieldset { border:0; min-width:0; }
-    .cov-title { font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:.92rem; margin-bottom:.15rem; }
+    .cov-title { font-family:'Poppins',sans-serif; font-weight:800; font-size:.92rem; margin-bottom:.15rem; }
     .cov-sub { font-size:.74rem; color:var(--muted); margin-bottom:.9rem; line-height:1.4; }
     .cov-sec { font-size:.68rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--teal2); margin:1rem 0 .55rem; }
     .cov-grid { display:grid; grid-template-columns:1fr 1fr; gap:.7rem .8rem; }
@@ -342,11 +342,11 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
   <input type="hidden" name="csrf" value="<?= $e($csrf) ?>"/>
   <input type="hidden" name="pay_method" id="f-method" value=""/>
 
-  <!-- ════ STEP 1: METHOD ════ -->
+  <!-- â•â•â•â• STEP 1: METHOD â•â•â•â• -->
   <div class="checkout-step active" id="step1">
     <div class="amount-display">
       <div class="amount-desc">Teleconsultation with <?= $doc_name ?></div>
-      <div class="amount-big"><span class="currency">₱</span><?= number_format($fee, 2) ?></div>
+      <div class="amount-big"><span class="currency">â‚±</span><?= number_format($fee, 2) ?></div>
       <div class="amount-label">Consultation fee</div>
     </div>
 
@@ -523,7 +523,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     </div>
   </div>
 
-  <!-- ════ STEP 2: REVIEW ════ -->
+  <!-- â•â•â•â• STEP 2: REVIEW â•â•â•â• -->
   <div class="checkout-step" id="step2">
     <div class="summary-block">
       <div class="summary-block-title">Appointment</div>
@@ -551,19 +551,19 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     </div>
   </div>
 
-  <!-- ════ STEP 3: PAYMENT ════ -->
+  <!-- â•â•â•â• STEP 3: PAYMENT â•â•â•â• -->
   <div class="checkout-step" id="step3">
     <div style="text-align:center;padding:3rem 1rem;">
       <div style="width:60px;height:60px;border:4px solid rgba(13,148,136,0.2);border-top-color:var(--teal);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 1.2rem;"></div>
-      <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:0.5rem;" id="processing-label">Processing…</div>
-      <div style="font-size:0.82rem;color:var(--muted);">Please wait…</div>
+      <div style="font-family:'Poppins',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:0.5rem;" id="processing-label">Processingâ€¦</div>
+      <div style="font-size:0.82rem;color:var(--muted);">Please waitâ€¦</div>
     </div>
   </div>
 </form>
 
   <div class="powered-by">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-    Secured by TELE-CARE · GCash payments powered by PayMongo
+    Secured by TELE-CARE Â· GCash payments powered by PayMongo
   </div>
 </div>
 
@@ -593,7 +593,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
   let step = 1, selMethod = null, selLabel = null;
   const FEE = <?= json_encode($fee_fmt) ?>;
 
-  // ── Toast ──
+  // â”€â”€ Toast â”€â”€
   function showToast(msg, type='error') {
     const c = document.getElementById('toast-container');
     document.getElementById('toast').className = 'toast ' + type;
@@ -606,7 +606,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     <?php unset($_SESSION['toast_error']); ?>
   <?php endif; ?>
 
-  // ── Method select ──
+  // â”€â”€ Method select â”€â”€
   function selectMethod(el) {
     document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
@@ -631,7 +631,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     b.classList.toggle('visible', list.length > 0);
   }
 
-  // ── PIN + HMO "Other" helpers ──
+  // â”€â”€ PIN + HMO "Other" helpers â”€â”€
   (function () {
     const el = document.getElementById('y-pin');
     el.addEventListener('input', () => {
@@ -656,7 +656,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     prov.addEventListener('change', sync); sync();
   })();
 
-  // ── Coverage form helpers (client side only helps the patient; the server re-checks everything) ──
+  // â”€â”€ Coverage form helpers (client side only helps the patient; the server re-checks everything) â”€â”€
   function covBox() { return document.getElementById('cov-' + selMethod); }
   function val(name) { const f = covBox().querySelector('[name="' + name + '"]'); return f ? f.value.trim() : ''; }
   function radio(name) { const f = covBox().querySelector('[name="' + name + '"]:checked'); return f ? f.value : ''; }
@@ -685,7 +685,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
 
   function maskPin(raw) {
     const d = raw.replace(/\D/g, '');
-    return d.length === 12 ? '••-•••••' + d.slice(7, 11) + '-' + d.slice(11) : d;
+    return d.length === 12 ? 'â€¢â€¢-â€¢â€¢â€¢â€¢â€¢' + d.slice(7, 11) + '-' + d.slice(11) : d;
   }
 
   function fillReview() {
@@ -708,7 +708,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     }
     block.style.display = '';
     document.getElementById('sum-due-label').textContent = 'Amount to pay now';
-    document.getElementById('sum-due').textContent = '₱0.00 (coverage — verified by the clinic)';
+    document.getElementById('sum-due').textContent = 'â‚±0.00 (coverage â€” verified by the clinic)';
     row('Member type', radio('member_type'));
     row('Contact number', val('contact_number'));
     if (selMethod === 'yakap') {
@@ -730,7 +730,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     }
   }
 
-  // ── Stepper ──
+  // â”€â”€ Stepper â”€â”€
   function updateStepper(n) {
     for (let i=1;i<=3;i++) {
       const sc = document.getElementById('sc'+i), sl = document.getElementById('sl'+i);
@@ -742,7 +742,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     }
   }
 
-  // ── Show step ──
+  // â”€â”€ Show step â”€â”€
   function showStep(n) {
     document.querySelectorAll('.checkout-step').forEach(s=>s.classList.remove('active'));
     document.getElementById('step'+n).classList.add('active');
@@ -751,7 +751,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     bb.style.display = n===2 ? '' : 'none';
     if (n===1) { bn.disabled=!selMethod; bn.textContent='Next'; bn.style.display=''; }
     else if (n===2) {
-      bn.textContent = selMethod === 'gcash' ? 'Confirm & Pay with GCash →' : 'Confirm & Submit →';
+      bn.textContent = selMethod === 'gcash' ? 'Confirm & Pay with GCash â†’' : 'Confirm & Submit â†’';
       const chk=document.getElementById('agree-chk');
       chk.checked=false; bn.disabled=true; bn.style.display='';
       chk.onchange=()=>{ bn.disabled=!chk.checked; };
@@ -779,7 +779,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
   function submitPayment() {
     step=3; showStep(3);
     document.getElementById('processing-label').textContent =
-      selMethod === 'gcash' ? 'Redirecting to GCash…' : 'Saving your details…';
+      selMethod === 'gcash' ? 'Redirecting to GCashâ€¦' : 'Saving your detailsâ€¦';
     setTimeout(() => document.getElementById('pay-form').submit(), 600);
   }
 
@@ -791,7 +791,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
   })();
   <?php endif; ?>
 
-  // ── Privacy Policy Modal ──
+  // â”€â”€ Privacy Policy Modal â”€â”€
   function openPolicyModal(e) {
     e.preventDefault();
     document.getElementById('policy-modal').classList.add('visible');
@@ -812,3 +812,5 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
 </script>
 </body>
 </html>
+
+

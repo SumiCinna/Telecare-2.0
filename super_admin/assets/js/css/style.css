@@ -1,4 +1,4 @@
-:root{
+﻿:root{
 	--red:#b31118;--red-dark:#8a000b;--red-light:#fff0ef;
 	--teal:#006a61;--teal-light:#0d9488;
 	--blue:#2f7fe7;--blue-light:#eef5ff;
@@ -11,11 +11,11 @@
 }
 *{box-sizing:border-box}
 html,body{min-height:100%}
-body{margin:0;background:var(--canvas);color:var(--ink);font-family:'Inter',sans-serif;font-size:15px}
+body{margin:0;background:var(--canvas);color:var(--ink);font-family:'Poppins',sans-serif;font-size:15px}
 a{color:inherit;text-decoration:none}
 button,input,select,textarea{font:inherit}
 
-/* ── Shell / sidebar / topbar (shared with dashboard) ───────────────── */
+/* â”€â”€ Shell / sidebar / topbar (shared with dashboard) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .admin-shell{min-height:100vh;display:flex}
 .sidebar{width:260px;min-width:260px;background:var(--white);border-right:1px solid var(--line);display:flex;flex-direction:column;position:fixed;inset:0 auto 0 0;z-index:5}
 .brand{display:flex;align-items:center;gap:12px;padding:24px 22px 21px}
@@ -43,7 +43,7 @@ button,input,select,textarea{font:inherit}
 .notification{position:relative;color:#5f6d81}
 .notification svg{width:19px}
 .notification b{position:absolute;top:-7px;right:-7px;min-width:14px;height:14px;border-radius:9px;background:var(--red);color:#fff;font-size:9px;text-align:center;line-height:14px}
-/* ── Profile menu (same pattern as the patient-side topbar) ─────────── */
+/* â”€â”€ Profile menu (same pattern as the patient-side topbar) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .profile-menu{position:relative}
 .profile-trigger{display:flex;align-items:center;gap:10px;padding:4px 8px 4px 4px;border:0;border-radius:10px;background:none;color:inherit;cursor:pointer;font:inherit;text-align:left;transition:background .2s}
 .profile-trigger:hover{background:var(--canvas)}
@@ -57,20 +57,20 @@ button,input,select,textarea{font:inherit}
 .profile-menu.open .profile-chevron{transform:rotate(180deg)}
 .profile-dropdown{position:absolute;top:calc(100% + 10px);right:0;z-index:220;display:none;min-width:195px;padding:6px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 40px rgba(21,28,39,.16)}
 .profile-menu.open .profile-dropdown{display:flex;flex-direction:column}
-.profile-option{display:flex;align-items:center;gap:9px;width:100%;box-sizing:border-box;padding:10px 11px;border:0;border-radius:8px;background:none;color:var(--ink);font:600 12px 'Inter',sans-serif;text-decoration:none;text-align:left;cursor:pointer}
+.profile-option{display:flex;align-items:center;gap:9px;width:100%;box-sizing:border-box;padding:10px 11px;border:0;border-radius:8px;background:none;color:var(--ink);font:600 12px 'Poppins',sans-serif;text-decoration:none;text-align:left;cursor:pointer}
 .profile-option:hover{background:var(--canvas);color:var(--ink)}
 .profile-option.logout{color:var(--red)}
 .profile-option.logout:hover{background:var(--red-light);color:var(--red)}
 .profile-option svg{width:16px;height:16px;flex-shrink:0}
 
-/* ── Password field with show/hide eye toggle ────────────────────────── */
+/* â”€â”€ Password field with show/hide eye toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .password-field{position:relative}
 .password-field .form-control{padding-right:42px}
 .password-toggle{position:absolute;top:50%;right:4px;transform:translateY(-50%);width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:none;border:0;border-radius:7px;color:var(--faint);cursor:pointer}
 .password-toggle:hover{background:var(--canvas);color:var(--ink)}
 .password-toggle svg{width:17px;height:17px}
 
-/* ── Change Password: live requirement checklist ─────────────────────── */
+/* â”€â”€ Change Password: live requirement checklist â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pw-requirements{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
 .pw-requirements li{font-size:11px;color:var(--faint);display:flex;align-items:center;gap:7px}
 .pw-requirements li:before{content:'';width:14px;height:14px;flex-shrink:0;border-radius:50%;border:1.5px solid #dbe1e8;background:#fff;background-size:9px;background-repeat:no-repeat;background-position:center}
@@ -80,7 +80,7 @@ button,input,select,textarea{font:inherit}
 .content{flex:1;width:100%;padding:32px 48px 56px}
 .panel{background:var(--white);border:1px solid var(--line);border-radius:14px;box-shadow:0 3px 13px rgba(21,28,39,.035)}
 
-/* ── Breadcrumb + page heading ──────────────────────────────────────── */
+/* â”€â”€ Breadcrumb + page heading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .crumbs{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--faint);margin-bottom:16px}
 .crumbs a{color:var(--faint)}
 .crumbs a:hover{color:var(--red)}
@@ -95,7 +95,7 @@ h1{margin:0;font-size:23px;line-height:1.2}
 .subtitle{margin:6px 0 0;color:var(--muted);font-size:12.5px;max-width:560px;line-height:1.5}
 .page-actions{display:flex;gap:10px;flex-wrap:wrap}
 
-/* ── Buttons ─────────────────────────────────────────────────────────── */
+/* â”€â”€ Buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .btn{display:inline-flex;align-items:center;gap:8px;border-radius:9px;font-size:12.5px;font-weight:700;padding:10px 16px;border:1px solid transparent;cursor:pointer;white-space:nowrap}
 .btn svg{width:15px;height:15px}
 .btn-primary{background:var(--red);color:#fff;box-shadow:0 6px 14px rgba(179,17,24,.18)}
@@ -107,7 +107,7 @@ h1{margin:0;font-size:23px;line-height:1.2}
 .btn-sm{padding:7px 12px;font-size:11.5px}
 .btn-block{width:100%;justify-content:center}
 
-/* ── Pills / badges ──────────────────────────────────────────────────── */
+/* â”€â”€ Pills / badges â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pill{display:inline-flex;align-items:center;gap:5px;border-radius:20px;font-size:10.5px;font-weight:700;padding:5px 10px;white-space:nowrap}
 .pill-blue{color:var(--blue);background:var(--blue-light)}
 .pill-purple{color:var(--purple);background:var(--purple-light)}
@@ -118,13 +118,13 @@ h1{margin:0;font-size:23px;line-height:1.2}
 .pill-live:before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green)}
 .pill-outline{border:1px solid #dbe1e8;color:var(--muted);background:#fff}
 
-/* ── Tab-line (underline tabs used on Legal Policies) ───────────────── */
+/* â”€â”€ Tab-line (underline tabs used on Legal Policies) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .tabline{display:flex;gap:22px;border-bottom:1px solid #eef0f3;margin-bottom:18px}
 .tabline button{background:none;border:0;padding:0 0 12px;font-size:12.5px;font-weight:600;color:var(--faint);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
 .tabline button.active{color:var(--red);border-color:var(--red)}
 .tabline button:hover:not(.active){color:var(--ink)}
 
-/* ── Data table (policy list + version history) ─────────────────────── */
+/* â”€â”€ Data table (policy list + version history) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .data-table{width:100%;border-collapse:collapse}
 .data-table th{color:#8290a2;font-size:10px;font-weight:700;letter-spacing:.05em;padding:0 14px 12px;text-align:left;text-transform:uppercase}
 .data-table td{border-top:1px solid #f2f4f6;color:#536277;font-size:12.5px;padding:16px 14px;vertical-align:middle}
@@ -137,7 +137,7 @@ h1{margin:0;font-size:23px;line-height:1.2}
 .policy-copy{color:#8a96a6;display:block;font-size:11px;line-height:1.4;margin-top:3px;max-width:280px}
 .updated-by{display:block;color:#a3adba;font-size:10.5px;margin-top:2px}
 
-/* ── Row actions / dropdown ──────────────────────────────────────────── */
+/* â”€â”€ Row actions / dropdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .row-actions{display:flex;align-items:center;gap:12px;justify-content:flex-end;color:#91a0b1;position:relative}
 .row-actions svg{width:15px;height:15px}
 .icon-action{background:none;border:0;padding:2px;color:inherit;cursor:pointer;display:flex}
@@ -149,14 +149,14 @@ h1{margin:0;font-size:23px;line-height:1.2}
 .dropdown-menu button.danger{color:var(--red)}
 .dropdown-menu svg{width:14px;height:14px}
 
-/* ── Pagination ──────────────────────────────────────────────────────── */
+/* â”€â”€ Pagination â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pagination-bar{display:flex;align-items:center;justify-content:space-between;padding-top:18px;margin-top:6px;border-top:1px solid #f0f2f5;font-size:11.5px;color:var(--faint)}
 .pager{display:flex;gap:6px}
 .pager button{width:30px;height:30px;border-radius:7px;border:1px solid #e1e6ec;background:#fff;color:var(--muted);font-size:11.5px;font-weight:600;cursor:pointer}
 .pager button.active{background:var(--red);border-color:var(--red);color:#fff}
 .pager button:disabled{opacity:.5;cursor:not-allowed}
 
-/* ── Process steps ───────────────────────────────────────────────────── */
+/* â”€â”€ Process steps â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .steps-panel .panel-header{display:flex;justify-content:space-between;align-items:flex-start;padding:22px 24px 6px}
 .steps-panel .panel-header h3{margin:0 0 4px;font-size:15px}
 .steps-panel .panel-header p{margin:0;font-size:12px;color:var(--muted)}
@@ -169,7 +169,7 @@ h1{margin:0;font-size:23px;line-height:1.2}
 .step-title{font-size:12.5px;font-weight:700;margin-bottom:4px}
 .step-desc{font-size:10.5px;color:var(--muted);line-height:1.4}
 
-/* ── Forms ───────────────────────────────────────────────────────────── */
+/* â”€â”€ Forms â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .form-grid{display:grid;gap:20px}
 .form-group label{display:block;font-size:11.5px;font-weight:700;letter-spacing:.03em;color:#50617a;margin-bottom:8px;text-transform:uppercase}
 .form-group label .req{color:var(--red)}
@@ -204,7 +204,7 @@ select.form-control{appearance:none;padding-left:28px;background-image:url("data
 .version-row{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)}
 .version-row strong{color:var(--ink);font-weight:700}
 
-/* ── Version history table extras ───────────────────────────────────── */
+/* â”€â”€ Version history table extras â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .two-col-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,1fr);gap:24px;align-items:start}
 .panel-header{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 4px}
 .panel-header h3{font-size:14.5px;margin:0;display:flex;align-items:center;gap:8px}
@@ -244,7 +244,7 @@ select.form-control{appearance:none;padding-left:28px;background-image:url("data
 .enforce-banner strong{display:block;font-size:12px}
 .enforce-banner span{display:block;font-size:10.5px;color:#a7d9cd;margin-top:2px}
 
-/* ── Modals ──────────────────────────────────────────────────────────── */
+/* â”€â”€ Modals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .modal-overlay{position:fixed;inset:0;background:rgba(15,20,28,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
 .modal-overlay.open{display:flex}
 .modal-box{background:#fff;border-radius:16px;width:100%;max-width:420px;padding:26px;box-shadow:0 24px 60px rgba(0,0,0,.25)}
@@ -261,7 +261,7 @@ select.form-control{appearance:none;padding-left:28px;background-image:url("data
 .modal-actions{display:flex;gap:10px;margin-top:22px}
 .modal-actions .btn{flex:1;justify-content:center}
 
-/* ── Responsive ──────────────────────────────────────────────────────── */
+/* â”€â”€ Responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media(max-width:1100px){
 	.sidebar{width:220px;min-width:220px}.main{margin-left:220px}
 	.content{padding-left:24px;padding-right:24px}

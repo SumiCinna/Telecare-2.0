@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // admin/discounts.php
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -125,8 +125,8 @@ $activeNav = 'pos-discounts';
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Discounts — TELE-CARE</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <title>Discounts â€” TELE-CARE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link href="assets/admin.css" rel="stylesheet"/>
   <style>
     
@@ -143,8 +143,8 @@ $activeNav = 'pos-discounts';
 </head>
 <body>
 
-<?php if ($toast): ?><div class="toast">✓ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
-<?php if ($toast_error): ?><div class="toast error">✕ <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
+<?php if ($toast): ?><div class="toast">âœ“ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
+<?php if ($toast_error): ?><div class="toast error">âœ• <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
 
 <?php include 'sidebar.php'; ?>
 
@@ -276,7 +276,7 @@ function renderRows(rows) {
   empty.style.display = 'none';
 
   tbody.innerHTML = rows.map(d => {
-    const valueDisplay = d.type === 'Percentage' ? `${Number(d.value)}%` : `₱${Number(d.value).toFixed(2)}`;
+    const valueDisplay = d.type === 'Percentage' ? `${Number(d.value)}%` : `â‚±${Number(d.value).toFixed(2)}`;
     let actions = `<button class="btn-sm btn-edit" onclick="openEditModal(${d.id})">Edit</button>`;
     actions += d.status === 'Active'
       ? `<a href="?archive_discount=${d.id}" class="btn-sm btn-red" onclick="var el=this;event.preventDefault();showConfirm('Archive ${escAttr(d.name)}?').then(function(ok){if(ok)window.location=el.href});return false;">Archive</a>`

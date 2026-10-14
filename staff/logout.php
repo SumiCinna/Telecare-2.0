@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // staff/logout.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -35,25 +35,25 @@ $staff_name = $_SESSION['staff_name'] ?? 'Staff';
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Logout — TELE-CARE</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <title>Logout â€” TELE-CARE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
     :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--bg:#EEF3FB;--white:#FFFFFF}
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--green);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
-    h1,h2{font-family:'Playfair Display',serif}
+    body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--green);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
+    h1,h2{font-family:'Poppins',sans-serif}
     .card{background:var(--white);border-radius:24px;padding:2.8rem 2.5rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(36,68,65,.12);text-align:center;animation:fadeUp .35s ease}
     @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-    .logo{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;color:var(--green);margin-bottom:2rem;letter-spacing:.02em}
+    .logo{font-family:'Poppins',sans-serif;font-size:1.3rem;font-weight:900;color:var(--green);margin-bottom:2rem;letter-spacing:.02em}
     .logo span{color:var(--red)}
     .icon-wrap{width:72px;height:72px;border-radius:20px;background:rgba(195,54,67,.08);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem}
     h2{font-size:1.5rem;margin-bottom:.5rem}
     .sub{font-size:.88rem;color:#6b8a87;line-height:1.6;margin-bottom:2rem}
     .sub strong{color:var(--green)}
     .role-badge{display:inline-block;background:rgba(63,130,227,.08);color:var(--blue);font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.25rem .75rem;border-radius:50px;margin-bottom:1.5rem}
-    .btn-logout{width:100%;padding:.9rem;border-radius:50px;background:var(--red);color:#fff;font-weight:700;font-size:.95rem;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 6px 18px rgba(195,54,67,.25);transition:all .25s;margin-bottom:.75rem}
+    .btn-logout{width:100%;padding:.9rem;border-radius:50px;background:var(--red);color:#fff;font-weight:700;font-size:.95rem;border:none;cursor:pointer;font-family:'Poppins',sans-serif;box-shadow:0 6px 18px rgba(195,54,67,.25);transition:all .25s;margin-bottom:.75rem}
     .btn-logout:hover{background:#a82d38;transform:translateY(-2px)}
-    .btn-cancel{width:100%;padding:.85rem;border-radius:50px;background:transparent;color:var(--green);font-weight:600;font-size:.92rem;border:1.5px solid rgba(36,68,65,.15);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;text-decoration:none;display:block}
+    .btn-cancel{width:100%;padding:.85rem;border-radius:50px;background:transparent;color:var(--green);font-weight:600;font-size:.92rem;border:1.5px solid rgba(36,68,65,.15);cursor:pointer;font-family:'Poppins',sans-serif;transition:all .2s;text-decoration:none;display:block}
     .btn-cancel:hover{background:rgba(36,68,65,.05)}
 
     @media(max-width:480px){
@@ -76,10 +76,11 @@ $staff_name = $_SESSION['staff_name'] ?? 'Staff';
     <form method="POST">
       <button type="submit" name="confirm_logout" class="btn-logout">Yes, Log Me Out</button>
     </form>
-    <a href="dashboard.php" class="btn-cancel">Cancel — Go Back</a>
+    <a href="dashboard.php" class="btn-cancel">Cancel â€” Go Back</a>
   </div>
 </body>
 </html>
+
 
 
 
