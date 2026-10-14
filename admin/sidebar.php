@@ -119,7 +119,7 @@ aside.sidebar .logout-btn svg{ flex-shrink:0; }
       <a href="hmo_providers.php" class="nav-link <?= $activeNav === 'hmo-providers' ? 'active' : '' ?>">HMO Providers</a>
       <a href="hmo.php#coverage-rules" class="nav-link <?= $activeNav === 'hmo-coverage' ? 'active' : '' ?>">Coverage &amp; Authorization Rules</a>
       <a href="hmo.php#staff-permissions" class="nav-link <?= $activeNav === 'hmo-staff' ? 'active' : '' ?>">Staff &amp; Permissions</a>
-      <a href="hmo.php#transactions" class="nav-link <?= $activeNav === 'hmo-transactions' ? 'active' : '' ?>">Transactions &amp; Authorization</a>
+      <a href="hmo_transactions.php" class="nav-link <?= $activeNav === 'hmo-transactions' ? 'active' : '' ?>">Transactions &amp; Authorization</a>
       <a href="hmo.php#claims" class="nav-link <?= $activeNav === 'hmo-claims' ? 'active' : '' ?>">Claims Management</a>
       <a href="hmo.php#payments" class="nav-link <?= $activeNav === 'hmo-payments' ? 'active' : '' ?>">Payment &amp; Collection</a>
       <a href="hmo.php#reports" class="nav-link <?= $activeNav === 'hmo-reports' ? 'active' : '' ?>">Reports &amp; Analytics</a>
