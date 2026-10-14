@@ -116,7 +116,7 @@ aside.sidebar .logout-btn svg{ flex-shrink:0; }
         <svg class="nav-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
       </summary>
       <a href="hmo.php" class="nav-link <?= $activeNav === 'hmo-dashboard' ? 'active' : '' ?>">HMO Dashboard</a>
-      <a href="hmo.php#providers" class="nav-link <?= $activeNav === 'hmo-providers' ? 'active' : '' ?>">HMO Providers</a>
+      <a href="hmo_providers.php" class="nav-link <?= $activeNav === 'hmo-providers' ? 'active' : '' ?>">HMO Providers</a>
       <a href="hmo.php#coverage-rules" class="nav-link <?= $activeNav === 'hmo-coverage' ? 'active' : '' ?>">Coverage &amp; Authorization Rules</a>
       <a href="hmo.php#staff-permissions" class="nav-link <?= $activeNav === 'hmo-staff' ? 'active' : '' ?>">Staff &amp; Permissions</a>
       <a href="hmo.php#transactions" class="nav-link <?= $activeNav === 'hmo-transactions' ? 'active' : '' ?>">Transactions &amp; Authorization</a>
