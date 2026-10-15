@@ -2,11 +2,10 @@
 // staff/appointments.php
 require_once 'includes/auth.php';
 require_once 'includes/functions.php';
-// staff/appointments.php
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // â”€â”€ Approve / Reject / Cancel / Complete â”€â”€
+    // -- Approve / Reject / Cancel / Complete --
     if (isset($_POST['action'], $_POST['appt_id'])) {
         $aid    = (int)$_POST['appt_id'];
         $action = $_POST['action'];
@@ -29,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $chk->execute();
                 $cur = $chk->get_result()->fetch_assoc();
                 if (!$cur || $cur['status'] !== 'DoctorApproved') {
-                    $_SESSION['toast_error'] = "Cannot act on this appointment â€” waiting for doctor's acceptance first.";
+                    $_SESSION['toast_error'] = "Cannot act on this appointment - waiting for doctor's acceptance first.";
                     header('Location: appointments.php?tab=' . urlencode($tab)); exit;
                 }
             }
@@ -41,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // â”€â”€ Create appointment â”€â”€
+    // -- Create appointment --
     if (isset($_POST['create_appt'])) {
         $pid   = (int)$_POST['patient_id'];
         $did   = (int)$_POST['doctor_id'];
@@ -78,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: appointments.php?ca_open=1'); exit;
     }
 
-    // â”€â”€ Reschedule â”€â”€
+    // -- Reschedule --
     if (isset($_POST['reschedule'])) {
         $aid  = (int)$_POST['appt_id'];
         $date = trim($_POST['new_date'] ?? '');
@@ -128,11 +127,11 @@ $ca_open  = (int)($_GET['ca_open'] ?? 0);
 $active_tab  = htmlspecialchars($_GET['tab'] ?? 'All');
 $active_page = 'appointments';
 
-// â”€â”€ Counts â”€â”€
+// -- Counts --
 $stat_pending         = (int)$conn->query("SELECT COUNT(*) c FROM appointments WHERE status='Pending'")->fetch_assoc()['c'];
 $stat_doctor_approved = (int)$conn->query("SELECT COUNT(*) c FROM appointments WHERE status='DoctorApproved'")->fetch_assoc()['c'];
 
-// â”€â”€ Fetch ALL rows (we do pagination in JS) â”€â”€
+// -- Fetch ALL rows (pagination done in JS) --
 $all_appts = $conn->query("
     SELECT a.*, p.full_name AS patient_name,
            d.full_name AS doctor_name, d.specialty, d.id AS doctor_id,
@@ -155,7 +154,7 @@ require_once 'includes/header.php';
 ?>
 
 <style>
-/* â”€â”€ Appointments page refresh (scoped additions, doesn't touch style.css) â”€â”€ */
+/* -- Appointments page (scoped additions, doesn't touch style.css) -- */
 .ap-page-head{margin-bottom:1.4rem}
 .sec-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.1rem}
 .sec-head h2{font-family:'Poppins',sans-serif;font-size:1.55rem;font-weight:800;color:var(--text,#1a1a1a);margin:0}
@@ -206,7 +205,7 @@ require_once 'includes/header.php';
 .pg-ellipsis{color:var(--muted,#6b7280);padding:0 .2rem}
 .empty-row{text-align:center;padding:2.5rem 1rem;color:var(--muted,#6b7280);font-size:.88rem}
 
-/* â”€â”€ Modals â”€â”€ */
+/* -- Modals -- */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,20,20,.5);z-index:9998;align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
 .modal{background:#fff;border-radius:18px;padding:1.6rem;max-width:480px;width:92%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
@@ -217,7 +216,7 @@ require_once 'includes/header.php';
 .btn-submit{width:100%;background:var(--red,#8B1E2B);color:#fff;border:none;border-radius:50px;padding:.75rem;font-weight:700;font-size:.88rem;cursor:pointer;margin-top:1.1rem}
 .btn-cancel-modal{width:100%;background:transparent;border:1.5px solid var(--border,#e5e7eb);border-radius:50px;padding:.7rem;font-weight:700;font-size:.85rem;cursor:pointer;margin-top:.55rem;color:var(--muted,#6b7280)}
 
-/* â”€â”€ Calendar picker â”€â”€ */
+/* -- Calendar picker -- */
 .cal-wrap{border:1.5px solid var(--border,#e5e7eb);border-radius:12px;padding:.8rem;margin-top:.3rem}
 .cal-wrap.cal-disabled{opacity:.5;pointer-events:none}
 .cal-placeholder{text-align:center;color:var(--muted,#6b7280);font-size:.82rem;padding:1rem 0}
@@ -238,7 +237,7 @@ require_once 'includes/header.php';
 .cal-legend{margin-top:.6rem;padding-top:.6rem;border-top:1px dashed var(--border,#e5e7eb);font-size:.72rem;color:var(--muted,#6b7280);line-height:1.7}
 .cal-legend-title{font-weight:700;color:var(--text,#1a1a1a);margin-bottom:.2rem}
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â• RECEIPT â€” redesigned â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* -- Receipt -- */
 .rcpt-modal{padding:0 !important;border-radius:22px !important;overflow-y:auto !important;overflow-x:hidden;max-height:90vh}
 .rcpt-hero{background:linear-gradient(135deg,var(--red,#8B1E2B) 0%,#5c131c 100%);padding:1.9rem 1.6rem 1.6rem;text-align:center;position:relative;color:#fff}
 .rcpt-hero-close{position:absolute;top:.9rem;right:.9rem;background:rgba(255,255,255,.18);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
@@ -282,7 +281,7 @@ require_once 'includes/header.php';
 <div class="sec-head">
   <h2>Appointment Management</h2>
   <div style="display:flex;gap:.6rem">
-    <input class="search-bar" id="appt-search" placeholder="Search ID, patient or doctorâ€¦" oninput="onSearchInput(this.value)"/>
+    <input class="search-bar" id="appt-search" placeholder="Search ID, patient or doctor&hellip;" oninput="onSearchInput(this.value)"/>
     <button class="btn-primary" onclick="openModal('modal-create')">+ Create Appointment</button>
   </div>
 </div>
@@ -297,7 +296,7 @@ require_once 'includes/header.php';
     <div style="font-weight:700;font-size:0.88rem;color:#1d4ed8;">
       <?= $stat_doctor_approved ?> appointment<?= $stat_doctor_approved > 1 ? 's' : '' ?> awaiting your confirmation
     </div>
-    <div style="font-size:0.77rem;color:#3b82f6;margin-top:0.1rem;">Doctor has accepted these â€” confirm them to notify the patient to pay.</div>
+    <div style="font-size:0.77rem;color:#3b82f6;margin-top:0.1rem;">Doctor has accepted these &mdash; confirm them to notify the patient to pay.</div>
   </div>
   <button onclick="filterStatus('DoctorApproved')" style="background:var(--blue);color:#fff;border:none;border-radius:50px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;">Review Now</button>
 </div>
@@ -349,7 +348,7 @@ require_once 'includes/header.php';
         $fee_val     = floatval($a['consultation_fee'] ?? 0);
     ?>
     <tr data-status="<?= $a['status'] ?>"
-        data-search="<?= strtolower('#' . $a['id'] . ' ' . $a['patient_name'] . ' ' . $a['doctor_name']) ?>"
+        data-search="<?= htmlspecialchars(strtolower('#' . $a['id'] . ' ' . $a['patient_name'] . ' ' . $a['doctor_name']), ENT_QUOTES) ?>"
         class="<?= $row_class ?>">
       <td>
         <span class="appt-id-badge">#<?= $a['id'] ?></span>
@@ -442,16 +441,16 @@ require_once 'includes/header.php';
     <form method="POST" id="ca-form">
       <label class="f-label">Patient</label>
       <select name="patient_id" class="f-input" required>
-        <option value="">Select patientâ€¦</option>
+        <option value="">Select patient&hellip;</option>
         <?php $pts2 = $conn->query("SELECT id, full_name FROM patients ORDER BY full_name ASC"); while ($r = $pts2->fetch_assoc()): ?>
         <option value="<?= $r['id'] ?>"><?= htmlspecialchars($r['full_name']) ?></option>
         <?php endwhile ?>
       </select>
       <label class="f-label">Doctor</label>
       <select name="doctor_id" id="ca-doctor" class="f-input" required onchange="onCaDoctorChange()">
-        <option value="">Select doctorâ€¦</option>
+        <option value="">Select doctor&hellip;</option>
         <?php $docs2 = $conn->query("SELECT id, full_name, specialty FROM doctors WHERE status='active' ORDER BY full_name ASC"); while ($r = $docs2->fetch_assoc()): ?>
-        <option value="<?= $r['id'] ?>">Dr. <?= htmlspecialchars($r['full_name']) ?> â€” <?= htmlspecialchars($r['specialty'] ?? '') ?></option>
+        <option value="<?= $r['id'] ?>">Dr. <?= htmlspecialchars($r['full_name']) ?> &mdash; <?= htmlspecialchars($r['specialty'] ?? '') ?></option>
         <?php endwhile ?>
       </select>
       <input type="hidden" name="appt_date" id="ca-date"/>
@@ -459,10 +458,10 @@ require_once 'includes/header.php';
       <div id="ca-cal-wrap" class="cal-wrap cal-disabled"><div class="cal-placeholder">Select a doctor to see available dates</div></div>
       <div id="ca-date-error" style="display:none;font-size:.75rem;color:#c33643;margin-top:-.4rem;margin-bottom:.5rem"></div>
       <label class="f-label">Time</label>
-      <select name="appt_time" id="ca-time" class="f-input" required><option value="">Select a date firstâ€¦</option></select>
+      <select name="appt_time" id="ca-time" class="f-input" required><option value="">Select a date first&hellip;</option></select>
       <div id="ca-client-error" style="display:none;background:rgba(195,54,67,.08);border:1px solid rgba(195,54,67,.2);color:#c33643;border-radius:10px;padding:.6rem .85rem;font-size:.81rem;margin-bottom:.6rem"></div>
       <label class="f-label">Notes</label>
-      <textarea name="notes" class="f-input" rows="2" placeholder="Reason for visitâ€¦"></textarea>
+      <textarea name="notes" class="f-input" rows="2" placeholder="Reason for visit&hellip;"></textarea>
       <button type="submit" name="create_appt" class="btn-submit">Create Appointment</button>
       <button type="button" class="btn-cancel-modal" onclick="closeModal('modal-create')">Cancel</button>
     </form>
@@ -482,10 +481,10 @@ require_once 'includes/header.php';
       <input type="hidden" name="active_tab" id="rs-tab"/>
       <input type="hidden" name="new_date"   id="rs-date"/>
       <label class="f-label">New Date <span id="rs-date-hint" style="font-weight:400;color:#9ab0ae;font-size:.75rem;margin-left:.4rem"></span></label>
-      <div id="rs-cal-wrap" class="cal-wrap"><div class="cal-placeholder">Loading scheduleâ€¦</div></div>
+      <div id="rs-cal-wrap" class="cal-wrap"><div class="cal-placeholder">Loading schedule&hellip;</div></div>
       <div id="rs-date-error" style="display:none;font-size:.75rem;color:#c33643;margin-top:-.4rem;margin-bottom:.5rem"></div>
       <label class="f-label">New Time</label>
-      <select name="new_time" id="rs-time" class="f-input" required><option value="">Pick a date firstâ€¦</option></select>
+      <select name="new_time" id="rs-time" class="f-input" required><option value="">Pick a date first&hellip;</option></select>
       <div id="rs-client-error" style="display:none;background:rgba(195,54,67,.08);border:1px solid rgba(195,54,67,.2);color:#c33643;border-radius:10px;padding:.6rem .85rem;font-size:.81rem;margin-bottom:.6rem"></div>
       <button type="submit" class="btn-submit">Confirm Reschedule</button>
       <button type="button" class="btn-cancel-modal" onclick="closeModal('modal-reschedule')">Cancel</button>
@@ -493,7 +492,7 @@ require_once 'includes/header.php';
   </div>
 </div>
 
-<!-- Modal: Receipt Preview (redesigned) -->
+<!-- Modal: Receipt Preview -->
 <div class="modal-overlay" id="modal-receipt">
   <div class="modal rcpt-modal" style="width:92%;max-width:560px;">
 
@@ -502,7 +501,7 @@ require_once 'includes/header.php';
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
       <div class="rcpt-brand">
-        <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="1" y="1" width="30" height="30" rx="9" fill="#fff"/><path d="M16 8v16M8 16h16" stroke="var(--red,#8B1E2B)" stroke-width="3.4" stroke-linecap="round"/></svg>
+        <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="1" y="1" width="30" height="30" rx="9" fill="#fff"/><path d="M16 8v16M8 16h16" stroke="#8B1E2B" stroke-width="3.4" stroke-linecap="round"/></svg>
         Tele-Care
       </div>
       <div class="rcpt-title">Payment Receipt</div>
@@ -562,13 +561,12 @@ const DAY_NAMES   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday'
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const TODAY_STR   = new Date().toISOString().slice(0, 10);
 
-// â”€â”€ Pagination State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Pagination state --
 const PER_PAGE  = 10;
 let _activeTab  = '<?= $active_tab ?>';
 let _searchQuery = '';
 let _currentPage = 1;
 
-// All rows from DOM (captured once)
 const _allRows = Array.from(document.querySelectorAll('#appt-tbody tr[data-status]'));
 
 function getVisibleRows() {
@@ -586,19 +584,17 @@ function renderTable() {
   const start = (_currentPage - 1) * PER_PAGE;
   const end   = start + PER_PAGE;
 
-  // Show/hide rows
   _allRows.forEach(r => r.style.display = 'none');
   visible.forEach((r, i) => {
     r.style.display = (i >= start && i < end) ? '' : 'none';
   });
 
-  // Empty state
   const existingEmpty = document.getElementById('pg-empty-row');
   if (existingEmpty) existingEmpty.remove();
   if (visible.length === 0) {
     const tr = document.createElement('tr');
     tr.id = 'pg-empty-row';
-    tr.innerHTML = `<td colspan="7" class="empty-row">No appointments found.</td>`;
+    tr.innerHTML = '<td colspan="7" class="empty-row">No appointments found.</td>';
     document.getElementById('appt-tbody').appendChild(tr);
   }
 
@@ -613,26 +609,24 @@ function renderPagination(total, totalPages) {
 
   info.textContent = total === 0
     ? 'No results'
-    : `Showing ${start}â€“${end} of ${total} appointment${total !== 1 ? 's' : ''}`;
+    : `Showing ${start}\u2013${end} of ${total} appointment${total !== 1 ? 's' : ''}`;
 
   btns.innerHTML = '';
   if (totalPages <= 1) return;
 
-  // Prev button
   const prev = document.createElement('button');
   prev.className = 'pg-btn';
-  prev.textContent = 'â€¹ Prev';
+  prev.textContent = '\u2039 Prev';
   prev.disabled = _currentPage === 1;
   prev.onclick = () => goPage(_currentPage - 1);
   btns.appendChild(prev);
 
-  // Page number buttons with ellipsis
   const pages = buildPageList(_currentPage, totalPages);
   pages.forEach(p => {
-    if (p === 'â€¦') {
+    if (p === '...') {
       const sp = document.createElement('span');
       sp.className = 'pg-ellipsis';
-      sp.textContent = 'â€¦';
+      sp.textContent = '\u2026';
       btns.appendChild(sp);
     } else {
       const btn = document.createElement('button');
@@ -643,10 +637,9 @@ function renderPagination(total, totalPages) {
     }
   });
 
-  // Next button
   const next = document.createElement('button');
   next.className = 'pg-btn';
-  next.textContent = 'Next â€º';
+  next.textContent = 'Next \u203A';
   next.disabled = _currentPage === totalPages;
   next.onclick = () => goPage(_currentPage + 1);
   btns.appendChild(next);
@@ -656,11 +649,11 @@ function buildPageList(current, total) {
   if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
   const pages = [];
   pages.push(1);
-  if (current > 3) pages.push('â€¦');
+  if (current > 3) pages.push('...');
   for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) {
     pages.push(p);
   }
-  if (current < total - 2) pages.push('â€¦');
+  if (current < total - 2) pages.push('...');
   pages.push(total);
   return pages;
 }
@@ -668,11 +661,10 @@ function buildPageList(current, total) {
 function goPage(p) {
   _currentPage = p;
   renderTable();
-  // Scroll table into view smoothly
   document.querySelector('.tbl-wrap').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// â”€â”€ Filter & Search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Filter & search --
 function filterStatus(status) {
   _activeTab   = status;
   _currentPage = 1;
@@ -688,7 +680,7 @@ function onSearchInput(val) {
   renderTable();
 }
 
-// â”€â”€ Calendar helpers (unchanged) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Calendar helpers --
 function fmt12(hhmm) {
   const [h, m] = hhmm.split(':').map(Number);
   return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
@@ -711,14 +703,14 @@ function buildScheduleLegendHTML(doctorId) {
   const slots = DOCTOR_SCHEDULES[doctorId] || [];
   if (!slots.length) return '';
   const byDay = {};
-  slots.forEach(s => (byDay[s.day] = byDay[s.day] || []).push(`${fmt12(s.start)} â€“ ${fmt12(s.end)}`));
+  slots.forEach(s => (byDay[s.day] = byDay[s.day] || []).push(`${fmt12(s.start)} \u2013 ${fmt12(s.end)}`));
   return '<div class="cal-legend-title">Available Hours</div>' +
     Object.entries(byDay).map(([day, times]) =>
       `<div><strong style="display:inline-block;min-width:2.6rem">${day.slice(0,3)}</strong>${times.join(' &nbsp;|&nbsp; ')}</div>`
     ).join('');
 }
 function populateTimeSelect(selEl, errEl, dateStr, doctorId, preselectHHMM = null) {
-  selEl.innerHTML = '<option value="">Select a timeâ€¦</option>';
+  selEl.innerHTML = '<option value="">Select a time\u2026</option>';
   if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
   if (!dateStr || !doctorId) return 0;
   const dayName   = DAY_NAMES[new Date(dateStr + 'T00:00:00').getDay()];
@@ -767,7 +759,7 @@ class CalendarPicker {
     this.doctorId     = doctorId || null;
     this.selectedDate = null;
     this.hiddenInput.value = '';
-    if (this.timeSel) this.timeSel.innerHTML = '<option value="">Select a date firstâ€¦</option>';
+    if (this.timeSel) this.timeSel.innerHTML = '<option value="">Select a date first\u2026</option>';
     if (this.errEl)   { this.errEl.textContent = ''; this.errEl.style.display = 'none'; }
     if (preselectDate) { const d = new Date(preselectDate+'T00:00:00'); this.viewYear=d.getFullYear(); this.viewMonth=d.getMonth(); }
     else { const now=new Date(); this.viewYear=now.getFullYear(); this.viewMonth=now.getMonth(); }
@@ -893,7 +885,7 @@ function quickAction(id, action) {
   document.getElementById('quick-form').submit();
 }
 
-// â”€â”€ Modal open/close (in case not already defined globally in style.css/sidebar.php) â”€â”€
+// -- Modal open/close (fallback if not defined globally) --
 if (typeof openModal !== 'function') {
   window.openModal = function(id) {
     const el = document.getElementById(id);
@@ -907,15 +899,15 @@ if (typeof closeModal !== 'function') {
   };
 }
 
-// â”€â”€ Receipt â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Receipt --
 function openReceiptModal(apptId, patient, doctor, specialty, apptDate, apptTime, amount, receiptNo, paidAt) {
   document.getElementById('rm-receipt-no').textContent = receiptNo;
-  const paidDate = paidAt ? new Date(paidAt) : new Date();
+  const paidDate = paidAt ? new Date(paidAt.replace(' ', 'T')) : new Date();
   document.getElementById('rm-paid-at').textContent = paidDate.toLocaleString('en-PH', {
     month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'
   });
   document.getElementById('rm-appt-id').textContent = '#' + apptId;
-  document.getElementById('rm-amount').textContent = 'â‚±' + parseFloat(amount).toLocaleString('en-PH', {
+  document.getElementById('rm-amount').textContent = '\u20B1' + parseFloat(amount).toLocaleString('en-PH', {
     minimumFractionDigits: 2, maximumFractionDigits: 2
   });
   const apptDateFmt = new Date(apptDate + 'T00:00:00').toLocaleDateString('en-PH', {
@@ -926,8 +918,8 @@ function openReceiptModal(apptId, patient, doctor, specialty, apptDate, apptTime
   const rows = [
     ['Patient',     patient],
     ['Doctor',      'Dr. ' + doctor],
-    ['Specialty',   specialty || 'â€”'],
-    ['Appointment', apptDateFmt + ' Â· ' + timeFmt],
+    ['Specialty',   specialty || '\u2014'],
+    ['Appointment', apptDateFmt + ' \u00B7 ' + timeFmt],
   ];
   document.getElementById('rm-rows').innerHTML = rows.map(([label, val]) => `
     <div class="rcpt-detail-row">
@@ -946,75 +938,83 @@ function printReceipt() {
   const rowsHTML   = document.getElementById('rm-rows').innerHTML;
 
   const printWindow = window.open('', '_blank', 'width=500,height=780');
+  if (!printWindow) { alert('Please allow pop-ups to print the receipt.'); return; }
 
-  printWindow.document.write('<!DOCTYPE html><html><head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">' +
-    '<title>Payment Receipt</title>' +
-    '<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">' +
-    '<style>' +
-    '*{box-sizing:border-box;}' +
-    'body{font-family:"Poppins",sans-serif;margin:0;padding:20px;background:#f4f4f4;color:#1a1a1a;}' +
-    '.card{max-width:440px;margin:0 auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.08);}' +
-    '.hdr{background:linear-gradient(135deg,#8B1E2B,#5c131c);color:#fff;text-align:center;padding:1.7rem 1.2rem 1.3rem;}' +
-    '.brand{font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.8;margin-bottom:.5rem;}' +
-    '.title{font-family:"Poppins",Georgia,serif;font-size:1.5rem;font-weight:800;margin-bottom:.2rem;}' +
-    '.sub{font-size:.76rem;opacity:.8;}' +
-    '.body{padding:1.5rem 1.3rem 0;}' +
-    '.success-bar{display:flex;align-items:center;gap:.7rem;background:rgba(34,197,94,.08);border:1.5px solid rgba(34,197,94,.25);border-radius:14px;padding:.75rem 1rem;margin-bottom:1.2rem;}' +
-    '.success-icon{width:32px;height:32px;background:linear-gradient(135deg,#16a34a,#15803d);border-radius:50%;flex-shrink:0;}' +
-    '.success-title{font-weight:700;font-size:.88rem;color:#15803d;}' +
-    '.success-date{font-size:.72rem;color:#16a34a;opacity:.85;}' +
-    '.rcpt-no-wrap{text-align:center;margin-bottom:1rem;}' +
-    '.rcpt-no-label{font-size:.63rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6b7280;}' +
-    '.rcpt-no-val{font-size:1.1rem;font-weight:800;color:#8B1E2B;letter-spacing:.04em;}' +
-    '.dashed{border:none;border-top:1.5px dashed #e5e7eb;margin:.9rem 0;}' +
-    '.detail-row{display:flex;justify-content:space-between;font-size:.82rem;padding:.4rem 0;}' +
-    '.detail-label{color:#6b7280;font-weight:600;}' +
-    '.detail-val{font-weight:700;text-align:right;}' +
-    '.amount-box{background:#faf5f5;border:1.5px solid rgba(139,30,43,.12);border-radius:16px;padding:1.1rem;text-align:center;margin:1.1rem 0;}' +
-    '.amount-label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:.3rem;}' +
-    '.amount-val{font-size:2rem;font-weight:800;color:#8B1E2B;}' +
-    '.paid-badge{display:inline-flex;align-items:center;gap:.3rem;background:#16a34a;color:#fff;border-radius:50px;padding:.22rem .85rem;font-size:.7rem;font-weight:700;margin-top:.5rem;}' +
-    '.meta-row{display:flex;justify-content:space-between;font-size:.75rem;padding:.28rem 0;}' +
-    '.meta-label{color:#6b7280;font-weight:600;}' +
-    '.meta-val{color:#8B1E2B;font-weight:700;}' +
-    '.footer{border-top:1.5px dashed #e5e7eb;margin-top:.9rem;padding:1rem 1.3rem 1.5rem;text-align:center;font-size:.72rem;color:#6b7280;line-height:1.7;}' +
-    '@media print{body{background:#fff;padding:0;}.card{box-shadow:none;}}' +
-    '</style></head><body>' +
-    '<div class="card">' +
-      '<div class="hdr">' +
-        '<div class="brand">Tele-Care</div>' +
-        '<div class="title">Payment Receipt</div>' +
-        '<div class="sub">Official Consultation Receipt</div>' +
-      '</div>' +
-      '<div class="body">' +
-        '<div class="success-bar">' +
-          '<div class="success-icon"></div>' +
-          '<div>' +
-            '<div class="success-title">Payment Successful</div>' +
-            '<div class="success-date" id="pw-paid-at"></div>' +
-          '</div>' +
-        '</div>' +
-        '<div class="rcpt-no-wrap">' +
-          '<div class="rcpt-no-label">Receipt No.</div>' +
-          '<div class="rcpt-no-val" id="pw-receipt-no"></div>' +
-        '</div>' +
-        '<hr class="dashed"/>' +
-        '<div id="detail-rows"></div>' +
-        '<div class="amount-box">' +
-          '<div class="amount-label">Total Amount Paid</div>' +
-          '<div class="amount-val" id="pw-amount"></div>' +
-          '<div><span class="paid-badge">PAID</span></div>' +
-        '</div>' +
-        '<div class="meta-row"><span class="meta-label">Payment via</span><span class="meta-val">PayMongo (GCash / Card)</span></div>' +
-        '<div class="meta-row" style="margin-bottom:.5rem"><span class="meta-label">Appointment ID</span><span class="meta-val" id="pw-appt-id"></span></div>' +
-      '</div>' +
-      '<div class="footer">Thank you for choosing TELE-CARE.<br/><strong>This serves as official proof of payment.</strong></div>' +
-    '</div>' +
-    '<' + '/body>' + '<' + '/html>');
+  const head = [
+    '<!DOCTYPE html><html><head><meta charset="UTF-8">',
+    '<link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">',
+    '<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">',
+    '<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">',
+    '<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">',
+    '<title>Payment Receipt</title>',
+    '<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">'
+  ].join('');
+
+  const css = [
+    '*{box-sizing:border-box;}',
+    'body{font-family:"Poppins",sans-serif;margin:0;padding:20px;background:#f4f4f4;color:#1a1a1a;}',
+    '.card{max-width:440px;margin:0 auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.08);}',
+    '.hdr{background:linear-gradient(135deg,#8B1E2B,#5c131c);color:#fff;text-align:center;padding:1.7rem 1.2rem 1.3rem;}',
+    '.brand{font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.8;margin-bottom:.5rem;}',
+    '.title{font-size:1.5rem;font-weight:800;margin-bottom:.2rem;}',
+    '.sub{font-size:.76rem;opacity:.8;}',
+    '.body{padding:1.5rem 1.3rem 0;}',
+    '.success-bar{display:flex;align-items:center;gap:.7rem;background:rgba(34,197,94,.08);border:1.5px solid rgba(34,197,94,.25);border-radius:14px;padding:.75rem 1rem;margin-bottom:1.2rem;}',
+    '.success-icon{width:32px;height:32px;background:linear-gradient(135deg,#16a34a,#15803d);border-radius:50%;flex-shrink:0;}',
+    '.success-title{font-weight:700;font-size:.88rem;color:#15803d;}',
+    '.success-date{font-size:.72rem;color:#16a34a;opacity:.85;}',
+    '.rcpt-no-wrap{text-align:center;margin-bottom:1rem;}',
+    '.rcpt-no-label{font-size:.63rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6b7280;}',
+    '.rcpt-no-val{font-size:1.1rem;font-weight:800;color:#8B1E2B;letter-spacing:.04em;}',
+    '.dashed{border:none;border-top:1.5px dashed #e5e7eb;margin:.9rem 0;}',
+    '.detail-row{display:flex;justify-content:space-between;font-size:.82rem;padding:.4rem 0;}',
+    '.detail-label{color:#6b7280;font-weight:600;}',
+    '.detail-val{font-weight:700;text-align:right;}',
+    '.amount-box{background:#faf5f5;border:1.5px solid rgba(139,30,43,.12);border-radius:16px;padding:1.1rem;text-align:center;margin:1.1rem 0;}',
+    '.amount-label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:.3rem;}',
+    '.amount-val{font-size:2rem;font-weight:800;color:#8B1E2B;}',
+    '.paid-badge{display:inline-flex;align-items:center;gap:.3rem;background:#16a34a;color:#fff;border-radius:50px;padding:.22rem .85rem;font-size:.7rem;font-weight:700;margin-top:.5rem;}',
+    '.meta-row{display:flex;justify-content:space-between;font-size:.75rem;padding:.28rem 0;}',
+    '.meta-label{color:#6b7280;font-weight:600;}',
+    '.meta-val{color:#8B1E2B;font-weight:700;}',
+    '.footer{border-top:1.5px dashed #e5e7eb;margin-top:.9rem;padding:1rem 1.3rem 1.5rem;text-align:center;font-size:.72rem;color:#6b7280;line-height:1.7;}',
+    '@media print{body{background:#fff;padding:0;}.card{box-shadow:none;}}'
+  ].join('');
+
+  const bodyHTML = [
+    '<div class="card">',
+      '<div class="hdr">',
+        '<div class="brand">Tele-Care</div>',
+        '<div class="title">Payment Receipt</div>',
+        '<div class="sub">Official Consultation Receipt</div>',
+      '</div>',
+      '<div class="body">',
+        '<div class="success-bar">',
+          '<div class="success-icon"></div>',
+          '<div>',
+            '<div class="success-title">Payment Successful</div>',
+            '<div class="success-date" id="pw-paid-at"></div>',
+          '</div>',
+        '</div>',
+        '<div class="rcpt-no-wrap">',
+          '<div class="rcpt-no-label">Receipt No.</div>',
+          '<div class="rcpt-no-val" id="pw-receipt-no"></div>',
+        '</div>',
+        '<hr class="dashed"/>',
+        '<div id="detail-rows"></div>',
+        '<div class="amount-box">',
+          '<div class="amount-label">Total Amount Paid</div>',
+          '<div class="amount-val" id="pw-amount"></div>',
+          '<div><span class="paid-badge">PAID</span></div>',
+        '</div>',
+        '<div class="meta-row"><span class="meta-label">Payment via</span><span class="meta-val">PayMongo (GCash / Card)</span></div>',
+        '<div class="meta-row" style="margin-bottom:.5rem"><span class="meta-label">Appointment ID</span><span class="meta-val" id="pw-appt-id"></span></div>',
+      '</div>',
+      '<div class="footer">Thank you for choosing TELE-CARE.<br/><strong>This serves as official proof of payment.</strong></div>',
+    '</div>'
+  ].join('');
+
+  printWindow.document.write(head + '<style>' + css + '</style></head><body>' + bodyHTML + '</body></html>');
   printWindow.document.close();
 
   printWindow.document.getElementById('pw-receipt-no').textContent = receiptNo;
@@ -1032,9 +1032,7 @@ function printReceipt() {
     if (val)   val.className   = 'detail-val';
   });
 
-  printWindow.onload = function () {
-    setTimeout(function () { printWindow.print(); printWindow.close(); }, 300);
-  };
+  setTimeout(function () { printWindow.focus(); printWindow.print(); printWindow.close(); }, 500);
 }
 
 function handleReceiptClick(btn) {
@@ -1045,8 +1043,8 @@ function handleReceiptClick(btn) {
   );
 }
 
-// â”€â”€ Boot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-filterStatus(_activeTab);  // sets tab highlight + calls renderTable()
+// -- Boot --
+filterStatus(_activeTab);
 
 <?php if ($rs_open): ?>openModal('modal-reschedule');<?php endif ?>
 <?php if ($ca_open): ?>openModal('modal-create');<?php endif ?>
