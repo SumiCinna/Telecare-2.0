@@ -153,3 +153,20 @@ textarea.field-input{resize:vertical;min-height:60px}
   .controls-bar{flex-direction:column;align-items:stretch}
   .search-wrap{max-width:none}
 }
+
+/* Design kit alignment: larger reading scale, calmer surfaces, and consistent shell spacing. */
+:root{--bg:#f5f9fd;--white:#fff;--green:#183657;--red:#1768d8;--blue:#1478ee}
+body{background:var(--bg);color:var(--green);font-size:16px}
+.main{margin-left:256px}
+.topbar{padding:1.15rem 2.25rem;min-height:72px}
+.page-content{padding:2.25rem;max-width:1600px}
+.page-content h1{font-size:clamp(1.65rem,2vw,2.25rem);line-height:1.2}
+.page-content h2{font-size:1.35rem;line-height:1.3}
+.table-wrap{border-radius:16px}
+button,input,select,textarea{font-size:inherit}
+.search-input,.field-input{min-height:44px}
+.btn-primary,.btn-primary-alt{min-height:44px;padding:.7rem 1.4rem}
+@media(max-width:900px){
+  .main{margin-left:0}
+  .page-content{padding:1.5rem}
+}

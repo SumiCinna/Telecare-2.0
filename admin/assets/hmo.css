@@ -6,3 +6,26 @@
 .transaction-metrics{grid-template-columns:repeat(5,1fr)}.transaction-layout{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(310px,.8fr);gap:16px}.transaction-table-panel{padding:0;overflow:hidden}.transaction-toolbar{display:flex;align-items:center;gap:8px;padding:12px;border-bottom:1px solid var(--line);flex-wrap:wrap}.transaction-toolbar .search-box{min-width:220px}.transaction-toolbar select,.date-filter,.more-filter{border:1px solid var(--line);border-radius:5px;background:#fff;color:#63809d;padding:9px 10px;font:10px Inter;white-space:nowrap}.more-filter{color:#47739e}.transaction-table-panel th{padding:11px 8px;font-size:8px}.transaction-table-panel td{padding:10px 8px;font-size:9px}.transaction-table-panel td strong{font-size:9px}.transaction-table-panel table{min-width:1050px}.transaction-detail{padding:0;overflow:hidden;min-height:590px}.transaction-detail .detail-head{padding:15px 16px 11px;align-items:start}.transaction-detail .detail-head h2{font-size:12px;margin-bottom:5px}.transaction-detail .detail-head small{display:block;font-size:9px;color:#879db3;margin-top:3px}.transaction-detail .detail-head .status-pill{margin-left:auto}.transaction-detail .detail-head button{margin-left:5px}.transaction-detail .detail-body{padding:17px 16px}.transaction-detail .detail-body dl{grid-template-columns:1fr 1.45fr;gap:10px 8px}.remarks{display:block;background:#f2f7fb;padding:8px;border-radius:4px;line-height:1.5}.membership-card{background:#eef7ff;border-left:3px solid var(--blue);padding:10px;margin-top:17px;display:grid;gap:4px;color:#3975aa;font-size:9px}.membership-card b{color:var(--ink);font-size:10px}.documents-title{border-top:1px solid var(--line);margin:17px -16px 10px;padding:15px 16px 0;font-size:11px}.documents-title a{float:right;color:var(--blue);font-weight:500;text-decoration:none}.document-list{display:grid;gap:7px}.document-list>div{display:flex;align-items:center;gap:8px;border:1px solid #e4edf4;border-radius:5px;padding:8px}.document-list>div>b{display:grid;place-items:center;width:25px;height:25px;border-radius:4px;background:#eaf3ff;color:var(--blue);font-size:8px}.document-list span{flex:1;font-size:9px;color:var(--ink)}.document-list small{display:block;color:#91a4b6;font-size:8px;margin-top:3px}.document-list button{border:0;background:#f4f8fb;color:#6d8aa4;padding:5px;cursor:pointer}.transaction-form{max-width:700px}
 @media(max-width:1050px){.transaction-metrics{grid-template-columns:repeat(3,1fr)}.transaction-layout{grid-template-columns:1fr}.transaction-detail{min-height:0}}
 @media(max-width:700px){.transaction-metrics{grid-template-columns:1fr 1fr}.transaction-toolbar .search-box{min-width:100%}.date-filter,.more-filter{width:100%;text-align:left}}
+
+/* Design kit alignment for the HMO screens. */
+body{font-size:14px}
+.hmo-main{margin-left:256px}
+.hmo-topbar{height:72px;padding:0 38px}
+.hmo-content{padding:34px 38px 52px}
+.page-heading h1{font-size:clamp(1.7rem,2.2vw,2.35rem);line-height:1.2}
+.page-heading p{font-size:14px}
+.metric-card{padding:19px 21px}
+.metric-card small{font-size:12px}
+.metric-card strong{font-size:26px}
+.panel{border-radius:12px;padding:22px}
+th{font-size:10px;padding:14px}
+td{font-size:12px;padding:13px 14px}
+td strong{font-size:12px}
+.table-toolbar,.transaction-toolbar{padding:16px}
+.search-box input,.table-toolbar select,.transaction-toolbar select,.date-filter,.more-filter{min-height:42px;font-size:12px}
+.primary-btn,.secondary-btn,.danger-btn{min-height:44px;padding:12px 18px;font-size:13px}
+@media(max-width:700px){
+  .hmo-main{margin-left:0}
+  .hmo-content{padding:24px 16px 36px}
+  .hmo-topbar{padding:0 16px}
+}

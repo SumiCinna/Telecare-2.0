@@ -5,61 +5,64 @@ $activeNav = $activeNav ?? '';
 ?>
 <style>
 aside.sidebar{
-  --tc-red:#B31118; --tc-ink:#151c27; --tc-line:rgba(21,28,39,0.08); --tc-muted:rgba(21,28,39,0.5);
-  position:fixed; top:0; left:0; bottom:0; width:240px; z-index:150;
-  background:#f1f3fc; border-right:1px solid #dce1ef;
-  display:flex; flex-direction:column; padding:1.2rem .85rem;
+  --tc-blue:#1768d8; --tc-navy:#12345d; --tc-ink:#183657; --tc-line:#dfeaf5; --tc-muted:#7188a4;
+  position:fixed; top:0; left:0; bottom:0; width:256px; z-index:150;
+  background:#f6faff; border-right:1px solid var(--tc-line);
+  display:flex; flex-direction:column; padding:1.35rem 1rem;
   font-family:'Poppins',sans-serif; overflow-y:auto; box-sizing:border-box;
 }
 aside.sidebar .sidebar-logo{
-  display:flex; align-items:center; gap:.65rem; padding:0 .3rem; margin-bottom:1.2rem;
+  display:flex; align-items:center; gap:.75rem; padding:0 .45rem; margin-bottom:1.35rem;
   font-size:inherit; letter-spacing:0; color:inherit;
 }
 aside.sidebar .sidebar-logo-mark{
-  width:36px; height:36px; border-radius:8px; overflow:hidden; flex-shrink:0;
+  width:42px; height:42px; border-radius:11px; overflow:hidden; flex-shrink:0;
   display:flex; align-items:center; justify-content:center;
 }
 aside.sidebar .sidebar-logo-mark img{ width:100%; height:100%; object-fit:contain; display:block; }
-aside.sidebar .sidebar-logo-name{ font-weight:800; font-size:.86rem; color:var(--tc-ink); line-height:1.15; white-space:nowrap; }
-aside.sidebar .sidebar-logo-sub{ font-size:.6rem; color:var(--tc-muted); margin-top:.1rem; font-weight:500; }
+aside.sidebar .sidebar-logo-name{ font-weight:800; font-size:1rem; color:var(--tc-navy); line-height:1.15; white-space:nowrap; }
+aside.sidebar .sidebar-logo-sub{ font-size:.68rem; color:var(--tc-muted); margin-top:.18rem; font-weight:500; }
 
 aside.sidebar .sidebar-admin{
-  background:#fff; border:1px solid var(--tc-line); border-radius:8px;
-  padding:.6rem .75rem; margin-bottom:1.2rem; font-size:.62rem; color:var(--tc-muted); line-height:1.5;
+  background:#fff; border:1px solid var(--tc-line); border-radius:12px;
+  padding:.75rem .85rem; margin-bottom:1.25rem; font-size:.72rem; color:var(--tc-muted); line-height:1.5;
 }
-aside.sidebar .sidebar-admin strong{ display:block; font-size:.8rem; color:var(--tc-ink); font-weight:700; }
+aside.sidebar .sidebar-admin strong{ display:block; font-size:.9rem; color:var(--tc-ink); font-weight:700; }
 
-aside.sidebar .nav-links{ display:flex; flex-direction:column; gap:.3rem; flex:1; }
+aside.sidebar .nav-links{ display:flex; flex-direction:column; gap:.35rem; flex:1; }
 aside.sidebar .nav-section-label{
-  font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
-  color:var(--tc-muted); padding:.9rem .7rem .3rem;
+  font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+  color:var(--tc-muted); padding:1rem .75rem .35rem;
 }
 aside.sidebar .nav-link{
   display:flex; align-items:center; gap:.55rem;
-  padding:.65rem .7rem; border-radius:7px;
-  color:var(--tc-muted); font-size:.78rem; font-weight:600;
+  padding:.75rem .8rem; border-radius:10px;
+  color:var(--tc-muted); font-size:.86rem; font-weight:600;
   text-decoration:none; transition:all .2s; white-space:nowrap;
   background:none; border:none;
 }
-aside.sidebar .nav-link svg{ width:18px; height:18px; flex-shrink:0; stroke:currentColor; }
-aside.sidebar .nav-link:hover{ background:rgba(21,28,39,0.05); color:var(--tc-ink); }
-aside.sidebar .nav-link.active{ background:var(--tc-red); color:#fff; box-shadow:0 3px 9px rgba(179,17,24,0.22); }
+aside.sidebar .nav-link svg{ width:19px; height:19px; flex-shrink:0; stroke:currentColor; }
+aside.sidebar .nav-link:hover{ background:#eaf3fd; color:var(--tc-navy); }
+aside.sidebar .nav-link.active{ background:var(--tc-blue); color:#fff; box-shadow:0 5px 14px rgba(23,104,216,.22); }
 aside.sidebar .nav-dropdown{ margin:0; }
 aside.sidebar .nav-dropdown summary{ list-style:none; cursor:pointer; }
 aside.sidebar .nav-dropdown summary::-webkit-details-marker{ display:none; }
 aside.sidebar .nav-dropdown .nav-chevron{ width:14px; height:14px; margin-left:auto; transition:transform .2s; }
 aside.sidebar .nav-dropdown[open] .nav-chevron{ transform:rotate(180deg); }
-aside.sidebar .nav-dropdown .nav-link{ font-size:.74rem; }
-aside.sidebar .nav-dropdown .nav-link.active{ background:rgba(179,17,24,0.12); color:var(--tc-red); box-shadow:none; }
+aside.sidebar .nav-dropdown > summary.nav-link{ font-size:.86rem; padding-left:.8rem; }
+aside.sidebar .nav-dropdown > .nav-link{ font-size:.82rem; padding-left:2.7rem; }
+aside.sidebar .nav-dropdown .nav-dropdown-items .nav-link{ font-size:.82rem; padding-left:2.7rem; }
+aside.sidebar .nav-dropdown .nav-link.active{ background:#e6f0fd; color:var(--tc-blue); box-shadow:none; }
+aside.sidebar .nav-dropdown .nav-dropdown-items{ display:flex; flex-direction:column; gap:.2rem; padding:.3rem 0 .15rem; }
 
 aside.sidebar .sidebar-logout{ border-top:1px solid var(--tc-line); padding-top:.6rem; margin-top:.6rem; }
 aside.sidebar .logout-btn{
   display:flex; align-items:center; gap:.55rem; width:100%; box-sizing:border-box;
-  padding:.65rem .7rem; border-radius:7px; background:none; border:none;
-  color:var(--tc-muted); font-size:.78rem; font-weight:600; text-decoration:none;
+  padding:.75rem .8rem; border-radius:10px; background:none; border:none;
+  color:var(--tc-muted); font-size:.86rem; font-weight:600; text-decoration:none;
   font-family:'Poppins',sans-serif; cursor:pointer; transition:all .2s;
 }
-aside.sidebar .logout-btn:hover{ background:rgba(179,17,24,0.08); color:var(--tc-red); }
+aside.sidebar .logout-btn:hover{ background:#eaf3fd; color:var(--tc-blue); }
 aside.sidebar .logout-btn svg{ flex-shrink:0; }
 </style>
 <aside class="sidebar">
@@ -84,11 +87,17 @@ aside.sidebar .logout-btn svg{ flex-shrink:0; }
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
       Assignments
     </a>
+    <details class="nav-dropdown" <?= strpos($activeNav, 'pos-') === 0 ? 'open' : '' ?>>
+      <summary class="nav-link <?= strpos($activeNav, 'pos-') === 0 ? 'active' : '' ?>">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M5 7v12a2 2 0 002 2h10a2 2 0 002-2V7M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        POS Management
+        <svg class="nav-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
+      </summary>
+      <div class="nav-dropdown-items">
     <a href="templates.php" class="nav-link <?= $activeNav === 'pos-templates' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 4.5h6a2 2 0 012 2V19a2 2 0 01-2 2H9a2 2 0 01-2-2V6.5a2 2 0 012-2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9.5 8.5h5M9.5 11.5h5M9.5 14.5h3"/></svg>
       Templates
     </a>
-    <div class="nav-section-label">POS Management</div>
     <a href="inventory.php" class="nav-link <?= $activeNav === 'pos-products' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
       Inventory
@@ -109,6 +118,8 @@ aside.sidebar .logout-btn svg{ flex-shrink:0; }
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
       Receipt Config
     </a>
+      </div>
+    </details>
     <details class="nav-dropdown" <?= strpos($activeNav, 'hmo') === 0 ? 'open' : '' ?>>
       <summary class="nav-link <?= strpos($activeNav, 'hmo') === 0 ? 'active' : '' ?>">
         <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>

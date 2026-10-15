@@ -53,19 +53,44 @@ $transactions = [
     </div>
   </section>
 </main>
-<div class="modal-backdrop" id="transactionModal"><form class="modal-card transaction-form" id="transactionForm"><button class="modal-close" type="button" data-close-transaction>×</button><h2>New HMO Transaction</h2><p>Enter transaction details for this frontend preview. No database changes will be made.</p><div class="form-grid"><label>Patient Name *<input required placeholder="Search or enter patient name"></label><label>HMO Provider *<select required><option value="">Select provider</option><option>Maxicare</option><option>Intellicare</option><option>Medicare</option><option>PhilCare</option></select></label><label>Membership Number *<input required placeholder="Enter membership number"></label><label>Requested Service *<select required><option value="">Select service</option><option>General Consultation</option><option>Laboratory Tests</option><option>Ultrasound</option><option>X-ray</option></select></label><label>Authorization / LOA No.<input placeholder="Enter reference number"></label><label>Authorization Status<select><option>Pending</option><option>Approved</option><option>Rejected</option></select></label><label>Validity Start Date<input type="date"></label><label>Validity End Date<input type="date"></label><label class="full-field">Transaction Remarks<textarea placeholder="Add remarks or rejection reason"></textarea></label></div><div class="modal-actions"><button type="button" class="secondary-btn" data-close-transaction>Cancel</button><button class="primary-btn" type="submit">Save Transaction</button></div></form></div>
-<script>
-const transactions = <?= json_encode($transactions) ?>;
-const detail = document.getElementById('transactionDetail');
-function renderTransaction(index = 0) {
-  const t = transactions[index] || transactions[0], status = t[6].toLowerCase();
-  detail.innerHTML = `<div class="detail-head"><div><h2>Transaction Details</h2><small>${t[0]}</small><small>Created on Jan 10, 2025 · 10:24 AM</small></div><span class="status-pill ${status}">${t[6]}</span><button type="button">×</button></div><div class="detail-tabs"><b>Overview</b><span>Patient &amp; Membership</span><span>Services</span><span>Documents</span><span>History</span></div><div class="detail-body"><h3>Transaction Information</h3><dl><dt>Patient Name</dt><dd>${t[9]}</dd><dt>HMO Provider</dt><dd>${t[2]}</dd><dt>Requested Service</dt><dd>${t[3]}</dd><dt>Authorization No.</dt><dd>${t[4]}</dd><dt>Authorization Status</dt><dd><span class="status-pill ${status}">${t[6]}</span></dd><dt>Validity Period</dt><dd>${t[5]}</dd><dt>Processed By</dt><dd>${t[7]} (HMO Staff)</dd><dt>Clinic / Department</dt><dd>North Caloocan - General Medicine</dd><dt>Appointment Date</dt><dd>Jan 12, 2025 · 10:00 AM</dd><dt>Rejection Reason</dt><dd>${t[6] === 'Rejected' ? t[8] : '—'}</dd><dt>Remarks</dt><dd><span class="remarks">${t[8]}</span></dd></dl><div class="membership-card"><b>Patient membership</b><span>Member ID: MAX-2024-009812</span><span>Plan: Family Care Plus · Valid until Dec 31, 2025</span></div><h3 class="documents-title">Documents (3) <a href="#">View All</a></h3><div class="document-list"><div><b>PDF</b><span>LOA-2025-00123.pdf<small>Uploaded Jan 10, 2025 · 245 KB</small></span><button>⇩</button></div><div><b>IMG</b><span>HMO Card.jpg<small>Uploaded Jan 10, 2025 · 512 KB</small></span><button>⇩</button></div><div><b>IMG</b><span>Valid ID.jpg<small>Uploaded Jan 10, 2025 · 380 KB</small></span><button>⇩</button></div></div></div>`;
-}
-renderTransaction();
-function filterTransactions() { const q = document.getElementById('transactionSearch').value.toLowerCase(), provider = document.getElementById('providerFilter').value, status = document.getElementById('transactionStatus').value; let shown = 0; document.querySelectorAll('#transactionRows tr').forEach(row => { const visible = row.dataset.search.includes(q) && (!provider || row.dataset.provider === provider) && (!status || row.dataset.status === status); row.hidden = !visible; if (visible) shown++; }); document.getElementById('transactionCount').textContent = `Showing ${shown ? 1 : 0}–${shown} of ${shown} transactions`; }
-document.getElementById('transactionSearch').addEventListener('input', filterTransactions); document.getElementById('providerFilter').addEventListener('change', filterTransactions); document.getElementById('transactionStatus').addEventListener('change', filterTransactions);
-document.querySelectorAll('[data-view-transaction]').forEach(button => button.addEventListener('click', () => renderTransaction(Number(button.dataset.viewTransaction))));
-const transactionModal = document.getElementById('transactionModal'); document.querySelectorAll('[data-open-transaction]').forEach(button => button.addEventListener('click', () => transactionModal.classList.add('open'))); document.querySelectorAll('[data-close-transaction]').forEach(button => button.addEventListener('click', () => transactionModal.classList.remove('open'))); transactionModal.addEventListener('click', e => { if (e.target === transactionModal) transactionModal.classList.remove('open'); }); document.getElementById('transactionForm').addEventListener('submit', e => { e.preventDefault(); transactionModal.classList.remove('open'); alert('Transaction saved in this frontend preview. No database changes were made.'); e.target.reset(); });
-document.querySelector('.mobile-menu')?.addEventListener('click', () => document.querySelector('.sidebar')?.classList.toggle('mobile-open'));
-</script>
-</body></html>
+<div class="modal-backdrop" id="transactionModal">
+ <form class="modal-card transaction-form" id="transactionForm">
+  <button class="modal-close" data-close-transaction="" type="button">
+   ×
+  </button>
+  <h2>
+   New HMO Transaction
+  </h2>
+  <p>
+   Enter transaction details for this frontend preview. No database changes will be made.
+  </p>
+  <div class="form-grid">
+   <label>
+    Patient Name *
+    <input placeholder="Search or enter patient name" required=""/>
+   </label>
+   <label>
+    HMO Provider *
+    <select required="">
+     <option value="">
+      Select provider
+     </option>
+     <option>
+      Maxicare
+     </option>
+     <option>
+      Intellicare
+     </option>
+     <option>
+      Medicare
+     </option>
+     <option>
+      PhilCare
+     </option>
+    </select>
+   </label>
+   <label>
+    Membership Number *
+    <input placeholder="Enter membership number" required=""/>
+   </label>
+   <label>
