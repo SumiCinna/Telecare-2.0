@@ -54,3 +54,24 @@ textarea {
   outline-offset: 2px;
 }
 
+/* Shared design kit scale for doctor workflows. */
+:root {
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+  --space-5:24px; --space-6:32px; --space-7:40px;
+  --kit-blue:#1478ee; --kit-ink:#183657; --kit-muted:#7188a4;
+  --kit-border:#dfeaf5; --kit-canvas:#f5f9fd;
+}
+body { background:var(--kit-canvas); color:var(--kit-ink); font-size:15px; line-height:1.5; }
+.main { background:var(--kit-canvas); }
+.topbar { min-height:72px; padding:0 var(--space-6); border-bottom-color:var(--kit-border); }
+.page-wrap { padding:var(--space-6); }
+.content { padding:var(--space-6) var(--space-7) 48px; }
+.card,.panel { border-color:var(--kit-border); border-radius:14px; box-shadow:0 3px 14px rgba(29,70,107,.06); }
+input,select,textarea,.form-control { min-height:44px; border-color:var(--kit-border); border-radius:10px; }
+button,.btn-primary,.btn-submit { min-height:44px; }
+table th { padding:14px 16px; }
+table td { padding:14px 16px; }
+@media (max-width:900px) {
+  .topbar { padding:0 var(--space-4); }
+  .page-wrap,.content { padding:var(--space-5) var(--space-4) 88px; }
+}

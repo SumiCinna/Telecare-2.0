@@ -68,3 +68,14 @@ $active_nav = $active_nav ?? '';
   </div>
 
 </nav>
+
+<style>
+:root{--sidebar-width:256px;--kit-blue:#1478ee;--kit-navy:#12345d;--kit-muted:#7188a4;--kit-line:#dfeaf5}
+.sidebar{width:var(--sidebar-width);min-width:var(--sidebar-width);background:#f6faff;border-right-color:var(--kit-line)}
+.logo-section{padding:20px 18px 22px}
+.logo-section a{font-size:1.05rem;color:var(--kit-navy)}
+.nav-item{padding:13px 18px;border-left:0;border-radius:10px;color:var(--kit-muted);font-size:.86rem;margin:3px 8px}
+.nav-item:hover{background:#eaf3fd;color:var(--kit-blue)}
+.nav-item.active{background:var(--kit-blue);border-left:0;color:#fff;box-shadow:0 5px 14px rgba(23,104,216,.22)}
+@media(max-width:767px){.nav-item.active{background:#eaf3fd;color:var(--kit-blue)}}
+</style>

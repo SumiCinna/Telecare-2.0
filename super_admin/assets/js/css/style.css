@@ -276,3 +276,18 @@ select.form-control{appearance:none;padding-left:28px;background-image:url("data
 	.data-table{display:block;overflow-x:auto}
 	.page-heading{flex-direction:column}
 }
+
+/* Shared TELE-CARE design kit alignment for super-admin workflows. */
+:root{--kit-blue:#1478ee;--kit-navy:#12345d;--kit-ink:#183657;--kit-muted:#7188a4;--kit-line:#dfeaf5;--kit-canvas:#f5f9fd;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:32px}
+body{background:var(--kit-canvas);color:var(--kit-ink);font-size:15px;line-height:1.5}
+.sidebar{width:256px;min-width:256px;background:#f6faff;border-right-color:var(--kit-line)}
+.main{margin-left:256px;background:var(--kit-canvas)}
+.topbar{min-height:72px;padding:0 var(--space-6);border-bottom-color:var(--kit-line)}
+.content{padding:var(--space-6) var(--space-7) 48px}
+.panel,.card,.stat-card,.tbl-wrap{border-color:var(--kit-line);border-radius:14px;box-shadow:0 3px 14px rgba(29,70,107,.06)}
+.panel{padding:var(--space-5)}
+input,select,textarea,.form-control{min-height:44px;border-color:var(--kit-line);border-radius:10px}
+button,.btn-primary,.btn-submit{min-height:44px}
+th{padding:14px 16px}
+td{padding:14px 16px;font-size:13px}
+@media(max-width:767px){.main{margin-left:0}.content{padding:var(--space-5) var(--space-4) 90px}.panel{padding:var(--space-4)}}

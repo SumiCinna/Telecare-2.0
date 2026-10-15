@@ -154,3 +154,18 @@ body.sidebar-collapsed{ padding-left:var(--tc-sidebar-w-collapsed); }
   });
 })();
 </script>
+
+<style>
+:root{--tc-sidebar-w:256px;--tc-blue:#1478ee;--tc-navy:#12345d;--tc-ink:#183657;--tc-muted:#7188a4;--tc-line:#dfeaf5}
+.sidebar{width:var(--tc-sidebar-w);background:#f6faff;border-right-color:var(--tc-line);padding:1.35rem 1rem}
+.sidebar-brand{gap:.75rem;margin-bottom:1.35rem}
+.sidebar-brand-icon{width:42px;height:42px;border-radius:11px}
+.sidebar-brand-name{font-size:1rem;color:var(--tc-navy)}
+.sidebar-brand-sub{font-size:.68rem;color:var(--tc-muted)}
+.sidebar-link{padding:.75rem .8rem;border-radius:10px;color:var(--tc-muted);font-size:.86rem}
+.sidebar-link:hover{background:#eaf3fd;color:var(--tc-navy)}
+.sidebar-link.active{background:var(--tc-blue);color:#fff;box-shadow:0 5px 14px rgba(23,104,216,.22)}
+.sidebar-link .nav-icon{width:19px;height:19px}
+body{padding-left:var(--tc-sidebar-w);background:#f5f9fd}
+@media(max-width:900px){body{padding-left:0}}
+</style>
