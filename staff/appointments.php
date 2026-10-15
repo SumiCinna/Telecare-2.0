@@ -556,6 +556,16 @@ require_once 'includes/header.php';
 <div id="print-receipt-area" style="display:none;"></div>
 
 <script>
+(function () {
+// Expose only what inline onclick/oninput handlers need (function declarations are hoisted)
+window.filterStatus       = filterStatus;
+window.onSearchInput      = onSearchInput;
+window.openReschedule     = openReschedule;
+window.quickAction        = quickAction;
+window.handleReceiptClick = handleReceiptClick;
+window.printReceipt       = printReceipt;
+window.onCaDoctorChange   = onCaDoctorChange;
+
 const DOCTOR_SCHEDULES = <?= json_encode($doctor_schedules) ?>;
 const DAY_NAMES   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -1048,6 +1058,7 @@ filterStatus(_activeTab);
 
 <?php if ($rs_open): ?>openModal('modal-reschedule');<?php endif ?>
 <?php if ($ca_open): ?>openModal('modal-create');<?php endif ?>
+})();
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
