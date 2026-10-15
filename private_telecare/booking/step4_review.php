@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // private_telecare/booking/step4_review.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../../includes/auth.php';
@@ -19,7 +19,7 @@ $reason_display = $b['concern'];
 $fee   = (float)($doctor['consultation_fee'] ?? 0);
 $total = $fee; // extend here if you add a platform/service fee later
 
-$page_title = 'Review Appointment â€” TELE-CARE';
+$page_title = 'Review Appointment — TELE-CARE';
 $active_nav = 'visits';
 require_once __DIR__ . '/../../includes/header.php';
 echo booking_wizard_css();
@@ -34,7 +34,7 @@ echo booking_wizard_css();
 .info-val{color:var(--green);font-weight:700}
 .reason-box{background:rgba(36,68,65,0.04);border-radius:8px;padding:.55rem .75rem;font-size:.78rem;color:var(--green);margin-top:.35rem}
 .bill-row{display:flex;justify-content:space-between;font-size:.8rem;padding:.3rem 0}
-.bill-total{display:flex;justify-content:space-between;font-family:'Poppins',sans-serif;font-weight:900;font-size:1.15rem;color:var(--red);border-top:1px solid rgba(36,68,65,0.1);margin-top:.4rem;padding-top:.55rem}
+.bill-total{display:flex;justify-content:space-between;font-family:'Playfair Display',serif;font-weight:900;font-size:1.15rem;color:var(--red);border-top:1px solid rgba(36,68,65,0.1);margin-top:.4rem;padding-top:.55rem}
 .review-reminder{border-left:3px solid var(--blue);background:#f3f6ff;border-radius:8px;padding:.55rem .75rem;color:var(--green);font-size:.7rem;line-height:1.35}
 .review-reminder strong{display:block;margin-bottom:.3rem;font-size:.82rem}
 .wiz-page{max-width:1180px;padding:1rem 2rem .5rem}
@@ -70,7 +70,7 @@ echo booking_wizard_css();
       <h3 style="margin-top:1.2rem;">Your Concern</h3>
       <div class="reason-box"><?= htmlspecialchars($reason_display) ?></div>
       <?php if (!empty($b['attachment_paths'])): ?>
-        <div class="reason-box" style="margin-top:0.6rem;">ðŸ“Ž Document attached (scanned, on file for the doctor).</div>
+        <div class="reason-box" style="margin-top:0.6rem;">📎 Document attached (scanned, on file for the doctor).</div>
       <?php endif; ?>
     </div>
 

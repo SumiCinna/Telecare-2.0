@@ -130,6 +130,7 @@ if (!$stmt->execute()) {
 }
 
 $appt_id = $conn->insert_id;
+$_SESSION['pay_prefer'] = $_SESSION['booking']['prefer_method'] ?? ''; // "Use HMO to Book" pre-selects HMO on the payment page
 unset($_SESSION['booking']); // wizard state no longer needed
 
 header('Location: ../router.php?page=pay&appt_id=' . $appt_id);

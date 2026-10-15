@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // private_telecare/booking/booking_helpers.php
 // Shared constants + guards for the multi-step booking wizard.
 // Included by every step*.php / payment.php / success.php / confirmed.php.
@@ -87,7 +87,7 @@ function booking_wizard_css(): string {
     <style>
     :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--muted:#9ab0ae}
     .wiz-page{max-width:920px;margin:0 auto;padding:1.8rem 2rem 5rem}
-    .wiz-title{font-family:'Poppins',sans-serif;font-size:1.8rem;font-weight:900;color:var(--green)}
+    .wiz-title{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--green)}
     .wiz-sub{color:var(--muted);font-size:0.88rem;margin-top:0.3rem;margin-bottom:1.6rem}
     .stepper{display:flex;align-items:flex-start;background:#fff;border:1px solid rgba(36,68,65,0.08);border-radius:16px;padding:1.2rem 1.5rem;margin-bottom:1.6rem}
     .step-col{display:flex;flex-direction:column;align-items:center}
@@ -98,8 +98,8 @@ function booking_wizard_css(): string {
     .step-line.done{background:#16a34a}
     .step-label{font-size:0.7rem;color:var(--muted);text-align:center;margin-top:0.4rem;width:74px}
     .wiz-card{background:#fff;border:1px solid rgba(36,68,65,0.08);border-radius:18px;padding:1.5rem;margin-bottom:1.4rem}
-    .wiz-card h3{font-family:'Poppins',sans-serif;font-size:1.1rem;color:var(--green);margin-bottom:1rem}
-    .wiz-btn{padding:0.85rem 1.8rem;border-radius:50px;border:none;font-weight:700;font-size:0.9rem;cursor:pointer;font-family:'Poppins',sans-serif;text-decoration:none;display:inline-block}
+    .wiz-card h3{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--green);margin-bottom:1rem}
+    .wiz-btn{padding:0.85rem 1.8rem;border-radius:50px;border:none;font-weight:700;font-size:0.9rem;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:none;display:inline-block}
     .wiz-btn.primary{background:var(--red);color:#fff;box-shadow:0 4px 14px rgba(195,54,67,0.28)}
     .wiz-btn.primary:hover{background:#a82d38}
     .wiz-btn.ghost{background:transparent;color:var(--green);border:1.5px solid rgba(36,68,65,0.15)}
@@ -124,9 +124,9 @@ function render_stepper(int $active): void {
 }
 
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────
 // Concern -> department / doctor recommendation (booking steps 1-2)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────
 
 /** Read a value from .env / environment (config.php loads .env into these). */
 function tc_env(string $key): string {
@@ -285,9 +285,9 @@ function booking_rank_doctors(array $doctors, string $concern): array {
     return $doctors;
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────
 // Payment methods on pay.php: GCash / PhilHealth YAKAP / HMO
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────
 
 const BOOKING_HMO_FALLBACK = [
     'Asalus Corporation (Intellicare)' => 'HMO-2023-06-R',
@@ -345,6 +345,104 @@ function booking_hmo_provider_list(mysqli $conn): array {
     $list = array_keys(booking_hmo_providers($conn));
     $list[] = 'Other';
     return $list;
+}
+
+/**
+ * HMO providers the clinic has put ON HOLD (e.g. unpaid bills). name => reason.
+ * A provider on hold is not accepted as a payment method: it is shown disabled in the dropdown,
+ * rejected on save, and staff cannot approve its cases. Managed in Admin > HMO.
+ */
+function booking_ensure_hold_columns(mysqli $conn): bool {
+    static $ok = null;
+    if ($ok !== null) return $ok;
+    try {
+        $t = $conn->query("SHOW TABLES LIKE 'hmo_providers'");
+        if (!$t || $t->num_rows === 0) return $ok = false;
+        foreach (['on_hold' => 'TINYINT(1) NOT NULL DEFAULT 0', 'hold_reason' => 'VARCHAR(255) NULL', 'hold_since' => 'DATETIME NULL'] as $col => $ddl) {
+            $r = $conn->query("SHOW COLUMNS FROM hmo_providers LIKE '$col'");
+            if ($r && $r->num_rows === 0) $conn->query("ALTER TABLE hmo_providers ADD COLUMN `$col` $ddl");
+        }
+        return $ok = true;
+    } catch (Throwable $e) {
+        error_log('booking_ensure_hold_columns: ' . $e->getMessage());
+        return $ok = false;
+    }
+}
+function booking_hmo_holds(mysqli $conn): array {
+    $out = [];
+    if (!booking_ensure_hold_columns($conn)) return $out;
+    try {
+        $r = $conn->query("SELECT name, hold_reason FROM hmo_providers WHERE on_hold = 1");
+        while ($r && ($row = $r->fetch_assoc())) $out[$row['name']] = (string)($row['hold_reason'] ?? '');
+    } catch (Throwable $e) { /* ignore */ }
+    return $out;
+}
+function booking_hmo_is_on_hold(mysqli $conn, string $provider): bool {
+    return array_key_exists($provider, booking_hmo_holds($conn));
+}
+
+/**
+ * What the patient should read about a YAKAP / HMO booking. Wording never says "confirmed" until the clinic approved it.
+ * Returns ['approved'=>bool,'status'=>string,'has_loa'=>bool,'title'=>..,'badge'=>..,'sub'=>..,'tone'=>'wait'|'ok'|'act'|'no']
+ */
+function booking_coverage_state(mysqli $conn, int $appt_id, string $method): array {
+    $st = ['approved' => false, 'status' => 'Pending', 'has_loa' => false, 'title' => 'Booking Received', 'badge' => 'Waiting for approval',
+           'sub' => 'Your booking was received.', 'tone' => 'wait'];
+    try {
+        if ($method === 'YAKAP') {
+            $r = $conn->query("SELECT verification_status AS s FROM appointment_yakap WHERE appointment_id = " . (int)$appt_id);
+            $row = $r ? $r->fetch_assoc() : null;
+            $s = (string)($row['s'] ?? 'Pending');
+            $st['status'] = $s;
+            if ($s === 'Verified' || $s === 'Approved') {
+                return ['approved' => true, 'status' => $s, 'has_loa' => false, 'title' => 'Appointment Confirmed', 'badge' => 'Confirmed',
+                        'sub' => 'Your PhilHealth YAKAP eligibility was verified. Your appointment is confirmed.', 'tone' => 'ok'];
+            }
+            if ($s === 'Rejected') {
+                return ['approved' => false, 'status' => $s, 'has_loa' => false, 'title' => 'YAKAP Not Verified', 'badge' => 'YAKAP not verified',
+                        'sub' => 'The clinic could not verify your YAKAP details. Please contact the clinic or choose another payment method.', 'tone' => 'no'];
+            }
+            $st['title'] = 'Waiting for YAKAP Verification';
+            $st['badge'] = 'Waiting for YAKAP verification';
+            $st['sub']   = 'The clinic is verifying your PhilHealth YAKAP details. Your appointment is confirmed once they finish.';
+            return $st;
+        }
+        $r = $conn->query("SELECT coverage_status AS s, loa_number FROM appointment_hmo WHERE appointment_id = " . (int)$appt_id);
+        $row = $r ? $r->fetch_assoc() : null;
+        $s = (string)($row['s'] ?? 'Pending');
+        $loa = trim((string)($row['loa_number'] ?? '')) !== '';
+        $st['status'] = $s; $st['has_loa'] = $loa;
+        if ($s === 'Approved') {
+            return ['approved' => true, 'status' => $s, 'has_loa' => $loa, 'title' => 'Appointment Confirmed', 'badge' => 'HMO approved',
+                    'sub' => $loa ? 'The clinic accepted your LOA. Your appointment is confirmed.' : 'Your HMO coverage was approved. Your appointment is confirmed.', 'tone' => 'ok'];
+        }
+        if ($s === 'Not Approved' || $s === 'Not Covered') {
+            return ['approved' => false, 'status' => $s, 'has_loa' => $loa, 'title' => 'HMO Not Approved', 'badge' => 'HMO not approved',
+                    'sub' => 'Your HMO coverage was not approved. Please choose another payment method or cancel the appointment.', 'tone' => 'no'];
+        }
+        if ($s === 'Action Required') {
+            return ['approved' => false, 'status' => $s, 'has_loa' => $loa, 'title' => 'Action Needed', 'badge' => 'Action needed',
+                    'sub' => 'The clinic needs something from you before your HMO booking can be approved.', 'tone' => 'act'];
+        }
+        if ($loa) {
+            return ['approved' => false, 'status' => $s, 'has_loa' => true, 'title' => 'LOA Received', 'badge' => 'Waiting for clinic to accept LOA',
+                    'sub' => 'You gave an LOA. The clinic will check it and accept it. No approval request to your HMO is needed.', 'tone' => 'wait'];
+        }
+        return ['approved' => false, 'status' => $s, 'has_loa' => false, 'title' => 'Waiting for HMO Approval', 'badge' => 'Waiting for HMO approval',
+                'sub' => 'The clinic is asking your HMO for approval. Your appointment is confirmed once the HMO approves.', 'tone' => 'wait'];
+    } catch (Throwable $e) { return $st; }
+}
+
+/** One bell notification per type per appointment (refreshes if sent again). */
+function booking_notify_patient(mysqli $conn, int $patient_id, int $appt_id, string $type, string $title, string $message, ?string $link = null): void {
+    try {
+        $link = $link ?: 'router.php?page=booking/hmo_status&appt_id=' . $appt_id;
+        $st = $conn->prepare("INSERT INTO notifications (patient_id, type, title, message, link, reference_type, reference_id)
+            VALUES (?, ?, ?, ?, ?, 'appointment', ?)
+            ON DUPLICATE KEY UPDATE title = VALUES(title), message = VALUES(message), link = VALUES(link), is_read = 0, created_at = NOW()");
+        $st->bind_param('issssi', $patient_id, $type, $title, $message, $link, $appt_id);
+        $st->execute();
+    } catch (Throwable $e) { error_log('booking_notify_patient: ' . $e->getMessage()); }
 }
 
 function booking_valid_phone(string $v): bool {
@@ -470,6 +568,7 @@ function booking_save_coverage(mysqli $conn, int $patient_id, int $appt_id, stri
         $d['loa']       = booking_clean($in['loa_number'] ?? '', 60);
         if (!in_array($sel, booking_hmo_provider_list($conn), true))           $errors[] = 'Select your HMO provider.';
         if ($sel === 'Other' && $other === '')                                 $errors[] = 'Enter the name of your HMO provider.';
+        if ($sel !== 'Other' && $sel !== '' && booking_hmo_is_on_hold($conn, $sel)) $errors[] = $sel . ' is not accepted by the clinic at this time. Please choose another HMO or another payment method.';
         if ($d['mid'] === '')                                                  $errors[] = 'HMO Member ID / Card No. is required.';
         if ($d['principal'] === '')                                            $errors[] = 'Principal member name is required.';
         if (!in_array($d['service'], ['Online Consultation', 'Follow-up Consultation'], true)) $errors[] = 'Select the type of consultation.';
@@ -515,12 +614,22 @@ function booking_save_coverage(mysqli $conn, int $patient_id, int $appt_id, stri
     } catch (Throwable $e) {
         try { $conn->rollback(); } catch (Throwable $ignore) {}
         if ($e->getCode() === 1) {
-            return ['ok' => false, 'errors' => ['This appointment can no longer be confirmed. It may have expired â€” please book again.']];
+            return ['ok' => false, 'errors' => ['This appointment can no longer be confirmed. It may have expired — please book again.']];
         }
         error_log('booking_save_coverage: ' . $e->getMessage());
         return ['ok' => false, 'errors' => ['Could not save your details. Please try again.']];
     }
 
+    if ($method === 'HMO') {
+        $hasLoa = ($d['loa'] ?? '') !== '';
+        booking_notify_patient($conn, $patient_id, $appt_id, 'hmo_pending',
+            $hasLoa ? 'LOA received' : 'Waiting for HMO approval',
+            $hasLoa ? 'We received your LOA. The clinic will check and accept it. Your appointment is confirmed once it is accepted.'
+                    : 'Your HMO booking was submitted. The clinic is asking your HMO for approval. Upload your documents to speed this up.');
+        return ['ok' => true, 'redirect' => 'router.php?page=booking/hmo_documents&appt_id=' . $appt_id];
+    }
+    booking_notify_patient($conn, $patient_id, $appt_id, 'yakap_pending', 'Waiting for YAKAP verification',
+        'Your PhilHealth YAKAP details were submitted. Your appointment is confirmed once the clinic verifies them.',
+        'router.php?page=booking/confirmed&appt_id=' . $appt_id);
     return ['ok' => true, 'redirect' => 'router.php?page=booking/success&appt_id=' . $appt_id];
 }
-

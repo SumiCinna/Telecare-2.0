@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // private_telecare/booking/success.php
 // Point your PayMongo success handler here: success.php?appt_id=<id>
 date_default_timezone_set('Asia/Manila');
@@ -16,7 +16,7 @@ $stmt->execute();
 $appt = $stmt->get_result()->fetch_assoc();
 if (!$appt) { header('Location: ../router.php?page=visits'); exit; }
 
-$page_title = 'Booking Confirmed â€” TELE-CARE';
+$page_title = 'Booking Confirmed — TELE-CARE';
 $active_nav = 'visits';
 require_once __DIR__ . '/../../includes/header.php';
 echo booking_wizard_css();
@@ -26,7 +26,7 @@ echo booking_wizard_css();
 .success-modal{background:#fff;border:1px solid rgba(36,68,65,.12);border-radius:10px;padding:1.35rem 1.15rem;max-width:320px;width:100%;text-align:center;box-shadow:0 18px 45px rgba(0,0,0,.22);animation:popIn .3s ease}
 @keyframes popIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
 .success-icon{width:48px;height:48px;border-radius:50%;background:rgba(195,54,67,.1);color:var(--red);display:flex;align-items:center;justify-content:center;margin:0 auto .8rem}
-.success-title{font-family:'Poppins',sans-serif;font-size:1.05rem;font-weight:800;color:var(--green);margin-bottom:.45rem}
+.success-title{font-family:'DM Sans',sans-serif;font-size:1.05rem;font-weight:800;color:var(--green);margin-bottom:.45rem}
 .success-sub{font-size:.7rem;color:var(--muted);margin-bottom:1rem;line-height:1.45}
 .success-modal .wiz-btn{font-size:.68rem;padding:.65rem 1rem;border-radius:6px}
 </style>
@@ -42,12 +42,17 @@ echo booking_wizard_css();
     <div class="success-icon">
       <svg width="25" height="25" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
     </div>
-    <div class="success-title">Appointment Booked Successfully!</div>
+    <?php $isCov = in_array($appt['payment_method'] ?? 'Regular', ['YAKAP', 'HMO'], true);
+          $cs = $isCov ? booking_coverage_state($conn, $appt_id, $appt['payment_method']) : null;
+          $waiting = $isCov && !$cs['approved']; ?>
+    <div class="success-title"><?= $waiting ? 'Booking Submitted' : 'Appointment Booked Successfully!' ?></div>
     <div class="success-sub">
-      Your appointment with <strong>Dr. <?= htmlspecialchars($appt['doctor_name']) ?></strong> has been confirmed for
+      Your appointment with <strong>Dr. <?= htmlspecialchars($appt['doctor_name']) ?></strong> is booked for
       <strong><?= (new DateTime($appt['appointment_date']))->format('F j, Y') ?> at <?= date('g:i A', strtotime($appt['appointment_time'])) ?></strong>.
-      <?php if (in_array($appt['payment_method'] ?? 'Regular', ['YAKAP', 'HMO'], true)): ?>
-        <br>Your <?= htmlspecialchars(booking_payment_label($appt['payment_method'])) ?> details were submitted and will be verified by the clinic.
+      <?php if ($waiting): ?>
+        <br><b><?= htmlspecialchars($cs['badge']) ?>.</b> <?= htmlspecialchars($cs['sub']) ?>
+      <?php else: ?>
+        It has been confirmed.
       <?php endif; ?>
     </div>
   <a href="router.php?page=booking/confirmed&amp;appt_id=<?= $appt_id ?>" class="wiz-btn primary" style="width:100%;text-align:center;box-sizing:border-box;">View Appointment</a>

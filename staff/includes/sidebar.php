@@ -30,6 +30,10 @@
       ['appointments.php','appointments', 'Appointments',
         '<path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>'],
 
+      // HMO — shield with check
+      ['hmo_queue.php',   'HMO',          'HMO Verification',
+        '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"/>'],
+
       // Doctors — stethoscope
       ['doctors.php',     'doctors',      'Doctors',
         '<path stroke-linecap="round" stroke-linejoin="round" d="M6 3v5a4 4 0 008 0V3"/><path stroke-linecap="round" d="M6 3H4.5M14 3h1.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 12v2a5 5 0 0010 0v-1"/><circle cx="20" cy="10" r="2"/>'],

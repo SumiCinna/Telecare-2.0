@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // private_telecare/booking/step2_doctor.php
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../../includes/auth.php';
@@ -32,7 +32,7 @@ if (!isset($available[$department])) $department = (string)array_key_first($avai
 $_SESSION['booking']['department'] = $department;
 $isSuggested = ($department === $rec['department']);
 
-// Selecting a doctor is a simple GET link â€” validate + store, then move on.
+// Selecting a doctor is a simple GET link — validate + store, then move on.
 if (isset($_GET['doctor_id'])) {
     $did = (int)$_GET['doctor_id'];
     $chk = $conn->prepare("SELECT id FROM doctors WHERE id=? AND department=? AND status='active'");
@@ -53,7 +53,7 @@ $doctors = booking_rank_doctors($stmt->get_result()->fetch_all(MYSQLI_ASSOC), $c
 
 $reasonText = $rec['reason'] !== '' ? $rec['reason'] : 'Based on the words in your description.';
 
-$page_title = 'Select Doctor â€” TELE-CARE';
+$page_title = 'Select Doctor — TELE-CARE';
 $active_nav = 'visits';
 require_once __DIR__ . '/../../includes/header.php';
 echo booking_wizard_css();
@@ -74,14 +74,14 @@ echo booking_wizard_css();
 .doctor-rating .rating-count{color:var(--muted);font-weight:500}
 .doctor-rating .no-rating{color:var(--muted);font-style:italic}
 .see-reviews-link{background:none;border:none;padding:0;font:inherit;font-size:.68rem;color:var(--blue);text-decoration:underline;cursor:pointer}
-/* â”€â”€ Reviews modal â”€â”€ */
+/* ── Reviews modal ── */
 .reviews-modal-backdrop{display:none;position:fixed;inset:0;background:rgba(15,25,24,.55);z-index:1000;align-items:center;justify-content:center;padding:1rem}
 .reviews-modal-backdrop.open{display:flex}
 .reviews-modal{background:#fff;border-radius:14px;max-width:480px;width:100%;max-height:85vh;overflow-y:auto;padding:1.25rem 1.4rem}
-.reviews-modal h3{font-family:'Poppins',sans-serif;color:var(--green);margin:0 0 .9rem;font-size:1.02rem;display:flex;justify-content:space-between;align-items:center}
+.reviews-modal h3{font-family:'DM Sans',sans-serif;color:var(--green);margin:0 0 .9rem;font-size:1.02rem;display:flex;justify-content:space-between;align-items:center}
 .reviews-modal h3 button{background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--muted)}
 .reviews-summary{display:flex;gap:1rem;align-items:center;padding-bottom:1rem;margin-bottom:1rem;border-bottom:1px solid rgba(36,68,65,.1)}
-.reviews-summary .avg-num{font-size:2rem;font-weight:800;color:var(--green);font-family:'Poppins',sans-serif;line-height:1}
+.reviews-summary .avg-num{font-size:2rem;font-weight:800;color:var(--green);font-family:'DM Sans',sans-serif;line-height:1}
 .reviews-summary .avg-stars{color:#ca8a04;font-size:.9rem;margin:.15rem 0}
 .reviews-summary .avg-count{font-size:.7rem;color:var(--muted)}
 .reviews-bars{flex:1;display:grid;gap:.2rem}
@@ -100,17 +100,17 @@ echo booking_wizard_css();
 .doctor-meta{grid-column:1/-1;background:#f3f6ff;border-radius:8px;padding:.55rem .7rem;font-size:.76rem;color:var(--green);margin:.5rem 0 .1rem;font-weight:600}
 .doctor-card .wiz-btn{grid-column:1/-1;width:100%;padding:.6rem 1rem;font-size:.76rem;border-radius:6px}
 .doctor-summary{background:#fff;border:1px solid rgba(36,68,65,.1);border-radius:12px;padding:1rem;font-size:.78rem;color:var(--green);position:sticky;top:1rem}
-.doctor-summary h3{font-family:'Poppins',sans-serif;font-size:.9rem;margin-bottom:.8rem;color:var(--green)}
+.doctor-summary h3{font-family:'DM Sans',sans-serif;font-size:.9rem;margin-bottom:.8rem;color:var(--green)}
 .summary-line{display:flex;justify-content:space-between;gap:.6rem;padding:.55rem 0;border-top:1px solid rgba(36,68,65,.08)}
 .summary-line span:first-child{color:var(--muted)}
 .summary-line span:last-child{text-align:right;font-weight:700}
 .empty-state{grid-column:1/-1;text-align:center;padding:2.5rem;color:var(--muted);font-size:0.88rem}
-/* â”€â”€ Recommendation â”€â”€ */
+/* ── Recommendation ── */
 .doctor-card{position:relative}
 .rec-badge{position:absolute;top:-9px;right:12px;background:var(--red);color:#fff;font-size:.62rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:.15rem .55rem;border-radius:20px}
 .rec-card{background:#fff;border:1.5px solid rgba(195,54,67,.25);border-radius:14px;padding:1rem 1.1rem;margin-bottom:1rem}
 .rec-label{font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.rec-dept{font-family:'Poppins',sans-serif;font-size:1.3rem;font-weight:900;color:var(--green);margin:.15rem 0 .25rem}
+.rec-dept{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;color:var(--green);margin:.15rem 0 .25rem}
 .rec-reason{font-size:.84rem;color:var(--green);line-height:1.5}
 .rec-src{font-size:.68rem;color:var(--muted);margin-top:.35rem}
 .rec-concern{font-size:.78rem;color:var(--muted);margin-top:.7rem;padding-top:.7rem;border-top:1px solid rgba(36,68,65,.08)}
@@ -209,11 +209,11 @@ echo booking_wizard_css();
   </div>
 </div>
 
-<!-- â•â• Reviews modal â•â• -->
+<!-- ══ Reviews modal ══ -->
 <div class="reviews-modal-backdrop" id="reviewsBackdrop" onclick="if(event.target===this) closeReviews()">
   <div class="reviews-modal">
     <h3><span id="reviewsDoctorName">Reviews</span> <button type="button" onclick="closeReviews()">&times;</button></h3>
-    <div id="reviewsBody"><div class="reviews-loading">Loading reviewsâ€¦</div></div>
+    <div id="reviewsBody"><div class="reviews-loading">Loading reviews…</div></div>
   </div>
 </div>
 
@@ -226,7 +226,7 @@ function openReviews(doctorId) {
   const backdrop = document.getElementById('reviewsBackdrop');
   const body = document.getElementById('reviewsBody');
   document.getElementById('reviewsDoctorName').textContent = 'Reviews';
-  body.innerHTML = '<div class="reviews-loading">Loading reviewsâ€¦</div>';
+  body.innerHTML = '<div class="reviews-loading">Loading reviews…</div>';
   backdrop.classList.add('open');
 
   fetch('router.php?page=doctor_reviews&doctor_id=' + doctorId)
@@ -238,7 +238,7 @@ function openReviews(doctorId) {
 
       const total = data.rating_count || 0;
       let html = '<div class="reviews-summary">';
-      html += '<div><div class="avg-num">' + (total ? data.avg_rating.toFixed(1) : 'â€”') + '</div>';
+      html += '<div><div class="avg-num">' + (total ? data.avg_rating.toFixed(1) : '—') + '</div>';
       html += '<div class="avg-stars">' + starString(data.avg_rating) + '</div>';
       html += '<div class="avg-count">' + total + ' rating' + (total === 1 ? '' : 's') + '</div></div>';
       html += '<div class="reviews-bars">';

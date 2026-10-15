@@ -17,7 +17,7 @@ function ensureNotification($conn, $type, $reference_id, $title, $message, $link
     $stmt = $conn->prepare("
         INSERT IGNORE INTO notifications
             (audience, patient_id, type, reference_type, reference_id, title, message, link, is_read)
-        VALUES ('staff', 0, ?, 'appointment', ?, ?, ?, ?)
+        VALUES ('staff', 0, ?, 'appointment', ?, ?, ?, ?, 0)
     ");
     $stmt->bind_param('sisss', $type, $reference_id, $title, $message, $link);
     $stmt->execute();

@@ -26,7 +26,9 @@ $privatePages = [
     'rate_doctor', 'doctor_reviews',
     'booking/step1_details', 'booking/step2_doctor', 'booking/step3_schedule',
     'booking/step4_review', 'booking/confirmed', 'booking/payment',
-    'booking/process_booking', 'booking/success'
+    'booking/process_booking', 'booking/success',
+    'booking/hmo_info', 'booking/hmo_start', 'booking/hmo_documents', 'booking/hmo_review',
+    'booking/hmo_status', 'booking/hmo_resolve', 'booking/hmo_file'
 ];
 
 if (in_array($page, $publicPages)) {

@@ -1,5 +1,5 @@
-﻿<?php
-// admin/hmo.php â€” template module: Providers + Coverage
+<?php
+// admin/hmo.php — template module: Providers + Coverage
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
@@ -16,6 +16,14 @@ try {
         $conn->query("ALTER TABLE hmo_providers ADD COLUMN license_no VARCHAR(30) NULL AFTER name");
     }
 } catch (Throwable $ignore) { /* table or permission problem: the page shows its normal error */ }
+
+// Hold columns: the clinic can put an HMO on hold (e.g. it has not paid its bills) so it is no longer accepted.
+try {
+    foreach (['on_hold' => 'TINYINT(1) NOT NULL DEFAULT 0', 'hold_reason' => 'VARCHAR(255) NULL', 'hold_since' => 'DATETIME NULL'] as $hc => $hd) {
+        $hr = $conn->query("SHOW COLUMNS FROM hmo_providers LIKE '$hc'");
+        if ($hr && $hr->num_rows === 0) $conn->query("ALTER TABLE hmo_providers ADD COLUMN `$hc` $hd");
+    }
+} catch (Throwable $ignore) { }
 
 // Keep only letters, digits and dashes (e.g. HMO-2023-07-R).
 function hmo_clean_license($v) {
@@ -47,7 +55,7 @@ if (!function_exists('log_audit')) {
     }
 }
 
-/* â”€â”€ Providers â”€â”€ */
+/* ── Providers ── */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_provider'])) {
     $name = trim($_POST['name'] ?? '');
     $contact = trim($_POST['contact_person'] ?? '');
@@ -91,6 +99,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_provider'])) {
     header('Location: hmo.php'); exit;
 }
 
+// Put an HMO on hold / take it off hold.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['hold_provider'])) {
+    $id = (int)($_POST['provider_id'] ?? 0);
+    $why = mb_substr(trim(preg_replace('/\s+/u', ' ', (string)($_POST['hold_reason'] ?? ''))), 0, 255);
+    if ($why === '') { $_SESSION['toast_error'] = 'Write the reason for the hold (for example: unpaid bills).'; header('Location: hmo.php'); exit; }
+    $stmt = $conn->prepare("UPDATE hmo_providers SET on_hold=1, hold_reason=?, hold_since=NOW() WHERE id=?");
+    $stmt->bind_param("si", $why, $id);
+    $stmt->execute();
+    $open = 0;
+    try {
+        $q = $conn->prepare("SELECT COUNT(*) c FROM appointment_hmo h JOIN appointments a ON a.id = h.appointment_id JOIN hmo_providers p ON p.name = h.hmo_provider
+                             WHERE p.id = ? AND a.status <> 'Cancelled' AND h.coverage_status IN ('Pending','In Verification','Action Required')");
+        $q->bind_param("i", $id); $q->execute();
+        $open = (int)($q->get_result()->fetch_assoc()['c'] ?? 0);
+    } catch (Throwable $ignore) { }
+    log_audit($conn, $admin_id, 'hold', 'hmo_provider', $id, null, $why);
+    $_SESSION['toast'] = 'HMO put on hold. It is no longer accepted for new bookings.' . ($open ? " $open open case(s) cannot be approved until it is released." : '');
+    header('Location: hmo.php'); exit;
+}
+if (isset($_GET['release_provider'])) {
+    $id = (int)$_GET['release_provider'];
+    $conn->query("UPDATE hmo_providers SET on_hold=0, hold_reason=NULL, hold_since=NULL WHERE id=$id");
+    log_audit($conn, $admin_id, 'release', 'hmo_provider', $id, null, null);
+    $_SESSION['toast'] = 'HMO taken off hold. It is accepted again.';
+    header('Location: hmo.php'); exit;
+}
+
 if (isset($_GET['archive_provider'])) {
     $id = (int)$_GET['archive_provider'];
     $conn->query("UPDATE hmo_providers SET status='Archived' WHERE id=$id");
@@ -106,7 +141,7 @@ if (isset($_GET['restore_provider'])) {
     header('Location: hmo.php'); exit;
 }
 
-/* â”€â”€ Coverage â”€â”€ */
+/* ── Coverage ── */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_coverage'])) {
     $provider_id = (int)($_POST['provider_id'] ?? 0);
     $desc = trim($_POST['description'] ?? '');
@@ -159,8 +194,8 @@ $activeNav = 'pos-hmo';
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>HMO â€” TELE-CARE</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <title>HMO — TELE-CARE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <link href="assets/admin.css" rel="stylesheet"/>
   <style>
     
@@ -172,7 +207,7 @@ $activeNav = 'pos-hmo';
     .modal{background:var(--white);border-radius:20px;padding:2rem;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;animation:fadeUp 0.3s ease}
     .modal h3{font-size:1.3rem;margin-bottom:0.3rem}
     .modal .sub{font-size:0.8rem;color:#9ab0ae;margin-bottom:1.2rem}
-    .field-input{width:100%;padding:0.72rem 0.9rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:12px;font-family:'Poppins',sans-serif;font-size:0.9rem;color:var(--green);outline:none}
+    .field-input{width:100%;padding:0.72rem 0.9rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--green);outline:none}
     .btn-submit{width:100%;padding:0.85rem;border-radius:50px;background:var(--red);color:#fff;font-weight:700;font-size:0.93rem;border:none;cursor:pointer;margin-top:0.5rem}
     .btn-cancel{width:100%;padding:0.7rem;border-radius:50px;background:transparent;color:var(--green);font-weight:600;font-size:0.88rem;border:1.5px solid rgba(36,68,65,0.15);cursor:pointer;margin-top:0.5rem}
 
@@ -183,8 +218,8 @@ $activeNav = 'pos-hmo';
 </head>
 <body>
 
-<?php if ($toast): ?><div class="toast">âœ“ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
-<?php if ($toast_error): ?><div class="toast error">âœ• <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
+<?php if ($toast): ?><div class="toast">✓ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
+<?php if ($toast_error): ?><div class="toast error">✕ <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
 
 <?php include 'sidebar.php'; ?>
 
@@ -201,7 +236,7 @@ $activeNav = 'pos-hmo';
   </div>
 
   <div class="page-content">
-    <div class="template-note">Template module â€” basic Provider + Coverage tracking. Claims workflow, patient card verification, and billing integration are not built yet.</div>
+    <div class="template-note">Template module — basic Provider + Coverage tracking. Claims workflow, patient card verification, and billing integration are not built yet.</div>
 
     <div class="table-wrap">
       <table>
@@ -271,6 +306,9 @@ $activeNav = 'pos-hmo';
   </div>
 </div>
 
+<form method="POST" id="hold-form" style="display:none">
+  <input type="hidden" name="hold_provider" value="1"/><input type="hidden" name="provider_id" id="hold-provider-id"/><input type="hidden" name="hold_reason" id="hold-provider-reason"/>
+</form>
 <script>
 const ALL_PROVIDERS = <?= json_encode(array_values($allProviders), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const COVERAGE_BY_PROVIDER = <?= json_encode($coverageByProvider, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
@@ -279,8 +317,17 @@ const OPEN_COVERAGE_FOR = <?= json_encode($openCoverageFor) ?>;
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-function statusBadge(status) {
-  return status === 'Active' ? `<span class="badge badge-green">Active</span>` : `<span class="badge badge-gray">Archived</span>`;
+function statusBadge(status, p) {
+  let b = status === 'Active' ? `<span class="badge badge-green">Active</span>` : `<span class="badge badge-gray">Archived</span>`;
+  if (p && String(p.on_hold) === '1') b += ` <span class="badge" style="background:rgba(195,54,67,0.12);color:#b4232f;" title="${escAttr(p.hold_reason || '')}">On hold</span>`;
+  return b;
+}
+function holdProvider(id, name) {
+  const why = prompt('Put ' + name + ' on hold?\nPatients will not be able to use it, and staff cannot approve its cases.\n\nReason (e.g. unpaid bills):');
+  if (why === null) return;
+  document.getElementById('hold-provider-id').value = id;
+  document.getElementById('hold-provider-reason').value = why;
+  document.getElementById('hold-form').submit();
 }
 
 function renderRows() {
@@ -294,21 +341,19 @@ function renderRows() {
     const items = COVERAGE_BY_PROVIDER[p.id] || [];
     let actions = `<button class="btn-sm btn-edit" onclick="openEditModal(${p.id})">Edit</button>`;
     actions += `<button class="btn-sm" style="background:rgba(63,130,227,0.1);color:var(--blue);" onclick="openCoverageModal(${p.id})">Coverage</button>`;
+    actions += String(p.on_hold) === '1'
+      ? `<a href="?release_provider=${p.id}" class="btn-sm btn-activate" onclick="var el=this;event.preventDefault();showConfirm('Take ${escAttr(p.name)} off hold?').then(function(ok){if(ok)window.location=el.href});return false;">Release hold</a>`
+      : `<button class="btn-sm btn-red" onclick="holdProvider(${p.id}, '${escAttr(p.name)}')">Put on hold</button>`;
     actions += p.status === 'Active'
       ? `<a href="?archive_provider=${p.id}" class="btn-sm btn-red" onclick="var el=this;event.preventDefault();showConfirm('Archive ${escAttr(p.name)}?').then(function(ok){if(ok)window.location=el.href});return false;">Archive</a>`
       : `<a href="?restore_provider=${p.id}" class="btn-sm btn-activate" onclick="var el=this;event.preventDefault();showConfirm('Restore ${escAttr(p.name)}?').then(function(ok){if(ok)window.location=el.href});return false;">Restore</a>`;
     return `<tr>
       <td>${escHtml(p.name)}</td>
-<<<<<<< HEAD
       <td>${escHtml(p.license_no || '—')}</td>
       <td>${escHtml(p.contact_person || '—')}</td>
       <td>${escHtml(p.phone || '—')}</td>
-=======
-      <td>${escHtml(p.contact_person || 'â€”')}</td>
-      <td>${escHtml(p.phone || 'â€”')}</td>
->>>>>>> e79f1b14fb431de05154e675f9719e9a79bf68c3
       <td>${items.length ? `<span class="badge badge-blue">${items.length} item${items.length>1?'s':''}</span>` : '<span style="color:#9ab0ae;">None</span>'}</td>
-      <td>${statusBadge(p.status)}</td>
+      <td>${statusBadge(p.status, p)}${String(p.on_hold) === '1' && p.hold_reason ? `<div style="font-size:11px;color:#9ab0ae;margin-top:3px;">${escHtml(p.hold_reason)}</div>` : ''}</td>
       <td><div class="actions-cell">${actions}</div></td>
     </tr>`;
   }).join('');
@@ -341,14 +386,14 @@ function renderCoverageList(providerId) {
   const list = document.getElementById('coverage-list');
   list.innerHTML = items.length
     ? items.map(c => {
-        const valueDisplay = c.coverage_type === 'Percentage' ? `${Number(c.coverage_value)}%` : `â‚±${Number(c.coverage_value).toFixed(2)}`;
+        const valueDisplay = c.coverage_type === 'Percentage' ? `${Number(c.coverage_value)}%` : `₱${Number(c.coverage_value).toFixed(2)}`;
         return `<div class="req-row">
           <div class="req-name">${escHtml(c.description)}<br/><span class="req-notes">${escHtml(c.notes || '')}</span></div>
           <div>${valueDisplay}</div>
           <a href="?remove_coverage=${c.id}&provider_id=${providerId}" class="btn-sm btn-red" onclick="return confirm('Remove ${escAttr(c.description)}?')">Remove</a>
         </div>`;
       }).join('')
-    : `<div class="req-empty">No coverage items yet â€” add one below.</div>`;
+    : `<div class="req-empty">No coverage items yet — add one below.</div>`;
 }
 
 function escHtml(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // private_telecare/booking/step1_details.php
 // Step 1 of 4: the patient describes their concern in their own words.
 // The system then recommends a department (and doctors) in step 2.
@@ -94,13 +94,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$page_title = 'Book Appointment â€” TELE-CARE';
+$page_title = 'Book Appointment — TELE-CARE';
 $active_nav = 'visits';
 require_once __DIR__ . '/../../includes/header.php';
 echo booking_wizard_css();
 ?>
 <style>
-.concern-box{width:100%;box-sizing:border-box;min-height:140px;resize:vertical;padding:.85rem 1rem;border:1.5px solid rgba(36,68,65,0.15);border-radius:14px;font-family:'Poppins',sans-serif;font-size:.95rem;line-height:1.5;color:var(--green)}
+.concern-box{width:100%;box-sizing:border-box;min-height:140px;resize:vertical;padding:.85rem 1rem;border:1.5px solid rgba(36,68,65,0.15);border-radius:14px;font-family:'DM Sans',sans-serif;font-size:.95rem;line-height:1.5;color:var(--green)}
 .concern-box:focus{outline:none;border-color:var(--red)}
 .concern-meta{display:flex;justify-content:space-between;gap:1rem;margin-top:.45rem;font-size:.72rem;color:var(--muted)}
 .concern-tips{margin-top:.9rem;font-size:.78rem;color:var(--green);background:rgba(36,68,65,.04);border-radius:12px;padding:.7rem .9rem;line-height:1.55}
@@ -142,7 +142,7 @@ echo booking_wizard_css();
     <div class="wiz-card">
       <h3>2. Upload Past Medical Document <span style="font-weight:400;font-size:0.72rem;text-transform:none;">(optional, up to 5 images)</span></h3>
       <div class="upload-box" id="upload-box">
-        <div id="upload-label">Upload a prescription or lab result â€” <strong>image files only</strong> (JPG, PNG, WEBP). You can select up to 5. We'll scan them automatically so they're on file for the doctor.</div>
+        <div id="upload-label">Upload a prescription or lab result — <strong>image files only</strong> (JPG, PNG, WEBP). You can select up to 5. We'll scan them automatically so they're on file for the doctor.</div>
         <input type="file" name="medical_doc[]" id="medical-doc-input" accept="image/*" multiple/>
         <div id="file-list" class="file-list"></div>
       </div>
@@ -164,7 +164,7 @@ concernEl.addEventListener('input', () => {
 // The recommendation can take a few seconds: show progress and stop double submits.
 document.getElementById('step1-form').addEventListener('submit', () => {
   const b = document.getElementById('go-btn');
-  setTimeout(() => { b.disabled = true; b.textContent = 'Finding the right doctorâ€¦'; }, 0);
+  setTimeout(() => { b.disabled = true; b.textContent = 'Finding the right doctor…'; }, 0);
 });
 
 const docInput = document.getElementById('medical-doc-input');
@@ -196,7 +196,7 @@ function renderFileList(warnMsg) {
 
     const remove = document.createElement('span');
     remove.className = 'fremove';
-    remove.textContent = 'âœ•';
+    remove.textContent = '✕';
     remove.title = 'Remove';
     remove.addEventListener('click', () => {
       selectedFiles.splice(idx, 1);
@@ -246,4 +246,3 @@ docInput.addEventListener('change', () => {
 <?php require_once __DIR__ . '/../../includes/nav.php'; ?>
 </body>
 </html>
-
