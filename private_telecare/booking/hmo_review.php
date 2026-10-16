@@ -10,14 +10,17 @@ if (!$case) { $_SESSION['toast_error'] = 'HMO booking not found.'; header('Locat
 if ($case['appt_status'] === 'Cancelled') { header('Location: router.php?page=booking/confirmed&appt_id=' . $appt_id); exit; }
 
 $docs = hmo_docs_for($conn, $appt_id);
-$hasCard = false; $hasLoaDoc = false;
-foreach ($docs as $d) { if ($d['doc_type'] === 'card') $hasCard = true; if ($d['doc_type'] === 'loa') $hasLoaDoc = true; }
+$hasLoaDoc = false; $have = [];
+foreach ($docs as $d) { $have[$d['doc_type']] = true; if ($d['doc_type'] === 'loa') $hasLoaDoc = true; }
+$rules = hmo_rules_for($conn, (string)$case['hmo_provider']);          // documents this HMO requires (Admin > HMO > Rules)
+$missing = array_values(array_filter($rules['required_docs'], fn($k) => empty($have[$k])));
+$hasCard = !$missing;
 $hasLoa = trim((string)$case['loa_number']) !== '';
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'submit') {
     if (!hmo_pat_csrf_ok()) $errors[] = 'Your session expired. Please try again.';
-    elseif (!$hasCard)      $errors[] = 'Please upload your HMO card or membership proof first.';
+    elseif ($missing)       $errors[] = 'Please upload: ' . implode(', ', array_map(fn($k) => HMO_DOC_TYPES[$k] ?? $k, $missing)) . '.';
     else {
         $u = $conn->prepare("UPDATE appointment_hmo SET patient_submitted_at = NOW(), patient_updated_at = NOW() WHERE appointment_id = ?");
         $u->bind_param('i', $appt_id); $u->execute();
@@ -76,7 +79,7 @@ echo hmo_patient_css();
       <li><span><b><?= $e(HMO_DOC_TYPES[$d['doc_type']] ?? 'Document') ?></b> <span class="hp-muted">— <?= $e($d['original_name']) ?></span></span></li>
     <?php endforeach; ?></ul>
     <?php endif; ?>
-    <?php if (!$hasCard): ?><div class="hp-flash no" style="margin-top:.6rem">An HMO card or membership proof is required.</div><?php endif; ?>
+    <?php if ($missing): ?><div class="hp-flash no" style="margin-top:.6rem">Still needed: <?= $e(implode(', ', array_map(fn($k) => HMO_DOC_TYPES[$k] ?? $k, $missing))) ?>.</div><?php endif; ?>
     <?php if ($hasLoa && !$hasLoaDoc): ?><div class="hp-flash wait" style="margin-top:.6rem">You entered an LOA number. Uploading the LOA itself helps the clinic accept it faster.</div><?php endif; ?>
     <div class="hp-actions"><a class="wiz-btn ghost" href="router.php?page=booking/hmo_documents&amp;appt_id=<?= $appt_id ?>">Add or change documents</a></div>
   </div>

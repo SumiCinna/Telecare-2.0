@@ -151,7 +151,7 @@ $fee_fmt   = '₱' . number_format($fee, 2);
 $doc_name  = 'Dr. ' . $e($appt['doctor_name']);
 $hmoMap    = booking_hmo_providers($conn);   // name => license no.
 $hmoList   = array_merge(array_keys($hmoMap), ['Other']);
-$hmoHolds  = booking_hmo_holds($conn);       // HMOs the clinic put on hold: shown disabled, not accepted
+$hmoHolds  = hmo_unavailable($conn, (int)$appt['doctor_id']);   // name => why it can't be used (suspended / no teleconsult / doctor not listed)
 $dobFmt    = !empty($p['date_of_birth']) ? (new DateTime($p['date_of_birth']))->format('M j, Y') : '';
 $apptWhen  = (new DateTime($appt['appointment_date']))->format('M j, Y') . ' at ' . date('g:i A', strtotime($appt['appointment_time']));
 $defPhone  = (string)($appt['patient_phone'] ?? '');
@@ -454,11 +454,11 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
               <option value="">Select your HMO</option>
               <?php foreach ($hmoList as $hp): ?>
                 <?php $held = isset($hmoHolds[$hp]); ?>
-                <option value="<?= $e($hp) ?>" data-lic="<?= $e($hmoMap[$hp] ?? '') ?>" <?= $held ? 'disabled' : '' ?> <?= (!$held && $isRepost && ($_POST['hmo_provider'] ?? '') === $hp) ? 'selected' : '' ?>><?= $e($hp) ?><?= $held ? ' — not accepted right now' : '' ?></option>
+                <option value="<?= $e($hp) ?>" data-lic="<?= $e($hmoMap[$hp] ?? '') ?>" <?= $held ? 'disabled' : '' ?> <?= (!$held && $isRepost && ($_POST['hmo_provider'] ?? '') === $hp) ? 'selected' : '' ?>><?= $e($hp) ?><?= $held ? ' — ' . $e($hmoHolds[$hp]) : '' ?></option>
               <?php endforeach; ?>
             </select>
             <div class="lic-line" id="h-lic" style="display:none;"></div>
-            <?php if ($hmoHolds): ?><div class="cov-sub" style="margin-top:.4rem;">HMOs marked "not accepted right now" can't be used for booking at the moment. Please pick another HMO or payment method.</div><?php endif; ?>
+            <?php if ($hmoHolds): ?><div class="cov-sub" style="margin-top:.4rem;">HMOs marked with a reason can't be used for this booking. Please pick another HMO or payment method.</div><?php endif; ?>
           </div>
           <div id="h-other-wrap" style="display:none;">
             <label class="form-label" for="h-other"><span class="req">*</span> HMO name</label>

@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/booking_helpers.php';
 
 $provMap = booking_hmo_providers($conn);
-$holds   = booking_hmo_holds($conn);
+$holds   = hmo_unavailable($conn);   // suspended or teleconsultation not offered
 // Teleconsultation coverage the clinic has confirmed (Admin > HMO > Coverage), by provider name.
 $cov = [];
 try {
@@ -63,11 +63,11 @@ echo hmo_patient_css();
         <?php if (!empty($cov[$name])): foreach ($cov[$name] as $c): ?>
           <br/><span class="hp-muted">✓ <?= $e($c['description']) ?> — <?= $c['coverage_type'] === 'Percentage' ? $e(rtrim(rtrim(number_format((float)$c['coverage_value'], 2), '0'), '.')) . '%' : '₱' . $e(number_format((float)$c['coverage_value'], 2)) ?></span>
         <?php endforeach; endif; ?></span>
-        <?php if (isset($holds[$name])): ?><span class="hp-pill no">Not accepted right now</span><?php else: ?><span class="hp-pill ok">Accepted</span><?php endif; ?>
+        <?php if (isset($holds[$name])): ?><span class="hp-pill no"><?= $e(ucfirst($holds[$name])) ?></span><?php else: ?><span class="hp-pill ok">Accepted</span><?php endif; ?>
       </li>
     <?php endforeach; ?>
     </ul>
-    <p class="hp-muted">Coverage details appear only where the clinic has confirmed them. Otherwise the HMO decides at approval. "Not accepted right now" means the clinic has paused that HMO.</p>
+    <p class="hp-muted">Coverage details appear only where the clinic has confirmed them. Otherwise the HMO decides at approval. A red label means that HMO can't be used at the moment (paused by the clinic or teleconsultation not offered).</p>
   </div>
 
   <?php if ($docs): ?>

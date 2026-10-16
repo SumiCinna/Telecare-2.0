@@ -275,6 +275,23 @@ require_once 'includes/header.php';
   </form>
 </div>
 
+<?php if (!empty($hmo_counts['ok'])): ?>
+<div class="card" style="padding:16px 20px;margin-bottom:18px">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+    <div style="font-size:14px;font-weight:800">HMO workload</div>
+    <a href="hmo_queue.php" class="btn-primary btn-sm">Open HMO queue</a>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px">
+    <a href="hmo_queue.php?status=Pending" style="text-decoration:none"><div class="stat-num" style="color:#B54708"><?= (int)$hmo_counts['new'] ?></div><div class="stat-lbl">New HMO requests</div></a>
+    <a href="hmo_queue.php?status=Open" style="text-decoration:none"><div class="stat-num" style="color:var(--blue)"><?= (int)$hmo_counts['pending'] ?></div><div class="stat-lbl">Pending verification</div></a>
+    <a href="hmo_queue.php?status=Action+Required" style="text-decoration:none"><div class="stat-num" style="color:var(--red)"><?= (int)$hmo_counts['action'] ?></div><div class="stat-lbl">Action required</div></a>
+    <a href="hmo_queue.php?status=Approved" style="text-decoration:none"><div class="stat-num" style="color:#067647"><?= (int)$hmo_counts['approved'] ?></div><div class="stat-lbl">Approved</div></a>
+    <a href="hmo_queue.php?status=Not+Approved" style="text-decoration:none"><div class="stat-num" style="color:var(--primary-dark)"><?= (int)$hmo_counts['rejected'] ?></div><div class="stat-lbl">Not approved</div></a>
+    <a href="hmo_queue.php?status=Open" style="text-decoration:none"><div class="stat-num"><?= (int)$hmo_counts['upcoming_open'] ?></div><div class="stat-lbl">Upcoming, unresolved</div></a>
+  </div>
+</div>
+<?php endif; ?>
+
 <div class="stat-grid">
   <div class="stat-card">
     <div class="stat-num" style="color:var(--blue)"><?= $stat_today ?></div>

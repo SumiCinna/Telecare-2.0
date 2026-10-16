@@ -49,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $docs = hmo_docs_for($conn, $appt_id);
 $hasLoa = trim((string)$case['loa_number']) !== '';
+$rules = hmo_rules_for($conn, (string)$case['hmo_provider']);
 $csrf = hmo_pat_csrf();
 $e = fn($x) => htmlspecialchars((string)$x, ENT_QUOTES);
 
@@ -70,10 +71,11 @@ echo hmo_patient_css();
   <div class="hp-card">
     <h3>What the clinic needs</h3>
     <ul class="hp-muted" style="margin:0 0 0 1rem;padding:0">
-      <li><b>HMO card / membership proof</b> (front and back) — required</li>
-      <li><b>Valid ID</b>, if your HMO asks for it</li>
+      <?php foreach (['card' => 'HMO card / membership proof (front and back)', 'id' => 'Valid ID'] as $k => $lbl): ?>
+      <li><b><?= $e($lbl) ?></b> — <?= in_array($k, $rules['required_docs'], true) ? 'required by ' . $e($case['hmo_provider']) : 'if your HMO asks for it' ?></li>
+      <?php endforeach; ?>
       <li><b>LOA / LOG / eLOA</b> — <?= $hasLoa ? 'you entered an LOA number, so please upload the LOA itself. The clinic checks it and accepts it; it does not need to ask your HMO again' : "if your HMO already gave you one. If you don't have it yet, the clinic asks your HMO for approval" ?></li>
-      <li><b>Doctor's request / referral</b>, if your HMO needs one</li>
+      <li><b>Doctor's request / referral</b> — <?= in_array('referral', $rules['required_docs'], true) ? 'required by ' . $e($case['hmo_provider']) : 'if your HMO needs one' ?></li>
     </ul>
     <p class="hp-muted" style="margin:.6rem 0 0">JPG, PNG, WEBP or PDF, up to 5 MB each. Only you and the clinic staff can open them.</p>
   </div>
