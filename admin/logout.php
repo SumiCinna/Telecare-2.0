@@ -69,7 +69,7 @@ $admin_name = $_SESSION['admin_name'] ?? 'Admin';
     <form method="POST">
       <button type="submit" name="confirm_logout" class="btn-logout">Yes, Log Me Out</button>
     </form>
-    <a href="dashboard.php" class="btn-cancel">Cancel Go Back</a>
+    <a href="dashboard.php" class="btn-cancel">Cancel? Go Back</a>
   </div>
 </body>
 </html>
