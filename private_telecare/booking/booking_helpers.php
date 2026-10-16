@@ -3,6 +3,8 @@
 // Shared constants + guards for the multi-step booking wizard.
 // Included by every step*.php / payment.php / success.php / confirmed.php.
 
+require_once __DIR__ . '/hmo_config_helpers.php';
+
 const BOOKING_DEPARTMENTS = [
     'General Medicine / General Practice' => [
         'desc' => 'Common illnesses, symptoms, initial assessment, prescriptions, referrals',
@@ -568,7 +570,21 @@ function booking_save_coverage(mysqli $conn, int $patient_id, int $appt_id, stri
         $d['loa']       = booking_clean($in['loa_number'] ?? '', 60);
         if (!in_array($sel, booking_hmo_provider_list($conn), true))           $errors[] = 'Select your HMO provider.';
         if ($sel === 'Other' && $other === '')                                 $errors[] = 'Enter the name of your HMO provider.';
-        if ($sel !== 'Other' && $sel !== '' && booking_hmo_is_on_hold($conn, $sel)) $errors[] = $sel . ' is not accepted by the clinic at this time. Please choose another HMO or another payment method.';
+        if ($sel !== 'Other' && $sel !== '') {
+            $dq = $conn->prepare('SELECT doctor_id FROM appointments WHERE id = ? AND patient_id = ?');
+            $dq->bind_param('ii', $appt_id, $patient_id); $dq->execute();
+            $docId = (int)($dq->get_result()->fetch_assoc()['doctor_id'] ?? 0);
+            $na = hmo_unavailable($conn, $docId);
+            if (isset($na[$sel])) $errors[] = $sel . ' is ' . $na[$sel] . '. Please choose another HMO or another payment method.';
+            // Provider-specific rules set by the admin (Admin > HMO > Rules)
+            $rl = hmo_rules_for($conn, $sel);
+            if ($rl['loa_requirement'] === 'required' && $d['loa'] === '') $errors[] = $sel . ' requires an LOA / approval number before booking.';
+            if ($rl['loa_requirement'] === 'not_applicable') $d['loa'] = '';
+            if (!in_array($d['service'], $rl['consult_types'], true)) $errors[] = $sel . ' covers: ' . implode(', ', $rl['consult_types']) . '.';
+            foreach (['company' => 'Company / employer', 'plan' => 'Plan / account type'] as $fk => $fl) {
+                if (in_array($fk, $rl['member_fields'], true) && $d[$fk] === '') $errors[] = $fl . ' is required for ' . $sel . '.';
+            }
+        }
         if ($d['mid'] === '')                                                  $errors[] = 'HMO Member ID / Card No. is required.';
         if ($d['principal'] === '')                                            $errors[] = 'Principal member name is required.';
         if (!in_array($d['service'], ['Online Consultation', 'Follow-up Consultation'], true)) $errors[] = 'Select the type of consultation.';

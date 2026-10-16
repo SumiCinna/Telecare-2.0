@@ -63,6 +63,16 @@ $isCancelled = $case['appt_status'] === 'Cancelled';
 $onHold  = array_key_exists((string)$case['hmo_provider'], booking_hmo_holds($conn));   // clinic paused this HMO (e.g. unpaid bills)
 $holdWhy = $onHold ? (booking_hmo_holds($conn)[$case['hmo_provider']] ?? '') : '';
 $hasLoa  = trim((string)$case['loa_number']) !== '';
+$canVerify = hmo_staff_can($conn, (int)$staff_id, 'can_verify');
+$canStatus = hmo_staff_can($conn, (int)$staff_id, 'can_update_status');
+$canDocs   = hmo_staff_can($conn, (int)$staff_id, 'can_view_documents');
+$rules     = hmo_rules_for($conn, (string)$case['hmo_provider']);          // provider-specific rules from Admin > HMO > Rules
+$ruleMethod = ['portal' => 'HMO portal', 'api' => 'Other', 'phone' => 'Phone call to HMO', 'email' => 'Email with HMO'][$rules['verification_method']] ?? '';
+$defFrom  = $rules['validity_days'] ? date('Y-m-d') : '';
+$defUntil = $rules['validity_days'] ? date('Y-m-d', strtotime('+' . (int)$rules['validity_days'] . ' days')) : '';
+$agents = [];
+try { $aq = $conn->prepare("SELECT c.* FROM hmo_provider_contacts c JOIN hmo_providers p ON p.id = c.provider_id WHERE p.name = ? ORDER BY c.is_primary DESC, c.agent_name");
+      $aq->bind_param('s', $case['hmo_provider']); $aq->execute(); $agents = $aq->get_result()->fetch_all(MYSQLI_ASSOC); } catch (Throwable $ex) { }
 $apptWhen = date('M j, Y', strtotime($case['appointment_date'])) . ' at ' . date('g:i A', strtotime($case['appointment_time']));
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -72,6 +82,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sid    = (int)$staff_id;
 
     if ($isCancelled && $action !== 'note') $fail('This appointment was cancelled, so the HMO case is closed.');
+    $needPerm = ['start' => 'can_verify', 'contact' => 'can_verify', 'instruct' => 'can_update_status', 'approve' => 'can_update_status',
+                 'accept_loa' => 'can_update_status', 'reject' => 'can_update_status'];
+    if (isset($needPerm[$action]) && !hmo_staff_can($conn, $sid, $needPerm[$action]))
+        $fail('You do not have permission for this action (' . HMO_PERMS[$needPerm[$action]] . '). Ask an admin.');
     if ($onHold && in_array($action, ['approve', 'accept_loa'], true))
         $fail($case['hmo_provider'] . ' is on hold, so its HMO payment is not accepted. Use "Not approved" or "Ask patient to act" instead.');
 
@@ -326,7 +340,9 @@ require_once 'includes/header.php';
       <div class="hc-full"><div class="k">Patient's concern</div><div class="v"><?= $e($case['reason']) ?></div></div>
     </div>
     <h4>Documents</h4>
-    <?php if (!$docs): ?>
+    <?php if (!$canDocs): ?>
+      <div style="font-size:12px;color:var(--muted)"><?= count($docs) ?> document(s) uploaded. You don't have permission to open patient documents. Ask an admin.</div>
+    <?php elseif (!$docs): ?>
       <div style="font-size:12px;color:var(--muted)">The patient has not uploaded any documents<?= $case['patient_submitted_at'] ? '' : ' (and has not submitted the booking yet)' ?>. You can ask for them under "Ask patient to act".</div>
     <?php else: ?>
       <?php foreach ($docs as $d): ?>
@@ -344,23 +360,26 @@ require_once 'includes/header.php';
     <?php if ($isCancelled): ?>
       <div style="font-size:12px;color:var(--muted)">Closed: the appointment was cancelled.</div>
     <?php else: ?>
-    <?php if ($cur === 'Pending'): ?>
+    <?php if ($cur === 'Pending' && $canVerify): ?>
       <form method="POST" style="margin-bottom:14px"><input type="hidden" name="csrf" value="<?= $e($csrf) ?>"/><input type="hidden" name="id" value="<?= $appt_id ?>"/><input type="hidden" name="action" value="start"/>
         <button class="btn-primary">Start verification</button>
         <span style="font-size:11.5px;color:var(--muted);margin-left:8px">Marks the case "In verification". Any staff member can work on any case; every action is recorded with the staff name.</span></form>
     <?php endif; ?>
 
     <div class="hc-tabs">
-      <?php if ($hasLoa): ?><button type="button" class="hc-tabbtn active" data-pane="p-loa">Accept LOA</button><?php endif; ?>
-      <button type="button" class="hc-tabbtn <?= $hasLoa ? '' : 'active' ?>" data-pane="p-contact"><?= $hasLoa ? 'Contact HMO (if LOA is doubtful)' : 'Contact HMO' ?></button>
+      <?php if ($hasLoa && $canStatus): ?><button type="button" class="hc-tabbtn active" data-pane="p-loa">Accept LOA</button><?php endif; ?>
+      <?php if ($canVerify): ?><button type="button" class="hc-tabbtn <?= ($hasLoa && $canStatus) ? '' : 'active' ?>" data-pane="p-contact"><?= $hasLoa ? 'Contact HMO (if LOA is doubtful)' : 'Contact HMO' ?></button><?php endif; ?>
+      <?php if ($canStatus): ?>
       <button type="button" class="hc-tabbtn" data-pane="p-approve">Approve</button>
       <button type="button" class="hc-tabbtn" data-pane="p-reject">Not approved</button>
       <button type="button" class="hc-tabbtn" data-pane="p-ask">Ask patient to act</button>
+      <?php endif; ?>
       <button type="button" class="hc-tabbtn" data-pane="p-note">Note</button>
     </div>
 
     <!-- 4. Contact HMO -->
-    <?php if ($hasLoa): ?>
+    <?php if (!$canVerify && !$canStatus): ?><div class="hc-hint">Your account can only add notes on HMO cases. Ask an admin for more permissions.</div><?php endif; ?>
+    <?php if ($hasLoa && $canStatus): ?>
     <!-- LOA already given: the HMO approved it, the clinic only accepts it -->
     <div class="hc-pane active" id="p-loa">
       <div class="hc-hint">The patient already has an LOA (<b><?= $e($case['loa_number']) ?></b>), so there is nothing to request from the HMO.
@@ -371,8 +390,8 @@ require_once 'includes/header.php';
       <form method="POST" class="hc-form">
         <input type="hidden" name="csrf" value="<?= $e($csrf) ?>"/><input type="hidden" name="id" value="<?= $appt_id ?>"/><input type="hidden" name="action" value="accept_loa"/>
         <div class="hc-row2">
-          <div><label class="f-label">Valid from (optional)</label><input class="f-input" type="date" name="valid_from"/></div>
-          <div><label class="f-label">Valid until (optional)</label><input class="f-input" type="date" name="valid_until"/></div>
+          <div><label class="f-label">Valid from (optional)</label><input class="f-input" type="date" name="valid_from" value="<?= $e($defFrom) ?>"/></div>
+          <div><label class="f-label">Valid until (optional)</label><input class="f-input" type="date" name="valid_until" value="<?= $e($defUntil) ?>"/></div>
           <div><label class="f-label">Patient's share / co-pay ₱ (optional)</label><input class="f-input" type="number" step="0.01" min="0" name="patient_share"/></div>
           <div><label class="f-label">Approved service</label><input class="f-input" name="approved_service" maxlength="150" value="<?= $e($case['service_type']) ?>"/></div>
         </div>
@@ -383,7 +402,15 @@ require_once 'includes/header.php';
     </div>
     <?php endif; ?>
 
-    <div class="hc-pane <?= $hasLoa ? '' : 'active' ?>" id="p-contact">
+    <?php if ($canVerify): ?>
+    <div class="hc-pane <?= ($hasLoa && $canStatus) ? '' : 'active' ?>" id="p-contact">
+      <?php if ($agents): ?>
+      <div class="hc-hint"><b>HMO agents on file:</b></div>
+      <?php foreach ($agents as $ag): ?>
+        <div class="hc-contact"><b><?= $e($ag['agent_name']) ?></b><?= $ag['role_title'] ? ' · ' . $e($ag['role_title']) : '' ?><?= $ag['is_primary'] ? ' · <span style="color:var(--primary);font-weight:700">Primary</span>' : '' ?><br/>
+          <?= $e(implode(' · ', array_filter([$ag['phone'], $ag['email'], $ag['channel']]))) ?><?= $ag['notes'] ? '<br/><span style="color:var(--muted)">' . $e($ag['notes']) . '</span>' : '' ?></div>
+      <?php endforeach; endif; ?>
+      <div class="hc-hint">How this HMO is verified (set by admin): <b><?= $e(HMO_RULE_METHODS[$rules['verification_method']] ?? '') ?></b>.</div>
       <?php if ($case['hmo_contact_person'] || $case['hmo_phone'] || $case['hmo_email']): ?>
       <div class="hc-hint">HMO contact on file (Admin &gt; HMO):
         <?= $e(implode(' · ', array_filter([$case['hmo_contact_person'], $case['hmo_phone'], $case['hmo_email']]))) ?></div>
@@ -420,7 +447,10 @@ require_once 'includes/header.php';
       <?php endif; ?>
     </div>
 
+    <?php endif; ?>
+
     <!-- 5. Approve -->
+    <?php if ($canStatus): ?>
     <div class="hc-pane" id="p-approve">
       <div class="hc-hint">Only mark this approved after the HMO confirmed it. The patient is notified.</div>
       <?php if ($onHold): ?><div class="hc-flash no" style="margin:0">Cannot approve: <?= $e($case['hmo_provider']) ?> is on hold.</div><?php else: ?>
@@ -429,15 +459,15 @@ require_once 'includes/header.php';
         <div class="hc-row2">
           <div><label class="f-label">Approval / LOA no.</label><input class="f-input" name="approval_loa_no" maxlength="60" value="<?= $e($case['approval_loa_no'] ?? '') ?>" placeholder="If one was issued"/></div>
           <div><label class="f-label">Approved service</label><input class="f-input" name="approved_service" maxlength="150" value="<?= $e($case['approved_service'] ?? $case['service_type']) ?>"/></div>
-          <div><label class="f-label">Valid from</label><input class="f-input" type="date" name="valid_from" value="<?= $e($case['valid_from'] ?? '') ?>"/></div>
-          <div><label class="f-label">Valid until</label><input class="f-input" type="date" name="valid_until" value="<?= $e($case['valid_until'] ?? '') ?>"/></div>
+          <div><label class="f-label">Valid from</label><input class="f-input" type="date" name="valid_from" value="<?= $e($case['valid_from'] ?? $defFrom) ?>"/></div>
+          <div><label class="f-label">Valid until</label><input class="f-input" type="date" name="valid_until" value="<?= $e($case['valid_until'] ?? $defUntil) ?>"/></div>
           <div><label class="f-label">HMO covers (₱)</label><input class="f-input" type="number" step="0.01" min="0" name="hmo_coverage_amount" value="<?= $e($case['hmo_coverage_amount'] ?? '') ?>"/></div>
           <div><label class="f-label">Patient's share / co-pay (₱)</label><input class="f-input" type="number" step="0.01" min="0" name="patient_share" value="<?= $e($case['patient_share'] ?? '') ?>"/></div>
         </div>
         <label class="f-label">Confirmed benefit (optional)</label>
         <input class="f-input" name="benefit_note" maxlength="255" value="<?= $e($case['benefit_note'] ?? '') ?>" placeholder="e.g. Teleconsultation covered, 1 visit"/>
         <label class="f-label">How was it verified?</label>
-        <select name="verification_method" class="f-input" required><option value="">Choose…</option><?php foreach (HMO_VERIFY_METHODS as $m): ?><option><?= $e($m) ?></option><?php endforeach; ?></select>
+        <select name="verification_method" class="f-input" required><option value="">Choose…</option><?php foreach (HMO_VERIFY_METHODS as $m): ?><option <?= $m === $ruleMethod ? 'selected' : '' ?>><?= $e($m) ?></option><?php endforeach; ?></select>
         <div class="hc-hint">Recorded under <?= $e($staff_name) ?>.</div>
         <button class="btn-submit hc-btn-green" style="width:auto;padding:9px 18px">Mark as approved</button>
       </form>
@@ -452,7 +482,7 @@ require_once 'includes/header.php';
         <label class="f-label">Reason it was not approved</label>
         <input class="f-input" name="decision_reason" maxlength="255" required placeholder="e.g. Coverage expired, member not found"/>
         <label class="f-label">How was it verified?</label>
-        <select name="verification_method" class="f-input" required><option value="">Choose…</option><?php foreach (HMO_VERIFY_METHODS as $m): ?><option><?= $e($m) ?></option><?php endforeach; ?></select>
+        <select name="verification_method" class="f-input" required><option value="">Choose…</option><?php foreach (HMO_VERIFY_METHODS as $m): ?><option <?= $m === $ruleMethod ? 'selected' : '' ?>><?= $e($m) ?></option><?php endforeach; ?></select>
         <button class="btn-submit hc-btn-red" style="width:auto;padding:9px 18px" onclick="return confirm('Mark as NOT approved and notify the patient?')">Mark as not approved</button>
       </form>
     </div>
@@ -467,6 +497,8 @@ require_once 'includes/header.php';
         <button class="btn-submit hc-btn-orange" style="width:auto;padding:9px 18px">Notify patient</button>
       </form>
     </div>
+    <?php endif; ?>
+
     <?php endif; ?>
 
     <!-- Note (always) -->
