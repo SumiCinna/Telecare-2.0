@@ -369,6 +369,11 @@ td:first-child {
     color:var(--hmo-muted);
     font-size:10px
 }
+.provider-pagination {
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
 .table-footer button {
     border:1px solid var(--hmo-border);
     background:white;

@@ -154,11 +154,6 @@ function hmo_admin_head(string $title, string $activeNav, string $actions = ''):
     </div>
   </header>
   <div class="hmo-content">
-    <div class="hx-tabs">
-      <?php foreach (hmo_admin_nav() as $k => [$href, $label]): ?>
-        <a class="hx-tab <?= $k === $activeNav ? 'active' : '' ?>" href="<?= h($href) ?>"><?= h($label) ?></a>
-      <?php endforeach; ?>
-    </div>
 <?php
 }
 function hmo_admin_foot(): void { ?>

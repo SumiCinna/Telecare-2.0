@@ -2,10 +2,16 @@
 const ALL_PROVIDERS = window.HMO_PROVIDER_DATA || [];
 const COVERAGE_BY_PROVIDER = window.HMO_COVERAGE_DATA || {};
 const OPEN_COVERAGE_FOR = window.HMO_OPEN_COVERAGE_FOR || null;
+const PAGE_SIZE = 10;
 
 const tableBody = document.getElementById('providersTableBody');
 const detailPanel = document.getElementById('providerDetail');
+const rowCountEl = document.getElementById('rowCount');
+const pageInfoEl = document.getElementById('providerPageInfo');
+const prevPageButton = document.getElementById('providerPrevPage');
+const nextPageButton = document.getElementById('providerNextPage');
 let selectedProviderId = ALL_PROVIDERS.length ? Number(ALL_PROVIDERS[0].id) : null;
+let currentPage = 1;
 
 function escapeHtml(value) {
     return String(value ?? '')
@@ -86,11 +92,35 @@ function getFilteredProviders() {
     });
 }
 
+function getPageCount(totalItems) {
+    return Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+}
+
+function renderPagination(totalItems) {
+    const totalPages = getPageCount(totalItems);
+    currentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+    if (pageInfoEl) {
+        pageInfoEl.textContent = `Page ${currentPage} of ${totalPages}`;
+    }
+    if (prevPageButton) {
+        prevPageButton.disabled = currentPage <= 1;
+    }
+    if (nextPageButton) {
+        nextPageButton.disabled = currentPage >= totalPages;
+    }
+}
+
 function renderProviderRows() {
     const providers = getFilteredProviders();
+    const totalPages = getPageCount(providers.length);
+    currentPage = Math.min(Math.max(1, currentPage), totalPages);
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const pageProviders = providers.slice(start, start + PAGE_SIZE);
+
     document.getElementById('emptyState').style.display = providers.length ? 'none' : 'block';
 
-    tableBody.innerHTML = providers.map((provider) => {
+    tableBody.innerHTML = pageProviders.map((provider) => {
         const coverage = COVERAGE_BY_PROVIDER[provider.id] || [];
         const isSelected = Number(provider.id) === selectedProviderId;
         const initials = escapeHtml((provider.name || '?').slice(0, 1).toUpperCase());
@@ -110,7 +140,12 @@ function renderProviderRows() {
             </tr>`;
     }).join('');
 
-    document.getElementById('rowCount').textContent = `Showing ${providers.length} of ${ALL_PROVIDERS.length} providers`;
+    const startRow = providers.length ? start + 1 : 0;
+    const endRow = Math.min(start + PAGE_SIZE, providers.length);
+    rowCountEl.textContent = providers.length
+        ? `Showing ${startRow}-${endRow} of ${providers.length} filtered providers`
+        : 'Showing 0 providers';
+    renderPagination(providers.length);
     updateMetrics();
 }
 
@@ -244,9 +279,24 @@ function holdProvider(id) {
     document.getElementById('hold-form').submit();
 }
 
-document.getElementById('providerSearch').addEventListener('input', renderProviderRows);
-document.getElementById('statusFilter').addEventListener('change', renderProviderRows);
-document.getElementById('holdFilter').addEventListener('change', renderProviderRows);
+function resetAndRenderProviders() {
+    currentPage = 1;
+    renderProviderRows();
+}
+
+document.getElementById('providerSearch').addEventListener('input', resetAndRenderProviders);
+document.getElementById('statusFilter').addEventListener('change', resetAndRenderProviders);
+document.getElementById('holdFilter').addEventListener('change', resetAndRenderProviders);
+prevPageButton?.addEventListener('click', () => {
+    if (currentPage > 1) {
+        currentPage -= 1;
+        renderProviderRows();
+    }
+});
+nextPageButton?.addEventListener('click', () => {
+    currentPage += 1;
+    renderProviderRows();
+});
 document.querySelector('.mobile-menu')?.addEventListener('click', () => {
     document.querySelector('.sidebar')?.classList.toggle('mobile-open');
 });

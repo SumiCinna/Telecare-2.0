@@ -40,6 +40,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $csrf = hmo_admin_csrf();
 $provs = $conn->query("SELECT p.*, (SELECT COUNT(*) FROM hmo_coverage c WHERE c.provider_id = p.id) AS n_cov FROM hmo_providers p ORDER BY p.name")->fetch_all(MYSQLI_ASSOC);
+$perPage = 10;
+$page = max(1, (int)($_GET['page'] ?? 1));
+$totalProviders = count($provs);
+$totalPages = max(1, (int) ceil($totalProviders / $perPage));
+$page = min($page, $totalPages);
+$offset = ($page - 1) * $perPage;
+$pagedProvs = array_slice($provs, $offset, $perPage);
 $sel = null; foreach ($provs as $p) if ((int)$p['id'] === $id) $sel = $p;
 $rules = $sel ? hmo_rules_for($conn, $sel['name']) : null;
 $ruleLabels = ['required' => 'LOA required', 'optional' => 'LOA optional', 'not_applicable' => 'LOA not applicable'];
@@ -49,7 +56,7 @@ hmo_admin_head('Coverage & Authorization Rules', 'hmo-rules');
 <div class="hx-card"><h3>Rules are per provider</h3>
   <div class="sub">Each HMO has its own rules. They are enforced when the patient books (LOA, member fields, consultation type), when the patient submits documents, and shown to staff when they verify. Providers without saved rules use safe defaults (LOA optional, HMO card required).</div>
   <table class="hx-mini"><tr><th>Provider</th><th>Teleconsult</th><th>LOA</th><th>Required documents</th><th>Verified by</th><th>Validity</th><th>Rules</th><th></th></tr>
-  <?php foreach ($provs as $p): $r = hmo_rules_for($conn, $p['name']); ?>
+  <?php foreach ($pagedProvs as $p): $r = hmo_rules_for($conn, $p['name']); ?>
     <tr style="<?= (int)$p['id'] === $id ? 'background:rgba(195,54,67,.05)' : '' ?>">
       <td><b><?= h($p['name']) ?></b> <?= hmo_state_badge(hmo_provider_state($p)) ?></td>
       <td><?= (int)$p['teleconsult_available'] ? 'Yes' : '<span style="color:var(--red)">No</span>' ?></td>
@@ -57,8 +64,16 @@ hmo_admin_head('Coverage & Authorization Rules', 'hmo-rules');
       <td><?= h(implode(', ', array_map(fn($k) => HMO_RULE_DOCS[$k] ?? $k, $r['required_docs'])) ?: '—') ?></td>
       <td><?= h(HMO_RULE_METHODS[$r['verification_method']]) ?></td><td><?= $r['validity_days'] ? (int)$r['validity_days'] . ' days' : '—' ?></td>
       <td><?= $r['saved'] ? '<span class="badge badge-green">Configured</span>' : '<span class="badge badge-gray">Defaults</span>' ?></td>
-      <td><a class="btn-sm btn-edit" href="hmo_rules.php?id=<?= (int)$p['id'] ?>#form">Edit</a></td></tr>
+      <td><a class="btn-sm btn-edit" href="hmo_rules.php?id=<?= (int)$p['id'] ?>&page=<?= $page ?>#form">Edit</a></td></tr>
   <?php endforeach; ?></table>
+  <div class="table-footer" style="padding-top:14px">
+    <span>Showing <?= $totalProviders ? ($offset + 1) . '-' . min($offset + $perPage, $totalProviders) : 0 ?> of <?= $totalProviders ?> providers</span>
+    <div class="provider-pagination">
+      <a class="btn-sm btn-edit" href="?<?= h(http_build_query(array_filter(['id' => $id ?: null, 'page' => max(1, $page - 1)]))) ?>" <?= $page <= 1 ? 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:.5"' : '' ?>>Prev</a>
+      <span class="hx-muted">Page <?= $page ?> of <?= $totalPages ?></span>
+      <a class="btn-sm btn-edit" href="?<?= h(http_build_query(array_filter(['id' => $id ?: null, 'page' => min($totalPages, $page + 1)]))) ?>" <?= $page >= $totalPages ? 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:.5"' : '' ?>>Next</a>
+    </div>
+  </div>
 </div>
 
 <?php if ($sel): ?>
