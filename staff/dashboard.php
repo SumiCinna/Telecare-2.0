@@ -261,69 +261,77 @@ $rps = $conn->query("
 ");
 if ($rps) { while ($row = $rps->fetch_assoc()) { $recent_pos_sales[] = $row; } }
 
+// Topbar greeting (Asia/Manila so it matches the clinic's clock, not the server's)
+$__hour  = (int)(new DateTime('now', new DateTimeZone('Asia/Manila')))->format('G');
+$__greet = $__hour < 12 ? 'Good morning' : ($__hour < 18 ? 'Good afternoon' : 'Good evening');
+$topbar_eyebrow = $__greet . ', ' . $staff_name;
+$topbar_title   = "Here's what's happening in TELE-CARE today.";
+
 require_once 'includes/header.php';
 ?>
 
-<div style="display:flex;justify-content:flex-end;align-items:center;gap:0.6rem;margin-bottom:1rem;">
-  <form method="GET" style="display:flex;align-items:center;gap:0.5rem;">
-    <label for="graph-range" style="font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;">Graph Range</label>
-    <select id="graph-range" name="range" onchange="this.form.submit()" style="padding:0.42rem 0.7rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:10px;font-size:0.82rem;font-weight:600;color:var(--green);background:#fff;outline:none;cursor:pointer;">
-      <option value="week" <?= $range === 'week' ? 'selected' : '' ?>>Week</option>
-      <option value="month" <?= $range === 'month' ? 'selected' : '' ?>>Month</option>
-      <option value="year" <?= $range === 'year' ? 'selected' : '' ?>>Year</option>
-    </select>
-  </form>
+<div class="period-bar">
+  <span class="period-label">Period:</span>
+  <a href="?range=week"  class="period-pill <?= $range === 'week'  ? 'active' : '' ?>">Week</a>
+  <a href="?range=month" class="period-pill <?= $range === 'month' ? 'active' : '' ?>">Month</a>
+  <a href="?range=year"  class="period-pill <?= $range === 'year'  ? 'active' : '' ?>">Year</a>
 </div>
 
 <?php if (!empty($hmo_counts['ok'])): ?>
-<div class="card" style="padding:16px 20px;margin-bottom:18px">
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
-    <div style="font-size:14px;font-weight:800">HMO workload</div>
+<div class="card">
+  <div class="card-head" style="flex-wrap:wrap">
+    <div>
+      <div class="card-eyebrow">Verification</div>
+      <div class="card-title">HMO workload</div>
+    </div>
     <a href="hmo_queue.php" class="btn-primary btn-sm">Open HMO queue</a>
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px">
-    <a href="hmo_queue.php?status=Pending" style="text-decoration:none"><div class="stat-num" style="color:#B54708"><?= (int)$hmo_counts['new'] ?></div><div class="stat-lbl">New HMO requests</div></a>
-    <a href="hmo_queue.php?status=Open" style="text-decoration:none"><div class="stat-num" style="color:var(--blue)"><?= (int)$hmo_counts['pending'] ?></div><div class="stat-lbl">Pending verification</div></a>
-    <a href="hmo_queue.php?status=Action+Required" style="text-decoration:none"><div class="stat-num" style="color:var(--red)"><?= (int)$hmo_counts['action'] ?></div><div class="stat-lbl">Action required</div></a>
-    <a href="hmo_queue.php?status=Approved" style="text-decoration:none"><div class="stat-num" style="color:#067647"><?= (int)$hmo_counts['approved'] ?></div><div class="stat-lbl">Approved</div></a>
-    <a href="hmo_queue.php?status=Not+Approved" style="text-decoration:none"><div class="stat-num" style="color:var(--primary-dark)"><?= (int)$hmo_counts['rejected'] ?></div><div class="stat-lbl">Not approved</div></a>
-    <a href="hmo_queue.php?status=Open" style="text-decoration:none"><div class="stat-num"><?= (int)$hmo_counts['upcoming_open'] ?></div><div class="stat-lbl">Upcoming, unresolved</div></a>
+    <a href="hmo_queue.php?status=Pending" style="text-decoration:none"><div class="stat-lbl">New HMO requests</div><div class="stat-num" style="color:#B54708"><?= (int)$hmo_counts['new'] ?></div></a>
+    <a href="hmo_queue.php?status=Open" style="text-decoration:none"><div class="stat-lbl">Pending verification</div><div class="stat-num" style="color:var(--blue)"><?= (int)$hmo_counts['pending'] ?></div></a>
+    <a href="hmo_queue.php?status=Action+Required" style="text-decoration:none"><div class="stat-lbl">Action required</div><div class="stat-num" style="color:var(--red)"><?= (int)$hmo_counts['action'] ?></div></a>
+    <a href="hmo_queue.php?status=Approved" style="text-decoration:none"><div class="stat-lbl">Approved</div><div class="stat-num" style="color:#067647"><?= (int)$hmo_counts['approved'] ?></div></a>
+    <a href="hmo_queue.php?status=Not+Approved" style="text-decoration:none"><div class="stat-lbl">Not approved</div><div class="stat-num" style="color:#991B1B"><?= (int)$hmo_counts['rejected'] ?></div></a>
+    <a href="hmo_queue.php?status=Open" style="text-decoration:none"><div class="stat-lbl">Upcoming, unresolved</div><div class="stat-num"><?= (int)$hmo_counts['upcoming_open'] ?></div></a>
   </div>
 </div>
 <?php endif; ?>
 
 <div class="stat-grid">
-  <div class="stat-card">
-    <div class="stat-num" style="color:var(--blue)"><?= $stat_today ?></div>
+  <div class="stat-card kpi">
     <div class="stat-lbl">Today's Appointments</div>
+    <div class="stat-num"><?= $stat_today ?></div>
   </div>
-  <div class="stat-card">
-    <div class="stat-num" style="color:#d97706"><?= $stat_schedule_pending ?></div>
+  <div class="stat-card kpi">
     <div class="stat-lbl">Schedule Change Requests</div>
+    <div class="stat-num"><?= $stat_schedule_pending ?></div>
   </div>
-  <div class="stat-card">
-    <div class="stat-num" style="color:var(--green)"><?= $stat_patients ?></div>
+  <div class="stat-card kpi">
     <div class="stat-lbl">Total Patients</div>
+    <div class="stat-num"><?= $stat_patients ?></div>
   </div>
-  <div class="stat-card">
-    <div class="stat-num" style="color:var(--red)"><?= $stat_doctors ?></div>
+  <div class="stat-card kpi">
     <div class="stat-lbl">Active Doctors</div>
+    <div class="stat-num"><?= $stat_doctors ?></div>
   </div>
-  <div class="stat-card">
-    <div class="stat-num" style="color:#0d9488">₱<?= number_format($stat_total_collected, 2) ?></div>
+  <div class="stat-card kpi">
     <div class="stat-lbl">Total Revenue (Consults + POS)</div>
+    <div class="stat-num">₱<?= number_format($stat_total_collected, 2) ?></div>
   </div>
-  <div class="stat-card">
-    <div class="stat-num" style="color:#3F82E3">₱<?= number_format($stat_pos_collected, 2) ?></div>
+  <div class="stat-card kpi">
     <div class="stat-lbl">POS Sales (<?= $stat_pos_count ?> transactions)</div>
+    <div class="stat-num">₱<?= number_format($stat_pos_collected, 2) ?></div>
   </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem;">
+<div class="dash-grid-2">
 
   <div class="card">
-    <div class="sec-head" style="margin-bottom:.8rem">
-      <h2 style="font-size:1rem">Daily Collections (Consults + POS)</h2>
+    <div class="card-head">
+      <div>
+        <div class="card-eyebrow">Revenue &amp; income</div>
+        <div class="card-title">Daily collections (consults + POS)</div>
+      </div>
       <span class="badge bg-blue"><?= htmlspecialchars($range_label) ?></span>
     </div>
     <div style="position:relative;width:100%;height:220px;">
@@ -335,8 +343,11 @@ require_once 'includes/header.php';
   </div>
 
   <div class="card">
-    <div class="sec-head" style="margin-bottom:.8rem">
-      <h2 style="font-size:1rem">Appointments by Status</h2>
+    <div class="card-head">
+      <div>
+        <div class="card-eyebrow">Appointment status</div>
+        <div class="card-title">Appointments by status</div>
+      </div>
       <span class="badge bg-blue"><?= htmlspecialchars($range_label) ?></span>
     </div>
     <div style="display:flex;align-items:center;gap:1.2rem;">
@@ -352,11 +363,14 @@ require_once 'includes/header.php';
 
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem;">
+<div class="dash-grid-2">
 
   <div class="card">
-    <div class="sec-head" style="margin-bottom:.8rem">
-      <h2 style="font-size:1rem">Today's Queue</h2>
+    <div class="card-head">
+      <div>
+        <div class="card-eyebrow">Operational</div>
+        <div class="card-title">Today's queue</div>
+      </div>
       <span class="badge bg-blue"><?= date('M j') ?></span>
     </div>
     <?php
@@ -384,13 +398,16 @@ require_once 'includes/header.php';
   </div>
 
   <div class="card">
-    <div class="sec-head" style="margin-bottom:.8rem">
-      <h2 style="font-size:1rem">Schedule Change Requests</h2>
+    <div class="card-head">
+      <div>
+        <div class="card-eyebrow">Doctor requests</div>
+        <div class="card-title">Schedule change requests</div>
+      </div>
       <?php if ($stat_schedule_pending > 0): ?>
         <span class="badge bg-blue"><?= $stat_schedule_pending ?></span>
       <?php endif ?>
     </div>
-    <div style="font-size:0.74rem;color:#3b82f6;font-weight:600;margin-bottom:0.75rem;">
+    <div style="font-size:0.74rem;color:var(--primary);font-weight:600;margin-bottom:0.75rem;">
       Doctors are requesting weekly schedule changes — approve to apply them immediately.
     </div>
     <?php if (!empty($pendingScheduleRequests)): ?>
@@ -456,35 +473,40 @@ require_once 'includes/header.php';
 <?php endforeach; ?>
 
 <div class="card">
-  <div class="sec-head" style="margin-bottom:.8rem">
-    <h2 style="font-size:1rem">Recent POS Sales</h2>
-    <a href="pos_services.php" class="badge bg-blue" style="text-decoration:none;">Go to POS →</a>
-  </div>
+  <div class="card-head">
+      <div>
+        <div class="card-eyebrow">Point of sale</div>
+        <div class="card-title">Recent POS sales</div>
+      </div>
+      <a href="pos_services.php" class="badge bg-blue" style="text-decoration:none;">Go to POS →</a>
+    </div>
   <?php if (!empty($recent_pos_sales)): ?>
-  <table style="width:100%;border-collapse:collapse;font-size:.83rem;">
+  <div class="tbl-wrap" style="box-shadow:none;overflow-x:auto;">
+  <table>
     <thead>
-      <tr style="text-align:left;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;">
-        <th style="padding:.4rem .3rem;">Receipt #</th>
-        <th style="padding:.4rem .3rem;">Patient</th>
-        <th style="padding:.4rem .3rem;">Items</th>
-        <th style="padding:.4rem .3rem;">Staff</th>
-        <th style="padding:.4rem .3rem;">Date</th>
-        <th style="padding:.4rem .3rem;text-align:right;">Amount</th>
+      <tr>
+        <th>Receipt #</th>
+        <th>Patient</th>
+        <th>Items</th>
+        <th>Staff</th>
+        <th>Date</th>
+        <th style="text-align:right;">Amount</th>
       </tr>
     </thead>
     <tbody>
       <?php foreach ($recent_pos_sales as $s): ?>
-      <tr style="border-top:1px solid rgba(36,68,65,.06);">
-        <td style="padding:.5rem .3rem;font-weight:700;">#<?= (int)$s['id'] ?></td>
-        <td style="padding:.5rem .3rem;"><?= htmlspecialchars($s['patient_name'] ?: 'Walk-in') ?></td>
-        <td style="padding:.5rem .3rem;"><?= (int)$s['item_count'] ?> item<?= (int)$s['item_count'] === 1 ? '' : 's' ?></td>
-        <td style="padding:.5rem .3rem;"><?= htmlspecialchars($s['staff_name'] ?? '—') ?></td>
-        <td style="padding:.5rem .3rem;color:var(--muted);"><?= date('M j, g:i A', strtotime($s['created_at'])) ?></td>
-        <td style="padding:.5rem .3rem;text-align:right;font-weight:700;color:#0d9488;">₱<?= number_format((float)$s['total_amount'], 2) ?></td>
+      <tr>
+        <td style="font-weight:700;color:var(--navy);">#<?= (int)$s['id'] ?></td>
+        <td><?= htmlspecialchars($s['patient_name'] ?: 'Walk-in') ?></td>
+        <td><?= (int)$s['item_count'] ?> item<?= (int)$s['item_count'] === 1 ? '' : 's' ?></td>
+        <td><?= htmlspecialchars($s['staff_name'] ?? '—') ?></td>
+        <td style="color:var(--muted);"><?= date('M j, g:i A', strtotime($s['created_at'])) ?></td>
+        <td style="text-align:right;font-weight:700;color:var(--navy);">₱<?= number_format((float)$s['total_amount'], 2) ?></td>
       </tr>
       <?php endforeach; ?>
     </tbody>
   </table>
+  </div>
   <?php else: ?>
   <div class="empty-row">No POS sales yet.</div>
   <?php endif; ?>
@@ -492,6 +514,7 @@ require_once 'includes/header.php';
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
+Chart.defaults.font.family = "'Poppins', sans-serif";
 const dailyLabels = <?= json_encode($chart_labels) ?>;
 const dailyValues = <?= json_encode($chart_values) ?>;
 
@@ -502,8 +525,8 @@ new Chart(document.getElementById('dailyChart'), {
     datasets: [{
       label: 'Collected (₱)',
       data: dailyValues,
-      backgroundColor: 'rgba(13,148,136,0.18)',
-      borderColor: '#0d9488',
+      backgroundColor: 'rgba(20,120,238,0.16)',
+      borderColor: '#1478ee',
       borderWidth: 2,
       borderRadius: 6,
       borderSkipped: false,
@@ -527,7 +550,8 @@ new Chart(document.getElementById('dailyChart'), {
       },
       y: {
         beginAtZero: true,
-        grid: { color: 'rgba(0,0,0,0.05)' },
+        suggestedMax: 100,
+        grid: { color: 'rgba(18,52,93,0.06)' },
         ticks: {
           font: { size: 11 },
           color: '#9ca3af',
@@ -541,18 +565,20 @@ new Chart(document.getElementById('dailyChart'), {
 const statusLabels = <?= json_encode($donut_labels) ?>;
 const statusValues = <?= json_encode($donut_values) ?>;
 
-const statusPalette = [
-  '#0d9488','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#10b981','#6b7280','#ec4899'
-];
+// Same colour-per-status mapping as the admin dashboard; unknown statuses fall back to the spare palette.
+const statusColorMap = { Pending: '#3b82f6', Completed: '#0d9488', Confirmed: '#f59e0b', Cancelled: '#ef4444' };
+const sparePalette = ['#8b5cf6','#10b981','#6b7280','#ec4899','#14b8a6','#a16207'];
+let spareIdx = 0;
+const statusPalette = statusLabels.map(l => statusColorMap[l] || sparePalette[spareIdx++ % sparePalette.length]);
 
 const total = statusValues.reduce((a, b) => a + b, 0);
 const legend = document.getElementById('status-legend');
 statusLabels.forEach((lbl, i) => {
   const pct = total > 0 ? Math.round(statusValues[i] / total * 100) : 0;
   const el = document.createElement('span');
-  el.style.cssText = 'display:flex;align-items:center;gap:6px;color:#374151;';
+  el.style.cssText = 'display:flex;align-items:center;gap:6px;color:#183657;';
   el.innerHTML =
-    '<span style="width:10px;height:10px;border-radius:2px;background:' + statusPalette[i % statusPalette.length] + ';flex-shrink:0;"></span>' +
+    '<span style="width:10px;height:10px;border-radius:2px;background:' + statusPalette[i] + ';flex-shrink:0;"></span>' +
     '<span style="font-size:.73rem;">' + lbl + ' <strong>' + statusValues[i] + '</strong> <span style="color:#9ca3af;">(' + pct + '%)</span></span>';
   legend.appendChild(el);
 });
@@ -563,7 +589,7 @@ new Chart(document.getElementById('statusChart'), {
     labels: statusLabels,
     datasets: [{
       data: statusValues,
-      backgroundColor: statusPalette.slice(0, statusLabels.length),
+      backgroundColor: statusPalette,
       borderWidth: 2,
       borderColor: '#ffffff',
       hoverOffset: 6,

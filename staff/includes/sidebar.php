@@ -10,11 +10,11 @@
       <img src="/telecarelogo.png" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;display:block;"/>
     </div>
     <div class="sb-logo-text">
-      <div class="sb-logo-title">TELE<b>CARE</b></div>
+      <div class="sb-logo-title">TELE-CARE</div>
       <div class="sb-logo-sub">Staff Portal</div>
     </div>
   </div>
-  <div class="sb-badge">Staff Portal<strong><?= htmlspecialchars($staff_name) ?></strong></div>
+  <div class="sb-badge">Signed in as<strong><?= htmlspecialchars($staff_name) ?></strong></div>
   <nav class="sb-nav">
     <?php
     $nav = [
@@ -43,7 +43,7 @@
         '<path stroke-linecap="round" stroke-linejoin="round" d="M14 8a3.5 3.5 0 11-7 0 3.5 3.5 0 017 0zM3.5 20a7 7 0 0114 0"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 8.5a2.5 2.5 0 100-5M18 14.5a5.5 5.5 0 013 4.9"/>'],
     ];
     foreach ($nav as [$href, $key, $label, $icon]): ?>
-    <a href="<?= $href ?>" class="sb-link <?= $active_page === $key ? 'active' : '' ?>">
+    <a href="<?= $href ?>" class="sb-link <?= $active_page === $key ? 'active' : '' ?>" title="<?= htmlspecialchars($label) ?>">
       <svg class="sb-link-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="1.8" aria-hidden="true"><?= $icon ?></svg>
       <span class="sb-link-label"><?= $label ?></span>
@@ -51,11 +51,11 @@
     <?php endforeach ?>
   </nav>
   <div class="sb-foot">
-    <a href="logout.php">
+    <a href="logout.php" title="Log Out">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
       </svg>
-      Log Out
+      <span class="sb-foot-label">Log Out</span>
     </a>
   </div>
 </aside>

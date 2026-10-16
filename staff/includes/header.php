@@ -1,6 +1,20 @@
 ﻿<?php
 // staff/includes/header.php
 // staff/includes/header.php mga sidebar
+
+// Friendly page titles (active_page keys -> labels). Pages may override with
+// $topbar_eyebrow / $topbar_title before including this file (dashboard does).
+$page_titles = [
+  'dashboard'    => 'Dashboard',
+  'pos'          => 'Services POS',
+  'appointments' => 'Appointments',
+  'HMO'          => 'HMO Verification',
+  'doctors'      => 'Doctors',
+  'patients'     => 'Patients',
+];
+$topbar_eyebrow    = $topbar_eyebrow ?? 'TELE-CARE Staff';
+$doc_title         = $page_titles[$active_page] ?? ucfirst($active_page);
+$topbar_title_text = $topbar_title ?? $doc_title;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -11,7 +25,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title><?= ucfirst($active_page) ?> â€” TELE-CARE</title>
+  <title><?= htmlspecialchars($doc_title) ?> — TELE-CARE</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
 </head>
@@ -52,8 +66,8 @@
         </svg>
       </button>
       <div>
-      <div style="font-size:.73rem;color:var(--muted);font-weight:600;">TELE-CARE Staff</div>
-      <div style="font-size:.95rem;font-weight:700;"><?= ucfirst($active_page) ?></div>
+        <div class="topbar-eyebrow"><?= htmlspecialchars($topbar_eyebrow) ?></div>
+        <div class="topbar-title"><?= htmlspecialchars($topbar_title_text) ?></div>
       </div>
     </div>
     <div class="topbar-right">
