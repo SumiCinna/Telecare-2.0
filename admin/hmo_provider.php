@@ -5,7 +5,7 @@ require_once 'includes/hmo_admin.php';
 $id = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
 $load = function () use ($conn, $id) { $st = $conn->prepare("SELECT * FROM hmo_providers WHERE id = ?"); $st->bind_param('i', $id); $st->execute(); return $st->get_result()->fetch_assoc(); };
 $p = $load();
-if (!$p) hmo_admin_back('hmo.php', 'Provider not found.', true);
+if (!$p) hmo_admin_back('hmo_providers.php', 'Provider not found.', true);
 $self = 'hmo_provider.php?id=' . $id;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -95,7 +95,7 @@ $hist = $conn->query("SELECT l.*, a.full_name AS admin_name FROM audit_logs l LE
 $hist = $hist ? $hist->fetch_all(MYSQLI_ASSOC) : [];
 $state = hmo_provider_state($p);
 
-hmo_admin_head($p['name'], 'pos-hmo', '<a class="hx-btn ghost" href="hmo.php">← All providers</a>');
+hmo_admin_head($p['name'], 'pos-hmo', '<a class="hx-btn ghost" href="hmo_providers.php">← All providers</a>');
 ?>
 <div class="hx-card">
   <h3>Provider details <?= hmo_state_badge($state) ?></h3>

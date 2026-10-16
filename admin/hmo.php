@@ -1,13 +1,6 @@
 <?php
-// admin/hmo.php — template module: Providers + Coverage
-if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Pragma: no-cache");
-
-require_once '../database/config.php';
-
-if (!isset($_SESSION['admin_id'])) { header('Location: login.php'); exit; }
-$admin_id = $_SESSION['admin_id'];
+header('Location: hmo_providers.php');
+exit;
 
 // Insurance Commission license number column (added once if it is missing).
 try {

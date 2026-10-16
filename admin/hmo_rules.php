@@ -64,7 +64,7 @@ hmo_admin_head('Coverage & Authorization Rules', 'hmo-rules');
 <?php if ($sel): ?>
 <div class="hx-card" id="form">
   <h3>Rules for <?= h($sel['name']) ?></h3>
-  <div class="sub">Teleconsultation on/off, status and participating doctors are set on the <a href="hmo_provider.php?id=<?= (int)$sel['id'] ?>">provider page</a>. Co-pay / coverage items are listed in <a href="hmo.php">Providers → Coverage</a> (<?= (int)$sel['n_cov'] ?> item(s) now).</div>
+  <div class="sub">Teleconsultation on/off, status and participating doctors are set on the <a href="hmo_provider.php?id=<?= (int)$sel['id'] ?>">provider page</a>. Co-pay / coverage items are listed in <a href="hmo_providers.php">Providers → Coverage</a> (<?= (int)$sel['n_cov'] ?> item(s) now).</div>
   <form method="POST">
     <input type="hidden" name="csrf" value="<?= h($csrf) ?>"/><input type="hidden" name="id" value="<?= (int)$sel['id'] ?>"/>
     <div class="hx-grid3">
