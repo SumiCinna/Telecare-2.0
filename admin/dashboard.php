@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // admin/dashboard.php
 if (session_status() !== PHP_SESSION_ACTIVE) {    session_start();}
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -171,67 +171,22 @@ unset($_SESSION['toast']);
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8"/>
   <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
-<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Dashboard â€” TELE-CARE</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<title>Dashboard — TELE-CARE</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <link href="assets/admin.css" rel="stylesheet"/>
-<style>
-
-.main{flex:1;overflow-y:auto;margin-left:230px}
-.topbar{background:var(--white);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(36,68,65,0.07);position:sticky;top:0;z-index:50}
-.page-content{padding:2rem}
-.filter-bar{display:flex;align-items:center;gap:0.5rem;margin-bottom:1.5rem}
-.filter-bar span{font-size:0.78rem;color:#9ab0ae;font-weight:600;margin-right:0.3rem}
-.filter-btn{padding:0.35rem 0.9rem;border-radius:50px;font-size:0.78rem;font-weight:600;border:1.5px solid rgba(36,68,65,0.15);background:var(--white);color:#9ab0ae;cursor:pointer;transition:all 0.2s;text-decoration:none}
-.filter-btn.active{background:var(--green);color:#fff;border-color:var(--green)}
-.filter-btn:hover:not(.active){border-color:var(--green);color:var(--green)}
-.stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:1rem;margin-bottom:1.5rem}
-.stat-card{background:var(--white);border-radius:16px;padding:1.2rem 1rem;border:1px solid rgba(36,68,65,0.07);box-shadow:0 2px 10px rgba(0,0,0,0.04)}
-.stat-card .label{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9ab0ae;margin-bottom:0.4rem}
-.stat-card .value{font-family:'Poppins',sans-serif;font-size:1.9rem;font-weight:900;color:var(--green);line-height:1}
-.stat-card.revenue-card .value{font-size:1.3rem}
-.delta{font-size:0.7rem;font-weight:600;display:block;margin-top:0.3rem}
-.delta.pos{color:#16a34a}.delta.neg{color:var(--red)}.delta.neu{color:#9ab0ae}
-.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem}
-.charts-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.2rem;margin-bottom:1.2rem}
-.chart-card{background:var(--white);border-radius:16px;padding:1.4rem;border:1px solid rgba(36,68,65,0.07);box-shadow:0 2px 10px rgba(0,0,0,0.04)}
-.chart-card.full{grid-column:1/-1}
-.chart-title{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#9ab0ae;margin-bottom:0.2rem}
-.chart-subtitle{font-family:'Poppins',sans-serif;font-size:1rem;font-weight:700;color:var(--green);margin-bottom:1rem}
-.chart-wrap{position:relative;width:100%}
-.chart-wrap canvas{max-width:100%}
-.btn-primary{display:inline-flex;align-items:center;gap:0.4rem;background:var(--red);color:#fff;padding:0.6rem 1.3rem;border-radius:50px;font-size:0.85rem;font-weight:600;border:none;cursor:pointer;transition:all 0.25s;font-family:'Poppins',sans-serif;box-shadow:0 4px 14px rgba(195,54,67,0.25);text-decoration:none}
-.btn-primary:hover{background:#a82d38;transform:translateY(-1px)}
-.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
-.section-header h2{font-size:1.3rem}
-.table-wrap{background:var(--white);border-radius:16px;overflow:hidden;border:1px solid rgba(36,68,65,0.07);box-shadow:0 2px 10px rgba(0,0,0,0.04);margin-bottom:1.2rem}
-table{width:100%;border-collapse:collapse}
-th{padding:0.9rem 1.2rem;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9ab0ae;text-align:left;background:rgba(36,68,65,0.03);border-bottom:1px solid rgba(36,68,65,0.07)}
-td{padding:0.9rem 1.2rem;font-size:0.88rem;border-bottom:1px solid rgba(36,68,65,0.05);vertical-align:middle}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:rgba(36,68,65,0.02)}
-.badge{display:inline-block;padding:0.22rem 0.65rem;border-radius:50px;font-size:0.7rem;font-weight:700;letter-spacing:0.04em}
-.badge-green{background:rgba(34,197,94,0.1);color:#16a34a}
-.badge-orange{background:rgba(245,158,11,0.1);color:#d97706}
-.badge-gray{background:rgba(0,0,0,0.06);color:#888}
-.toast{position:fixed;bottom:2rem;right:2rem;z-index:300;background:var(--green);color:#fff;padding:0.9rem 1.5rem;border-radius:14px;font-size:0.88rem;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:slideIn 0.4s ease,fadeOut 0.4s 3s ease forwards}
-@keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
-@keyframes fadeOut{from{opacity:1}to{opacity:0;pointer-events:none}}
-.empty-row{text-align:center;padding:3rem;color:#9ab0ae;font-size:0.88rem}
-@media(max-width:1200px){.stats-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:900px){.sidebar{display:none}.stats-grid{grid-template-columns:repeat(2,1fr)}.charts-grid,.charts-grid-3{grid-template-columns:1fr}}
-</style>
+<link href="assets/admin-dashboard.css" rel="stylesheet"/>
+<script src="assets/admin-dashboard.js" defer></script>
 </head>
 <body>
 
-<?php if ($toast): ?><div class="toast">âœ“ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
+<?php if ($toast): ?><div class="toast">✓ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
 
 <?php $activeNav = 'dashboard'; include 'sidebar.php'; ?>
 <div class="main">
@@ -281,12 +236,12 @@ tr:hover td{background:rgba(36,68,65,0.02)}
       </div>
       <div class="stat-card revenue-card">
         <div class="label">Revenue</div>
-        <div class="value">â‚±<?= number_format($cur_rev) ?></div>
-        <?= delta((int)$cur_rev, (int)$prev_rev, 'â‚±') ?>
+        <div class="value">₱<?= number_format($cur_rev) ?></div>
+        <?= delta((int)$cur_rev, (int)$prev_rev, '₱') ?>
       </div>
     </div>
 
-    <!-- Cancelled KPI (below, smaller) â€” only show if non-zero or always -->
+    <!-- Cancelled KPI (below, smaller) — only show if non-zero or always -->
     <!-- Trend Analysis + Stacked Bar -->
     <div class="charts-grid">
       <div class="chart-card">
@@ -309,7 +264,7 @@ tr:hover td{background:rgba(36,68,65,0.02)}
     <div class="charts-grid-3">
       <div class="chart-card">
         <div class="chart-title">Revenue &amp; Income</div>
-        <div class="chart-subtitle">Revenue trend (â‚±) - income from paid consultations</div>
+        <div class="chart-subtitle">Revenue trend (₱) - income from paid consultations</div>
         <div class="chart-wrap" style="height:200px">
           <canvas id="areaChart"></canvas>
         </div>
@@ -343,7 +298,7 @@ tr:hover td{background:rgba(36,68,65,0.02)}
         if ($dres && $dres->num_rows > 0): while ($d = $dres->fetch_assoc()): ?>
         <tr>
           <td><span style="font-weight:600;">Dr. <?= htmlspecialchars($d['full_name']) ?></span></td>
-          <td style="color:#9ab0ae;font-size:0.82rem;"><?= htmlspecialchars($d['specialty'] ?? 'â€”') ?></td>
+          <td style="color:#9ab0ae;font-size:0.82rem;"><?= htmlspecialchars($d['specialty'] ?? '—') ?></td>
           <td><span class="badge <?= $d['status']==='active'?'badge-green':($d['status']==='pending'?'badge-orange':'badge-gray') ?>"><?= ucfirst($d['status']) ?></span></td>
         </tr>
         <?php endwhile; else: ?>
@@ -356,125 +311,23 @@ tr:hover td{background:rgba(36,68,65,0.02)}
   </div>
 </div>
 
+
 <script>
-const labels    = <?= $trendLabels ?>;
-const dataAppts = <?= $trendDataJS ?>;
-const dataComp  = <?= $trendCompJS ?>;
-const dataPend  = <?= $trendPendJS ?>;
-const dataConf  = <?= $trendConfJS ?>;
-const dataCanc  = <?= $trendCancJS ?>;
-const dataRev   = <?= $trendRevJS ?>;
-const docNames  = <?= $docNames ?>;
-const docCounts = <?= $docCounts ?>;
-const paidCnt   = <?= $paid_count ?>;
-const unpaidCnt = <?= $unpaid_count ?>;
-
-const gridColor = 'rgba(36,68,65,0.07)';
-const fontColor = '#9ab0ae';
-
-const baseOpts = {
-  responsive:true, maintainAspectRatio:false,
-  plugins:{ legend:{ labels:{ font:{family:"'Poppins',sans-serif",size:11}, color:'#244441', boxWidth:10, padding:12 }}},
-  scales:{
-    x:{ grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'Poppins',sans-serif"}} },
-    y:{ grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'Poppins',sans-serif"},precision:0} }
-  }
+window.TELECARE_DASHBOARD_DATA = {
+    labels: <?= $trendLabels ?: '[]' ?>,
+    appointments: <?= $trendDataJS ?: '[]' ?>,
+    completed: <?= $trendCompJS ?: '[]' ?>,
+    pending: <?= $trendPendJS ?: '[]' ?>,
+    confirmed: <?= $trendConfJS ?: '[]' ?>,
+    cancelled: <?= $trendCancJS ?: '[]' ?>,
+    revenue: <?= $trendRevJS ?: '[]' ?>,
+    doctorNames: <?= $docNames ?: '[]' ?>,
+    doctorCounts: <?= $docCounts ?: '[]' ?>,
+    paidCount: <?= (int) $paid_count ?>,
+    unpaidCount: <?= (int) $unpaid_count ?>
 };
-
-// LINE CHART
-new Chart(document.getElementById('lineChart'), {
-  type:'line',
-  data:{
-    labels,
-    datasets:[
-      { label:'Appointments', data:dataAppts, borderColor:'#3F82E3', backgroundColor:'rgba(63,130,227,0.08)', tension:0.4, fill:true, pointRadius:3, borderWidth:2 },
-      { label:'Completed',    data:dataComp,  borderColor:'#0d9488', backgroundColor:'rgba(13,148,136,0.06)', tension:0.4, fill:true, pointRadius:3, borderWidth:2, borderDash:[4,3] }
-    ]
-  },
-  options:{...baseOpts, plugins:{...baseOpts.plugins}}
-});
-
-// STACKED BAR
-new Chart(document.getElementById('stackedBar'), {
-  type:'bar',
-  data:{
-    labels,
-    datasets:[
-      { label:'Pending',   data:dataPend, backgroundColor:'#3F82E3', stack:'s' },
-      { label:'Completed', data:dataComp, backgroundColor:'#0d9488', stack:'s' },
-      { label:'Confirmed', data:dataConf, backgroundColor:'#f59e0b', stack:'s' },
-      { label:'Cancelled', data:dataCanc, backgroundColor:'#ef4444', stack:'s' }
-    ]
-  },
-  options:{
-    ...baseOpts,
-    scales:{
-      x:{ stacked:true, grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'Poppins',sans-serif"}} },
-      y:{ stacked:true, grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'Poppins',sans-serif"},precision:0} }
-    }
-  }
-});
-
-// AREA LINE (Revenue)
-new Chart(document.getElementById('areaChart'), {
-  type:'line',
-  data:{
-    labels,
-    datasets:[{
-      label:'Revenue',
-      data:dataRev,
-      borderColor:'#0d9488',
-      backgroundColor:'rgba(13,148,136,0.12)',
-      tension:0.4, fill:true, pointRadius:3, borderWidth:2
-    }]
-  },
-  options:{
-    ...baseOpts,
-    plugins:{...baseOpts.plugins, legend:{display:true, labels:{font:{family:"'Poppins',sans-serif",size:11},color:'#244441',boxWidth:10}}},
-    scales:{
-      x:{ grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'Poppins',sans-serif"}} },
-      y:{ grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'Poppins',sans-serif"},callback:v=>'â‚±'+v.toLocaleString()} }
-    }
-  }
-});
-
-// DONUT
-new Chart(document.getElementById('donutChart'), {
-  type:'doughnut',
-  data:{
-    labels:['Paid','Unpaid'],
-    datasets:[{ data:[paidCnt,unpaidCnt], backgroundColor:['#0d9488','#ef4444'], borderWidth:0, hoverOffset:4 }]
-  },
-  options:{
-    responsive:true, maintainAspectRatio:false, cutout:'65%',
-    plugins:{
-      legend:{ position:'bottom', labels:{font:{family:"'Poppins',sans-serif",size:11},color:'#244441',boxWidth:10,padding:10} },
-      tooltip:{ callbacks:{ label:ctx=>` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/(paidCnt+unpaidCnt||1)*100)}%)` } }
-    }
-  }
-});
-
-// DOCTOR BAR
-new Chart(document.getElementById('doctorBar'), {
-  type:'bar',
-  data:{
-    labels:docNames.map(n=>'Dr. '+n),
-    datasets:[{ label:'Appointments', data:docCounts, backgroundColor:'#7c6ef7', borderRadius:6, borderSkipped:false }]
-  },
-  options:{
-    ...baseOpts,
-    plugins:{...baseOpts.plugins, legend:{display:false}},
-    scales:{
-      x:{ grid:{display:false}, ticks:{color:fontColor,font:{size:9,family:"'Poppins',sans-serif"},maxRotation:30} },
-      y:{ grid:{color:gridColor}, ticks:{color:fontColor,font:{size:10,family:"'Poppins',sans-serif"},precision:0} }
-    }
-  }
-});
 </script>
 
-<script>
-setTimeout(() => { const t = document.querySelector('.toast'); if(t) t.remove(); }, 3500);
-</script>
 </body>
 </html>
 
