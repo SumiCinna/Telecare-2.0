@@ -35,6 +35,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ");
             $stmt->bind_param('sii', $summary_text, $appt_id, $doctor_id);
             $stmt->execute();
+            // Guest bookings (landing page, no account): e-mail the summary link to the patient.
+            try {
+                $__gb = __DIR__ . '/../includes/guest_booking.php';
+                if (is_file($__gb)) { require_once $__gb; guest_notify_summary($conn, (int)$appt_id); }
+            } catch (Throwable $e) { error_log('guest summary mail: ' . $e->getMessage()); }
             $success = 'Summary published â€” the patient can now view it.';
         } elseif ($action === 'save_draft') {
             $stmt = $conn->prepare("

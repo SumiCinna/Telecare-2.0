@@ -3,8 +3,12 @@
 date_default_timezone_set('Asia/Manila');
 require_once __DIR__ . '/../includes/auth.php';
 // call_patient.php (patient side)
+// Guests (booked from the landing page) have no portal: send them to the thank-you page instead of My Visits.
+$__guest   = !empty($_SESSION['guest_mode']);
+$home_url  = $__guest ? 'guest_access.php?go=done' : 'router.php?page=visits';
+$fail_url  = $__guest ? '../guest_access.php?go=done' : '../router.php?page=visits';
 $appt_id = (int)($_GET['appt_id'] ?? 0);
-if (!$appt_id) { header('Location: ../router.php?page=visits'); exit; }
+if (!$appt_id) { header('Location: ' . $fail_url); exit; }
 
 $stmt = $conn->prepare("
     SELECT a.*, d.full_name AS doctor_name, d.specialty, d.profile_photo AS doctor_photo
@@ -14,11 +18,11 @@ $stmt = $conn->prepare("
 $stmt->bind_param("ii", $appt_id, $patient_id);
 $stmt->execute();
 $appt = $stmt->get_result()->fetch_assoc();
-if (!$appt) { header('Location: ../router.php?page=visits'); exit; }
+if (!$appt) { header('Location: ' . $fail_url); exit; }
 
 $appt_ts = strtotime($appt['appointment_date'] . ' ' . $appt['appointment_time']);
 $now     = (new DateTime('now', new DateTimeZone('Asia/Manila')))->getTimestamp();
-if ($now < ($appt_ts - 900) || $now > ($appt_ts + 3600)) { header('Location: ../router.php?page=visits'); exit; }
+if ($now < ($appt_ts - 900) || $now > ($appt_ts + 3600)) { header('Location: ' . $fail_url); exit; }
 
 $room_id = 'telecare-' . $appt_id . '-' . str_replace('-', '', $appt['appointment_date']);
 $end_ts  = $appt_ts + 3600;
@@ -531,6 +535,7 @@ const ROLE     = 'patient';
 const APPT_TS  = <?= $appt_ts ?>;
 const END_TS   = <?= $end_ts ?>;
 const APPT_ID  = <?= $appt_id ?>;
+const HOME_URL = <?= json_encode($home_url) ?>;
 const MY_NAME  = <?= json_encode($pat_name) ?>;
 const WS_URL = `wss://telecare-signaling.onrender.com/ws/${ROOM_ID}/${ROLE}`;
 const ICE = {
@@ -843,16 +848,16 @@ async function endCall(auto = false) {
         try {
           const response = await fetch(`router.php?page=check_summary&appt_id=${APPT_ID}`);
           const data = await response.json();
-          if (data.done) { window.location.href = 'router.php?page=visits'; }
-else if (Date.now() - startTime > maxWait) { window.location.href = 'router.php?page=visits'; }
+          if (data.done) { window.location.href = HOME_URL; }
+else if (Date.now() - startTime > maxWait) { window.location.href = HOME_URL; }
           else { setTimeout(checkSummary, 2000); }
         } catch(e) { setTimeout(checkSummary, 5000); }
       };
       await fetch('process_consultation_v2.php', { method: 'POST', body: fd });
       setTimeout(checkSummary, 2000);
-    } catch(e) { setTimeout(() => { window.location.href = 'router.php?page=visits'; }, 5000); }
+    } catch(e) { setTimeout(() => { window.location.href = HOME_URL; }, 5000); }
 } else {
-    window.location.href = 'router.php?page=visits';
+    window.location.href = HOME_URL;
 }
 }
 

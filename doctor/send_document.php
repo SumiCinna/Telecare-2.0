@@ -708,6 +708,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($action, ['issue', 'export
         @$up->execute();
         $up->close();
 
+        // Guest bookings (landing page, no account): e-mail the document link to the patient.
+        try {
+            $__gb = __DIR__ . '/../includes/guest_booking.php';
+            if (is_file($__gb)) { require_once $__gb; guest_notify_document($conn, (int)$appt_id, $doc_type, (string)$docLabel, (string)$filePathDb); }
+        } catch (Throwable $e) { error_log('guest document mail: ' . $e->getMessage()); }
+
         $_SESSION['toast'] = $DOC_TYPES[$doc_type] . ' issued to patient records.';
         header('Location: patient-records.php?patient_id=' . (int)$appt['patient_id']);
         exit;

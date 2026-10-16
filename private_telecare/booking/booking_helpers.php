@@ -636,6 +636,15 @@ function booking_save_coverage(mysqli $conn, int $patient_id, int $appt_id, stri
         return ['ok' => false, 'errors' => ['Could not save your details. Please try again.']];
     }
 
+    // Guest bookings (landing page, no account): e-mail the consultation room link now.
+    try {
+        $__gb = __DIR__ . '/../../includes/guest_booking.php';
+        if (is_file($__gb)) { require_once $__gb; }
+        if (function_exists('guest_is_guest_appointment') && guest_is_guest_appointment($conn, $appt_id)) {
+            guest_notify_booking_confirmed($conn, $appt_id, $method);
+        }
+    } catch (Throwable $e) { error_log('guest mail: ' . $e->getMessage()); }
+
     if ($method === 'HMO') {
         $hasLoa = ($d['loa'] ?? '') !== '';
         booking_notify_patient($conn, $patient_id, $appt_id, 'hmo_pending',

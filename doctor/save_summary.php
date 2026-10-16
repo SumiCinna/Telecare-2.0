@@ -255,6 +255,12 @@ $stmt = $conn->prepare("
 $stmt->bind_param('ssii', $edited_summary, $filename, $appt_id, $doctor_id);
 $stmt->execute();
 
+// Guest bookings (landing page, no account): e-mail the summary link to the patient.
+try {
+    $__gb = __DIR__ . '/../includes/guest_booking.php';
+    if (is_file($__gb)) { require_once $__gb; guest_notify_summary($conn, (int)$appt_id); }
+} catch (Throwable $e) { error_log('guest summary mail: ' . $e->getMessage()); }
+
 echo json_encode([
     'status'   => 'success',
     'message'  => 'Summary saved and PDF updated.',

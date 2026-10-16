@@ -1,5 +1,9 @@
-﻿<?php
+<?php
 // index.php
+if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
+if (empty($_SESSION['gb_csrf'])) { $_SESSION['gb_csrf'] = bin2hex(random_bytes(32)); }
+// A signed-in (non-guest) patient books from the account, not from this widget.
+$gbLoggedIn = !empty($_SESSION['patient_id']) && empty($_SESSION['guest_mode']);
 $pageTitle = "TELE-CARE | Your Health, Connected";
 ?>
 <!DOCTYPE html>
@@ -702,6 +706,102 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     footer p { font-size:.68rem; } 
     @media(max-width:780px) { .kit-hero-grid,.kit-benefit-grid,.kit-app-grid { grid-template-columns:1fr; } .kit-hero-art { min-height:270px; } .kit-grid { grid-template-columns:1fr 1fr; } .kit-phone { justify-self:center; } .nav-links { display:none; } .hamburger { display:flex; } }
     @media(max-width:520px) { .kit-grid,.kit-steps { grid-template-columns:1fr; } .kit-section-head { display:block; } .kit-section-head p { margin-top:8px; } .kit-step:not(:last-child)::after { display:none; } .kit-hero { padding-top:34px; } }
+
+    /* ── Guest booking widget (landing page) ── */
+    .gb-section { background:#fff; border-top:1px solid var(--line); border-bottom:1px solid var(--line); scroll-margin-top:76px; }
+    .gb-card { max-width:980px; margin:0 auto; background:#fff; border:1px solid var(--line); border-radius:18px; box-shadow:0 18px 44px rgba(25,63,114,.08); padding:26px; }
+    .gb-steps { display:flex; align-items:flex-start; margin-bottom:24px; }
+    .gb-step { display:flex; flex-direction:column; align-items:center; gap:6px; min-width:62px; }
+    .gb-dot { width:28px; height:28px; border-radius:50%; display:grid; place-items:center; font-size:.72rem; font-weight:700; background:#e8f1fb; color:var(--muted); transition:background .2s; }
+    .gb-step.on .gb-dot { background:var(--blue); color:#fff; box-shadow:0 0 0 4px rgba(31,111,198,.15); }
+    .gb-step.done .gb-dot { background:var(--green); color:#fff; }
+    .gb-step span { font-size:.62rem; color:var(--muted); font-weight:600; text-align:center; }
+    .gb-step.on span { color:var(--blue-dark); }
+    .gb-line { flex:1; height:2px; background:var(--line); margin:14px 6px 0; }
+    .gb-line.done { background:var(--green); }
+    .gb-h { color:var(--blue-dark); font-size:1.05rem; font-weight:700; letter-spacing:-.02em; margin-bottom:12px; }
+    .gb-label { display:block; font-size:.72rem; font-weight:600; color:var(--blue-dark); margin-bottom:6px; }
+    .gb-label i { color:#e11d48; font-style:normal; }
+    .gb-label small { color:var(--muted); font-weight:500; }
+    .gb-input, .gb-text { width:100%; padding:11px 13px; border:1.5px solid var(--line); border-radius:11px; font:inherit; font-size:.82rem; color:var(--ink); background:#fff; outline:0; transition:border-color .2s, box-shadow .2s; }
+    .gb-input:focus, .gb-text:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(31,111,198,.12); }
+    .gb-input.bad, .gb-text.bad { border-color:#e11d48; }
+    .gb-text { min-height:132px; resize:vertical; line-height:1.55; }
+    .gb-meta { display:flex; justify-content:space-between; gap:12px; margin-top:6px; font-size:.66rem; color:var(--muted); }
+    .gb-field { margin-bottom:15px; }
+    .gb-fe { color:#e11d48; font-size:.68rem; margin-top:5px; min-height:0; }
+    .gb-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:0 18px; }
+    .gb-actions { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:20px; }
+    .gb-btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:11px 22px; border-radius:999px; border:1px solid transparent; font:inherit; font-size:.78rem; font-weight:700; cursor:pointer; text-decoration:none; transition:background .2s, opacity .2s; }
+    .gb-btn.primary { background:var(--blue); color:#fff; box-shadow:0 7px 16px rgba(33,102,177,.22); }
+    .gb-btn.primary:hover:not(:disabled) { background:var(--blue-dark); }
+    .gb-btn.ghost { background:#fff; color:var(--blue); border-color:#a9d1f1; }
+    .gb-btn:disabled { opacity:.5; cursor:not-allowed; }
+    .gb-alert { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; border-radius:12px; padding:11px 14px; font-size:.76rem; line-height:1.5; margin-bottom:14px; }
+    .gb-alert a { color:#991b1b; font-weight:700; }
+    .gb-alert.warn { background:#fffbeb; border-color:#fde68a; color:#92400e; }
+    .gb-rec { border:1.5px solid #cfe6f8; background:#f1f8ff; border-radius:14px; padding:15px 17px; margin-bottom:16px; }
+    .gb-rec small { display:block; font-size:.62rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+    .gb-rec b { display:block; color:var(--blue-dark); font-size:1.15rem; margin:3px 0 4px; letter-spacing:-.02em; }
+    .gb-rec p { font-size:.76rem; color:var(--ink); line-height:1.55; }
+    .gb-rec em { display:block; font-style:normal; font-size:.64rem; color:var(--muted); margin-top:5px; }
+    .gb-chips { margin-top:10px; display:flex; gap:6px; flex-wrap:wrap; align-items:center; font-size:.68rem; color:var(--muted); }
+    .gb-chip { padding:5px 12px; border:1.5px solid var(--line); border-radius:999px; background:#fff; font:inherit; font-size:.68rem; font-weight:600; color:var(--blue-dark); cursor:pointer; }
+    .gb-chip:hover { border-color:var(--blue); color:var(--blue); }
+    .gb-docs { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:14px; }
+    .gb-doc { position:relative; border:1px solid var(--line); border-radius:14px; padding:15px; background:#fff; display:flex; flex-direction:column; gap:10px; transition:border-color .2s, box-shadow .2s; }
+    .gb-doc:hover { border-color:var(--blue-bright); box-shadow:0 10px 22px rgba(31,111,198,.12); }
+    .gb-doc-top { display:flex; gap:12px; align-items:center; }
+    .gb-av { width:50px; height:50px; border-radius:50%; background:#e3efff; color:var(--blue); display:grid; place-items:center; font-weight:700; overflow:hidden; flex:0 0 auto; }
+    .gb-av img { width:100%; height:100%; object-fit:cover; }
+    .gb-doc b { display:block; color:var(--blue-dark); font-size:.84rem; line-height:1.3; }
+    .gb-doc small { display:block; color:var(--muted); font-size:.68rem; margin-top:2px; }
+    .gb-stars { color:#ca8a04; font-size:.68rem; }
+    .gb-fee { background:#f1f8ff; border-radius:9px; padding:8px 11px; font-size:.78rem; font-weight:700; color:var(--blue-dark); }
+    .gb-badge { position:absolute; top:-9px; right:12px; background:var(--blue); color:#fff; font-size:.58rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; padding:3px 10px; border-radius:999px; }
+    .gb-sched { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(240px,.9fr); gap:18px; align-items:start; }
+    .gb-box { border:1px solid var(--line); border-radius:14px; padding:16px; }
+    .gb-strip { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+    .gb-cal-h { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .gb-cal-h b { font-size:.86rem; color:var(--blue-dark); }
+    .gb-nav { background:none; border:0; cursor:pointer; color:var(--blue-dark); padding:4px 10px; border-radius:8px; font-size:1.1rem; }
+    .gb-nav:hover:not(:disabled) { background:#eaf3fc; }
+    .gb-nav:disabled { opacity:.25; cursor:default; }
+    .gb-cal { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+    .gb-dn { text-align:center; font-size:.62rem; font-weight:700; color:var(--muted); padding:4px 0; }
+    .gb-c { aspect-ratio:1; display:grid; place-items:center; border-radius:10px; font-size:.78rem; font-weight:500; }
+    .gb-c.past { color:rgba(71,71,72,.22); }
+    .gb-c.blocked { color:rgba(71,71,72,.25); text-decoration:line-through; }
+    .gb-c.av { color:var(--blue-dark); background:#f1f6fc; cursor:pointer; font-weight:600; }
+    .gb-c.av:hover { background:#dcebfb; color:var(--blue); }
+    .gb-c.today.av { border:1.5px solid var(--blue); }
+    .gb-c.sel { background:var(--blue) !important; color:#fff !important; font-weight:700; }
+    .gb-sum-row { padding:10px 0; border-top:1px solid var(--line); font-size:.76rem; color:var(--blue-dark); }
+    .gb-sum-row:first-of-type { border-top:0; padding-top:0; }
+    .gb-sum-row small { display:block; color:var(--muted); font-size:.62rem; font-weight:600; margin-bottom:2px; }
+    .gb-times { display:grid; grid-template-columns:repeat(2,1fr); gap:7px; margin-top:10px; max-height:300px; overflow:auto; padding-right:2px; }
+    .gb-t { padding:9px 0; border:1.5px solid var(--line); border-radius:10px; text-align:center; font-size:.74rem; font-weight:600; color:var(--blue-dark); cursor:pointer; background:#fff; }
+    .gb-t:hover { border-color:var(--blue); color:var(--blue); }
+    .gb-t.sel { background:var(--blue); border-color:var(--blue); color:#fff; }
+    .gb-t.off { background:#f5f7fa; color:rgba(71,71,72,.3); cursor:not-allowed; border-color:transparent; }
+    .gb-mobile { display:flex; gap:8px; }
+    .gb-mobile .pre { flex:0 0 auto; display:flex; align-items:center; gap:6px; padding:0 12px; border:1.5px solid var(--line); border-radius:11px; font-size:.82rem; color:var(--ink); background:#f8fafc; }
+    .gb-radios { display:flex; gap:18px; padding:10px 0; font-size:.82rem; }
+    .gb-radios label { display:flex; align-items:center; gap:7px; cursor:pointer; }
+    .gb-radios input { accent-color:var(--blue); width:16px; height:16px; }
+    .gb-accept { display:flex; gap:9px; align-items:flex-start; font-size:.74rem; color:var(--ink); line-height:1.5; }
+    .gb-accept input { margin-top:2px; width:16px; height:16px; accent-color:var(--blue); flex:0 0 auto; }
+    .gb-accept a { color:var(--blue); font-weight:600; }
+    .gb-verify { max-width:380px; margin:0 auto; text-align:center; }
+    .gb-verify p { font-size:.8rem; color:var(--muted); line-height:1.6; margin-bottom:14px; }
+    .gb-verify p b { color:var(--blue-dark); }
+    .gb-code { text-align:center; font-size:1.7rem; letter-spacing:.5em; padding:12px 10px 12px 20px; font-weight:700; color:var(--blue-dark); }
+    .gb-link { background:none; border:0; font:inherit; font-size:.72rem; font-weight:700; color:var(--blue); cursor:pointer; padding:8px; }
+    .gb-link:disabled { color:var(--muted); cursor:default; }
+    .gb-center { text-align:center; padding:18px 6px; }
+    .gb-center p { color:var(--muted); font-size:.82rem; margin-bottom:16px; }
+    @media(max-width:780px) { .gb-sched { grid-template-columns:1fr; } .gb-card { padding:18px 14px; } .gb-grid2 { grid-template-columns:1fr; } }
+    @media(max-width:520px) { .gb-step { min-width:46px; } .gb-step span { font-size:.56rem; } .gb-actions { flex-direction:column-reverse; align-items:stretch; } .gb-btn { width:100%; } .gb-docs { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -719,7 +819,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     </div>
     <ul class="nav-links">
       <li><a href="index.php" aria-current="page">Home</a></li>
-      <li><a href="#services">Find a Doctor</a></li>
+      <li><a href="#book">Find a Doctor</a></li>
       <li><a href="#consultation">Quick Consultation</a></li>
       <li><a href="#appointments">Appointments</a></li>
       <li><a href="#benefits">Insurance &amp; Benefits</a></li>
@@ -735,7 +835,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
 
 <div class="mob-menu" id="mobMenu">
   <a href="index.php" aria-current="page">Home</a>
-  <a href="#services">Find a Doctor</a>
+  <a href="#book">Find a Doctor</a>
   <a href="#consultation">Quick Consultation</a>
   <a href="#appointments">Appointments</a>
   <a href="#benefits">Insurance &amp; Benefits</a>
@@ -756,8 +856,8 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
           <input type="search" aria-label="Search doctor or specialty" placeholder="Search doctor or specialty...">
         </div>
         <div class="kit-actions">
-          <a class="kit-btn kit-btn-primary" href="auth/register.php">Find a Doctor</a>
-          <a class="kit-btn kit-btn-outline" href="private_telecare/booking/step1_details.php">Quick Consultation</a>
+          <a class="kit-btn kit-btn-primary" href="#book">Find a Doctor</a>
+          <a class="kit-btn kit-btn-outline" href="#book">Quick Consultation</a>
         </div>
       </div>
       <div class="kit-hero-art" aria-label="Tele-Care healthcare illustration">
@@ -765,6 +865,95 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
         <div class="kit-float one"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Licensed professionals</div>
         <div class="kit-float two"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg> Private &amp; secure</div>
       </div>
+    </div>
+  </section>
+
+  <!-- ══ Guest booking: no account needed ══ -->
+  <section class="kit-section gb-section" id="book">
+    <div class="container">
+      <div class="kit-section-head"><div><div class="kit-eyebrow">Book online</div><h2>Book a Doctor</h2></div><p>Tell us how you feel and pick a doctor.</p></div>
+
+<?php if ($gbLoggedIn): ?>
+      <div class="gb-card"><div class="gb-center">
+        <div class="gb-h">You're signed in</div>
+        <p>Book from your TELE-CARE account.</p>
+        <a class="gb-btn primary" href="router.php?page=booking/step1_details">Book from my account</a>
+      </div></div>
+<?php else: ?>
+      <div class="gb-card" id="gb" data-csrf="<?= htmlspecialchars($_SESSION['gb_csrf'], ENT_QUOTES) ?>">
+        <div class="gb-steps" id="gbSteps"></div>
+        <div id="gbAlert"></div>
+
+        <!-- 1 · concern -->
+        <div class="gb-panel" id="gbP1">
+          <div class="gb-h">What are you feeling?</div>
+          <div class="gb-field">
+            <label class="gb-label" for="gbConcern">Reason for booking / chief complaint <i>*</i></label>
+            <textarea class="gb-text" id="gbConcern" maxlength="500" placeholder="e.g. I've had a dry cough and mild fever for 3 days, and I get short of breath at night."></textarea>
+            <div class="gb-meta"><span>English or Filipino. Analyzed by AI only to suggest a department; not a diagnosis.</span><span><span id="gbCount">0</span>/500</span></div>
+          </div>
+          <div class="gb-actions"><span></span><button class="gb-btn primary" id="gbFind" type="button">Find a Doctor</button></div>
+        </div>
+
+        <!-- 2 · doctors -->
+        <div class="gb-panel" id="gbP2" hidden>
+          <div id="gbUrgent"></div>
+          <div class="gb-rec"><small id="gbRecLabel">Suggested department</small><b id="gbRecDept"></b><p id="gbRecReason"></p><em id="gbRecSrc"></em><div class="gb-chips" id="gbChips"></div></div>
+          <div class="gb-docs" id="gbDocs"></div>
+          <div class="gb-actions"><button class="gb-btn ghost" type="button" data-back="1">Back</button><span></span></div>
+        </div>
+
+        <!-- 3 · schedule -->
+        <div class="gb-panel" id="gbP3" hidden>
+          <div class="gb-sched">
+            <div class="gb-box">
+              <div class="gb-strip"><div class="gb-av" id="gbSAv"></div><div><b style="color:var(--blue-dark);font-size:.88rem" id="gbSName"></b><small style="display:block;color:var(--muted);font-size:.7rem" id="gbSSpec"></small></div></div>
+              <div class="gb-cal-h"><button class="gb-nav" id="gbPrev" type="button">&#8249;</button><b id="gbMonth"></b><button class="gb-nav" id="gbNext" type="button">&#8250;</button></div>
+              <div class="gb-cal" id="gbCal"></div>
+            </div>
+            <aside class="gb-box">
+              <div class="gb-sum-row"><small>Department</small><span id="gbSDept"></span></div>
+              <div class="gb-sum-row"><small>Doctor</small><span id="gbSDoc"></span></div>
+              <div class="gb-sum-row"><small>Date &amp; time</small><span id="gbSWhen">Pending selection</span></div>
+              <div class="gb-times" id="gbTimes"></div>
+            </aside>
+          </div>
+          <div class="gb-actions"><button class="gb-btn ghost" type="button" data-back="2">Back</button><button class="gb-btn primary" id="gbSlotGo" type="button" disabled>Continue</button></div>
+        </div>
+
+        <!-- 4 · patient details -->
+        <div class="gb-panel" id="gbP4" hidden>
+          <div class="gb-h">Patient Details</div>
+          <form id="gbForm" novalidate autocomplete="on">
+            <div class="gb-grid2">
+              <div class="gb-field"><label class="gb-label" for="gbFirst">First Name <i>*</i></label><input class="gb-input" id="gbFirst" name="first_name" maxlength="60" autocomplete="given-name"><div class="gb-fe" data-e="first_name"></div></div>
+              <div class="gb-field"><label class="gb-label" for="gbMid">Middle Name</label><input class="gb-input" id="gbMid" name="middle_name" maxlength="60" autocomplete="additional-name"><div class="gb-fe" data-e="middle_name"></div></div>
+              <div class="gb-field"><label class="gb-label" for="gbLast">Last Name <i>*</i></label><input class="gb-input" id="gbLast" name="last_name" maxlength="60" autocomplete="family-name"><div class="gb-fe" data-e="last_name"></div></div>
+              <div class="gb-field"><label class="gb-label" for="gbDob">Date of Birth <small>(MM/DD/YYYY)</small> <i>*</i></label><input class="gb-input" id="gbDob" name="dob" inputmode="numeric" maxlength="10" placeholder="MM/DD/YYYY" autocomplete="bday"><div class="gb-fe" data-e="dob"></div></div>
+              <div class="gb-field"><label class="gb-label">Sex <i>*</i></label><div class="gb-radios"><label><input type="radio" name="sex" value="Male"> Male</label><label><input type="radio" name="sex" value="Female"> Female</label></div><div class="gb-fe" data-e="sex"></div></div>
+              <div class="gb-field"><label class="gb-label" for="gbAddr">Address <i>*</i></label><input class="gb-input" id="gbAddr" name="address" maxlength="255" autocomplete="street-address"><div class="gb-fe" data-e="address"></div></div>
+              <div class="gb-field"><label class="gb-label" for="gbMob">Mobile Number <i>*</i></label><div class="gb-mobile"><div class="pre">&#127477;&#127469; +63</div><input class="gb-input" id="gbMob" name="mobile" inputmode="numeric" maxlength="13" placeholder="9XX XXX XXXX" autocomplete="tel-national"></div><div class="gb-fe" data-e="mobile"></div></div>
+              <div class="gb-field"><label class="gb-label" for="gbEmail">Email <i>*</i></label><input class="gb-input" id="gbEmail" name="email" type="email" maxlength="150" autocomplete="email"><div class="gb-fe" data-e="email"></div></div>
+            </div>
+            <div class="gb-field"><label class="gb-label" for="gbReason">Reason for Booking / Chief Complaint <i>*</i></label><input class="gb-input" id="gbReason" name="reason" maxlength="500"><div class="gb-fe" data-e="reason"></div></div>
+            <div class="gb-field"><label class="gb-accept"><input type="checkbox" id="gbAccept" name="accept" value="1"><span>I have read, understood, and accepted the <a href="auth/termsandpolicy.php" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="private_telecare/privacy-policy.php" target="_blank" rel="noopener">Privacy Policy</a></span></label><div class="gb-fe" data-e="accept"></div></div>
+            <div class="gb-actions"><button class="gb-btn ghost" type="button" data-back="3">Back</button><button class="gb-btn primary" id="gbSubmit" type="submit">Continue</button></div>
+          </form>
+        </div>
+
+        <!-- 5 · email code -->
+        <div class="gb-panel" id="gbP5" hidden>
+          <div class="gb-verify">
+            <div class="gb-h">We're almost there</div>
+            <p>Enter the 6-digit code sent to <b id="gbMail"></b></p>
+            <input class="gb-input gb-code" id="gbCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="------">
+            <div><button class="gb-link" id="gbClear" type="button">CLEAR</button></div>
+            <div class="gb-actions" style="justify-content:center;margin-top:8px"><button class="gb-btn primary" id="gbVerify" type="button" disabled>Verify &amp; Continue</button></div>
+            <div style="margin-top:6px"><button class="gb-link" id="gbResend" type="button" disabled>Resend code</button> &middot; <button class="gb-link" type="button" data-back="4">Edit details</button></div>
+          </div>
+        </div>
+      </div>
+<?php endif; ?>
     </div>
   </section>
 
@@ -1163,7 +1352,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       </div>
       <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.68rem;">
         <a href="index.php" style="color:#c8e4fb;text-decoration:none;">Home</a>
-        <a href="#services" style="color:#c8e4fb;text-decoration:none;">Find a Doctor</a>
+        <a href="#book" style="color:#c8e4fb;text-decoration:none;">Find a Doctor</a>
         <a href="#consultation" style="color:#c8e4fb;text-decoration:none;">Quick Consultation</a>
         <a href="#appointments" style="color:#c8e4fb;text-decoration:none;">Appointments</a>
         <a href="#benefits" style="color:#c8e4fb;text-decoration:none;">Insurance &amp; Benefits</a>
@@ -1337,6 +1526,316 @@ document.querySelectorAll('.feat-card').forEach(card => {
 document.querySelectorAll('.feat-grid .feat-card, .svc-grid .svc-card').forEach((el, i) => {
   el.style.transitionDelay = (i * 55) + 'ms';
 });
+</script>
+<script>
+/* ── Guest booking (no account) ── */
+(function () {
+  var root = document.getElementById('gb');
+  if (!root) return;
+  var CSRF = root.dataset.csrf;
+  var $ = function (id) { return document.getElementById(id); };
+  var S = { step: 1, concern: '', dept: '', doctor: null, schedules: [], settings: {}, booked: [], now: null, selDate: null, selTime: null, calY: 0, calM: 0, busy: false, resendAt: 0, mailed: false };
+  var LABELS = ['Concern', 'Doctor', 'Schedule', 'Details', 'Verify'];
+  var DAYS_S = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  var DAYS_L = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+  function money(n) { return '₱' + Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function api(action, data) {
+    var b = new URLSearchParams(Object.assign({ action: action, csrf: CSRF }, data || {}));
+    return fetch('guest_booking_api.php', { method: 'POST', body: b, credentials: 'same-origin' })
+      .then(function (r) { return r.json().catch(function () { return { ok: false, error: 'Unexpected response. Please try again.' }; }); })
+      .catch(function () { return { ok: false, error: 'Connection problem. Please try again.' }; });
+  }
+  function busy(btn, on, label) {
+    if (!btn) return;
+    if (on) { btn.dataset.l = btn.textContent; btn.disabled = true; if (label) btn.textContent = label; }
+    else { btn.disabled = false; if (btn.dataset.l) btn.textContent = btn.dataset.l; }
+  }
+  function alertBox(msg, html, warn) {
+    var a = $('gbAlert');
+    if (!msg) { a.innerHTML = ''; return; }
+    a.innerHTML = '<div class="gb-alert' + (warn ? ' warn' : '') + '">' + (html ? msg : esc(msg)) + '</div>';
+    a.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  function handleFail(r) {
+    if (r.logged_in) { location.reload(); return; }
+    if (r.expired)   { alertBox('Your session expired. Reloading…'); setTimeout(function () { location.reload(); }, 900); return; }
+    if (r.restart)   { go(1); }
+    if ((r.back === 'schedule' || r.refresh_schedule) && S.doctor) { loadSchedule(S.doctor.id, true); go(3); }
+    if (r.back === 'doctor') { go(2); }
+    if (r.registered) { alertBox(esc(r.error) + ' <a href="auth/login.php">Log in</a>', true); return; }
+    alertBox(r.error || 'Something went wrong. Please try again.');
+  }
+
+  /* ── stepper + panels ── */
+  function renderSteps() {
+    var h = '';
+    LABELS.forEach(function (l, i) {
+      var n = i + 1, cls = n < S.step ? 'done' : (n === S.step ? 'on' : '');
+      h += '<div class="gb-step ' + cls + '"><div class="gb-dot">' + (n < S.step ? '✓' : n) + '</div><span>' + l + '</span></div>';
+      if (n < LABELS.length) h += '<div class="gb-line ' + (n < S.step ? 'done' : '') + '"></div>';
+    });
+    $('gbSteps').innerHTML = h;
+  }
+  function go(n) {
+    S.step = n;
+    for (var i = 1; i <= 5; i++) $('gbP' + i).hidden = (i !== n);
+    renderSteps();
+    alertBox('');
+    if (n === 4 && !$('gbReason').value) $('gbReason').value = S.concern;
+    var top = root.getBoundingClientRect().top + window.pageYOffset - 90;
+    if (Math.abs(window.pageYOffset - top) > 160) window.scrollTo({ top: top, behavior: 'smooth' });
+  }
+  root.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-back]');
+    if (b) go(parseInt(b.dataset.back, 10));
+  });
+
+  /* ── 1 · concern ── */
+  $('gbConcern').addEventListener('input', function () { $('gbCount').textContent = this.value.length; });
+  $('gbFind').addEventListener('click', function () {
+    var v = $('gbConcern').value.trim(), btn = this;
+    if (v.length < 10) { alertBox('Please describe how you feel in a little more detail (at least 10 characters).'); return; }
+    alertBox(''); busy(btn, true, 'Finding the right doctor…');
+    api('recommend', { concern: v }).then(function (r) {
+      busy(btn, false);
+      if (!r.ok) { handleFail(r); return; }
+      S.concern = r.concern; S.dept = r.department; S.doctor = null; S.selDate = S.selTime = null; S.urgent = r.urgent; S.reason = r.reason; S.source = r.source;
+      renderDoctors(r);
+      go(2);
+    });
+  });
+
+  /* ── 2 · doctors ── */
+  function stars(r, c) {
+    if (!c) return '<span class="gb-stars" style="color:var(--muted);font-style:italic">No ratings yet</span>';
+    var f = Math.floor(r), half = (r - f) >= .5 ? 1 : 0;
+    return '<span class="gb-stars">' + '★'.repeat(f) + (half ? '½' : '') + '☆'.repeat(5 - f - half) + ' ' + r.toFixed(1) + ' (' + c + ')</span>';
+  }
+  function avatar(d) {
+    var ini = (d.name || '?').trim().split(/\s+/).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase();
+    return d.photo ? '<img src="' + esc(encodeURI(d.photo)) + '" alt="" onerror="this.remove()">' + esc(ini) : esc(ini);
+  }
+  function renderDoctors(r) {
+    $('gbUrgent').innerHTML = r.urgent ? '<div class="gb-alert"><b>Some symptoms you described can be serious.</b> If they are severe, sudden, or getting worse, do not wait for an appointment. Call <b>911</b> or go to the nearest emergency room.</div>' : '';
+    var suggested = r.department === r.suggested;
+    $('gbRecLabel').textContent = suggested ? 'Suggested department' : 'Selected department';
+    $('gbRecDept').textContent = r.department;
+    $('gbRecReason').textContent = suggested ? (r.reason || 'Based on the words in your description.') : 'You chose this instead of our suggestion (' + r.suggested + ').';
+    $('gbRecSrc').textContent = suggested ? ((r.source === 'ai' ? 'Suggested by our AI assistant' : 'Suggested from your keywords') + ' · this is not a diagnosis.') : '';
+    var chips = '';
+    (r.departments || []).forEach(function (d) { if (d !== r.department) chips += '<button type="button" class="gb-chip" data-dept="' + esc(d) + '">' + esc(d) + '</button>'; });
+    $('gbChips').innerHTML = chips ? '<span>Another department:</span>' + chips : '';
+    var h = '';
+    if (!r.doctors.length) h = '<div class="gb-center" style="grid-column:1/-1"><p>No doctors are listed under this department right now.</p></div>';
+    r.doctors.forEach(function (d) {
+      h += '<div class="gb-doc">' + (d.recommended ? '<span class="gb-badge">Recommended</span>' : '')
+        + '<div class="gb-doc-top"><div class="gb-av">' + avatar(d) + '</div><div><b>Dr. ' + esc(d.name) + '</b><small>' + esc(d.specialty || r.department) + (d.subspecialty ? ' · ' + esc(d.subspecialty) : '') + '</small>' + stars(d.rating, d.rating_count) + '</div></div>'
+        + '<div class="gb-fee">' + money(d.fee) + '</div>'
+        + '<button type="button" class="gb-btn primary" data-doc="' + d.id + '">Select Doctor</button></div>';
+    });
+    $('gbDocs').innerHTML = h;
+  }
+  $('gbP2').addEventListener('click', function (e) {
+    var c = e.target.closest('[data-dept]'), d = e.target.closest('[data-doc]');
+    if (c) {
+      api('doctors', { department: c.dataset.dept }).then(function (r) {
+        if (!r.ok) { handleFail(r); return; }
+        S.dept = r.department; r.concern = S.concern; r.reason = S.reason; r.urgent = S.urgent; r.source = S.source; r.departments = null;
+        var chips = c.parentNode, all = [];
+        chips.querySelectorAll('[data-dept]').forEach(function (x) { all.push(x.textContent); });
+        all.push($('gbRecDept').textContent);
+        r.departments = all;
+        renderDoctors(r);
+      });
+    }
+    if (d) {
+      var btn = d; busy(btn, true, 'Loading…');
+      loadSchedule(parseInt(d.dataset.doc, 10)).then(function (ok) { busy(btn, false); if (ok) go(3); });
+    }
+  });
+
+  /* ── 3 · schedule ── */
+  function toMin(t) { var p = t.split(':'); return (+p[0]) * 60 + (+p[1] || 0); }
+  function fmt12(t) { var p = t.split(':').map(Number), ap = p[0] >= 12 ? 'PM' : 'AM', h = p[0] % 12 || 12; return h + ':' + String(p[1] || 0).padStart(2, '0') + ' ' + ap; }
+  function loadSchedule(id, keepSel) {
+    return api('schedule', { doctor_id: id }).then(function (r) {
+      if (!r.ok) { handleFail(r); return false; }
+      S.doctor = r.doctor; S.schedules = r.schedules; S.settings = r.settings; S.booked = r.booked; S.now = r.now; S.dept = r.department;
+      if (!keepSel) { S.selDate = S.selTime = null; }
+      var p = S.now.date.split('-'); S.calY = +p[0]; S.calM = +p[1] - 1;
+      $('gbSAv').innerHTML = avatar(r.doctor);
+      $('gbSName').textContent = 'Dr. ' + r.doctor.name;
+      $('gbSSpec').textContent = r.doctor.specialty || '';
+      $('gbSDept').textContent = r.department;
+      $('gbSDoc').textContent = 'Dr. ' + r.doctor.name + ' · ' + money(r.doctor.fee);
+      renderCal(); renderTimes(); sumUpdate();
+      return true;
+    });
+  }
+  function slotsFor(s) {
+    var out = [], step = Number(S.settings.appointment_interval) || 30, m = toMin(s.start_time.slice(0, 5)), end = toMin(s.end_time.slice(0, 5));
+    for (; m < end; m += step) out.push(String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'));
+    return out;
+  }
+  function isOpen(dayName, t, date) {
+    var DUR = Number(S.settings.consultation_duration) || 60, m = toMin(t), nowM = S.now.mins;
+    if (date === S.now.date && m <= nowM) return false;
+    var sched = S.schedules.some(function (s) { return s.day_of_week === dayName && m >= toMin(s.start_time.slice(0, 5)) && m + DUR <= toMin(s.end_time.slice(0, 5)); });
+    if (!sched) return false;
+    var bs = S.settings.break_start ? toMin(S.settings.break_start.slice(0, 5)) : null, be = S.settings.break_end ? toMin(S.settings.break_end.slice(0, 5)) : null;
+    if (bs !== null && be !== null && m < be && m + DUR > bs) return false;
+    return !S.booked.some(function (b) { if (b.appointment_date !== date) return false; var bm = toMin(b.appointment_time.slice(0, 5)); return m < bm + DUR && m + DUR > bm; });
+  }
+  function dayHasOpen(dayName, date) {
+    return S.schedules.filter(function (s) { return s.day_of_week === dayName; }).some(function (s) { return slotsFor(s).some(function (t) { return isOpen(dayName, t, date); }); });
+  }
+  function renderCal() {
+    var first = new Date(S.calY, S.calM, 1).getDay(), dim = new Date(S.calY, S.calM + 1, 0).getDate();
+    $('gbMonth').textContent = MONTHS[S.calM] + ' ' + S.calY;
+    var np = S.now.date.split('-');
+    $('gbPrev').disabled = (S.calY === +np[0] && S.calM === +np[1] - 1);
+    var h = DAYS_S.map(function (d) { return '<div class="gb-dn">' + d + '</div>'; }).join('');
+    for (var i = 0; i < first; i++) h += '<div class="gb-c"></div>';
+    for (var d = 1; d <= dim; d++) {
+      var ds = S.calY + '-' + String(S.calM + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+      var dn = DAYS_L[new Date(S.calY, S.calM, d).getDay()];
+      var past = ds < S.now.date, inSched = S.schedules.some(function (s) { return s.day_of_week === dn; });
+      var open = !past && inSched && dayHasOpen(dn, ds);
+      var cls = 'gb-c' + (past ? ' past' : (!inSched ? ' blocked' : (open ? ' av' : ' past'))) + (ds === S.now.date ? ' today' : '') + (S.selDate === ds && open ? ' sel' : '');
+      h += '<div class="' + cls + '"' + (open ? ' data-date="' + ds + '"' : '') + '>' + d + '</div>';
+    }
+    $('gbCal').innerHTML = h;
+  }
+  function renderTimes() {
+    var g = $('gbTimes');
+    if (!S.selDate) { g.innerHTML = '<div style="grid-column:1/-1;color:var(--muted);font-size:.74rem">Select a date to view times.</div>'; return; }
+    var dn = DAYS_L[new Date(S.selDate + 'T00:00:00').getDay()], seen = {}, all = [];
+    S.schedules.filter(function (s) { return s.day_of_week === dn; }).forEach(function (s) { slotsFor(s).forEach(function (t) { if (!seen[t]) { seen[t] = 1; all.push(t); } }); });
+    all.sort();
+    var h = '', any = false;
+    all.forEach(function (t) {
+      var ok = isOpen(dn, t, S.selDate); if (ok) any = true;
+      h += '<div class="gb-t' + (ok ? '' : ' off') + (S.selTime === t ? ' sel' : '') + '"' + (ok ? ' data-time="' + t + '"' : '') + '>' + fmt12(t) + '</div>';
+    });
+    g.innerHTML = any ? h : '<div style="grid-column:1/-1;color:var(--muted);font-size:.74rem">No times available for this date.</div>';
+  }
+  function sumUpdate() {
+    $('gbSWhen').textContent = S.selDate ? (S.selDate + (S.selTime ? ' at ' + fmt12(S.selTime) : '')) : 'Pending selection';
+    $('gbSlotGo').disabled = !(S.selDate && S.selTime);
+  }
+  $('gbPrev').addEventListener('click', function () { S.calM--; if (S.calM < 0) { S.calM = 11; S.calY--; } renderCal(); });
+  $('gbNext').addEventListener('click', function () { S.calM++; if (S.calM > 11) { S.calM = 0; S.calY++; } renderCal(); });
+  $('gbCal').addEventListener('click', function (e) { var c = e.target.closest('[data-date]'); if (!c) return; S.selDate = c.dataset.date; S.selTime = null; renderCal(); renderTimes(); sumUpdate(); });
+  $('gbTimes').addEventListener('click', function (e) { var t = e.target.closest('[data-time]'); if (!t) return; S.selTime = t.dataset.time; renderTimes(); sumUpdate(); });
+  $('gbSlotGo').addEventListener('click', function () {
+    var btn = this; busy(btn, true, 'Checking…');
+    api('select_slot', { date: S.selDate, time: S.selTime }).then(function (r) {
+      busy(btn, false);
+      if (!r.ok) { if (r.refresh_schedule) { S.selTime = null; loadSchedule(S.doctor.id, true); } handleFail(r); return; }
+      go(4);
+    });
+  });
+
+  /* ── 4 · patient details ── */
+  var form = $('gbForm');
+  $('gbDob').addEventListener('input', function () {
+    var d = this.value.replace(/\D/g, '').slice(0, 8), o = d;
+    if (d.length > 2) o = d.slice(0, 2) + '/' + d.slice(2);
+    if (d.length > 4) o = d.slice(0, 2) + '/' + d.slice(2, 4) + '/' + d.slice(4);
+    this.value = o;
+  });
+  $('gbMob').addEventListener('input', function () {
+    var d = this.value.replace(/\D/g, '');
+    if (d.slice(0, 2) === '63') d = d.slice(2);
+    if (d[0] === '0') d = d.slice(1);
+    d = d.slice(0, 10);
+    this.value = d.length > 6 ? d.slice(0, 3) + ' ' + d.slice(3, 6) + ' ' + d.slice(6) : (d.length > 3 ? d.slice(0, 3) + ' ' + d.slice(3) : d);
+  });
+  function fieldErrors(f) {
+    form.querySelectorAll('.gb-fe').forEach(function (n) { n.textContent = ''; });
+    form.querySelectorAll('.bad').forEach(function (n) { n.classList.remove('bad'); });
+    Object.keys(f || {}).forEach(function (k) {
+      var n = form.querySelector('[data-e="' + k + '"]'); if (n) n.textContent = f[k];
+      var i = form.querySelector('[name="' + k + '"]'); if (i && i.type !== 'radio' && i.type !== 'checkbox') i.classList.add('bad');
+    });
+    var first = form.querySelector('.gb-fe:not(:empty)');
+    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var fd = new FormData(form), data = {}; fd.forEach(function (v, k) { data[k] = v; });
+    var errs = {};
+    if ((data.first_name || '').trim().length < 2) errs.first_name = 'Enter your first name.';
+    if ((data.last_name || '').trim().length < 2) errs.last_name = 'Enter your last name.';
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(data.dob || '')) errs.dob = 'Enter your date of birth as MM/DD/YYYY.';
+    if (!data.sex) errs.sex = 'Select your sex.';
+    if ((data.address || '').trim().length < 5) errs.address = 'Enter your address.';
+    if ((data.mobile || '').replace(/\D/g, '').length !== 10) errs.mobile = 'Enter a valid mobile number.';
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email || '')) errs.email = 'Enter a valid email address.';
+    if ((data.reason || '').trim().length < 10) errs.reason = 'Describe your reason for booking.';
+    if (!data.accept) errs.accept = 'Please accept the Terms & Conditions and Privacy Policy.';
+    fieldErrors(errs);
+    if (Object.keys(errs).length) return;
+    alertBox('');
+    var btn = $('gbSubmit'); busy(btn, true, 'Sending code…');
+    api('submit_details', data).then(function (r) {
+      busy(btn, false);
+      if (!r.ok) { if (r.fields) fieldErrors(r.fields); handleFail(r); return; }
+      if (r.already_verified) { finish({ skip: 1 }, btn); return; }
+      showVerify(r);
+    });
+  });
+
+  /* ── 5 · e-mail code ── */
+  function showVerify(r) {
+    $('gbMail').textContent = r.email; $('gbCode').value = ''; $('gbVerify').disabled = true;
+    S.resendAt = Date.now() + (r.resend_in || 45) * 1000; tick(); go(5); $('gbCode').focus();
+  }
+  function tick() {
+    var left = Math.ceil((S.resendAt - Date.now()) / 1000), b = $('gbResend');
+    if (left > 0) { b.disabled = true; b.textContent = 'Resend code (' + left + 's)'; setTimeout(tick, 500); }
+    else { b.disabled = false; b.textContent = 'Resend code'; }
+  }
+  $('gbCode').addEventListener('input', function () {
+    this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    $('gbVerify').disabled = this.value.length !== 6;
+    if (this.value.length === 6) $('gbVerify').click();
+  });
+  $('gbClear').addEventListener('click', function () { $('gbCode').value = ''; $('gbVerify').disabled = true; $('gbCode').focus(); });
+  $('gbResend').addEventListener('click', function () {
+    var b = this; b.disabled = true;
+    api('resend_otp').then(function (r) {
+      if (!r.ok) { alertBox(r.error || 'Could not resend the code.'); if (r.wait) { S.resendAt = Date.now() + r.wait * 1000; tick(); } else { b.disabled = false; } return; }
+      alertBox(''); S.resendAt = Date.now() + (r.resend_in || 45) * 1000; tick(); $('gbCode').value = ''; $('gbCode').focus();
+    });
+  });
+  function finish(extra, btn, done) {
+    busy(btn, true, 'Verifying…');
+    api('verify_otp', extra).then(function (r) {
+      if (!r.ok) {
+        if (done) done();
+        busy(btn, false);
+        if (r.verified) { S.mailed = true; }
+        handleFail(r);
+        if (r.bad_code) { $('gbCode').value = ''; $('gbVerify').disabled = true; $('gbCode').focus(); }
+        return;
+      }
+      btn.textContent = 'Redirecting…';
+      location.href = r.redirect;
+    });
+  }
+  var verifying = false;
+  $('gbVerify').addEventListener('click', function () {
+    if (verifying) return; verifying = true;
+    var btn = this, code = $('gbCode').value;
+    finish({ code: code }, btn, function () { verifying = false; });
+  });
+
+  renderSteps();
+})();
 </script>
 </body>
 </html>

@@ -17,7 +17,7 @@ define('PAYMONGO_SECRET_KEY', $paymongoSecretKey);
 $appt_id = (int)($_GET['appt_id'] ?? 0);
 if (!$appt_id) { header('Location: ../visits.php'); exit; }
 
-$conn->query("UPDATE appointments SET status='Cancelled' WHERE status='Pending' AND payment_status='Unpaid' AND created_at < (NOW() - INTERVAL 10 MINUTE)");
+$conn->query("UPDATE appointments SET status='Cancelled' WHERE status='Pending' AND payment_status='Unpaid' AND created_at < (NOW() - INTERVAL 15 MINUTE)");
 
 $stmt = $conn->prepare("
     SELECT a.*, d.full_name AS doctor_name, d.specialty, d.consultation_fee,

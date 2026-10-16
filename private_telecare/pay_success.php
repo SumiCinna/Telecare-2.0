@@ -168,7 +168,14 @@ if ($verified) {
 
     // Notify the patient by email. Best-effort — a failed send is logged
     // (see includes/emailjs.php) but never blocks the payment flow.
-    send_appointment_confirmation_email($appt, $receipt_no);
+    // Guests (booked from the landing page, no account) get the consultation-room e-mail instead.
+    $__gb = __DIR__ . '/../includes/guest_booking.php';
+    if (is_file($__gb)) { require_once $__gb; }
+    if (function_exists('guest_is_guest_appointment') && guest_is_guest_appointment($conn, (int)$appt_id)) {
+        guest_notify_booking_confirmed($conn, (int)$appt_id, 'GCash', $receipt_no);
+    } else {
+        send_appointment_confirmation_email($appt, $receipt_no);
+    }
 
     $_SESSION['toast'] = "Payment successful! Your appointment is confirmed.";
     header('Location: router.php?page=booking/success&appt_id=' . $appt_id);
