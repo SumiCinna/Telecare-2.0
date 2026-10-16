@@ -806,7 +806,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
   </section>
 
   <section class="kit-section kit-app" id="download">
-    <div class="container kit-app-grid"><div><div class="kit-eyebrow">Download TELE-CARE App</div><h2>Download TELE-CARE App</h2><p>Get convenient access to healthcare services from your mobile device.</p><div class="kit-store-row"><a class="kit-store" href="#"><strong>Google Play</strong></a><a class="kit-store" href="#"><strong>App Store</strong></a></div><small style="display:block;margin-top:10px;color:var(--muted);">Coming Soon</small></div><div class="kit-phone"><img src="/src/assets/logo.png" alt="Tele-Care app"/></div></div>
+    <div class="container kit-app-grid"><div><div class="kit-eyebrow">Download TELE-CARE App</div><h2>Download TELE-CARE App</h2><p>Get convenient access to healthcare services from your mobile device.</p><div class="kit-store-row"><a class="kit-store" href="#"><strong>Google Play</strong></a><a class="kit-store" href="#"><strong>App Store</strong></a></div><small style="display:block;margin-top:10px;color:var(--muted);">Coming Soon</small></div><div class="kit-phone"><img src="telecarelogo.png" alt="Tele-Care app"/></div></div>
   </section>
 </main>
 
