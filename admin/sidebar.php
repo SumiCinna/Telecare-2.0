@@ -448,7 +448,7 @@ aside.sidebar .logout-btn svg {
       </summary>
 
       <div class="nav-dropdown-items">
-        <a href="hmo.php"
+        <a href="hmo_dashboard.php"
            class="nav-link <?= $activeNav === 'hmo-dashboard' ? 'active' : '' ?>">
           HMO Dashboard
         </a>
