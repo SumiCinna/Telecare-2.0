@@ -1,112 +1,104 @@
-﻿<?php
+<?php
 // admin/sidebar.php
 
 $activeNav = $activeNav ?? '';
+$hmoActive = in_array($activeNav, ['hmo-dashboard', 'hmo-rules', 'hmo-staff', 'hmo-transactions', 'hmo-reports', 'hmo-audit', 'pos-hmo'], true);
 ?>
-<style>
-aside.sidebar{
-  --tc-red:#B31118; --tc-ink:#151c27; --tc-line:rgba(21,28,39,0.08); --tc-muted:rgba(21,28,39,0.5);
-  position:fixed; top:0; left:0; bottom:0; width:240px; z-index:150;
-  background:#f1f3fc; border-right:1px solid #dce1ef;
-  display:flex; flex-direction:column; padding:1.2rem .85rem;
-  font-family:'Inter',sans-serif; overflow-y:auto; box-sizing:border-box;
-}
-aside.sidebar .sidebar-logo{
-  display:flex; align-items:center; gap:.65rem; padding:0 .3rem; margin-bottom:1.2rem;
-  font-size:inherit; letter-spacing:0; color:inherit;
-}
-aside.sidebar .sidebar-logo-mark{
-  width:36px; height:36px; border-radius:8px; overflow:hidden; flex-shrink:0;
-  display:flex; align-items:center; justify-content:center;
-}
-aside.sidebar .sidebar-logo-mark img{ width:100%; height:100%; object-fit:contain; display:block; }
-aside.sidebar .sidebar-logo-name{ font-weight:800; font-size:.86rem; color:var(--tc-ink); line-height:1.15; white-space:nowrap; }
-aside.sidebar .sidebar-logo-sub{ font-size:.6rem; color:var(--tc-muted); margin-top:.1rem; font-weight:500; }
-
-aside.sidebar .sidebar-admin{
-  background:#fff; border:1px solid var(--tc-line); border-radius:8px;
-  padding:.6rem .75rem; margin-bottom:1.2rem; font-size:.62rem; color:var(--tc-muted); line-height:1.5;
-}
-aside.sidebar .sidebar-admin strong{ display:block; font-size:.8rem; color:var(--tc-ink); font-weight:700; }
-
-aside.sidebar .nav-links{ display:flex; flex-direction:column; gap:.3rem; flex:1; }
-aside.sidebar .nav-section-label{
-  font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
-  color:var(--tc-muted); padding:.9rem .7rem .3rem;
-}
-aside.sidebar .nav-link{
-  display:flex; align-items:center; gap:.55rem;
-  padding:.65rem .7rem; border-radius:7px;
-  color:var(--tc-muted); font-size:.78rem; font-weight:600;
-  text-decoration:none; transition:all .2s; white-space:nowrap;
-  background:none; border:none;
-}
-aside.sidebar .nav-link svg{ width:18px; height:18px; flex-shrink:0; stroke:currentColor; }
-aside.sidebar .nav-link:hover{ background:rgba(21,28,39,0.05); color:var(--tc-ink); }
-aside.sidebar .nav-link.active{ background:var(--tc-red); color:#fff; box-shadow:0 3px 9px rgba(179,17,24,0.22); }
-
-aside.sidebar .sidebar-logout{ border-top:1px solid var(--tc-line); padding-top:.6rem; margin-top:.6rem; }
-aside.sidebar .logout-btn{
-  display:flex; align-items:center; gap:.55rem; width:100%; box-sizing:border-box;
-  padding:.65rem .7rem; border-radius:7px; background:none; border:none;
-  color:var(--tc-muted); font-size:.78rem; font-weight:600; text-decoration:none;
-  font-family:'Inter',sans-serif; cursor:pointer; transition:all .2s;
-}
-aside.sidebar .logout-btn:hover{ background:rgba(179,17,24,0.08); color:var(--tc-red); }
-aside.sidebar .logout-btn svg{ flex-shrink:0; }
-</style>
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <div class="sidebar-logo-mark"><img src="/telecarelogo.png" alt="TELE-CARE"/></div>
+    <div class="sidebar-logo-mark"><img src="/telecarelogo.png" alt="TELE-CARE"></div>
     <div>
       <div class="sidebar-logo-name">TELE-CARE</div>
       <div class="sidebar-logo-sub">Admin Portal</div>
     </div>
   </div>
+
   <div class="sidebar-admin">Signed in as<strong><?= htmlspecialchars($_SESSION['admin_name'] ?? 'Admin') ?></strong></div>
-  <nav class="nav-links">
+
+  <nav class="nav-links" aria-label="Admin navigation">
     <a href="dashboard.php" class="nav-link <?= $activeNav === 'dashboard' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
       Dashboard
     </a>
+
     <a href="Users.php" class="nav-link <?= $activeNav === 'users' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       User Management
     </a>
+
     <a href="assignments.php" class="nav-link <?= $activeNav === 'assignments' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
       Assignments
     </a>
+
     <a href="templates.php" class="nav-link <?= $activeNav === 'pos-templates' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 4.5h6a2 2 0 012 2V19a2 2 0 01-2 2H9a2 2 0 01-2-2V6.5a2 2 0 012-2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9.5 8.5h5M9.5 11.5h5M9.5 14.5h3"/></svg>
       Templates
     </a>
-    <div class="nav-section-label">POS Management</div>
+
     <a href="inventory.php" class="nav-link <?= $activeNav === 'pos-products' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
       Inventory
     </a>
+
     <a href="services.php" class="nav-link <?= $activeNav === 'pos-services' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M5 8h14M6 8v10a2 2 0 002 2h8a2 2 0 002-2V8"/></svg>
       Services
     </a>
+
     <a href="discounts.php" class="nav-link <?= $activeNav === 'pos-discounts' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5l-8 8m0-8l8 8M5 5h.01M19 19h.01"/></svg>
       Discounts
     </a>
+
     <a href="prices.php" class="nav-link <?= $activeNav === 'pos-prices' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v20m5-17H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
       Prices
     </a>
-    <a href="hmo_dashboard.php" class="nav-link <?= in_array($activeNav, ['hmo-dashboard','hmo-rules','hmo-staff','hmo-transactions','hmo-reports','hmo-audit','pos-hmo'], true) ? 'active' : '' ?>">
-      <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-      HMO
-    </a>
+
     <a href="receipt_config.php" class="nav-link <?= $activeNav === 'pos-receipt' ? 'active' : '' ?>">
       <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
       Receipt Config
     </a>
+
+    <div class="nav-section-label">HMO Management</div>
+
+    <a href="hmo_dashboard.php" class="nav-link <?= $activeNav === 'hmo-dashboard' ? 'active' : '' ?>">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12h18M12 3v18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg>
+      HMO Dashboard
+    </a>
+
+    <a href="hmo_providers.php" class="nav-link <?= $activeNav === 'pos-hmo' ? 'active' : '' ?>">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+      HMO Providers
+    </a>
+
+    <a href="hmo_transactions.php" class="nav-link <?= $activeNav === 'hmo-transactions' ? 'active' : '' ?>">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
+      Transactions
+    </a>
+
+    <a href="hmo_rules.php" class="nav-link <?= $activeNav === 'hmo-rules' ? 'active' : '' ?>">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 4.5h6a2 2 0 012 2V19a2 2 0 01-2 2H9a2 2 0 01-2-2V6.5a2 2 0 012-2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9.5 9h5M9.5 12h5M9.5 15h3"/></svg>
+      Coverage &amp; Rules
+    </a>
+
+    <a href="hmo_staff.php" class="nav-link <?= $activeNav === 'hmo-staff' ? 'active' : '' ?>">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Staff &amp; Permissions
+    </a>
+
+    <a href="hmo_reports.php" class="nav-link <?= $activeNav === 'hmo-reports' ? 'active' : '' ?>">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5m0 14h16M8 15l3-3 3 2 4-5"/></svg>
+      Reports
+    </a>
+
+    <a href="hmo_audit.php" class="nav-link <?= $activeNav === 'hmo-audit' ? 'active' : '' ?>">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      Audit Logs
+    </a>
   </nav>
+
   <div class="sidebar-logout">
     <a href="logout.php" class="logout-btn">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
