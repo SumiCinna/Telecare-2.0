@@ -30,10 +30,6 @@
       ['appointments.php','appointments', 'Appointments',
         '<path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>'],
 
-      // HMO — shield with check
-      ['hmo_queue.php',   'HMO',          'HMO Verification',
-        '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"/>'],
-
       // Doctors — stethoscope
       ['doctors.php',     'doctors',      'Doctors',
         '<path stroke-linecap="round" stroke-linejoin="round" d="M6 3v5a4 4 0 008 0V3"/><path stroke-linecap="round" d="M6 3H4.5M14 3h1.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 12v2a5 5 0 0010 0v-1"/><circle cx="20" cy="10" r="2"/>'],
@@ -44,11 +40,37 @@
     ];
     foreach ($nav as [$href, $key, $label, $icon]): ?>
     <a href="<?= $href ?>" class="sb-link <?= $active_page === $key ? 'active' : '' ?>">
-      <svg class="sb-link-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="1.8" aria-hidden="true"><?= $icon ?></svg>
+      <?php if ($key === 'pos'): ?>
+        <img class="pos-nav-icon" src="https://cdn-icons-png.flaticon.com/512/5950/5950578.png" alt="" aria-hidden="true"/>
+      <?php else: ?>
+        <svg class="sb-link-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.8" aria-hidden="true"><?= $icon ?></svg>
+      <?php endif; ?>
       <span class="sb-link-label"><?= $label ?></span>
     </a>
     <?php endforeach ?>
+    <style>
+      .pos-nav-icon{width:20px;height:20px;object-fit:contain;flex-shrink:0;border-radius:4px}
+      .sb-link.active .pos-nav-icon{filter:brightness(0) invert(1)}
+    </style>
+    <details class="hmo-nav-group" <?= strpos((string)$active_page, 'hmo-') === 0 ? 'open' : '' ?>>
+      <summary class="sb-link <?= strpos((string)$active_page, 'hmo-') === 0 ? 'active' : '' ?>">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"/>
+        </svg>
+        <span class="sb-link-label">HMO Management</span>
+        <svg class="hmo-nav-chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="hmo-nav-items">
+        <a href="hmo_dashboard.php" class="sb-link <?= $active_page === 'hmo-dashboard' ? 'active' : '' ?>"><span class="sb-link-label">HMO Dashboard</span></a>
+        <a href="hmo_verification.php" class="sb-link <?= $active_page === 'hmo-verification' ? 'active' : '' ?>"><span class="sb-link-label">Patient HMO Verification</span></a>
+        <a href="hmo_inquiry.php" class="sb-link <?= $active_page === 'hmo-inquiry' ? 'active' : '' ?>"><span class="sb-link-label">HMO Inquiry &amp; Authorization Requests</span></a>
+        <a href="hmo_processing.php" class="sb-link <?= $active_page === 'hmo-processing' ? 'active' : '' ?>"><span class="sb-link-label">HMO Transaction Processing</span></a>
+        <a href="hmo_claims.php" class="sb-link <?= $active_page === 'hmo-claims' ? 'active' : '' ?>"><span class="sb-link-label">HMO Claims Preparation</span></a>
+        <a href="hmo_history.php" class="sb-link <?= $active_page === 'hmo-history' ? 'active' : '' ?>"><span class="sb-link-label">HMO Transaction History</span></a>
+      </div>
+    </details>
   </nav>
   <div class="sb-foot">
     <a href="logout.php">
@@ -74,3 +96,19 @@
     };
   })();
 </script>
+<style>
+.hmo-nav-group{margin:0}
+.hmo-nav-group summary{list-style:none;cursor:pointer}
+.hmo-nav-group summary::-webkit-details-marker{display:none}
+.hmo-nav-group .hmo-nav-chevron{margin-left:auto;transition:transform .2s}
+.hmo-nav-group[open] .hmo-nav-chevron{transform:rotate(180deg)}
+.hmo-nav-items{display:flex;flex-direction:column;gap:2px;padding:3px 0 5px}
+.hmo-nav-items .sb-link{padding-left:50px;font-size:12px;line-height:1.3;white-space:normal}
+.hmo-nav-items .sb-link.active{background:rgba(255,255,255,.16)}
+@media(max-width:700px){
+  .hmo-nav-group{display:contents}
+  .hmo-nav-group summary{display:none}
+  .hmo-nav-items{display:contents}
+  .hmo-nav-items .sb-link{padding:0.4rem 0.6rem;font-size:.63rem;white-space:normal}
+}
+</style>
