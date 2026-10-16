@@ -349,6 +349,8 @@ function guest_upsert_patient(mysqli $conn, array $f): array {
     $val = function (string $name, $v) use ($cols, $enumPick) {
         $c = $cols[$name];
         if (stripos((string)$c['Type'], 'enum') === 0) return $enumPick($c, (string)$v);
+        // varchar(n): cut to the column length (e.g. patients.home_address is varchar(100))
+        if (is_string($v) && preg_match('/^varchar\((\d+)\)/i', (string)$c['Type'], $m)) return mb_substr($v, 0, (int)$m[1]);
         return $v;
     };
 
