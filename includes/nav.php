@@ -3,6 +3,9 @@
 // $active_nav must be set before including: 'home' | 'visits' | 'meds' | 'billing' | 'profile'
 $active_nav = $active_nav ?? 'home';
 
+// The Android app (Capacitor) appends "TeleCareApp" to the user agent.
+$tcIsApp = stripos($_SERVER['HTTP_USER_AGENT'] ?? '', 'TeleCareApp') !== false;
+
 $nav_pages = [
     'home'    => ['href' => 'router.php?page=dashboard', 'label' => 'Dashboard',
             'icon' => '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>'],
@@ -14,7 +17,7 @@ $nav_pages = [
             'icon' => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/>'],
 ];
 // NOTE: The "Settings" / profile link was intentionally removed from the
-// sidebar â€” it's already reachable from the profile dropdown in the header
+// sidebar - it's already reachable from the profile dropdown in the header
 // (includes/header.php), so keeping it here just duplicated the entry.
 ?>
 <style>
@@ -169,3 +172,23 @@ body.sidebar-collapsed{ padding-left:var(--tc-sidebar-w-collapsed); }
 body{padding-left:var(--tc-sidebar-w);background:#f5f9fd}
 @media(max-width:900px){body{padding-left:0}}
 </style>
+
+<?php if ($tcIsApp): ?>
+<style>
+/* ── Android app only: keep the UI clear of the status bar and the gesture/nav bar ── */
+body.tc-app{ --tc-safe-top:max(env(safe-area-inset-top, 0px), 32px); --tc-safe-bottom:max(env(safe-area-inset-bottom, 0px), 16px); padding-top:var(--tc-safe-top); }
+body.tc-app::before{ content:''; position:fixed; top:0; left:0; right:0; height:var(--tc-safe-top); background:#fff; z-index:10000; }
+@media(max-width:900px){
+  body.tc-app, body.tc-app.sidebar-collapsed{ padding-bottom:calc(72px + var(--tc-safe-bottom)); }
+  body.tc-app .sidebar, body.tc-app .sidebar.collapsed{ padding-bottom:calc(0.5rem + var(--tc-safe-bottom)); }
+}
+</style>
+<script>
+(function(){
+  document.body.classList.add('tc-app');
+  // env(safe-area-inset-*) only reports values when the viewport allows drawing edge to edge.
+  var m = document.querySelector('meta[name="viewport"]');
+  if (m && m.content.indexOf('viewport-fit') === -1) { m.content += ', viewport-fit=cover'; }
+})();
+</script>
+<?php endif; ?>

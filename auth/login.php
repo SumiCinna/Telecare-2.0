@@ -102,7 +102,7 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>Log In - TELE-CARE AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
@@ -158,6 +158,9 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
     .policy-content h1, .policy-content h2, .policy-content h3 { text-align:left; color:var(--ink); }
     @media (max-width:480px) { body { padding:1.25rem .75rem; } .legal-links { gap:.8rem; } }
 
+    /* ── Android app only: keep content clear of the status bar / gesture bar ── */
+    body.is-app { padding-top:calc(2rem + max(env(safe-area-inset-top, 0px), 32px)); padding-bottom:calc(2rem + max(env(safe-area-inset-bottom, 0px), 16px)); }
+
     /* ── Android app only: guest booking button ── */
     .btn-guest { display:flex; align-items:center; justify-content:center; width:100%; height:40px; border:1.5px solid var(--red); border-radius:6px; background:#fff; color:var(--red); font-size:.8rem; font-weight:700; text-decoration:none; }
     .btn-guest:hover { background:#fff3f3; text-decoration:none; }
@@ -179,7 +182,7 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
     @keyframes splashOut { to { opacity:0; visibility:hidden; pointer-events:none; } }
   </style>
 </head>
-<body>
+<body class="<?= $isApp ? 'is-app' : '' ?>">
 <?php if ($isApp): ?>
   <div class="splash" id="splash" aria-hidden="true">
     <div class="splash-glow"></div>
