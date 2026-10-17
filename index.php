@@ -21,7 +21,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
 <head>
   <link rel="icon" type="image/png" href="telecarelogo.png">
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title><?= $pageTitle ?></title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
@@ -820,12 +820,13 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     .app-bar { display:none; }
     .app-mode nav, .app-mode .mob-menu, .app-mode footer { display:none !important; }
     .app-mode .kit-page > section:not(#book) { display:none !important; }
-    .app-mode .app-bar { display:flex; position:sticky; top:0; z-index:200; align-items:center; gap:12px; padding:12px 16px; background:rgba(255,255,255,.97); border-bottom:1px solid var(--line); box-shadow:0 2px 16px rgba(33,102,177,.08); }
+    .app-mode .app-bar { display:flex; position:sticky; top:0; z-index:200; align-items:center; gap:12px; padding:calc(12px + max(env(safe-area-inset-top, 0px), 32px)) 16px 12px; background:rgba(255,255,255,.97); border-bottom:1px solid var(--line); box-shadow:0 2px 16px rgba(33,102,177,.08); }
     .app-bar a { display:inline-flex; align-items:center; gap:6px; color:var(--blue); font-size:.78rem; font-weight:700; text-decoration:none; }
     .app-bar a svg { width:16px; height:16px; }
     .app-bar b { margin-left:auto; color:var(--blue-dark); font-size:.85rem; }
     .app-mode .gb-section { border-top:0; padding-top:24px; }
     .app-mode .container { padding:0 14px; }
+    .app-mode { padding-bottom:max(env(safe-area-inset-bottom, 0px), 24px); }
   </style>
 </head>
 <body class="<?= $appBook ? 'app-mode' : '' ?>">
