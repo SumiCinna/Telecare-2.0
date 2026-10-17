@@ -23,6 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'No departments are available for booking right now. Please check back later.';
     } elseif (mb_strlen($concern) < CONCERN_MIN) {
         $error = 'Please describe your concern in a little more detail (at least ' . CONCERN_MIN . ' characters).';
+    } elseif (($gib = booking_concern_error($concern)) !== null) {
+        $error = $gib;
     } else {
         // A different concern means a different recommendation: drop everything chosen after this step.
         $prev = $_SESSION['booking']['concern'] ?? '';
@@ -89,7 +91,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($_SESSION['booking']['rec'])) {
                 $_SESSION['booking']['rec'] = booking_recommend_department($conn, $concern);
             }
+            if (!empty($_SESSION['booking']['rec']['invalid'])) {
+                // The AI judged it not to be a real health concern: do not continue.
+                unset($_SESSION['booking']['rec'], $_SESSION['booking']['concern']);
+                $error = 'That does not look like a health concern. Please describe your symptoms or the reason for your visit in your own words.';
+            } else {
             header('Location: router.php?page=booking/step2_doctor'); exit;
+            }
         }
     }
 }

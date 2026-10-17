@@ -91,6 +91,8 @@ switch ($action) {
 case 'recommend': {
     $concern = booking_clean($_POST['concern'] ?? '', 500);
     if (mb_strlen($concern) < 10) gb_fail('Please describe how you feel in a little more detail (at least 10 characters).');
+    // Gibberish such as "ahsdawdjask" must not proceed.
+    if (($bad = booking_concern_error($concern)) !== null) gb_fail($bad);
 
     $now = time();
     $hist = array_filter($_SESSION['gb_rec_hist'] ?? [], fn($t) => $t > $now - 3600);
@@ -101,6 +103,10 @@ case 'recommend': {
     if (!$available) gb_fail('No doctors are available for booking right now. Please check back later.');
 
     $rec  = booking_recommend_department($conn, $concern);
+    if (!empty($rec['invalid'])) {
+        unset($_SESSION['gb']);
+        gb_fail('That does not look like a health concern. Please describe your symptoms or the reason for your visit in your own words.');
+    }
     $dept = isset($available[$rec['department']]) ? $rec['department'] : (string)array_key_first($available);
 
     $_SESSION['gb'] = ['concern' => $concern, 'rec' => $rec, 'department' => $dept];
@@ -194,6 +200,7 @@ case 'submit_details': {
     if (!$phone)                                      $errs['mobile']     = 'Enter a valid mobile number (09XX XXX XXXX).';
     if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 150) $errs['email'] = 'Enter a valid email address.';
     if (mb_strlen($why) < 10)                         $errs['reason']     = 'Describe your reason for booking.';
+    elseif (booking_concern_error($why) !== null)     $errs['reason']     = 'Describe your reason for booking in real words.';
     if (empty($_POST['accept']))                      $errs['accept']     = 'Please accept the Terms & Conditions and Privacy Policy.';
     if ($errs) gb_out(['ok' => false, 'error' => 'Please check the highlighted fields.', 'fields' => $errs], 422);
 

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // index.php
 // The Android app (Capacitor) appends "TeleCareApp" to the user agent.
 // App users never see the landing page: they go to the login screen.
@@ -1629,10 +1629,48 @@ document.querySelectorAll('.feat-grid .feat-card, .svc-grid .svc-card').forEach(
   });
 
   /* ── 1 · concern ── */
+
+  /* Rejects gibberish concerns ("ahsdawdjask", "asdf", "aaaa") before anything is sent. Mirrors booking_concern_error() in PHP. */
+  var OK_CC = {}; ('bl br ch ck cl cr ct dr dg ff fl fr gh gl gr gn kn ld lf lk lm lp lt lb lc lv ly mb mp mn ms nd ng nk nt ns nc nj nf nv nl ph pl pr ps pt rb rc rd rf rg rk rl rm rn rp rs rt rv rw rh sc sh sk sl sm sn sp st sw sq th tr ts tw wh wr wl xp xc ft bt dm dv bd gm pn tl kt gk mg tc cc bb dd gg ll mm nn pp rr ss tt zz kl kb kw dl ny cy cs').split(' ').forEach(function (k) { OK_CC[k] = 1; });
+  function concernLooksFake(text) {
+    var t = (text || '').toLowerCase().trim(), flat = t.replace(/\s+/g, '');
+    if (!flat) return true;
+    var letters = (flat.match(/\p{L}/gu) || []).length;
+    if (letters < 3 || letters / flat.length < 0.6) return true;
+    if (/^(.{1,3})\1{3,}$/u.test(flat)) return true;
+    var words = t.match(/\p{L}+/gu) || [], shortOk = ['ng','sa','ko','ay','na','at','ba','po','mo','ka','ta','ha','di'],
+        allow = ['strengths','lengths','twelfths','strength'], V = /[aeiouyáéíóúàèìòùäëïöü]/u, judged = 0, bad = 0;
+    words.forEach(function (w) {
+      var len = Array.from(w).length;
+      if (len < 3 || shortOk.indexOf(w) > -1) return;
+      judged++;
+      if (allow.indexOf(w) > -1) return;
+      var vow = (w.match(/[aeiouyáéíóúàèìòùäëïöü]/gu) || []).length, isBad = false;
+      if (len >= 4 && vow === 0) isBad = true;
+      if (!isBad && len >= 7 && vow / len < 0.25) isBad = true;
+      if (!isBad && /[^aeiouyáéíóúàèìòùäëïöü]{5,}/u.test(w)) isBad = true;
+      if (!isBad && /(.)\1{3,}/u.test(w)) isBad = true;
+      if (!isBad && /^(.{1,3})\1{2,}$/u.test(w)) isBad = true;
+      if (!isBad) {
+        var ch = Array.from(w), pairs = 0;
+        for (var i = 0; i < ch.length - 1; i++) {
+          if (V.test(ch[i]) || V.test(ch[i + 1]) || ch[i] === ch[i + 1]) continue;
+          if (ch[i + 1] === 's' && i + 1 === ch.length - 1) continue;
+          if (!OK_CC[ch[i] + ch[i + 1]]) pairs++;
+        }
+        if (pairs >= 2) isBad = true;
+      }
+      if (!isBad && /^(ha|he|hi|ho|ja|ji|je|xd|lol|wk|kek)+$/.test(w)) isBad = true;
+      if (!isBad && /asdf|sdfg|dfgh|fghj|ghjk|hjkl|qwer|wert|erty|rtyu|tyui|yuio|uiop|zxcv|xcvb|cvbn|vbnm|asd[fg]|kjh|lkj/.test(w)) isBad = true;
+      if (isBad) bad++;
+    });
+    return judged === 0 || bad / judged >= 0.5;
+  }
   $('gbConcern').addEventListener('input', function () { $('gbCount').textContent = this.value.length; });
   $('gbFind').addEventListener('click', function () {
     var v = $('gbConcern').value.trim(), btn = this;
     if (v.length < 10) { alertBox('Please describe how you feel in a little more detail (at least 10 characters).'); return; }
+    if (concernLooksFake(v)) { alertBox('Please describe your health concern in real words (for example: "dry cough and fever for 3 days").'); return; }
     alertBox(''); busy(btn, true, 'Finding the right doctor…');
     api('recommend', { concern: v }).then(function (r) {
       busy(btn, false);
