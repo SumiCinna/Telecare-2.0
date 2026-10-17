@@ -85,6 +85,17 @@ Options -Indexes
     Deny from all
 </Files>
 
+# Serve the Android APK correctly so browsers download it instead of showing text
+<IfModule mod_mime.c>
+    AddType application/vnd.android.package-archive .apk
+</IfModule>
+<FilesMatch "\.apk$">
+    <IfModule mod_headers.c>
+        Header set Content-Disposition "attachment"
+        Header set Cache-Control "no-cache"
+    </IfModule>
+</FilesMatch>
+
 # Security headers
 <IfModule mod_headers.c>
     Header always set X-Frame-Options "SAMEORIGIN"

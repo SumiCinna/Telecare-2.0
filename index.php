@@ -1,5 +1,15 @@
 ﻿<?php
 // index.php
+// The Android app (Capacitor) appends "TeleCareApp" to the user agent.
+// App users never see the landing page: they go to the login screen.
+// The only exception is index.php?app=1, which shows just the guest booking widget.
+$isApp   = stripos($_SERVER['HTTP_USER_AGENT'] ?? '', 'TeleCareApp') !== false;
+$appBook = $isApp && !empty($_GET['app']);
+if ($isApp && !$appBook) {
+    header('Location: auth/login.php');
+    exit;
+}
+
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 if (empty($_SESSION['gb_csrf'])) { $_SESSION['gb_csrf'] = bin2hex(random_bytes(32)); }
 // A signed-in (non-guest) patient books from the account, not from this widget.
@@ -699,6 +709,9 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     .kit-phone img { display:block; width:100%; border-radius:14px; }
     .kit-store-row { display:flex; gap:9px; margin-top:16px; flex-wrap:wrap; }
     .kit-store { padding:8px 12px; border:1px solid var(--blue); border-radius:8px; color:var(--blue-dark); font-size:.65rem; text-decoration:none; background:#fff; }
+    .kit-store-apk { display:inline-flex; align-items:center; gap:8px; padding:11px 18px; border-radius:20px; border:0; color:#fff; background:var(--blue); box-shadow:0 7px 16px rgba(33,102,177,.22); font-size:.75rem; font-weight:700; text-decoration:none; }
+    .kit-store-apk:hover { background:var(--blue-dark); }
+    .kit-store-apk svg { width:16px; height:16px; }
     .nav-links li:first-child a { color:var(--blue); font-weight:700; }
     .nav-links li:first-child a::after { width:100%; }
     footer { padding:28px 0; background:var(--blue-dark); border:0; color:#c8e4fb; }
@@ -802,9 +815,30 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     .gb-center p { color:var(--muted); font-size:.82rem; margin-bottom:16px; }
     @media(max-width:780px) { .gb-sched { grid-template-columns:1fr; } .gb-card { padding:18px 14px; } .gb-grid2 { grid-template-columns:1fr; } }
     @media(max-width:520px) { .gb-step { min-width:46px; } .gb-step span { font-size:.56rem; } .gb-actions { flex-direction:column-reverse; align-items:stretch; } .gb-btn { width:100%; } .gb-docs { grid-template-columns:1fr; } }
+
+    /* ── Android app: booking-only mode (index.php?app=1) ── */
+    .app-bar { display:none; }
+    .app-mode nav, .app-mode .mob-menu, .app-mode footer { display:none !important; }
+    .app-mode .kit-page > section:not(#book) { display:none !important; }
+    .app-mode .app-bar { display:flex; position:sticky; top:0; z-index:200; align-items:center; gap:12px; padding:12px 16px; background:rgba(255,255,255,.97); border-bottom:1px solid var(--line); box-shadow:0 2px 16px rgba(33,102,177,.08); }
+    .app-bar a { display:inline-flex; align-items:center; gap:6px; color:var(--blue); font-size:.78rem; font-weight:700; text-decoration:none; }
+    .app-bar a svg { width:16px; height:16px; }
+    .app-bar b { margin-left:auto; color:var(--blue-dark); font-size:.85rem; }
+    .app-mode .gb-section { border-top:0; padding-top:24px; }
+    .app-mode .container { padding:0 14px; }
   </style>
 </head>
-<body>
+<body class="<?= $appBook ? 'app-mode' : '' ?>">
+
+<?php if ($appBook): ?>
+<div class="app-bar">
+  <a href="auth/login.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+    Back to Login
+  </a>
+  <b>Book a Doctor</b>
+</div>
+<?php endif; ?>
 
 <div class="scroll-bar" id="scrollBar"></div>
 
@@ -995,7 +1029,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
   </section>
 
   <section class="kit-section kit-app" id="download">
-    <div class="container kit-app-grid"><div><div class="kit-eyebrow">Download TELE-CARE App</div><h2>Download TELE-CARE App</h2><p>Get convenient access to healthcare services from your mobile device.</p><div class="kit-store-row"><a class="kit-store" href="#"><strong>Google Play</strong></a><a class="kit-store" href="#"><strong>App Store</strong></a></div><small style="display:block;margin-top:10px;color:var(--muted);">Coming Soon</small></div><div class="kit-phone"><img src="telecarelogo.png" alt="Tele-Care app"/></div></div>
+    <div class="container kit-app-grid"><div><div class="kit-eyebrow">Download TELE-CARE App</div><h2>Download TELE-CARE App</h2><p>Get convenient access to healthcare services from your mobile device.</p><div class="kit-store-row"><a class="kit-store-apk" href="downloads/telecare.apk" download><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>Download for Android (APK)</a></div><small style="display:block;margin-top:10px;color:var(--muted);">Android only &middot; iOS coming soon</small></div><div class="kit-phone"><img src="telecarelogo.png" alt="Tele-Care app"/></div></div>
   </section>
 </main>
 
@@ -1566,7 +1600,7 @@ document.querySelectorAll('.feat-grid .feat-card, .svc-grid .svc-card').forEach(
     if ((r.back === 'schedule' || r.refresh_schedule) && S.doctor) { loadSchedule(S.doctor.id, true); go(3); }
     if (r.back === 'doctor') { go(2); }
     if (r.registered) { alertBox(esc(r.error) + ' <a href="auth/login.php">Log in</a>', true); return; }
-    alertBox((r.error || 'Something went wrong. Please try again.') + (r.debug ? ' [' + r.debug + ']' : ''));
+    alertBox(r.error || 'Something went wrong. Please try again.');
   }
 
   /* ── stepper + panels ── */
