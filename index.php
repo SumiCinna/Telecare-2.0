@@ -861,6 +861,7 @@ $lpH = fn($x) => htmlspecialchars((string)$x, ENT_QUOTES);
     .dl-range b { color:var(--blue-dark); }
     .dl-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
     .dl-card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:11px; transition:border-color .2s, box-shadow .2s; }
+    .dl-card[hidden], .dl-empty[hidden] { display:none !important; }
     .dl-card:hover { border-color:var(--blue-bright); box-shadow:0 10px 22px rgba(31,111,198,.12); }
     .dl-top { display:flex; gap:12px; align-items:center; }
     .dl-av { width:46px; height:46px; border-radius:50%; background:var(--blue-soft); color:var(--blue); display:grid; place-items:center; font-weight:700; font-size:.9rem; overflow:hidden; flex:0 0 auto; }
