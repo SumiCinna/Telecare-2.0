@@ -12,6 +12,8 @@ if ($isApp && !$appBook) {
 
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 if (empty($_SESSION['gb_csrf'])) { $_SESSION['gb_csrf'] = bin2hex(random_bytes(32)); }
+require_once __DIR__ . '/database/config.php';
+require_once __DIR__ . '/includes/legal_policy_helper.php';
 // A signed-in (non-guest) patient books from the account, not from this widget.
 $gbLoggedIn = !empty($_SESSION['patient_id']) && empty($_SESSION['guest_mode']);
 $pageTitle = "TELE-CARE | Your Health, Connected";
@@ -98,6 +100,37 @@ $lpH = fn($x) => htmlspecialchars((string)$x, ENT_QUOTES);
     .nav-cta:hover { background:var(--blue-dark) !important; }
     .nav-cta::after { display: none !important; }
     .nav-divider { width:1px; height:18px; background:var(--line); }
+
+    .legal-link-btn {
+      background: none; border: none; padding: 0; color: #1b6fc2; font: inherit;
+      text-decoration: underline; cursor: pointer; font-weight: 600;
+    }
+    .modal-overlay{position:fixed;inset:0;background:rgba(10,14,20,.55);backdrop-filter:blur(2px);z-index:10000;display:none;align-items:center;justify-content:center;padding:1.5rem}
+    .modal-overlay.open{display:flex}
+    .modal-box{background:#fff;border-radius:18px;width:100%;max-width:640px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,.3);overflow:hidden}
+    .modal-head{padding:1.3rem 1.6rem;border-bottom:1px solid rgba(21,28,39,.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .modal-head h3{font-size:1.15rem;font-weight:800;font-family:'Poppins',sans-serif}
+    .modal-close{background:none;border:none;cursor:pointer;color:#9ab0ae;padding:.3rem;border-radius:6px;transition:background .2s,color .2s}
+    .modal-close:hover{background:rgba(21,28,39,.06);color:var(--ink)}
+    .modal-tabs{display:flex;gap:.4rem;padding:.8rem 1.6rem 0;flex-shrink:0;border-bottom:1px solid rgba(21,28,39,.08)}
+    .modal-tab{background:none;border:none;cursor:pointer;font-family:'Poppins',sans-serif;font-size:.82rem;font-weight:600;color:#9ab0ae;padding:.55rem .9rem;border-radius:8px 8px 0 0;position:relative;top:1px}
+    .modal-tab.active{color:var(--blue-dark);border-bottom:2px solid var(--blue)}
+    .modal-body{padding:1.4rem 1.6rem;overflow-y:auto;flex:1;font-size:.86rem;line-height:1.75;color:#3a4650}
+    .modal-body h4{font-size:.95rem;font-weight:700;color:var(--ink);margin:1.1rem 0 .4rem}
+    .modal-body h4:first-child{margin-top:0}
+    .modal-body p{margin-bottom:.7rem}
+    .modal-body ul{margin:0 0 .7rem 1.2rem}
+    .modal-body li{margin-bottom:.35rem}
+    .modal-section{display:none}
+    .modal-section.active{display:block}
+    .modal-foot{padding:1rem 1.6rem;border-top:1px solid rgba(21,28,39,.08);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:1rem;background:#fafbfc}
+    .scroll-progress{font-size:.76rem;color:#9ab0ae;display:flex;align-items:center;gap:.5rem}
+    .scroll-bar{width:90px;height:5px;border-radius:3px;background:rgba(21,28,39,.1);overflow:hidden}
+    .scroll-bar-fill{height:100%;width:0%;background:var(--blue);transition:width .15s}
+    .btn-accept{padding:.7rem 1.4rem;border-radius:8px;background:var(--blue);color:#fff;font-weight:600;font-size:.88rem;border:none;cursor:not-allowed;opacity:.5;transition:all .25s}
+    .btn-accept.unlocked{cursor:pointer;opacity:1}
+    .btn-accept.unlocked:hover{background:var(--blue-dark)}
+    @media (max-width:768px){.modal-box{max-height:90vh}.modal-tabs{overflow-x:auto;flex-wrap:nowrap}.modal-foot{flex-direction:column;align-items:stretch}.scroll-progress{justify-content:space-between}} 
 
     .hamburger { display: none; flex-direction: column; gap: 0.28rem; }
     .hamburger span { width: 22px; height: 2px; background: var(--ink); border-radius: 2px; transition: all 0.3s; }
@@ -1116,7 +1149,7 @@ $lpH = fn($x) => htmlspecialchars((string)$x, ENT_QUOTES);
               <div class="gb-field"><label class="gb-label" for="gbEmail">Email <i>*</i></label><input class="gb-input" id="gbEmail" name="email" type="email" maxlength="150" autocomplete="email"><div class="gb-fe" data-e="email"></div></div>
             </div>
             <div class="gb-field"><label class="gb-label" for="gbReason">Reason for Booking / Chief Complaint <i>*</i></label><input class="gb-input" id="gbReason" name="reason" maxlength="500"><div class="gb-fe" data-e="reason"></div></div>
-            <div class="gb-field"><label class="gb-accept"><input type="checkbox" id="gbAccept" name="accept" value="1"><span>I have read, understood, and accepted the <a href="auth/termsandpolicy.php" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="private_telecare/privacy-policy.php" target="_blank" rel="noopener">Privacy Policy</a></span></label><div class="gb-fe" data-e="accept"></div></div>
+            <div class="gb-field"><label class="gb-accept"><input type="checkbox" id="gbAccept" name="accept" value="1"><span>I have read, understood, and accepted the <button type="button" class="legal-link-btn" data-legal="terms">Terms &amp; Conditions</button> and <button type="button" class="legal-link-btn" data-legal="policy">Privacy Policy</button></span></label><div class="gb-fe" data-e="accept"></div></div>
             <div class="gb-actions"><button class="gb-btn ghost" type="button" data-back="3">Back</button><button class="gb-btn primary" id="gbSubmit" type="submit">Continue</button></div>
           </form>
         </div>
@@ -1541,14 +1574,127 @@ $lpH = fn($x) => htmlspecialchars((string)$x, ENT_QUOTES);
         <a href="#download" style="color:#c8e4fb;text-decoration:none;">Download App</a>
         <a href="#faq" style="color:#c8e4fb;text-decoration:none;">FAQ</a>
         <a href="#contact" style="color:#c8e4fb;text-decoration:none;">Contact</a>
-        <a href="private_telecare/privacy-policy.php" style="color:#c8e4fb;text-decoration:none;">Privacy Policy</a>
-        <a href="auth/termsandpolicy.php" style="color:#c8e4fb;text-decoration:none;">Terms &amp; Conditions</a>
+        <button type="button" class="legal-link-btn" data-legal="policy" style="color:#c8e4fb;text-decoration:none;">Privacy Policy</button>
+        <button type="button" class="legal-link-btn" data-legal="terms" style="color:#c8e4fb;text-decoration:none;">Terms &amp; Conditions</button>
       </div>
     </div>
     <p>&copy; 2026 TELE-CARE. Frontend prototype.</p>
   </div>
 </footer>
 
+<div class="modal-overlay" id="legalModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>TELE-CARE Legal Agreements</h3>
+      <button type="button" class="modal-close" onclick="closeLegalModal()" aria-label="Close legal agreements">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="modal-tabs">
+      <button type="button" class="modal-tab active" data-tab="privacy" onclick="switchLegalTab('privacy')">Data Privacy Notice</button>
+      <button type="button" class="modal-tab" data-tab="terms" onclick="switchLegalTab('terms')">Terms &amp; Conditions</button>
+      <button type="button" class="modal-tab" data-tab="policy" onclick="switchLegalTab('policy')">Privacy Policy</button>
+    </div>
+    <div class="modal-body" id="legalModalBody" onscroll="updateLegalScrollUI()">
+      <div class="modal-section active" data-section="privacy">
+        <?= legal_policy_content($conn, 'data-privacy-notice') ?>
+      </div>
+      <div class="modal-section" data-section="terms">
+        <?= legal_policy_content($conn, 'terms-and-conditions') ?>
+      </div>
+      <div class="modal-section" data-section="policy">
+        <?= legal_policy_content($conn, 'privacy-policy') ?>
+        <p style="margin-top:1.2rem;color:#9ab0ae;font-size:.78rem">— End of document —</p>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <div class="scroll-progress">
+        <span id="legalScrollLabel">Scroll to read</span>
+        <div class="scroll-bar"><div class="scroll-bar-fill" id="legalScrollFill"></div></div>
+      </div>
+      <button type="button" class="btn-accept" id="legalBtnAccept" onclick="acceptLegalModal()">I've Read This</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const legalReadTabs = { privacy: false, terms: false, policy: false };
+let legalCurrentTab = 'privacy';
+
+function openLegalModal(startTab) {
+  legalCurrentTab = startTab || 'privacy';
+  document.getElementById('legalModal').classList.add('open');
+  switchLegalTab(legalCurrentTab);
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLegalModal() {
+  document.getElementById('legalModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function switchLegalTab(tab) {
+  legalCurrentTab = tab;
+  document.querySelectorAll('.modal-tab').forEach(function (tabEl) {
+    tabEl.classList.toggle('active', tabEl.dataset.tab === tab);
+  });
+  document.querySelectorAll('.modal-section').forEach(function (section) {
+    section.classList.toggle('active', section.dataset.section === tab);
+  });
+  const body = document.getElementById('legalModalBody');
+  if (body) {
+    body.scrollTop = 0;
+  }
+  updateLegalScrollUI();
+}
+
+function updateLegalScrollUI() {
+  const body = document.getElementById('legalModalBody');
+  if (!body) return;
+  const maxScroll = body.scrollHeight - body.clientHeight;
+  const pct = maxScroll <= 0 ? 100 : Math.min(100, Math.round((body.scrollTop / maxScroll) * 100));
+  const fill = document.getElementById('legalScrollFill');
+  if (fill) fill.style.width = pct + '%';
+
+  const atBottom = maxScroll <= 0 || body.scrollTop >= maxScroll - 4;
+  if (atBottom) legalReadTabs[legalCurrentTab] = true;
+
+  const label = document.getElementById('legalScrollLabel');
+  const btn = document.getElementById('legalBtnAccept');
+  const allRead = legalReadTabs.privacy && legalReadTabs.terms && legalReadTabs.policy;
+
+  if (label) {
+    if (legalReadTabs[legalCurrentTab]) {
+      label.textContent = allRead ? 'All documents read' : 'Read — check the other tabs too';
+    } else {
+      label.textContent = 'Scroll to the bottom to mark as read (' + pct + '%)';
+    }
+  }
+  if (btn) btn.classList.toggle('unlocked', allRead);
+}
+
+function acceptLegalModal() {
+  const allRead = legalReadTabs.privacy && legalReadTabs.terms && legalReadTabs.policy;
+  if (!allRead) {
+    alert('Please scroll through all three documents first.');
+    return;
+  }
+
+  const cb = document.getElementById('gbAccept');
+  if (cb) {
+    cb.checked = true;
+    cb.value = '1';
+  }
+  closeLegalModal();
+}
+
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest('[data-legal]');
+  if (!btn) return;
+  e.preventDefault();
+  openLegalModal(btn.dataset.legal);
+});
+</script>
 
 <script>
 /* ── HERO CANVAS PARTICLES ── */
