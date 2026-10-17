@@ -5,7 +5,7 @@ require_once __DIR__ . '/../includes/auth.php';
 // visits.php (for patients)
 
 // â”€â”€ Auto-cancel any Pending/Unpaid appointment past its 10-minute payment window â”€â”€
-$conn->query("UPDATE appointments SET status='Cancelled' WHERE status='Pending' AND payment_status='Unpaid' AND created_at < (NOW() - INTERVAL 10 MINUTE)");
+$conn->query("UPDATE appointments SET status='Cancelled' WHERE status='Pending' AND payment_status='Unpaid' AND created_at < (NOW() - INTERVAL 15 MINUTE)");
 
 // â”€â”€ Handle new booking â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) {
@@ -64,22 +64,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
 // â”€â”€ Fetch visits â”€â”€
 // PENDING: booked but not yet paid â€” still inside the 10-minute window (anything past it was
 // already flipped to Cancelled by the auto-cancel query above).
+// Also here: HMO / YAKAP bookings still waiting for the clinic's approval / verification (no payment due).
 $visits_pending = $conn->query("
-    SELECT a.*, d.full_name AS doctor_name, d.specialty, d.consultation_fee
+    SELECT a.*, d.full_name AS doctor_name, d.specialty, d.consultation_fee,
+           h.coverage_status AS hmo_status, h.hmo_provider, y.verification_status AS yakap_status
     FROM appointments a JOIN doctors d ON d.id = a.doctor_id
+    LEFT JOIN appointment_hmo h   ON h.appointment_id = a.id AND a.payment_method = 'HMO'
+    LEFT JOIN appointment_yakap y ON y.appointment_id = a.id AND a.payment_method = 'YAKAP'
     WHERE a.patient_id=$patient_id
-      AND a.status='Pending' AND a.payment_status='Unpaid'
+      AND (
+            (a.status='Pending' AND a.payment_status='Unpaid')
+         OR (a.status='Confirmed' AND a.payment_status='Unpaid' AND a.appointment_date >= CURDATE()
+             AND ( (a.payment_method='HMO'   AND COALESCE(h.coverage_status,'Pending') <> 'Approved')
+                OR (a.payment_method='YAKAP' AND COALESCE(y.verification_status,'Pending') <> 'Verified') ))
+          )
     ORDER BY a.created_at DESC
 ");
 
 // UPCOMING: only appointments that are actually Confirmed AND Paid
+// HMO / YAKAP bookings appear here once the clinic approved / verified them (before that they are under Pending).
 $visits_upcoming = $conn->query("
-    SELECT a.*, d.full_name AS doctor_name, d.specialty, d.consultation_fee
+    SELECT a.*, d.full_name AS doctor_name, d.specialty, d.consultation_fee,
+           h.coverage_status AS hmo_status, h.hmo_provider, y.verification_status AS yakap_status
     FROM appointments a JOIN doctors d ON d.id = a.doctor_id
+    LEFT JOIN appointment_hmo h   ON h.appointment_id = a.id AND a.payment_method = 'HMO'
+    LEFT JOIN appointment_yakap y ON y.appointment_id = a.id AND a.payment_method = 'YAKAP'
     WHERE a.patient_id=$patient_id
       AND a.appointment_date >= CURDATE()
-      AND a.status IN ('Confirmed','Completed') AND a.payment_status='Paid'
-    ORDER BY a.appointment_date ASC
+      AND a.status IN ('Confirmed','Completed')
+      AND (a.payment_status='Paid'
+           OR (a.payment_method='HMO'   AND h.coverage_status = 'Approved')
+           OR (a.payment_method='YAKAP' AND y.verification_status = 'Verified'))
+    ORDER BY a.appointment_date ASC, a.appointment_time ASC
 ");
 
 // PAST: completed, past-dated, or cancelled â€” cancelled ones show here regardless of date so
@@ -122,6 +138,34 @@ unset($_SESSION['toast'], $_SESSION['toast_error']);
 $page_title = 'My Visits â€” TELE-CARE';
 $active_nav = 'visits';
 require_once __DIR__ . '/../includes/header.php';
+
+// Label / colour / note shown to the patient for an HMO or YAKAP booking that is waiting on the clinic.
+function coverageInfo(array $a): array {
+    $m = $a['payment_method'] ?? '';
+    if ($m === 'HMO') {
+        $hs = (string)($a['hmo_status'] ?? 'Pending');
+        $map = [
+          'Pending'         => ['Waiting for HMO approval', 'badge-orange', 'The clinic is asking your HMO for approval. Upload your documents to speed this up.'],
+          'In Verification' => ['HMO verification in progress', 'badge-blue', 'The clinic is checking your coverage with ' . ($a['hmo_provider'] ?? 'your HMO') . '.'],
+          'Action Required' => ['Action needed', 'badge-red', 'The clinic needs something from you. Open the details to see what.'],
+          'Approved'        => ['HMO approved', 'badge-green', ''],
+          'Not Approved'    => ['HMO not approved', 'badge-red', 'Your HMO did not approve this booking. Open the details to choose another payment method.'],
+          'Not Covered'     => ['Not covered', 'badge-red', 'This service is not covered. Open the details to choose another payment method.'],
+        ];
+        $r = $map[$hs] ?? $map['Pending'];
+        return ['label' => $r[0], 'class' => $r[1], 'note' => $r[2], 'ok' => $hs === 'Approved'];
+    }
+    if ($m === 'YAKAP') {
+        $ys = (string)($a['yakap_status'] ?? 'Pending');
+        return [
+          'label' => $ys === 'Verified' ? 'YAKAP verified' : ($ys === 'Rejected' ? 'YAKAP not verified' : 'Waiting for YAKAP verification'),
+          'class' => $ys === 'Verified' ? 'badge-green' : ($ys === 'Rejected' ? 'badge-red' : 'badge-orange'),
+          'note'  => $ys === 'Pending' ? 'The clinic is verifying your PhilHealth YAKAP details.' : ($ys === 'Rejected' ? 'Your YAKAP details could not be verified. Open the details for the next step.' : ''),
+          'ok'    => $ys === 'Verified',
+        ];
+    }
+    return ['label' => '', 'class' => '', 'note' => '', 'ok' => true];
+}
 
 function isCallActive(string $date, string $time): bool {
     $appt = strtotime($date . ' ' . $time);
@@ -571,7 +615,9 @@ function isCallActive(string $date, string $time): bool {
         $has = true;
         $d   = new DateTime($a['appointment_date']);
         $fee = floatval($a['consultation_fee'] ?? 0);
-        $deadlineMs = !empty($a['created_at']) ? (strtotime($a['created_at']) + 600) * 1000 : null;
+        $cov   = coverageInfo($a);
+        $isCov = in_array($a['payment_method'] ?? '', ['HMO', 'YAKAP'], true) && $a['status'] === 'Confirmed';
+        $deadlineMs = (!$isCov && !empty($a['created_at'])) ? (strtotime($a['created_at']) + 900) * 1000 : null;
         $initials = strtoupper(substr($a['doctor_name'],0,1) . (strpos($a['doctor_name'],' ')!==false ? substr($a['doctor_name'],strpos($a['doctor_name'],' ')+1,1) : ''));
     ?>
     <div class="appt-card pending-card" data-search="<?= strtolower(htmlspecialchars($a['doctor_name'].' '.($a['specialty']??''))) ?>" data-status="pending" data-type="<?= strtolower(htmlspecialchars($a['type'])) ?>" data-date="<?= htmlspecialchars($a['appointment_date']) ?>">
@@ -580,10 +626,10 @@ function isCallActive(string $date, string $time): bool {
         <div class="appt-main-info">
           <div class="appt-name-row">
             <span class="appt-doctor-name">Dr. <?= htmlspecialchars($a['doctor_name']) ?></span>
-            <span class="badge badge-orange">Pending Payment</span>
+            <?php if ($isCov): ?><span class="badge <?= $cov['class'] ?>"><?= htmlspecialchars($cov['label']) ?></span><?php else: ?><span class="badge badge-orange">Pending Payment</span><?php endif; ?>
           </div>
           <div class="appt-sub">
-            <?= !empty($a['specialty']) ? htmlspecialchars($a['specialty']).' Â· ' : '' ?><?= htmlspecialchars($a['type']) ?>
+            <?= !empty($a['specialty']) ? htmlspecialchars($a['specialty']).' &middot; ' : '' ?><?= htmlspecialchars($a['type']) ?>
           </div>
           <div class="appt-meta-row">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -605,17 +651,19 @@ function isCallActive(string $date, string $time): bool {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               Details
             </a>
+            <?php if (!$isCov): ?>
             <a href="router.php?page=pay&appt_id=<?= $a['id'] ?>" class="btn-pill solid-purple">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
               Pay Now<?php if ($fee > 0): ?> &mdash; &#8369;<?= number_format($fee, 2) ?><?php endif; ?>
             </a>
+            <?php endif; ?>
           </div>
         </div>
       </div>
       <div class="pending-notice">
         <div class="pending-notice-text">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-          Pay within the time limit or this slot will be released
+          <?= $isCov ? htmlspecialchars($cov['note'] !== '' ? $cov['note'] : 'Waiting for the clinic.') : 'Pay within the time limit or this slot will be released' ?>
         </div>
         <?php if ($deadlineMs): ?>
           <span class="countdown-chip" data-deadline="<?= (int)$deadlineMs ?>">--:--</span>
@@ -629,7 +677,7 @@ function isCallActive(string $date, string $time): bool {
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <circle cx="12" cy="12" r="9" stroke-width="1.4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.4" d="M12 7v5l3 3"/>
       </svg>
-      <p>No pending appointments awaiting payment.</p>
+      <p>No pending appointments.</p>
     </div>
     <?php endif; ?>
   </div>
@@ -650,6 +698,11 @@ function isCallActive(string $date, string $time): bool {
         $hasSummary  = !empty($a['summary_pdf_path']) && !empty($a['summary_reviewed_at']);
         $hasContent  = !empty($a['chat_log']) || !empty($a['consultation_transcript']);
         $initials = strtoupper(substr($a['doctor_name'],0,1) . (strpos($a['doctor_name'],' ')!==false ? substr($a['doctor_name'],strpos($a['doctor_name'],' ')+1,1) : ''));
+        $cov     = coverageInfo($a);
+        $isCov   = in_array($a['payment_method'] ?? '', ['HMO', 'YAKAP'], true);
+        $isPaid  = $a['payment_status'] === 'Paid';
+        $hmoOk   = $cov['ok'];
+        $covLabel = $cov['label']; $covClass = $cov['class']; $covNote = $cov['note'];
     ?>
     <div class="appt-card" id="appt-<?= $a['id'] ?>" data-search="<?= strtolower(htmlspecialchars($a['doctor_name'].' '.($a['specialty']??''))) ?>" data-status="confirmed" data-type="<?= strtolower(htmlspecialchars($a['type'])) ?>" data-date="<?= htmlspecialchars($a['appointment_date']) ?>">
       <div class="appt-card-inner">
@@ -658,10 +711,10 @@ function isCallActive(string $date, string $time): bool {
           <div class="appt-name-row">
                         <span class="appt-doctor-name">Dr. <?= htmlspecialchars($a['doctor_name']) ?></span>
             <span class="badge badge-green"><?= htmlspecialchars($a['status']) ?></span>
-            <span class="badge badge-green">Paid</span>
+            <?php if ($isCov && !$isPaid): ?><span class="badge <?= $covClass ?>"><?= htmlspecialchars($covLabel) ?></span><?php else: ?><span class="badge badge-green">Paid</span><?php endif; ?>
           </div>
           <div class="appt-sub">
-            <?= !empty($a['specialty']) ? htmlspecialchars($a['specialty']).' Â· ' : '' ?><?= htmlspecialchars($a['type']) ?>
+            <?= !empty($a['specialty']) ? htmlspecialchars($a['specialty']).' &middot; ' : '' ?><?= htmlspecialchars($a['type']) ?>
           </div>
           <div class="appt-meta-row">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -675,6 +728,9 @@ function isCallActive(string $date, string $time): bool {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
             <?= htmlspecialchars($a['notes']) ?>
           </div>
+          <?php endif; ?>
+          <?php if ($isCov && !$isPaid && $covNote !== ''): ?>
+            <div class="flow-note soon"><?= htmlspecialchars($covNote) ?></div>
           <?php endif; ?>
           <?php if (!$active && $soon): ?>
             <div class="flow-note soon">
@@ -694,16 +750,18 @@ function isCallActive(string $date, string $time): bool {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               Appointment Details
             </a>
-            <?php if ($active): ?>
+            <?php if ($active && $hmoOk): ?>
               <a href="router.php?page=call_patient&appt_id=<?= $a['id'] ?>" class="btn-pill solid-green">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
                 <?= $early ? 'Join Early' : 'Join Consultation' ?>
               </a>
             <?php endif; ?>
+            <?php if ($isPaid): ?>
             <a href="router.php?page=receipt&appt_id=<?= $a['id'] ?>" class="btn-pill outline-neutral">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               Receipt
             </a>
+            <?php endif; ?>
             <?php if ($hasSummary): ?>
               <a href="router.php?page=download_summary&appt_id=<?= $a['id'] ?>" target="_blank" class="btn-pill outline-blue">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -726,7 +784,7 @@ function isCallActive(string $date, string $time): bool {
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.4" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
       </svg>
-      <p>No upcoming (paid) appointments.</p>
+      <p>No upcoming appointments.</p>
       <a href="router.php?page=booking/step1_details" style="margin-top:0.5rem;padding:0.55rem 1.4rem;background:#3F82E3;color:#fff;border:none;border-radius:50px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;box-shadow:0 4px 14px rgba(63,130,227,0.28);text-decoration:none;">
         Book Now
       </a>
@@ -757,7 +815,7 @@ function isCallActive(string $date, string $time): bool {
             <span class="badge <?= $paid?'badge-green':'badge-gray' ?>"><?= $a['payment_status'] ?></span>
           </div>
           <div class="appt-sub">
-            <?= !empty($a['specialty']) ? htmlspecialchars($a['specialty']).' Â· ' : '' ?><?= htmlspecialchars($a['type']) ?>
+            <?= !empty($a['specialty']) ? htmlspecialchars($a['specialty']).' &middot; ' : '' ?><?= htmlspecialchars($a['type']) ?>
           </div>
           <div class="appt-meta-row">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
