@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // index.php
 // The Android app (Capacitor) appends "TeleCareApp" to the user agent.
 // App users never see the landing page: they go to the login screen.
@@ -15,6 +15,34 @@ if (empty($_SESSION['gb_csrf'])) { $_SESSION['gb_csrf'] = bin2hex(random_bytes(3
 // A signed-in (non-guest) patient books from the account, not from this widget.
 $gbLoggedIn = !empty($_SESSION['patient_id']) && empty($_SESSION['guest_mode']);
 $pageTitle = "TELE-CARE | Your Health, Connected";
+
+// Where the request buttons go: a signed-in patient starts the booking wizard from the account,
+// a guest uses the booking widget on this page (#book).
+$reqHref        = $gbLoggedIn ? 'router.php?page=booking/step1_details' : '#book';
+$bookDoctorHref = $reqHref;
+
+// Active doctors + their consultation fees, shown before booking so rates are visible upfront.
+// Same source as the booking wizard (doctors.status = 'active', doctors.consultation_fee).
+$lpDoctors = [];
+try {
+    $lpCfg = __DIR__ . '/database/config.php';
+    if (is_file($lpCfg)) {
+        require_once $lpCfg;
+        if (isset($conn) && $conn instanceof mysqli) {
+            $lpRes = $conn->query("SELECT id, full_name, specialty, subspecialty, department, consultation_fee, profile_photo, rating, rating_count
+                                   FROM doctors WHERE status = 'active' ORDER BY department ASC, full_name ASC");
+            while ($lpRes && ($lpRow = $lpRes->fetch_assoc())) $lpDoctors[] = $lpRow;
+        }
+    }
+} catch (Throwable $lpErr) { error_log('index doctors list: ' . $lpErr->getMessage()); }
+$lpDepts = [];
+$lpFees  = [];
+foreach ($lpDoctors as $lpD) {
+    $dn = trim((string)($lpD['department'] ?? '')) ?: 'General Medicine / General Practice';
+    $lpDepts[$dn] = ($lpDepts[$dn] ?? 0) + 1;
+    if ((float)$lpD['consultation_fee'] > 0) $lpFees[] = (float)$lpD['consultation_fee'];
+}
+$lpH = fn($x) => htmlspecialchars((string)$x, ENT_QUOTES);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -816,6 +844,47 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     @media(max-width:780px) { .gb-sched { grid-template-columns:1fr; } .gb-card { padding:18px 14px; } .gb-grid2 { grid-template-columns:1fr; } }
     @media(max-width:520px) { .gb-step { min-width:46px; } .gb-step span { font-size:.56rem; } .gb-actions { flex-direction:column-reverse; align-items:stretch; } .gb-btn { width:100%; } .gb-docs { grid-template-columns:1fr; } }
 
+    /* ── Doctors & fees list (landing page) ── */
+    .dl-section { scroll-margin-top:76px; background:var(--page); }
+    .dl-pay { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 16px; font-size:.7rem; color:var(--muted); }
+    .dl-pay b { color:var(--blue-dark); }
+    .dl-pill { display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px; background:#fff; border:1px solid var(--line); color:var(--blue-dark); font-weight:700; font-size:.68rem; }
+    .dl-pill i { width:8px; height:8px; border-radius:50%; display:inline-block; }
+    .dl-tools { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px; }
+    .dl-find { display:flex; align-items:center; gap:8px; flex:1 1 260px; max-width:360px; padding:10px 14px; background:#fff; border:1px solid var(--line); border-radius:22px; }
+    .dl-find svg { width:15px; color:var(--blue-bright); flex:0 0 auto; }
+    .dl-find input { width:100%; border:0; outline:0; background:transparent; font:inherit; font-size:.74rem; color:var(--ink); }
+    .dl-chips { display:flex; flex-wrap:wrap; gap:8px; }
+    .dl-chip { border:1px solid #a9d1f1; background:#fff; color:var(--blue); border-radius:999px; padding:7px 13px; font:inherit; font-size:.68rem; font-weight:700; cursor:pointer; }
+    .dl-chip.on { background:var(--blue); border-color:var(--blue); color:#fff; }
+    .dl-range { margin-left:auto; font-size:.72rem; color:var(--muted); }
+    .dl-range b { color:var(--blue-dark); }
+    .dl-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
+    .dl-card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:11px; transition:border-color .2s, box-shadow .2s; }
+    .dl-card:hover { border-color:var(--blue-bright); box-shadow:0 10px 22px rgba(31,111,198,.12); }
+    .dl-top { display:flex; gap:12px; align-items:center; }
+    .dl-av { width:46px; height:46px; border-radius:50%; background:var(--blue-soft); color:var(--blue); display:grid; place-items:center; font-weight:700; font-size:.9rem; overflow:hidden; flex:0 0 auto; }
+    .dl-av img { width:100%; height:100%; object-fit:cover; }
+    .dl-card b { display:block; color:var(--blue-dark); font-size:.86rem; line-height:1.3; }
+    .dl-card small { display:block; color:var(--muted); font-size:.68rem; margin-top:2px; }
+    .dl-stars { color:#ca8a04; font-size:.68rem; }
+    .dl-stars em { color:var(--muted); font-style:italic; }
+    .dl-dept { font-size:.62rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+    .dl-fee { display:flex; justify-content:space-between; align-items:baseline; background:#f1f8ff; border-radius:10px; padding:9px 12px; }
+    .dl-fee span { font-size:.68rem; color:var(--muted); font-weight:600; }
+    .dl-fee strong { font-size:1rem; color:var(--blue-dark); letter-spacing:-.02em; }
+    .dl-card .gb-btn { width:100%; margin-top:auto; }
+    .dl-empty { grid-column:1/-1; text-align:center; color:var(--muted); font-size:.8rem; padding:26px 10px; }
+    /* ── Quick-text chips (multi-select) ── */
+    .gb-quick { margin-bottom:12px; }
+    .gb-quick > small { display:block; font-size:.66rem; color:var(--muted); margin-bottom:7px; font-weight:600; }
+    .gb-quick-row { display:flex; flex-wrap:wrap; gap:8px; }
+    .gb-qbtn { border:1.5px solid #a9d1f1; background:#fff; color:var(--blue); border-radius:999px; padding:7px 14px; font:inherit; font-size:.7rem; font-weight:700; cursor:pointer; transition:background .15s,color .15s; }
+    .gb-qbtn:hover { border-color:var(--blue); }
+    .gb-qbtn.on { background:var(--blue); border-color:var(--blue); color:#fff; }
+    .gb-qbtn.on::before { content:'\2713  '; }
+    @media(max-width:520px){ .dl-range { margin-left:0; width:100%; } .dl-grid { grid-template-columns:1fr; } }
+
     /* ── Android app: booking-only mode (index.php?app=1) ── */
     .app-bar { display:none; }
     .app-mode nav, .app-mode .mob-menu, .app-mode footer { display:none !important; }
@@ -854,7 +923,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
     </div>
     <ul class="nav-links">
       <li><a href="index.php" aria-current="page">Home</a></li>
-      <li><a href="#book">Find a Doctor</a></li>
+      <li><a href="#doctors">Find a Doctor</a></li>
       <li><a href="#consultation">Quick Consultation</a></li>
       <li><a href="#appointments">Appointments</a></li>
       <li><a href="#benefits">Insurance &amp; Benefits</a></li>
@@ -870,8 +939,10 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
 
 <div class="mob-menu" id="mobMenu">
   <a href="index.php" aria-current="page">Home</a>
-  <a href="#book">Find a Doctor</a>
+  <a href="#doctors">Find a Doctor</a>
   <a href="#consultation">Quick Consultation</a>
+  <a href="<?= $reqHref ?>" data-quick="medcert">Request Med Cert</a>
+  <a href="<?= $reqHref ?>" data-quick="refill">Request Refill Prescription</a>
   <a href="#appointments">Appointments</a>
   <a href="#benefits">Insurance &amp; Benefits</a>
   <a href="#download">Download App</a>
@@ -888,11 +959,13 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
         <p>Connect with licensed healthcare professionals online, book consultations, and access healthcare services from wherever you are.</p>
         <div class="kit-search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-          <input type="search" aria-label="Search doctor or specialty" placeholder="Search doctor or specialty...">
+          <input type="search" id="heroSearch" aria-label="Search doctor or specialty" placeholder="Search doctor or specialty...">
         </div>
         <div class="kit-actions">
-          <a class="kit-btn kit-btn-primary" href="#book">Find a Doctor</a>
-          <a class="kit-btn kit-btn-outline" href="#book">Quick Consultation</a>
+          <a class="kit-btn kit-btn-primary" href="#doctors">Find a Doctor</a>
+          <a class="kit-btn kit-btn-outline" href="#book" >Quick Consultation</a>
+          <a class="kit-btn kit-btn-outline" href="<?= $reqHref ?>" data-quick="medcert">Request Med Cert</a>
+          <a class="kit-btn kit-btn-outline" href="<?= $reqHref ?>" data-quick="refill">Request Refill Prescription</a>
         </div>
       </div>
       <div class="kit-hero-art" aria-label="Tele-Care healthcare illustration">
@@ -900,6 +973,69 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
         <div class="kit-float one"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Licensed professionals</div>
         <div class="kit-float two"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg> Private &amp; secure</div>
       </div>
+    </div>
+  </section>
+
+  <!-- ══ Available doctors + consultation fees (before booking) ══ -->
+  <section class="kit-section dl-section" id="doctors">
+    <div class="container">
+      <div class="kit-section-head"><div><div class="kit-eyebrow">Our doctors</div><h2>Available Doctors &amp; Consultation Fees</h2></div><p>See who is available and what a consultation costs before you book.</p></div>
+
+      <div class="dl-pay">
+        <b>Pay with:</b>
+        <span class="dl-pill"><i style="background:#00a3e0"></i>GCash</span>
+        <span class="dl-pill"><i style="background:#0b8f4d"></i>PhilHealth YAKAP</span>
+        <span class="dl-pill"><i style="background:#7e3af2"></i>HMO</span>
+        <span>YAKAP and HMO bookings are verified by the clinic. Choose your payment method when you book.</span>
+      </div>
+
+<?php if (!$lpDoctors): ?>
+      <div class="gb-card"><div class="gb-center" style="text-align:center"><p style="color:var(--muted);font-size:.82rem">Our doctor list is not available right now. You can still <a href="#book" style="color:var(--blue);font-weight:700">start a booking</a> and pick a doctor there.</p></div></div>
+<?php else: ?>
+      <div class="dl-tools">
+        <label class="dl-find"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input type="search" id="dlSearch" aria-label="Search doctors" placeholder="Search doctor or specialty..."></label>
+        <?php if (count($lpDepts) > 1): ?>
+        <div class="dl-chips" id="dlChips">
+          <button type="button" class="dl-chip on" data-dept="">All (<?= count($lpDoctors) ?>)</button>
+<?php foreach ($lpDepts as $dn => $cnt): ?>
+          <button type="button" class="dl-chip" data-dept="<?= $lpH($dn) ?>"><?= $lpH($dn) ?> (<?= (int)$cnt ?>)</button>
+<?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+        <?php if ($lpFees): ?>
+        <div class="dl-range">Fees: <b>&#8369;<?= number_format(min($lpFees), 2) ?></b><?= min($lpFees) !== max($lpFees) ? ' to <b>&#8369;' . number_format(max($lpFees), 2) . '</b>' : '' ?> per consultation</div>
+        <?php endif; ?>
+      </div>
+
+      <div class="dl-grid" id="dlGrid">
+<?php foreach ($lpDoctors as $lpD):
+    $dn   = trim((string)($lpD['department'] ?? '')) ?: 'General Medicine / General Practice';
+    $nm   = trim((string)$lpD['full_name']);
+    $ini  = strtoupper(mb_substr($nm, 0, 1) . (str_contains($nm, ' ') ? mb_substr($nm, strpos($nm, ' ') + 1, 1) : ''));
+    $fee  = (float)$lpD['consultation_fee'];
+    $rc   = (int)$lpD['rating_count'];
+    $rt   = (float)$lpD['rating'];
+    $hay  = mb_strtolower($nm . ' ' . ($lpD['specialty'] ?? '') . ' ' . ($lpD['subspecialty'] ?? '') . ' ' . $dn);
+?>
+        <div class="dl-card" data-dept="<?= $lpH($dn) ?>" data-hay="<?= $lpH($hay) ?>">
+          <div class="dl-top">
+            <div class="dl-av"><?php if (!empty($lpD['profile_photo'])): ?><img src="<?= $lpH($lpD['profile_photo']) ?>" alt="" loading="lazy" onerror="this.remove()"><?php endif; ?><?= $lpH($ini) ?></div>
+            <div>
+              <b>Dr. <?= $lpH($nm) ?></b>
+              <small><?= $lpH($lpD['specialty'] ?: $dn) ?><?= !empty($lpD['subspecialty']) ? ' &middot; ' . $lpH($lpD['subspecialty']) : '' ?></small>
+              <?php if ($rc > 0): $f = (int)floor($rt); $h = ($rt - $f) >= .5 ? 1 : 0; ?>
+              <span class="dl-stars"><?= str_repeat('&#9733;', $f) . ($h ? '&#189;' : '') . str_repeat('&#9734;', 5 - $f - $h) ?> <?= number_format($rt, 1) ?> (<?= $rc ?>)</span>
+              <?php else: ?><span class="dl-stars"><em>No ratings yet</em></span><?php endif; ?>
+            </div>
+          </div>
+          <div class="dl-dept"><?= $lpH($dn) ?></div>
+          <div class="dl-fee"><span>Consultation fee</span><strong><?= $fee > 0 ? '&#8369;' . number_format($fee, 2) : 'To be confirmed' ?></strong></div>
+          <a class="gb-btn primary" href="<?= $bookDoctorHref ?>" >Book a consultation</a>
+        </div>
+<?php endforeach; ?>
+        <div class="dl-empty" id="dlEmpty" hidden>No doctors match your search.</div>
+      </div>
+<?php endif; ?>
     </div>
   </section>
 
@@ -922,6 +1058,14 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
         <!-- 1 · concern -->
         <div class="gb-panel" id="gbP1">
           <div class="gb-h">What are you feeling?</div>
+          <div class="gb-quick">
+            <small>Need something specific? Tap to add it (you can pick more than one, or just type below):</small>
+            <div class="gb-quick-row" id="gbQuick">
+              <button type="button" class="gb-qbtn" data-q="medcert">Request for Medical Certificate</button>
+              <button type="button" class="gb-qbtn" data-q="lab">Request for Lab Results</button>
+              <button type="button" class="gb-qbtn" data-q="refill">Request for Prescription Refill</button>
+            </div>
+          </div>
           <div class="gb-field">
             <label class="gb-label" for="gbConcern">Reason for booking / chief complaint <i>*</i></label>
             <textarea class="gb-text" id="gbConcern" maxlength="500" placeholder="e.g. I've had a dry cough and mild fever for 3 days, and I get short of breath at night."></textarea>
@@ -999,7 +1143,7 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
         <a class="kit-card" href="auth/register.php"><div class="kit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3v5a4 4 0 0 0 8 0V3M6 3H4m10 0h2M10 12v2a5 5 0 0 0 10 0v-1"/><circle cx="20" cy="10" r="2"/></svg></div><h3>Online Doctor Consultation</h3><p>Talk to a licensed healthcare professional online.</p><span class="kit-arrow">→</span></a>
         <a class="kit-card" href="auth/register.php"><div class="kit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4m8-4v4M3 10h18"/></svg></div><h3>Appointment &amp; Follow-up Care</h3><p>Schedule your preferred date and time.</p><span class="kit-arrow">→</span></a>
         <a class="kit-card" href="ocr/scan.php"><div class="kit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6l2 2h3v16H4V5h3l2-2Z"/><path d="M8 11h8M8 15h6"/></svg></div><h3>Prescription &amp; Treatment Guidance</h3><p>Keep your treatment information organized.</p><span class="kit-arrow">→</span></a>
-        <a class="kit-card" href="ocr/scan.php"><div class="kit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16 9 11l4 4 3-3 4 4"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div><h3>Medical Certificate</h3><p>Receive important records after your consultation.</p><span class="kit-arrow">→</span></a>
+        <a class="kit-card" href="<?= $reqHref ?>" data-quick="medcert"><div class="kit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16 9 11l4 4 3-3 4 4"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div><h3>Medical Certificate</h3><p>Receive important records after your consultation.</p><span class="kit-arrow">→</span></a>
         <a class="kit-card" href="ocr/scan.php"><div class="kit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19h16M6 17V7m4 10V4m4 13v-7m4 7V3"/></svg></div><h3>Laboratory &amp; Diagnostic Requests</h3><p>Submit and digitize your health documents.</p><span class="kit-arrow">→</span></a>
         <a class="kit-card" href="auth/register.php"><div class="kit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M5 8v11h14V8M8 5h8M9 12h6M9 16h4"/></svg></div><h3>Consultation Summary &amp; Medical Records</h3><p>Access structured consultation summaries and medical records.</p><span class="kit-arrow">→</span></a>
       </div>
@@ -1387,8 +1531,10 @@ $pageTitle = "TELE-CARE | Your Health, Connected";
       </div>
       <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.68rem;">
         <a href="index.php" style="color:#c8e4fb;text-decoration:none;">Home</a>
-        <a href="#book" style="color:#c8e4fb;text-decoration:none;">Find a Doctor</a>
+        <a href="#doctors" style="color:#c8e4fb;text-decoration:none;">Find a Doctor</a>
         <a href="#consultation" style="color:#c8e4fb;text-decoration:none;">Quick Consultation</a>
+        <a href="<?= $reqHref ?>" data-quick="medcert" style="color:#c8e4fb;text-decoration:none;">Request Med Cert</a>
+        <a href="<?= $reqHref ?>" data-quick="refill" style="color:#c8e4fb;text-decoration:none;">Request Refill Prescription</a>
         <a href="#appointments" style="color:#c8e4fb;text-decoration:none;">Appointments</a>
         <a href="#benefits" style="color:#c8e4fb;text-decoration:none;">Insurance &amp; Benefits</a>
         <a href="#download" style="color:#c8e4fb;text-decoration:none;">Download App</a>
@@ -1563,6 +1709,36 @@ document.querySelectorAll('.feat-grid .feat-card, .svc-grid .svc-card').forEach(
 });
 </script>
 <script>
+/* ── Doctors list: search + department filter ── */
+(function () {
+  var grid = document.getElementById('dlGrid');
+  if (!grid) return;
+  var cards = Array.prototype.slice.call(grid.querySelectorAll('.dl-card'));
+  var box = document.getElementById('dlSearch'), hero = document.getElementById('heroSearch'), empty = document.getElementById('dlEmpty');
+  var dept = '', q = '';
+  function apply() {
+    var n = 0;
+    cards.forEach(function (c) {
+      var ok = (!dept || c.dataset.dept === dept) && (!q || c.dataset.hay.indexOf(q) > -1);
+      c.hidden = !ok; if (ok) n++;
+    });
+    empty.hidden = n > 0;
+  }
+  function setQ(v, from) { q = (v || '').toLowerCase().trim(); if (box && from !== box) box.value = v; if (hero && from !== hero) hero.value = v; apply(); }
+  if (box) box.addEventListener('input', function () { setQ(this.value, this); });
+  if (hero) {
+    hero.addEventListener('input', function () { setQ(this.value, this); });
+    hero.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); setQ(this.value, this); document.getElementById('doctors').scrollIntoView({ behavior: 'smooth' }); } });
+  }
+  var chips = document.getElementById('dlChips');
+  if (chips) chips.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-dept]'); if (!b) return;
+    chips.querySelectorAll('.dl-chip').forEach(function (x) { x.classList.toggle('on', x === b); });
+    dept = b.dataset.dept; apply();
+  });
+})();
+</script>
+<script>
 /* ── Guest booking (no account) ── */
 (function () {
   var root = document.getElementById('gb');
@@ -1626,6 +1802,33 @@ document.querySelectorAll('.feat-grid .feat-card, .svc-grid .svc-card').forEach(
   root.addEventListener('click', function (e) {
     var b = e.target.closest('[data-back]');
     if (b) go(parseInt(b.dataset.back, 10));
+  });
+
+  /* ── quick-text chips: build "I'm requesting A, B and C" without touching what the patient typed ── */
+  var QUICK = { medcert: 'a medical certificate', lab: 'lab results', refill: 'a prescription refill' };
+  var QORDER = ['medcert', 'lab', 'refill'], qOn = {}, qAuto = '';
+  function qSentence() {
+    var parts = QORDER.filter(function (k) { return qOn[k]; }).map(function (k) { return QUICK[k]; });
+    if (!parts.length) return '';
+    var list = parts.length === 1 ? parts[0] : parts.slice(0, -1).join(', ') + ' and ' + parts[parts.length - 1];
+    return "I'm requesting " + list + '.';
+  }
+  function qApply() {
+    var ta = $('gbConcern'), now = qSentence(), v = ta.value, i = qAuto ? v.indexOf(qAuto) : -1;
+    if (i > -1) v = (v.slice(0, i) + now + v.slice(i + qAuto.length)).replace(/\s{2,}/g, ' ').trim();   // update our sentence, keep the rest
+    else if (now) v = v.trim() ? now + ' ' + v.trim() : now;                                         // patient typed first: put ours in front
+    qAuto = now;
+    ta.value = v.slice(0, 500);
+    $('gbCount').textContent = ta.value.length;
+    document.querySelectorAll('#gbQuick [data-q]').forEach(function (b) { b.classList.toggle('on', !!qOn[b.dataset.q]); });
+  }
+  $('gbQuick').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-q]'); if (!b) return;
+    qOn[b.dataset.q] = !qOn[b.dataset.q]; qApply(); $('gbConcern').focus();
+  });
+  document.addEventListener('click', function (e) {   // hero / footer / service-card links: switch the chip on
+    var a = e.target.closest('a[data-quick]');
+    if (a && a.getAttribute('href') === '#book') { qOn[a.dataset.quick] = true; qApply(); }
   });
 
   /* ── 1 · concern ── */

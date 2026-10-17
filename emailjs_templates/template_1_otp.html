@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Verification code</title></head>
+<body style="margin:0;padding:0;background:#eef4fb;font-family:Arial,Helvetica,sans-serif;color:#474748;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Your TELE-CARE verification code is {{otp_code}}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef4fb;padding:28px 12px;">
+  <tr><td align="center">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #dbe7f4;">
+      <tr><td style="background:#193f72;padding:22px 28px;">
+        <span style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#ffffff;">TELE-CARE</span>
+        <span style="font-size:12px;color:#9fc6ee;margin-left:8px;">Your Healthcare, Anywhere.</span>
+      </td></tr>
+      <tr><td style="padding:30px 28px 10px 28px;">
+        <h1 style="margin:0 0 10px 0;font-size:21px;line-height:1.25;color:#193f72;letter-spacing:-.02em;">Verify your email</h1>
+        <p style="margin:0 0 12px 0;font-size:14px;line-height:1.65;color:#474748;">Hi {{to_name}}, use this code to continue your booking.</p>
+        <div style="margin:18px 0;padding:18px;text-align:center;background:#f1f8ff;border:1px solid #cfe6f8;border-radius:14px;">
+          <span style="font-size:34px;font-weight:800;letter-spacing:10px;color:#193f72;">{{otp_code}}</span>
+        </div>
+        <p style="margin:0 0 12px 0;font-size:14px;line-height:1.65;color:#474748;">This code expires in {{otp_minutes}} minutes. Never share it with anyone.</p>
+      </td></tr>
+      <tr><td style="padding:8px 28px 26px 28px;">
+        <p style="margin:0;font-size:11px;line-height:1.6;color:#8a97a6;">This message was sent to {{to_email}} because of a booking made on <a href="{{site_url}}" style="color:#1f6fc6;">{{site_name}}</a>. If this wasn't you, you can ignore this email.</p>
+      </td></tr>
+    </table>
+    <p style="font-size:11px;color:#8a97a6;margin:14px 0 0 0;">&copy; {{year}} TELE-CARE</p>
+  </td></tr>
+</table>
+</body>
+</html>
