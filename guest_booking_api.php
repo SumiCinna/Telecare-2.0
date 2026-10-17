@@ -8,6 +8,20 @@ if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
+// Any crash comes back as JSON (and is logged). Set GUEST_DEBUG=1 in .env to see the real message.
+function gb_debug_on(): bool { $v = $_ENV['GUEST_DEBUG'] ?? $_SERVER['GUEST_DEBUG'] ?? getenv('GUEST_DEBUG'); return $v === '1' || $v === 1 || $v === true; }
+function gb_crash(string $msg): void {
+    error_log('guest_booking_api: ' . $msg);
+    if (!headers_sent()) { http_response_code(500); header('Content-Type: application/json; charset=utf-8'); }
+    echo json_encode(['ok' => false, 'error' => 'Something went wrong on our side. Please try again.'] + (gb_debug_on() ? ['debug' => $msg] : []));
+}
+set_exception_handler(function (Throwable $e) { gb_crash($e->getMessage() . ' @ ' . basename($e->getFile()) . ':' . $e->getLine()); });
+register_shutdown_function(function () {
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) { ob_clean(); gb_crash($e['message'] . ' @ ' . basename($e['file']) . ':' . $e['line']); }
+});
+ob_start();
+
 require_once __DIR__ . '/database/config.php';
 require_once __DIR__ . '/includes/guest_booking.php';
 require_once __DIR__ . '/private_telecare/booking/booking_helpers.php';
@@ -129,12 +143,15 @@ case 'schedule': {
     $schedules = $s->get_result()->fetch_all(MYSQLI_ASSOC);
     $b = $conn->prepare("SELECT appointment_date, appointment_time FROM appointments WHERE doctor_id=? AND status NOT IN ('Cancelled') AND appointment_date >= CURDATE()");
     $b->bind_param('i', $id); $b->execute();
+    $booked = $b->get_result()->fetch_all(MYSQLI_ASSOC);
+    $b->close();
+    $settings = guest_schedule_settings($conn, $id);
     gb_out([
         'ok' => true,
         'doctor' => ['id' => $id, 'name' => $doc['full_name'], 'specialty' => (string)$doc['specialty'], 'photo' => (string)($doc['profile_photo'] ?? ''), 'fee' => (float)$doc['consultation_fee']],
         'schedules' => $schedules,
-        'settings'  => guest_schedule_settings($conn, $id),
-        'booked'    => $b->get_result()->fetch_all(MYSQLI_ASSOC),
+        'settings'  => $settings,
+        'booked'    => $booked,
         'now'       => ['date' => date('Y-m-d'), 'mins' => (int)date('G') * 60 + (int)date('i')],
         'department' => $doc['department'],
     ]);
