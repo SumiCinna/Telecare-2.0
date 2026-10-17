@@ -345,10 +345,17 @@ require_once 'includes/header.php';
     <?php elseif (!$docs): ?>
       <div style="font-size:12px;color:var(--muted)">The patient has not uploaded any documents<?= $case['patient_submitted_at'] ? '' : ' (and has not submitted the booking yet)' ?>. You can ask for them under "Ask patient to act".</div>
     <?php else: ?>
-      <?php foreach ($docs as $d): ?>
+      <?php foreach ($docs as $d): $isImg = strpos((string)$d['mime'], 'image/') === 0; $isPdf = $d['mime'] === 'application/pdf'; $url = 'hmo_file.php?id=' . (int)$d['id']; ?>
         <div class="hc-contact"><b><?= $e(HMO_DOC_TYPES[$d['doc_type']] ?? 'Document') ?></b> &middot; <?= $e($d['original_name']) ?> &middot; <?= $e(number_format($d['size_bytes'] / 1024, 0)) ?> KB
           &middot; <?= $e(date('M j, g:i A', strtotime($d['created_at']))) ?>
-          &middot; <a href="hmo_file.php?id=<?= (int)$d['id'] ?>" target="_blank" rel="noopener" style="color:var(--primary);font-weight:700">Open</a></div>
+          &middot; <a href="<?= $url ?>" target="_blank" rel="noopener" style="color:var(--primary);font-weight:700">Open full size</a>
+          &middot; <a href="<?= $url ?>&amp;download=1" style="color:var(--primary);font-weight:700">Download</a>
+          <?php if ($isImg): ?>
+            <a href="<?= $url ?>" target="_blank" rel="noopener"><img src="<?= $url ?>" alt="<?= $e($d['original_name']) ?>" loading="lazy" style="display:block;width:100%;max-height:520px;object-fit:contain;margin-top:10px;border:1px solid var(--border);border-radius:10px;background:#f8fafc"/></a>
+          <?php elseif ($isPdf): ?>
+            <iframe src="<?= $url ?>" title="<?= $e($d['original_name']) ?>" style="display:block;width:100%;height:520px;margin-top:10px;border:1px solid var(--border);border-radius:10px;background:#fff"></iframe>
+          <?php endif; ?>
+        </div>
       <?php endforeach; ?>
       <div class="hc-hint">Booking submitted by patient: <?= $case['patient_submitted_at'] ? $e(date('M j, Y g:i A', strtotime($case['patient_submitted_at']))) : 'not yet' ?>.</div>
     <?php endif; ?>

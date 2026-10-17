@@ -259,7 +259,7 @@ require_once __DIR__ . '/../includes/header.php';
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/></svg>
         </div>
         <div>
-          <div class="stat-num red">â‚±<?= number_format($stats['balance'], 2) ?></div>
+          <div class="stat-num red">₱<?= number_format($stats['balance'], 2) ?></div>
           <div class="stat-lbl">Current Balance</div>
         </div>
       </div>
@@ -279,7 +279,7 @@ require_once __DIR__ . '/../includes/header.php';
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8c-1.66 0-3 .9-3 2s1.34 2 3 2 3 .9 3 2-1.34 2-3 2m0-8V6m0 12v-2m0-8c1.11 0 2.08.402 2.6 1"/><circle cx="12" cy="12" r="9"/></svg>
         </div>
         <div>
-          <div class="stat-num teal">â‚±<?= number_format($stats['total_paid'], 2) ?></div>
+          <div class="stat-num teal">₱<?= number_format($stats['total_paid'], 2) ?></div>
           <div class="stat-lbl">Total Paid (All Time)</div>
         </div>
       </div>
@@ -344,7 +344,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="tx-desc-main"><?= htmlspecialchars($t['type']) ?> Consultation</div>
                 <div class="tx-desc-sub">Dr. <?= htmlspecialchars($t['doctor_name']) ?><?= !empty($t['specialty']) ? ' Â· '.htmlspecialchars($t['specialty']) : '' ?></div>
               </td>
-              <td class="tx-amount">â‚±<?= number_format($fee, 2) ?></td>
+              <td class="tx-amount">₱<?= number_format($fee, 2) ?></td>
               <td>
                 <?php if ($isPaid): ?>
                 <span class="tx-pay">
@@ -419,7 +419,7 @@ require_once __DIR__ . '/../includes/header.php';
           <div>
             <div class="inv-no"><?= htmlspecialchars($invNo) ?></div>
             <div class="inv-meta"><?= $paidAt->format('M j, Y') ?> Â· Dr. <?= htmlspecialchars($t['doctor_name']) ?></div>
-            <div class="inv-amt">â‚±<?= number_format($fee, 2) ?></div>
+            <div class="inv-amt">₱<?= number_format($fee, 2) ?></div>
           </div>
           <a href="router.php?page=receipt&appt_id=<?= (int)$t['id'] ?>" class="inv-view" title="View receipt">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
