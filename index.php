@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // index.php
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 if (empty($_SESSION['gb_csrf'])) { $_SESSION['gb_csrf'] = bin2hex(random_bytes(32)); }
@@ -1566,7 +1566,7 @@ document.querySelectorAll('.feat-grid .feat-card, .svc-grid .svc-card').forEach(
     if ((r.back === 'schedule' || r.refresh_schedule) && S.doctor) { loadSchedule(S.doctor.id, true); go(3); }
     if (r.back === 'doctor') { go(2); }
     if (r.registered) { alertBox(esc(r.error) + ' <a href="auth/login.php">Log in</a>', true); return; }
-    alertBox(r.error || 'Something went wrong. Please try again.');
+    alertBox((r.error || 'Something went wrong. Please try again.') + (r.debug ? ' [' + r.debug + ']' : ''));
   }
 
   /* ── stepper + panels ── */
