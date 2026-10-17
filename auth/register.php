@@ -334,7 +334,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input type="hidden" name="agree_terms" id="h_agree" value="0"/>
 
         <!-- Google Register Button -->
-        <a href="google-register.php" onclick="return openGoogleExternal(event, this)" style="
+        <a href="google-register.php" style="
             display:flex;align-items:center;justify-content:center;gap:.75rem;
             width:100%;padding:.85rem 1rem;
             border:1.5px solid rgba(21,28,39,.18);
@@ -722,24 +722,6 @@ function togglePw(id, showId, hideId) {
     toast(top.firstChild.textContent.trim());
   }
 })();
-
-// In the Android app, Google blocks OAuth inside the WebView, so open the sign-in in the
-// system browser (Chrome). The callback hands the session back through app_handoff.php.
-function openGoogleExternal(event, el) {
-  if (!<?= $isApp ? 'true' : 'false' ?>) return true;
-  event.preventDefault();
-  var url = new URL(el.getAttribute('href'), window.location.href).href;
-  var cap = window.Capacitor && window.Capacitor.Plugins;
-  try {
-    if (cap && cap.Browser && cap.Browser.open) { cap.Browser.open({ url: url }); return false; }
-    if (cap && cap.App && cap.App.openUrl) { cap.App.openUrl({ url: url }); return false; }
-  } catch (e) {}
-  var u = new URL(url);
-  window.location.href = 'intent://' + u.host + u.pathname + u.search +
-    '#Intent;scheme=' + u.protocol.replace(':', '') + ';package=com.android.chrome;S.browser_fallback_url=' +
-    encodeURIComponent(url) + ';end';
-  return false;
-}
 
 const dobEl = document.getElementById('f_dob');
 if (dobEl) {

@@ -252,7 +252,7 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
           <div class="alert alert-unverified"><?= htmlspecialchars($notice) ?></div>
         <?php endif; ?>
 
-        <a class="google-login" href="google-login.php" onclick="return openGoogleExternal(event, this)">
+        <a class="google-login" href="google-login.php">
           <svg viewBox="0 0 48 48" aria-hidden="true">
             <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
             <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
@@ -313,24 +313,6 @@ $termsPolicy = get_legal_policy($conn, 'terms-and-conditions');
       terms: { title: <?= json_encode($termsPolicy['title'] ?? 'Terms of Service') ?>, content: <?= json_encode($termsPolicy['content'] ?? '<p>This policy is not currently available.</p>') ?> },
       data: { title: <?= json_encode($dataPolicy['title'] ?? 'Data Policy') ?>, content: <?= json_encode($dataPolicy['content'] ?? '<p>This policy is not currently available.</p>') ?> }
     };
-
-    // In the Android app, Google blocks OAuth inside the WebView, so open the sign-in in the
-    // system browser (Chrome). The callback hands the session back through app_handoff.php.
-    function openGoogleExternal(event, el) {
-      if (!<?= $isApp ? 'true' : 'false' ?>) return true;
-      event.preventDefault();
-      var url = new URL(el.getAttribute('href'), window.location.href).href;
-      var cap = window.Capacitor && window.Capacitor.Plugins;
-      try {
-        if (cap && cap.Browser && cap.Browser.open) { cap.Browser.open({ url: url }); return false; }
-        if (cap && cap.App && cap.App.openUrl) { cap.App.openUrl({ url: url }); return false; }
-      } catch (e) {}
-      var u = new URL(url);
-      window.location.href = 'intent://' + u.host + u.pathname + u.search +
-        '#Intent;scheme=' + u.protocol.replace(':', '') + ';package=com.android.chrome;S.browser_fallback_url=' +
-        encodeURIComponent(url) + ';end';
-      return false;
-    }
     function openPolicy(type) { document.getElementById('policyTitle').textContent = policies[type].title; document.getElementById('policyContent').innerHTML = policies[type].content; document.getElementById('policyModal').classList.add('open'); }
     function closePolicy(event) { if (!event || event.target === document.getElementById('policyModal')) document.getElementById('policyModal').classList.remove('open'); }
 
