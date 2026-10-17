@@ -1,4 +1,5 @@
 <?php
+// doctor/includes/nav.php
 $active_nav = $active_nav ?? '';
 ?>
 <style>
@@ -78,4 +79,17 @@ $active_nav = $active_nav ?? '';
 .nav-item:hover{background:#eaf3fd;color:var(--kit-blue)}
 .nav-item.active{background:var(--kit-blue);border-left:0;color:#fff;box-shadow:0 5px 14px rgba(23,104,216,.22)}
 @media(max-width:767px){.nav-item.active{background:#eaf3fd;color:var(--kit-blue)}}
+</style>
+
+<style>
+/* ── Mobile bottom bar fix: all 6 items must fit, full width, no overflow ── */
+@media(max-width:767px){
+  .sidebar-nav{left:0!important;right:0!important;bottom:0!important;width:100%!important;max-width:100vw;box-sizing:border-box;background:#fff;padding:0 0 env(safe-area-inset-bottom,0px)!important;box-shadow:0 -4px 16px rgba(18,52,93,.08)}
+  .nav-items-container{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:0!important;width:100%}
+  .nav-item{min-width:0;margin:0!important;padding:8px 2px!important;border-radius:0!important;min-height:60px;gap:3px!important;box-shadow:none!important;font-size:.6rem!important;line-height:1.1;text-align:center;background:transparent}
+  .nav-item span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nav-item svg{width:20px!important;height:20px!important;flex-shrink:0}
+  .nav-item.active{background:#eaf3fd!important;color:var(--kit-blue,#1478ee)!important;box-shadow:inset 0 3px 0 var(--kit-blue,#1478ee)!important}
+  .page{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))!important}
+}
 </style>

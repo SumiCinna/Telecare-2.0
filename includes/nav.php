@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // includes/nav.php
 // $active_nav must be set before including: 'home' | 'visits' | 'meds' | 'billing' | 'profile'
 $active_nav = $active_nav ?? 'home';
@@ -171,6 +171,20 @@ body.sidebar-collapsed{ padding-left:var(--tc-sidebar-w-collapsed); }
 .sidebar-link .nav-icon{width:19px;height:19px}
 body{padding-left:var(--tc-sidebar-w);background:#f5f9fd}
 @media(max-width:900px){body{padding-left:0}}
+</style>
+
+
+<style>
+/* ── Mobile bottom bar fix: full width (the 256px desktop width was leaking in), items share the row evenly ── */
+@media(max-width:900px){
+  .sidebar,.sidebar.collapsed{left:0!important;right:0!important;bottom:0!important;top:auto!important;width:100%!important;max-width:100vw;min-width:0!important;box-sizing:border-box;height:auto;flex-direction:row!important;padding:.35rem .25rem calc(.35rem + env(safe-area-inset-bottom,0px))!important;background:#fff!important;border-right:0!important;border-top:1px solid #dfeaf5!important;box-shadow:0 -4px 16px rgba(18,52,93,.08);z-index:1000}
+  .sidebar-nav{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px!important;width:100%;flex:1}
+  .sidebar-link,.sidebar.collapsed .sidebar-link{flex-direction:column!important;align-items:center;justify-content:center;gap:3px!important;min-width:0;padding:.45rem .1rem!important;border-radius:12px!important;font-size:.66rem!important;line-height:1.1;text-align:center;white-space:nowrap}
+  .sidebar-link .nav-label{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .sidebar-link .nav-icon{width:22px!important;height:22px!important}
+  .sidebar-link.active{background:#eaf3fd!important;color:var(--tc-blue,#1478ee)!important;box-shadow:none!important}
+  body,body.sidebar-collapsed{padding-left:0!important}
+}
 </style>
 
 <?php if ($tcIsApp): ?>
