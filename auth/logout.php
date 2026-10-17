@@ -88,7 +88,7 @@ $user_name = $_SESSION['user_name'] ?? $_SESSION['patient_name'] ?? 'User';
     <form method="POST">
       <button type="submit" name="confirm_logout" class="btn-logout">Yes, Log Me Out</button>
     </form>
-    <a href="javascript:history.back()" class="btn-cancel">Cancel â€” Go Back</a>
+    <a href="javascript:history.back()" class="btn-cancel">Cancel? Go Back</a>
   </div>
 </body>
 </html>
