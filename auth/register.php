@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // auth/register.php
 require_once '../database/config.php';
 require_once '../includes/legal_policy_helper.php';
@@ -8,6 +8,26 @@ $show_verify  = false;
 $verify_email = '';
 $patient_name = '';
 $verify_token = '';
+$isApp        = stripos($_SERVER['HTTP_USER_AGENT'] ?? '', 'TeleCareApp') !== false;
+$error_code   = '';
+
+// Messages coming back from the Google sign-up flow.
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' && !empty($_GET['error'])) {
+    switch ($_GET['error']) {
+        case 'no_account':
+            $error = 'No Tele-Care account exists for that Google email yet. Sign up below to create one.'; break;
+        case 'google_cancelled':
+            $error = 'Google sign-up was cancelled.'; break;
+        case 'google_token_failed':
+            $error = 'Google sign-up failed. Please try again.'; break;
+        case 'google_no_email':
+            $error = 'We could not get an email from your Google account.'; break;
+        case 'google_profile_failed':
+            $error = 'Could not read your Google profile. Please try again.'; break;
+        default:
+            $error = 'Something went wrong. Please try again.';
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $first_name       = trim($_POST['first_name'] ?? '');
@@ -61,12 +81,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!$agree_terms) {
         $error = 'You must read and agree to the Data Privacy Notice, Terms and Conditions, and Privacy Policy before creating an account.';
     } else {
-        $stmt = $conn->prepare("SELECT id FROM patients WHERE email = ?");
+        $stmt = $conn->prepare("SELECT id, is_verified FROM patients WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $stmt->store_result();
-        if ($stmt->num_rows > 0) {
-            $error = 'An account with this email already exists.';
+        $dupVerified = null;
+        if ($stmt->num_rows > 0) { $stmt->bind_result($dupId, $dupVerified); $stmt->fetch(); }
+        $dupDoc = $conn->prepare("SELECT id FROM doctors WHERE email = ? LIMIT 1");
+        $dupDoc->bind_param("s", $email);
+        $dupDoc->execute();
+        $dupDoc->store_result();
+        $isDoctorEmail = $dupDoc->num_rows > 0;
+        $dupDoc->close();
+        if ($isDoctorEmail || $dupVerified !== null) {
+            if ($dupVerified !== null && !(int)$dupVerified) {
+                $error_code = 'unverified';
+                $error = 'This email is already registered but not activated yet. Check your inbox for the activation link.';
+            } else {
+                $error_code = 'exists';
+                $error = 'An account with this email already exists. Please log in instead.';
+            }
         } else {
             $hashed     = password_hash($password, PASSWORD_BCRYPT);
             $token      = bin2hex(random_bytes(32));
@@ -287,7 +321,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <h2 style="font-size:1.6rem;margin-bottom:.3rem">Create Account</h2>
       <p style="color:rgba(21,28,39,0.55);font-size:.9rem;margin-bottom:1.8rem">Tell us about yourself.</p>
 
-      <?php if($error): ?><div class="alert-error" id="topFormError"><?= htmlspecialchars($error) ?></div><?php endif ?>
+      <?php if($error): ?><div class="alert-error" id="topFormError" role="alert"><?= htmlspecialchars($error) ?>
+        <?php if($error_code === 'exists'): ?><div style="margin-top:.6rem"><a href="login.php?email=<?= urlencode($_POST['email'] ?? '') ?>" style="color:var(--red);font-weight:700;text-decoration:underline">Go to Log in</a> &middot; <a href="forgot_password.php" style="color:var(--red);font-weight:700;text-decoration:underline">Forgot password?</a></div>
+        <?php elseif($error_code === 'unverified'): ?><div style="margin-top:.6rem"><a href="login.php?error=not_verified&email=<?= urlencode($_POST['email'] ?? '') ?>" style="color:var(--red);font-weight:700;text-decoration:underline">Resend activation email</a></div><?php endif ?>
+      </div><?php endif ?>
 
       <form method="POST" id="regForm" novalidate>
 
@@ -297,7 +334,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input type="hidden" name="agree_terms" id="h_agree" value="0"/>
 
         <!-- Google Register Button -->
-        <a href="google-register.php" style="
+        <a href="google-register.php" onclick="return openGoogleExternal(event, this)" style="
             display:flex;align-items:center;justify-content:center;gap:.75rem;
             width:100%;padding:.85rem 1rem;
             border:1.5px solid rgba(21,28,39,.18);
@@ -677,6 +714,33 @@ function togglePw(id, showId, hideId) {
 }
 
 // â”€â”€ DOB max â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Surface server-side errors
+(function () {
+  const top = document.getElementById('topFormError');
+  if (top) {
+    top.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    toast(top.firstChild.textContent.trim());
+  }
+})();
+
+// In the Android app, Google blocks OAuth inside the WebView, so open the sign-in in the
+// system browser (Chrome). The callback hands the session back through app_handoff.php.
+function openGoogleExternal(event, el) {
+  if (!<?= $isApp ? 'true' : 'false' ?>) return true;
+  event.preventDefault();
+  var url = new URL(el.getAttribute('href'), window.location.href).href;
+  var cap = window.Capacitor && window.Capacitor.Plugins;
+  try {
+    if (cap && cap.Browser && cap.Browser.open) { cap.Browser.open({ url: url }); return false; }
+    if (cap && cap.App && cap.App.openUrl) { cap.App.openUrl({ url: url }); return false; }
+  } catch (e) {}
+  var u = new URL(url);
+  window.location.href = 'intent://' + u.host + u.pathname + u.search +
+    '#Intent;scheme=' + u.protocol.replace(':', '') + ';package=com.android.chrome;S.browser_fallback_url=' +
+    encodeURIComponent(url) + ';end';
+  return false;
+}
+
 const dobEl = document.getElementById('f_dob');
 if (dobEl) {
   const max = new Date();

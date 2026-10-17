@@ -59,7 +59,7 @@ require_once '../database/config.php';
   <div id="statusMsg"></div>
 
   <p style="text-align:center;margin-top:1.5rem;font-size:0.85rem;color:#9ab0ae;">
-    <a href="login.php" style="color:var(--green);font-weight:600;text-decoration:none;">â† Back to Login</a>
+    <a href="login.php" style="color:var(--green);font-weight:600;text-decoration:none;">Back to Login</a>
   </p>
 </div>
 
