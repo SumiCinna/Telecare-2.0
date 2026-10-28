@@ -29,9 +29,7 @@ $doctor_name = $_SESSION['doctor_name'] ?? 'Doctor';
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/png" href="../telecarelogo.png?v=20261028">
-  <link rel="shortcut icon" type="image/png" href="../telecarelogo.png?v=20261028">
-  <link rel="apple-touch-icon" type="image/png" href="../telecarelogo.png?v=20261028">
+  <link rel="icon" type="image/png" href="../telecarelogo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Logout â€” TELE-CARE</title>
