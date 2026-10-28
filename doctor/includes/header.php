@@ -1,10 +1,12 @@
 ﻿<?php
-$tc_favicon_href = '../telecarelogo.png';
+$tc_favicon_href = '../telecarelogo.png?v=telecare-blue-1';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <link rel="icon" type="image/png" href="<?= htmlspecialchars($tc_favicon_href) ?>">
+  <link rel="shortcut icon" type="image/png" href="<?= htmlspecialchars($tc_favicon_href) ?>">
+  <link rel="apple-touch-icon" type="image/png" href="<?= htmlspecialchars($tc_favicon_href) ?>">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
   <title><?= $page_title ?? 'Doctor — TELE-CARE' ?></title>

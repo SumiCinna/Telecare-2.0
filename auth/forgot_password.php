@@ -10,7 +10,7 @@ require_once '../database/config.php';
   <link rel="apple-touch-icon" type="image/png" href="/telecarelogo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Forgot Password â€” TELE-CARE</title>
+  <title>Forgot Password — TELE-CARE</title>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
@@ -41,7 +41,7 @@ require_once '../database/config.php';
   <a href="login.php" class="logo">TELE<span>-</span>CARE</a>
 
   <div style="margin-bottom:1.8rem;">
-    <div style="width:52px;height:52px;border-radius:14px;background:rgba(195,54,67,0.08);border:1px solid rgba(195,54,67,0.15);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:1rem;">ðŸ”</div>
+    <div style="width:52px;height:52px;border-radius:14px;background:rgba(195,54,67,0.08);border:1px solid rgba(195,54,67,0.15);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:1rem;">🔐</div>
     <h2 style="font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:900;color:var(--green);margin-bottom:0.3rem;">Forgot Password?</h2>
     <p style="color:#6b8a87;font-size:0.88rem;line-height:1.6;">No worries. Enter your registered email and we'll send you a reset link.</p>
   </div>
@@ -63,7 +63,7 @@ require_once '../database/config.php';
 </div>
 
 <script>
-  // â”€â”€ EMAILJS KEYS â”€â”€
+  // ─── EMAILJS KEYS ───
   const EMAILJS_PUBLIC_KEY    = 'WCw8iwd51l4iljHV-';
   const EMAILJS_SERVICE_ID    = 'service_bknr7e6';
   const EMAILJS_RESET_TEMPLATE = 'template_eh6dcuy';
@@ -80,13 +80,13 @@ require_once '../database/config.php';
     const msg   = document.getElementById('statusMsg');
 
     if (!email) {
-      msg.innerHTML = '<div class="alert-error">âš ï¸ Please enter your email address.</div>';
+      msg.innerHTML = '<div class="alert-error">⚠️ Please enter your email address.</div>';
       return;
     }
 
     // Basic email format check
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      msg.innerHTML = '<div class="alert-error">âš ï¸ Please enter a valid email address.</div>';
+      msg.innerHTML = '<div class="alert-error">⚠️ Please enter a valid email address.</div>';
       return;
     }
 
@@ -107,7 +107,7 @@ require_once '../database/config.php';
         const isCooldown   = data.message && data.message.includes('wait');
         const isNotFound   = data.message && data.message.includes('not found');
         let   alertClass   = isCooldown ? 'alert-warn' : 'alert-error';
-        let   icon         = isCooldown ? 'â³' : 'âœ—';
+        let   icon         = isCooldown ? '›' : '✕';
         msg.innerHTML = `<div class="${alertClass}">${icon} ${data.message}</div>`;
         // Re-enable after short delay so they can fix their input
         setTimeout(() => { btn.disabled = false; btn.innerHTML = 'Send Reset Link'; isSending = false; }, 2000);
@@ -124,13 +124,13 @@ require_once '../database/config.php';
       }
     })
     .then(() => {
-      msg.innerHTML = '<div class="alert-success">âœ“ Reset link sent! Check your inbox â€” it expires in 1 hour.</div>';
+      msg.innerHTML = '<div class="alert-success">✓ Reset link sent! Check your inbox — it expires in 1 hour.</div>';
       // Start 3-minute frontend cooldown
       startCooldown(btn);
     })
     .catch(err => {
       if (err === 'handled') return;
-      msg.innerHTML = '<div class="alert-error">âœ— ' + (err.message || 'Something went wrong. Try again.') + '</div>';
+      msg.innerHTML = '<div class="alert-error">✕ ' + (err.message || 'Something went wrong. Try again.') + '</div>';
       btn.disabled  = false;
       btn.innerHTML = 'Send Reset Link';
       isSending     = false;

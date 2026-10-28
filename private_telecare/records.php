@@ -430,7 +430,7 @@ require_once __DIR__ . '/../includes/header.php';
               <div>
                 <div class="hist-date"><?= date('M j, Y', strtotime($visit['appointment_date'])) ?></div>
                 <div class="hist-name">Dr. <?= htmlspecialchars($visit['doctor_name']) ?></div>
-                <div class="hist-detail"><?= htmlspecialchars($visit['specialty'] ?: 'Consultation') ?><?= !empty($visit['reason']) ? ' Â· ' . htmlspecialchars($visit['reason']) : '' ?></div>
+                <div class="hist-detail"><?= htmlspecialchars($visit['specialty'] ?: 'Consultation') ?><?= !empty($visit['reason']) ? ' · ' . htmlspecialchars($visit['reason']) : '' ?></div>
               </div>
               <span class="hist-status <?= $badge_class ?>"><?= htmlspecialchars($visit['status']) ?></span>
             </div>
@@ -447,7 +447,7 @@ require_once __DIR__ . '/../includes/header.php';
               <?php endif; ?>
             </div>
             <div class="hist-detail-panel" id="hist-panel-<?= $i ?>">
-              <?= htmlspecialchars($visit['specialty'] ?: 'General Consultation') ?><?= !empty($visit['reason']) ? ' â€” ' . htmlspecialchars($visit['reason']) : '' ?>
+              <?= htmlspecialchars($visit['specialty'] ?: 'General Consultation') ?><?= !empty($visit['reason']) ? ' — ' . htmlspecialchars($visit['reason']) : '' ?>
             </div>
           </div>
           <?php endforeach; ?>
@@ -594,7 +594,7 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
             <div style="min-width:0;flex:1;">
               <div class="med-name"><?= htmlspecialchars($m['medication_name']) ?></div>
-              <div class="med-meta"><?= htmlspecialchars($m['dosage'] ?? 'â€”') ?> Â· <?= htmlspecialchars($m['frequency'] ?? 'â€”') ?></div>
+              <div class="med-meta"><?= htmlspecialchars($m['dosage'] ?? '—') ?> · <?= htmlspecialchars($m['frequency'] ?? '—') ?></div>
               <span class="med-chip <?= $zero ? 'refill' : 'active' ?>"><?= $zero ? 'REFILL NEEDED' : 'ACTIVE' ?></span>
             </div>
           </div>
@@ -625,7 +625,7 @@ require_once __DIR__ . '/../includes/header.php';
     <header class="original-head">
       <div class="original-title" id="originalTitle">Scanned Document</div>
       <div class="original-tools">
-        <button type="button" class="original-tool" id="zoomOutBtn" onclick="zoomOriginal(-.15)" aria-label="Zoom out">âˆ’</button>
+        <button type="button" class="original-tool" id="zoomOutBtn" onclick="zoomOriginal(-.15)" aria-label="Zoom out">−</button>
         <button type="button" class="original-tool" onclick="resetOriginalZoom()" aria-label="Reset zoom">100%</button>
         <button type="button" class="original-tool" id="zoomInBtn" onclick="zoomOriginal(.15)" aria-label="Zoom in">+</button>
         <button type="button" class="original-close" onclick="closeOriginalModal()" aria-label="Close document viewer">&times;</button>
@@ -634,7 +634,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="original-stage" id="originalStage">
       <img class="original-image" id="originalImage" alt="Scanned document"/>
       <iframe class="original-frame" id="originalFrame" title="Scanned document PDF"></iframe>
-      <div class="original-hint" id="originalHint">Use + and âˆ’ to zoom</div>
+      <div class="original-hint" id="originalHint">Use + and − to zoom</div>
     </div>
   </section>
 </div>
@@ -644,7 +644,7 @@ require_once __DIR__ . '/../includes/header.php';
   <div class="upl-modal">
     <button type="button" class="upl-close" onclick="closeUploadModal()">&times;</button>
     <div class="upl-title">Scan a Document</div>
-    <div class="upl-sub">Upload a photo of your lab result or prescription â€” we'll extract the text automatically.</div>
+    <div class="upl-sub">Upload a photo of your lab result or prescription — we'll extract the text automatically.</div>
 
     <?php if ($error && isset($_FILES['doc_file'])): ?>
       <div class="upl-alert-error"><svg class="record-inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3z"/><path d="M12 9v5M12 17h.01"/></svg><?= htmlspecialchars($error) ?></div>

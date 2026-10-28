@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $patient) {
   <link rel="apple-touch-icon" type="image/png" href="/telecarelogo.png">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Reset Password â€” TELE-CARE</title>
+  <title>Reset Password — TELE-CARE</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
     :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF}
@@ -78,10 +78,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $patient) {
   <?php if ($success): ?>
     <!-- Success state -->
     <div style="text-align:center;">
-      <div style="font-size:3rem;margin-bottom:1rem;">âœ…</div>
+      <div style="font-size:3rem;margin-bottom:1rem;">✓</div>
       <h2 style="font-family:'Poppins',sans-serif;font-size:1.6rem;color:var(--green);margin-bottom:0.5rem;">Password Updated!</h2>
       <p style="color:#6b8a87;font-size:0.9rem;line-height:1.7;margin-bottom:1.5rem;">Your password has been changed successfully. You can now log in with your new password.</p>
-      <a href="login.php" style="display:inline-block;padding:0.9rem 2.5rem;border-radius:50px;background:var(--red);color:#fff;font-weight:600;text-decoration:none;box-shadow:0 6px 20px rgba(195,54,67,0.3);">Go to Login â†’</a>
+      <a href="login.php" style="display:inline-block;padding:0.9rem 2.5rem;border-radius:50px;background:var(--red);color:#fff;font-weight:600;text-decoration:none;box-shadow:0 6px 20px rgba(195,54,67,0.3);">Go to Login →</a>
     </div>
 
   <?php elseif ($error && !$patient): ?>
@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $patient) {
   <?php else: ?>
     <!-- Reset form -->
     <div style="margin-bottom:1.8rem;">
-      <div style="width:52px;height:52px;border-radius:14px;background:rgba(63,130,227,0.08);border:1px solid rgba(63,130,227,0.15);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:1rem;">ðŸ”‘</div>
+      <div style="width:52px;height:52px;border-radius:14px;background:rgba(63,130,227,0.08);border:1px solid rgba(63,130,227,0.15);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:1rem;">🔑</div>
       <h2 style="font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:900;color:var(--green);margin-bottom:0.3rem;">Set New Password</h2>
       <p style="color:#6b8a87;font-size:0.88rem;line-height:1.6;">Hi <strong><?= htmlspecialchars($patient['full_name']) ?></strong>, enter your new password below.</p>
     </div>
@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $patient) {
     </form>
 
     <p style="text-align:center;margin-top:1.5rem;font-size:0.85rem;color:#9ab0ae;">
-      <a href="login.php" style="color:var(--green);font-weight:600;text-decoration:none;">â† Back to Login</a>
+      <a href="login.php" style="color:var(--green);font-weight:600;text-decoration:none;">← Back to Login</a>
     </p>
   <?php endif ?>
 </div>

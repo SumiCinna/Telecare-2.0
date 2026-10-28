@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
 }
 
 // â”€â”€ Fetch visits â”€â”€
-// PENDING: booked but not yet paid â€” still inside the 10-minute window (anything past it was
+// PENDING: booked but not yet paid — still inside the 10-minute window (anything past it was
 // already flipped to Cancelled by the auto-cancel query above).
 // Also here: HMO / YAKAP bookings still waiting for the clinic's approval / verification (no payment due).
 $visits_pending = $conn->query("
@@ -98,7 +98,7 @@ $visits_upcoming = $conn->query("
     ORDER BY a.appointment_date ASC, a.appointment_time ASC
 ");
 
-// PAST: completed, past-dated, or cancelled â€” cancelled ones show here regardless of date so
+// PAST: completed, past-dated, or cancelled — cancelled ones show here regardless of date so
 // they don't just disappear from the patient's view.
 $visits_past = $conn->query("
     SELECT a.*, d.full_name AS doctor_name, d.specialty

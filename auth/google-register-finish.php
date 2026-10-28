@@ -258,7 +258,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <?php if($show_verify): ?>
       <div style="text-align:center;padding:1rem 0;animation:fadeUp .6s ease">
-        <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,rgba(63,130,227,.15),rgba(36,68,65,.1));display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;font-size:2.5rem;border:2px solid rgba(63,130,227,.15)">ðŸ“§</div>
+        <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,rgba(63,130,227,.15),rgba(36,68,65,.1));display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;font-size:2.5rem;border:2px solid rgba(63,130,227,.15)">📩</div>
         <h2 style="font-size:1.8rem;margin-bottom:.6rem">Check your email!</h2>
         <p style="color:#6b8a87;font-size:.95rem;line-height:1.75;margin-bottom:.5rem">
           We sent an activation link to<br/>
@@ -267,14 +267,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <p style="color:#9ab0ae;font-size:.82rem;margin-bottom:2rem">Click the link in the email to activate your account.<br/>The link expires in <strong>24 hours</strong>.</p>
         <div style="background:rgba(63,130,227,.05);border:1px solid rgba(63,130,227,.12);border-radius:16px;padding:1.2rem 1.5rem;text-align:left;margin-bottom:2rem">
           <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ab0ae;margin-bottom:.8rem">What to do next</div>
-          <?php foreach([['ðŸ“¬','Open your email inbox'],['ðŸ”','Look for an email from TELE-CARE'],['ðŸ”—','Click the "Activate Account" link'],['âœ…','Log in with Google and start your consultation']] as [$icon,$text]): ?>
+          <?php foreach([['📬','Open your email inbox'],['📩','Look for an email from TELE-CARE'],['📧','Click the "Activate Account" link'],['✓','Log in with Google and start your consultation']] as [$icon,$text]): ?>
           <div style="display:flex;align-items:center;gap:.8rem;margin-bottom:.6rem;font-size:.88rem;color:var(--green)"><span><?= $icon ?></span><?= $text ?></div>
           <?php endforeach ?>
         </div>
         <p style="font-size:.85rem;color:#9ab0ae;margin-bottom:.5rem">Didn't receive the email?</p>
         <button class="resend-btn" id="resendBtn" onclick="resendEmail()">Resend activation email</button>
         <div id="resendMsg" style="font-size:.8rem;color:var(--green);margin-top:.5rem;min-height:1.2rem"></div>
-        <div style="margin-top:2rem"><a href="login.php" style="color:#9ab0ae;font-size:.85rem;text-decoration:none">Already activated? Log in â†’</a></div>
+        <div style="margin-top:2rem"><a href="login.php" style="color:#9ab0ae;font-size:.85rem;text-decoration:none">Already activated? Log in →</a></div>
       </div>
       <script>
         const EMAILJS_PUBLIC_KEY  = 'm-AvAiAdUDsgBbz6D';
@@ -297,7 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             msg.textContent = 'âœ“ Email resent successfully!'; msg.style.color = 'var(--green)';
             cooldown = 60;
             const t = setInterval(() => { cooldown--; btn.innerHTML = 'Resend again in ' + cooldown + 's'; if (cooldown <= 0) { clearInterval(t); btn.disabled = false; btn.innerHTML = 'Resend activation email'; } }, 1000);
-          }).catch(() => { msg.textContent = 'âœ— Failed. Please try again.'; msg.style.color = 'var(--red)'; btn.disabled = false; btn.innerHTML = 'Resend activation email'; });
+          }).catch(() => { msg.textContent = '✕ Failed. Please try again.'; msg.style.color = 'var(--red)'; btn.disabled = false; btn.innerHTML = 'Resend activation email'; });
         }
       </script>
 
@@ -361,12 +361,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
 
           <div style="margin-bottom:1rem">
-            <label class="field-label">Profile Photo <span class="optional-tag">(optional â€” uses Google photo if blank)</span></label>
+            <label class="field-label">Profile Photo <span class="optional-tag">(optional — uses Google photo if blank)</span></label>
             <input type="file" name="profile_photo" id="f_profile_photo" class="field-input" accept="image/jpeg,image/png,image/gif,image/webp" style="padding:.6rem"/>
           </div>
 
           <div style="margin-top:2rem">
-            <button type="button" class="btn-next" onclick="goStep(2)">Continue to Location â†’</button>
+            <button type="button" class="btn-next" onclick="goStep(2)">Continue to Location →</button>
           </div>
         </div>
 

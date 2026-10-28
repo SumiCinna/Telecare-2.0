@@ -133,8 +133,8 @@
     <div id="tpScrollProgress"><div id="tpScrollBar"></div></div>
 
     <div id="tpTabs">
-      <button class="tp-tab active" onclick="tpSwitchTab('terms')">ðŸ“‹ Terms of Use</button>
-      <button class="tp-tab" onclick="tpSwitchTab('privacy')">ðŸ”’ Privacy Policy</button>
+      <button class="tp-tab active" onclick="tpSwitchTab('terms')">📋 Terms of Use</button>
+      <button class="tp-tab" onclick="tpSwitchTab('privacy')">📄 Privacy Policy</button>
     </div>
 
     <div id="tpScrollNotice">
@@ -290,7 +290,7 @@
 
     <div id="tpFooter">
       <p id="tpScrollHint" style="color:#C33643;font-size:.76rem;font-weight:600;text-align:center">
-        â†“ Scroll to the bottom to enable the checkbox
+        ↓ Scroll to the bottom to enable the checkbox
       </p>
       <label id="tpCheckRow" style="pointer-events:none;opacity:.45">
         <input type="checkbox" id="tpCheckbox" disabled/>
@@ -329,7 +329,7 @@
     document.getElementById('tpAcceptBtn').disabled = true;
     document.getElementById('tpScrollNotice').style.opacity = '1';
     document.getElementById('tpScrollHint').style.display   = 'block';
-    document.getElementById('tpScrollHint').textContent = 'â†“ Scroll to the bottom to enable the checkbox';
+    document.getElementById('tpScrollHint').textContent = '↓ Scroll to the bottom to enable the checkbox';
     document.getElementById('tpScrollBar').style.width = '0%';
     document.getElementById('tpBody').scrollTop = 0;
 

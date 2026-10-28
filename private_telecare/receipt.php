@@ -80,7 +80,7 @@ $back_url = match($role) {
     default  => 'router.php?page=visits',
 };
 
-$page_title = 'Payment Receipt â€” TELE-CARE';
+$page_title = 'Payment Receipt — TELE-CARE';
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -174,8 +174,8 @@ require_once __DIR__ . '/../includes/header.php';
   }
 </style>
 
-<?php if ($toast): ?><div class="toast-bar success">âœ“ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
-<?php if ($toast_error): ?><div class="toast-bar error">âœ• <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
+<?php if ($toast): ?><div class="toast-bar success">✓ <?= htmlspecialchars($toast) ?></div><?php endif; ?>
+<?php if ($toast_error): ?><div class="toast-bar error">✕ <?= htmlspecialchars($toast_error) ?></div><?php endif; ?>
 
 <div class="page">
 <div class="receipt-wrap">
@@ -190,7 +190,7 @@ require_once __DIR__ . '/../includes/header.php';
 
     <!-- Header -->
     <div class="receipt-top">
-      <div class="receipt-logo">ðŸ¥ Tele-Care</div>
+      <div class="receipt-logo">🏥 Tele-Care</div>
       <div class="receipt-title">Payment Receipt</div>
       <div class="receipt-subtitle">Official Consultation Receipt</div>
     </div>
@@ -204,7 +204,7 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
         <div>
           <div class="receipt-status-text">Payment Successful</div>
-          <div class="receipt-status-sub"><?= $paid_at->format('F j, Y Â· g:i A') ?></div>
+          <div class="receipt-status-sub"><?= $paid_at->format('F j, Y · g:i A') ?></div>
         </div>
       </div>
 
