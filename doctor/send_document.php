@@ -676,8 +676,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($action, ['issue', 'export
     if ($action !== 'draft') {
         if ($doc_type === 'prescription') {
             $has = false;
-            foreach ($P['prescription']['drugs'] as $d) { if (trim($d['name']) !== '') { $has = true; break; } }
+            $incomplete = false;
+            foreach ($P['prescription']['drugs'] as $d) {
+                if (trim($d['name']) !== '') {
+                    $has = true;
+                    if (trim($d['dispense']) === '' || trim($d['freq']) === '' || trim($d['duration']) === '') { $incomplete = true; }
+                }
+            }
             if (!$has) { $error = 'Add at least one medication before issuing the prescription.'; }
+            elseif ($incomplete) { $error = 'Complete the dispense quantity, frequency and duration of every medication.'; }
         } elseif ($doc_type === 'lab_request') {
             if (empty($P['lab_request']['tests'])) { $error = 'Select at least one diagnostic examination.'; }
         } elseif ($doc_type === 'med_cert') {
@@ -772,6 +779,9 @@ require_once __DIR__ . '/includes/header.php';
 .db-actions{display:flex;gap:8px;flex-wrap:wrap}
 .db-btn{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 15px;border-radius:9px;border:1px solid var(--border-color,#e5e7eb);background:#fff;color:var(--neutral-800,#1f2937);font-size:.72rem;font-weight:800;cursor:pointer;text-decoration:none;font-family:inherit}
 .db-btn:hover{background:#f5f6fa}
+.db-btn:disabled,.db-btn.is-disabled{opacity:.45;cursor:not-allowed;pointer-events:auto;filter:none}
+.db-btn:disabled:hover{background:#fff}
+.db-btn.primary:disabled:hover{background:var(--doc-primary);filter:none}
 .db-btn.primary{background:var(--doc-primary);border-color:var(--doc-primary);color:#fff}
 .db-btn.primary:hover{filter:brightness(1.07);background:var(--doc-primary-dark)}
 .db-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
@@ -866,8 +876,8 @@ require_once __DIR__ . '/includes/header.php';
     </div>
     <div class="db-actions">
      
-      <button type="button" class="db-btn" onclick="dbSubmit('export')">Export PDF</button>
-      <button type="button" class="db-btn primary" onclick="dbSubmit('issue')">Sign &amp; Issue</button>
+      <button type="button" class="db-btn" id="btnExport" onclick="dbSubmit('export')">Export PDF</button>
+      <button type="button" class="db-btn primary" id="btnIssue" onclick="dbSubmit('issue')">Sign &amp; Issue</button>
     </div>
   </div>
 
@@ -1174,6 +1184,7 @@ function renderPreview(){
     headerHTML() +
     `<div class="pv-title">${esc(DOC_TITLE)}</div>` +
     body;
+  updateActionButtons();
 }
 
 /* ---------------- binding ---------------- */
@@ -1211,7 +1222,38 @@ function hydrate(){
 }
 
 /* ---------------- submit ---------------- */
+/* Required-input check: returns '' when OK, otherwise the reason. */
+function missingRequired(){
+  if(DOC_TYPE==='prescription'){
+    const rows=S.prescription.drugs.filter(d=>['name','dispense','freq','duration','sig'].some(k=>String(d[k]||'').trim()!==''));
+    if(!rows.length) return 'Add at least one medication.';
+    for(const d of rows){
+      if(!String(d.name||'').trim())     return 'Enter the drug name for every medication order.';
+      if(!String(d.dispense||'').trim()) return 'Enter the dispense quantity for every medication order.';
+      if(!String(d.freq||'').trim())     return 'Enter the frequency & route for every medication order.';
+      if(!String(d.duration||'').trim()) return 'Enter the duration for every medication order.';
+    }
+    return '';
+  }
+  if(DOC_TYPE==='lab_request'){
+    return Object.keys(S.lab_request.tests||{}).some(c=>(S.lab_request.tests[c]||[]).length) ? '' : 'Select at least one diagnostic examination.';
+  }
+  if(DOC_TYPE==='med_cert'){
+    return (String(S.diagnosis||'').trim()||String(S.med_cert.remarks||'').trim()) ? '' : 'Enter a diagnosis or clinical remarks.';
+  }
+  return '';
+}
+function updateActionButtons(){
+  const why=missingRequired();
+  ['btnExport','btnIssue'].forEach(id=>{
+    const b=document.getElementById(id); if(!b) return;
+    b.disabled=!!why;
+    b.title=why||'';
+  });
+}
+
 async function dbSubmit(action){
+  if(missingRequired()) return;
   const form=document.getElementById('dbForm');
   document.getElementById('dbPayload').value=JSON.stringify(S);
   document.getElementById('dbAction').value=action;
