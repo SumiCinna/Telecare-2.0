@@ -25,6 +25,18 @@ $conn->query("CREATE TABLE IF NOT EXISTS `audit_logs` (
   KEY `entity` (`entity_type`,`entity_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
+
+// License re-verification + e-signature columns (added once if missing).
+foreach ([
+  'pending_license_number' => "VARCHAR(25) NULL",
+  'license_requested_at'   => "DATETIME NULL",
+  'license_reject_note'    => "VARCHAR(255) NULL",
+  'esignature_path'        => "VARCHAR(255) NULL",
+  'esignature_updated_at'  => "DATETIME NULL",
+] as $__col => $__def) {
+    $__c = $conn->query("SHOW COLUMNS FROM `doctors` LIKE '$__col'");
+    if ($__c && $__c->num_rows === 0) { @$conn->query("ALTER TABLE `doctors` ADD COLUMN `$__col` $__def"); }
+}
 // â”€â”€ Audit logging helper â”€â”€
 function log_audit($conn, $admin_id, $action, $entity_type, $entity_id, $old = null, $new = null) {
     $old_json = $old === null ? null : json_encode($old, JSON_UNESCAPED_SLASHES);
@@ -172,6 +184,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_staff'])) {
     header('Location: Users.php'); exit;
 }
 
+// Reject a pending license change
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reject_license'])) {
+    $did  = (int)$_POST['doctor_id'];
+    $note = mb_substr(trim($_POST['reject_note'] ?? ''), 0, 255);
+    $row  = $conn->query("SELECT pending_license_number FROM doctors WHERE id=$did")->fetch_assoc();
+    $stmt = $conn->prepare("UPDATE doctors SET pending_license_number=NULL, license_requested_at=NULL, license_reject_note=? WHERE id=?");
+    $stmt->bind_param("si", $note, $did);
+    $stmt->execute();
+    log_audit($conn, $admin_id, 'reject_license', 'doctor', $did, ['pending_license_number'=>$row['pending_license_number'] ?? null], ['reason'=>$note]);
+    $_SESSION['toast'] = 'License change rejected.';
+    header('Location: Users.php'); exit;
+}
+
 // â”€â”€ Verify doctor â”€â”€
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_doctor'])) {
     $did     = (int)$_POST['doctor_id'];
@@ -216,7 +241,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_doctor'])) {
             if (move_uploaded_file($tmp_name, $upload_dir . $fname)) { $$col = 'uploads/docs/' . $fname; }
         }
     }
-    $stmt = $conn->prepare("UPDATE doctors SET license_number=?, issuing_board=?, license_file=COALESCE(?,license_file), board_cert_file=COALESCE(?,board_cert_file), is_verified=1, verified_at=?, verified_by=? WHERE id=?");
+    $stmt = $conn->prepare("UPDATE doctors SET license_number=?, issuing_board=?, license_file=COALESCE(?,license_file), board_cert_file=COALESCE(?,board_cert_file), is_verified=1, verified_at=?, verified_by=?, pending_license_number=NULL, license_requested_at=NULL, license_reject_note=NULL WHERE id=?");
     $stmt->bind_param("sssssii", $license, $board, $license_file, $cert_file, $now, $admin_id, $did);
     $stmt->execute();
     $_SESSION['toast'] = "Doctor verified successfully.";
@@ -708,12 +733,16 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="modal-overlay" id="modal-verify-doctor">
   <div class="modal">
-    <h3>Verify Doctor</h3>
+    <h3 id="verify-title">Verify Doctor</h3>
     <p style="font-size:0.82rem;color:#9ab0ae;margin-bottom:1.2rem;">Log the doctor's license info and upload documents.</p>
     <div id="verify-live-warning" class="live-warning"></div>
     <form method="POST" enctype="multipart/form-data" id="verify-form">
       <input type="hidden" name="doctor_id" id="verify-doctor-id"/>
       <div class="form-field"><label class="field-label">Doctor</label><input type="text" id="verify-doctor-name" class="field-input" disabled/></div>
+      <div id="verify-pending-box" style="display:none;background:rgba(217,119,6,0.08);border-radius:12px;padding:0.7rem 0.85rem;margin-bottom:1rem;font-size:0.8rem;color:#92620a;">
+        <b>Pending license verification</b><br><span id="verify-pending-info"></span><br>
+        <span style="font-size:0.74rem;">Check the number against the PRC record / uploaded file, then approve or reject. Only approved numbers appear on the doctor's documents.</span>
+      </div>
       <div class="form-row">
         <div class="form-field">
           <label class="field-label">License Number</label>
@@ -736,7 +765,11 @@ if ($alog) { while ($row = $alog->fetch_assoc()) $auditLogs[] = $row; }
         <input type="file" name="board_cert_file" id="verify-board-file" class="field-input" accept="application/pdf,image/*,.pdf,.jpg,.jpeg,.png,.webp" style="padding:0.5rem;"/>
         <div class="field-warning" id="warn-board-file">Invalid file. Upload PDF/JPG/JPEG/PNG/WEBP only.</div>
       </div>
-      <button type="submit" name="verify_doctor" class="btn-submit">Mark as Verified</button>
+      <button type="submit" name="verify_doctor" id="verify-submit-btn" class="btn-submit">Mark as Verified</button>
+      <div id="verify-reject-btn" style="display:none;margin-top:0.6rem;">
+        <input type="text" name="reject_note" id="verify-reject-note" class="field-input" maxlength="255" placeholder="Reason for rejection (shown to the doctor)"/>
+        <button type="submit" name="reject_license" value="1" formnovalidate class="btn-cancel" style="margin-top:0.5rem;width:100%;color:#dc2626;">Reject License Change</button>
+      </div>
       <button type="button" class="btn-cancel" onclick="closeModal('modal-verify-doctor')">Cancel</button>
     </form>
   </div>
@@ -923,8 +956,8 @@ function renderRows(rows) {
       actions += `<button class="btn-sm btn-teal" onclick="openDetailsModal(${d.id})">View</button>`;
       actions += `<button class="btn-sm btn-edit" onclick="openEditDoctorModal(${d.id})">Edit</button>`;
       actions += `<a href="?toggle_doctor=${d.id}" class="btn-sm ${d.status==='active'?'btn-red':'btn-activate'}">${d.status==='active'?'Deactivate':'Activate'}</a>`;
-      if (!d.is_verified) {
-        actions += `<button class="btn-sm btn-blue" onclick="openVerifyModal(${d.id}, '${escAttr(d.full_name)}')">Verify</button>`;
+      if (!d.is_verified || d.pending_license_number) {
+        actions += `<button class="btn-sm btn-blue" onclick="openVerifyModal(${d.id}, '${escAttr(d.full_name)}')">${d.pending_license_number ? 'Review License' : 'Verify'}</button>`;
       }
       if (!d.setup_complete) {
         actions += `<a href="?resend_invite=${d.id}" class="btn-sm btn-green" onclick="return confirm('Send a new setup link to ${escAttr(d.email)}?')">Resend Setup Link</a>`;
@@ -946,7 +979,7 @@ function renderRows(rows) {
     }
 
     return `<tr>
-      <td><span class="row-avatar">${initials(u.full_name)}</span>${escHtml(u.full_name)}</td>
+      <td><span class="row-avatar">${initials(u.full_name)}</span>${escHtml(u.full_name)}${(u.type==='doctor' && u.raw.pending_license_number) ? ' <span class="badge badge-orange" style="font-size:0.62rem;">License pending</span>' : ''}</td>
       <td>${rolePill(u.type)}</td>
       <td style="color:#9ab0ae;">${escHtml(u.email || 'â€”')}</td>
       <td>${statusBadge(u.status)}</td>
@@ -961,6 +994,19 @@ function openVerifyModal(id, name) {
   if (form) form.reset();
   document.getElementById('verify-doctor-id').value = id;
   document.getElementById('verify-doctor-name').value = 'Dr. ' + name;
+  const u = ALL_USERS.find(x => x.type === 'doctor' && x.id == id);
+  const d = u ? u.raw : {};
+  const pending = !!d.pending_license_number;
+  document.getElementById('verify-license-number').value = d.pending_license_number || d.license_number || '';
+  document.getElementById('verify-issuing-board').value  = d.issuing_board || '';
+  document.getElementById('verify-pending-box').style.display = pending ? 'block' : 'none';
+  document.getElementById('verify-reject-btn').style.display  = pending ? 'block' : 'none';
+  document.getElementById('verify-reject-note').value = '';
+  document.getElementById('verify-pending-info').textContent = pending
+    ? 'Requested license: ' + d.pending_license_number + (d.license_number ? '  (current approved: ' + d.license_number + ')' : '  (no approved license yet)')
+    : '';
+  document.getElementById('verify-title').textContent = pending ? 'Review License Change' : 'Verify Doctor';
+  document.getElementById('verify-submit-btn').textContent = pending ? 'Approve License' : 'Mark as Verified';
   clearVerifyWarnings();
   openModal('modal-verify-doctor');
 }
@@ -1034,6 +1080,7 @@ if (verifyForm) {
   if (boardFile) boardFile.addEventListener('change', () => validateVerifyFileInput('verify-board-file', 'warn-board-file'));
 
   verifyForm.addEventListener('submit', (e) => {
+    if (e.submitter && e.submitter.name === 'reject_license') return;
     const licenseOk = validateLicenseField();
     const boardOk = validateBoardField();
     const licenseFileOk = validateVerifyFileInput('verify-license-file', 'warn-license-file');
@@ -1279,7 +1326,7 @@ function openDetailsModal(id) {
   document.getElementById('vd-phone').innerHTML   = emptySpan(d.phone_number || d.phone);
   document.getElementById('vd-address').innerHTML = emptySpan(d.clinic_address || d.address);
 
-  document.getElementById('vd-license').innerHTML    = emptySpan(d.license_number);
+  document.getElementById('vd-license').innerHTML    = emptySpan(d.license_number) + (d.pending_license_number ? ` <span class="badge badge-orange" style="font-size:0.62rem;">Pending: ${escHtml(d.pending_license_number)}</span>` : '');
   document.getElementById('vd-board').innerHTML      = emptySpan(d.issuing_board);
   document.getElementById('vd-experience').innerHTML = d.years_experience ? `<span>${escHtml(d.years_experience)} year(s)</span>` : `<span class="empty">Not provided</span>`;
   document.getElementById('vd-fee').innerHTML = d.consultation_fee ? `<span>â‚± ${parseFloat(d.consultation_fee).toLocaleString()}</span>` : `<span class="empty">Not set</span>`;

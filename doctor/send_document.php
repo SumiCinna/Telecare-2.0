@@ -30,6 +30,9 @@ function tc_ensure_schema(mysqli $conn): void {
     if (!tc_has_column($conn, 'doctors', 'credentials')) {
         @$conn->query("ALTER TABLE `doctors` ADD COLUMN `credentials` VARCHAR(120) NOT NULL DEFAULT ''");
     }
+    foreach (['pending_license_number' => "VARCHAR(25) NULL", 'license_requested_at' => "DATETIME NULL", 'license_reject_note' => "VARCHAR(255) NULL", 'esignature_path' => "VARCHAR(255) NULL", 'esignature_updated_at' => "DATETIME NULL"] as $__c => $__d) {
+        if (!tc_has_column($conn, 'doctors', $__c)) { @$conn->query("ALTER TABLE `doctors` ADD COLUMN `$__c` $__d"); }
+    }
     if (!tc_has_column($conn, 'doctors', 'ptr_number')) {
         @$conn->query("ALTER TABLE `doctors` ADD COLUMN `ptr_number` VARCHAR(100) NOT NULL DEFAULT ''");
     }
@@ -182,8 +185,17 @@ $doctorMeta = [
     'name'        => trim((string)($docRow['full_name'] ?? '')),
     'credentials' => trim((string)($docRow['credentials'] ?? '')),
     'specialty'   => trim((string)($docRow['specialty'] ?? '')),
-    'license'     => trim((string)($docRow['license_number'] ?? '')),
+    // Only an admin-approved license number is printed on documents.
+    'license'     => (!empty($docRow['is_verified'])) ? trim((string)($docRow['license_number'] ?? '')) : '',
+    // Saved e-signature (credentials.php): web URL for the preview, file path for the PDF.
+    'sig_url'     => '',
+    'sig_file'    => '',
 ];
+$__sigRel = trim((string)($docRow['esignature_path'] ?? ''));
+if ($__sigRel !== '' && is_file(__DIR__ . '/../' . $__sigRel)) {
+    $doctorMeta['sig_file'] = realpath(__DIR__ . '/../' . $__sigRel) ?: '';
+    $doctorMeta['sig_url']  = '../' . $__sigRel . '?v=' . (int)@filemtime(__DIR__ . '/../' . $__sigRel);
+}
 
 /* ============================================================
    LABORATORY CATALOG
@@ -624,8 +636,20 @@ function tc_build_pdf(string $doc_type, array $P, array $patientMeta, array $doc
         $pdf->MultiCell(0, 5, tc_enc($head['footer']), 0, 'L');
     }
 
-    $pdf->Ln(14);
-    if ($pdf->GetY() > 250) { $pdf->AddPage(); $pdf->Ln(6); }
+    $hasSig = ($doctorMeta['sig_file'] ?? '') !== '' && is_file($doctorMeta['sig_file']);
+    $pdf->Ln($hasSig ? 22 : 14);
+    if ($pdf->GetY() > 250) { $pdf->AddPage(); $pdf->Ln($hasSig ? 16 : 6); }
+    if ($hasSig) {
+        // E-signature sits just above the signature line, left-aligned with it.
+        $sz = @getimagesize($doctorMeta['sig_file']);
+        if ($sz && $sz[0] > 0 && $sz[1] > 0) {
+            $maxW = 60; $maxH = 20;
+            $ratio = min($maxW / $sz[0], $maxH / $sz[1]);
+            $w = $sz[0] * $ratio; $h = $sz[1] * $ratio;
+            $type = ($sz[2] === IMAGETYPE_PNG) ? 'PNG' : 'JPG';
+            try { $pdf->Image($doctorMeta['sig_file'], 17, $pdf->GetY() - $h - 0.5, $w, $h, $type); } catch (\Throwable $e) { /* skip signature on bad image */ }
+        }
+    }
     $pdf->SetDrawColor(0, 0, 0);
     $pdf->SetLineWidth(0.3);
     $pdf->Line(15, $pdf->GetY(), 95, $pdf->GetY());
@@ -816,6 +840,8 @@ require_once __DIR__ . '/includes/header.php';
 .pv-labitem.sel .box{background:#1a1a1a}
 .pv-foot{font-size:.78rem;font-style:italic;margin-top:16px}
 .pv-sign{margin-top:44px}
+.pv-sign.has-sig{margin-top:10px}
+.pv-sign img.pv-sig{display:block;max-width:230px;max-height:64px;object-fit:contain;margin:0 0 -3px 6px;position:relative;z-index:1}
 .pv-sign b{font-size:.85rem;display:block;border-top:1px solid #1a1a1a;padding-top:4px;width:260px}
 .pv-sign span{display:block;font-size:.8rem}
 .pv-empty{color:#9ca3af;font-style:italic;font-size:.78rem}
@@ -952,7 +978,7 @@ const DOC_TITLE  = <?= json_encode($DOC_TITLES[$doc_type]) ?>;
 const LAB        = <?= json_encode($LAB_CATALOG, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const HEAD       = <?= json_encode($head, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const PT         = <?= json_encode($patientMeta, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
-const DR         = <?= json_encode($doctorMeta, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+const DR         = <?= json_encode(array_diff_key($doctorMeta, ['sig_file' => 1]), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 let   S          = <?= json_encode($draftPayload, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -1081,7 +1107,8 @@ function patientLineHTML(nameLabel){
 }
 function signHTML(){
   return `${HEAD.footer?`<div class="pv-foot">${esc(HEAD.footer)}</div>`:''}
-  <div class="pv-sign">
+  <div class="pv-sign${DR.sig_url?' has-sig':''}">
+    ${DR.sig_url?`<img class="pv-sig" src="${esc(DR.sig_url)}" alt="Signature">`:''}
     <b>${esc(DR.name)}${DR.credentials?', '+esc(DR.credentials):''}</b>
     ${DR.license?`<span>License No.: ${esc(DR.license)}</span>`:''}
   </div>`;

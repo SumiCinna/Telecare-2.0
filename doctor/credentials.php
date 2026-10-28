@@ -2,11 +2,82 @@
 // doctor/credentials.php
 require_once 'includes/auth.php';
 
-// â”€â”€ FRONTEND ONLY â”€â”€
-// No DB reads/writes or upload handling here yet.
-// $doc is assumed available from auth.php (same as profile.php / dashboard.php).
-// Placeholder values below stand in for future $doc['license_number'],
-// $doc['license_verified'], $doc['esignature_path'].
+// Columns used by this page (added once if missing; admin/Users.php does the same).
+foreach ([
+  'pending_license_number' => "VARCHAR(25) NULL",
+  'license_requested_at'   => "DATETIME NULL",
+  'license_reject_note'    => "VARCHAR(255) NULL",
+  'esignature_path'        => "VARCHAR(255) NULL",
+  'esignature_updated_at'  => "DATETIME NULL",
+] as $__col => $__def) {
+    $__c = $conn->query("SHOW COLUMNS FROM `doctors` LIKE '$__col'");
+    if ($__c && $__c->num_rows === 0) { @$conn->query("ALTER TABLE `doctors` ADD COLUMN `$__col` $__def"); }
+}
+
+$flash_ok = ''; $flash_err = '';
+
+/* ---- Save e-signature (AJAX, returns JSON) ---- */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_signature'])) {
+    header('Content-Type: application/json');
+    $fail = function ($m) { echo json_encode(['ok' => false, 'error' => $m]); exit; };
+    $bin = null;
+
+    if (!empty($_POST['sig_data'])) {
+        if (!preg_match('#^data:image/png;base64,([A-Za-z0-9+/=]+)$#', $_POST['sig_data'], $m)) $fail('Invalid signature data.');
+        $bin = base64_decode($m[1], true);
+    } elseif (!empty($_FILES['sig_file']['name']) && $_FILES['sig_file']['error'] === UPLOAD_ERR_OK) {
+        $bin = file_get_contents($_FILES['sig_file']['tmp_name']);
+    } else {
+        $fail('No signature received.');
+    }
+    if ($bin === false || $bin === null || strlen($bin) > 5 * 1024 * 1024) $fail('Signature is empty or larger than 5MB.');
+
+    $info = @getimagesizefromstring($bin);
+    $ext  = [IMAGETYPE_PNG => 'png', IMAGETYPE_JPEG => 'jpg'][$info[2] ?? 0] ?? null;
+    if (!$ext) $fail('Signature must be a PNG or JPG image.');
+
+    $dir = __DIR__ . '/../uploads/signatures/';
+    if (!is_dir($dir) && !mkdir($dir, 0755, true)) $fail('Could not create the signature folder.');
+    $fname = 'sig_' . (int)$doctor_id . '_' . bin2hex(random_bytes(5)) . '.' . $ext;
+    if (file_put_contents($dir . $fname, $bin) === false) $fail('Could not save the signature file.');
+
+    $path = 'uploads/signatures/' . $fname;
+    $old  = (string)($doc['esignature_path'] ?? '');
+    $stmt = $conn->prepare("UPDATE doctors SET esignature_path = ?, esignature_updated_at = NOW() WHERE id = ?");
+    $stmt->bind_param("si", $path, $doctor_id);
+    if (!$stmt->execute()) { @unlink($dir . $fname); $fail('Database error while saving the signature.'); }
+    if ($old !== '' && strpos($old, 'uploads/signatures/') === 0) { @unlink(__DIR__ . '/../' . $old); }
+
+    echo json_encode(['ok' => true, 'url' => '../' . $path . '?v=' . time()]);
+    exit;
+}
+
+/* ---- Submit license number for admin verification ---- */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_license'])) {
+    $lic = strtoupper(trim($_POST['license_number'] ?? ''));
+    if (!preg_match('/^[A-Z0-9][A-Z0-9\-\/]{4,24}$/', $lic)) {
+        $flash_err = 'Invalid license number. Use 5-25 characters: letters, numbers, dash or slash.';
+    } elseif (!empty($doc['is_verified']) && $lic === strtoupper((string)($doc['license_number'] ?? '')) && empty($doc['pending_license_number'])) {
+        $flash_err = 'That license number is already verified.';
+    } else {
+        $stmt = $conn->prepare("UPDATE doctors SET pending_license_number = ?, license_requested_at = NOW(), license_reject_note = NULL WHERE id = ?");
+        $stmt->bind_param("si", $lic, $doctor_id);
+        $stmt->execute();
+        header('Location: credentials.php?license_submitted=1'); exit;
+    }
+}
+if (isset($_GET['license_submitted'])) $flash_ok = 'License number submitted. It will appear on your documents once TELE-CARE admin verifies it.';
+
+// Re-read the latest credentials state
+$cs = $conn->prepare("SELECT license_number, is_verified, pending_license_number, license_reject_note, esignature_path, esignature_updated_at FROM doctors WHERE id = ? LIMIT 1");
+$cs->bind_param("i", $doctor_id); $cs->execute();
+$cred = $cs->get_result()->fetch_assoc() ?: []; $cs->close();
+$approvedLicense = (!empty($cred['is_verified']) && trim((string)$cred['license_number']) !== '') ? trim($cred['license_number']) : '';
+$pendingLicense  = trim((string)($cred['pending_license_number'] ?? ''));
+$rejectNote      = trim((string)($cred['license_reject_note'] ?? ''));
+$sigPath         = trim((string)($cred['esignature_path'] ?? ''));
+$sigUrl          = ($sigPath !== '' && is_file(__DIR__ . '/../' . $sigPath))
+                   ? '../' . $sigPath . '?v=' . (int)@filemtime(__DIR__ . '/../' . $sigPath) : '';
 
 $page_title       = 'Credentials â€” TELE-CARE';
 $page_title_short = 'Credentials';
@@ -56,7 +127,9 @@ require_once 'includes/header.php';
 
 <div class="page">
 
-  <div class="alert-success" style="display:none;" id="successBanner">âœ“ Credentials updated successfully.</div>
+  <?php if ($flash_err): ?><div class="alert-error" style="background:rgba(220,38,38,0.08);color:#b91c1c;border-radius:12px;padding:0.7rem 0.9rem;font-size:0.82rem;margin-bottom:1rem;"><?= htmlspecialchars($flash_err) ?></div><?php endif; ?>
+  <div class="alert-success" style="display:<?= $flash_ok ? 'block' : 'none' ?>;" id="successBanner"><?= htmlspecialchars($flash_ok) ?></div>
+  <div class="alert-success" style="display:none;" id="sigBanner">âœ“ Credentials updated successfully.</div>
 
   <!-- Header -->
   <div class="card" style="text-align:center;padding:1.6rem 1rem;">
@@ -65,7 +138,13 @@ require_once 'includes/header.php';
       Your license number and e-signature are used on prescriptions, referrals, and other official documents.
     </div>
     <div style="margin-top:0.6rem;display:flex;justify-content:center;gap:0.5rem;flex-wrap:wrap;">
-      <span class="badge badge-orange" id="licenseStatusBadge">Pending Verification</span>
+      <?php if ($pendingLicense !== ''): ?>
+        <span class="badge badge-orange" id="licenseStatusBadge">Pending Verification</span>
+      <?php elseif ($approvedLicense !== ''): ?>
+        <span class="badge badge-green" id="licenseStatusBadge">License Verified</span>
+      <?php else: ?>
+        <span class="badge" style="background:rgba(36,68,65,0.08);color:var(--muted);" id="licenseStatusBadge">No License Submitted</span>
+      <?php endif; ?>
     </div>
   </div>
 
@@ -75,8 +154,16 @@ require_once 'includes/header.php';
     <form method="POST" id="licenseForm">
       <div class="form-field">
         <label class="field-label">PRC License Number</label>
-        <input type="text" name="license_number" id="licenseNumber" class="field-input" placeholder="e.g. 0123456" maxlength="20"/>
+        <input type="text" name="license_number" id="licenseNumber" class="field-input" placeholder="e.g. 0123456" maxlength="25" value="<?= htmlspecialchars($pendingLicense !== '' ? $pendingLicense : $approvedLicense) ?>" style="text-transform:uppercase;"/>
       </div>
+      <?php if ($approvedLicense !== ''): ?>
+        <div class="license-status-row"><span class="badge badge-green">Verified</span><span style="font-size:0.82rem;">Approved license on documents: <b><?= htmlspecialchars($approvedLicense) ?></b></span></div>
+      <?php endif; ?>
+      <?php if ($pendingLicense !== ''): ?>
+        <div class="license-status-row"><span class="badge badge-orange">Pending</span><span style="font-size:0.82rem;">Awaiting admin verification: <b><?= htmlspecialchars($pendingLicense) ?></b></span></div>
+      <?php elseif ($rejectNote !== ''): ?>
+        <div class="license-status-row"><span class="badge badge-red">Rejected</span><span style="font-size:0.82rem;">Your last submission was rejected: <?= htmlspecialchars($rejectNote) ?></span></div>
+      <?php endif; ?>
       <div class="verify-note">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         <span>Changing your license number will require re-verification by TELE-CARE admin before it appears on documents.</span>
@@ -89,12 +176,12 @@ require_once 'includes/header.php';
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem;">
       <div class="section-label" style="margin-bottom:0;">E-Signature</div>
-      <span style="font-size:0.78rem;color:var(--muted);" id="sigSavedNote"></span>
+      <span style="font-size:0.78rem;color:var(--muted);" id="sigSavedNote"><?= !empty($cred['esignature_updated_at']) ? 'Updated ' . htmlspecialchars(date('M j, Y g:i A', strtotime($cred['esignature_updated_at']))) : '' ?></span>
     </div>
 
     <!-- Currently saved signature (placeholder / hidden until one exists) -->
-    <div class="sig-saved-box" id="sigSavedBox" style="display:none;margin-bottom:1rem;">
-      <img id="sigSavedImg" src="" alt="Current signature"/>
+    <div class="sig-saved-box" id="sigSavedBox" style="display:<?= $sigUrl ? 'block' : 'none' ?>;margin-bottom:1rem;">
+      <img id="sigSavedImg" src="<?= htmlspecialchars($sigUrl) ?>" alt="Current signature"/>
       <div style="font-size:0.74rem;color:var(--muted);margin-top:0.4rem;">Current signature on file</div>
     </div>
 
@@ -255,6 +342,7 @@ require_once 'includes/header.php';
     if (fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]);
   });
 
+  let uploadedFile = null;
   function handleFile(file) {
     if (!file.type.match(/^image\/(png|jpeg)$/)) {
       alert('Please upload a PNG or JPG image.');
@@ -265,6 +353,7 @@ require_once 'includes/header.php';
       return;
     }
     const reader = new FileReader();
+    uploadedFile = file;
     reader.onload = (e) => {
       uploadImg.src = e.target.result;
       dropzone.style.display = 'none';
@@ -275,26 +364,61 @@ require_once 'includes/header.php';
 
   document.getElementById('removeUploadBtn').addEventListener('click', () => {
     fileInput.value = '';
+    uploadedFile = null;
     uploadImg.src = '';
     uploadPreview.style.display = 'none';
     dropzone.style.display = 'block';
   });
 
-  // â”€â”€ Save signature (frontend placeholder â€” no backend wired yet) â”€â”€
-  document.getElementById('saveSignatureBtn').addEventListener('click', () => {
+  // Save signature -> POST to this page, stored in uploads/signatures + doctors.esignature_path
+  function cropCanvasToPNG() {
+    const w = canvas.width, h = canvas.height;
+    const data = ctx.getImageData(0, 0, w, h).data;
+    let minX = w, minY = h, maxX = 0, maxY = 0;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      if (data[(y * w + x) * 4 + 3] > 0) { if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; }
+    }
+    if (maxX < minX) return null;
+    const pad = 6;
+    minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad);
+    maxX = Math.min(w - 1, maxX + pad); maxY = Math.min(h - 1, maxY + pad);
+    const out = document.createElement('canvas');
+    out.width = maxX - minX + 1; out.height = maxY - minY + 1;
+    out.getContext('2d').drawImage(canvas, minX, minY, out.width, out.height, 0, 0, out.width, out.height);
+    return out.toDataURL('image/png');
+  }
+
+  document.getElementById('saveSignatureBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('saveSignatureBtn');
     const activeTab = document.querySelector('.sig-tab.active').dataset.tab;
-    if (activeTab === 'draw' && !hasDrawn) {
-      alert('Please draw your signature first.');
-      return;
+    const fd = new FormData();
+    fd.append('save_signature', '1');
+    if (activeTab === 'draw') {
+      if (!hasDrawn) { alert('Please draw your signature first.'); return; }
+      const png = cropCanvasToPNG();
+      if (!png) { alert('Please draw your signature first.'); return; }
+      fd.append('sig_data', png);
+    } else {
+      if (!uploadedFile) { alert('Please upload a signature image first.'); return; }
+      fd.append('sig_file', uploadedFile);
     }
-    if (activeTab === 'upload' && !uploadImg.src) {
-      alert('Please upload a signature image first.');
-      return;
+    btn.disabled = true; const label = btn.textContent; btn.textContent = 'Saving...';
+    try {
+      const res = await fetch('credentials.php', { method: 'POST', body: fd, credentials: 'same-origin' });
+      const j = await res.json();
+      if (!j.ok) { alert(j.error || 'Could not save signature.'); return; }
+      document.getElementById('sigSavedImg').src = j.url;
+      document.getElementById('sigSavedBox').style.display = 'block';
+      document.getElementById('sigSavedNote').textContent = 'Updated just now';
+      const banner = document.getElementById('sigBanner');
+      banner.textContent = '✓ E-signature saved. It will now appear on your prescriptions and documents.';
+      banner.style.display = 'block';
+      banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (e) {
+      alert('Network error while saving the signature.');
+    } finally {
+      btn.disabled = false; btn.textContent = label;
     }
-    // TODO: wire to backend â€” POST canvas.toDataURL('image/png') or the uploaded file
-    const banner = document.getElementById('successBanner');
-    banner.style.display = 'block';
-    banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
 </script>
 
