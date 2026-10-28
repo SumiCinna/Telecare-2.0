@@ -82,7 +82,9 @@ function hmo_admin_head(string $title, string $activeNav, string $actions = ''):
     unset($_SESSION['toast'], $_SESSION['toast_error']);
     ?><!DOCTYPE html>
 <html lang="en"><head>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
+  <link rel="icon" type="image/png" href="/telecarelogo.png">
+  <link rel="shortcut icon" type="image/png" href="/telecarelogo.png">
+  <link rel="apple-touch-icon" type="image/png" href="/telecarelogo.png">
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title><?= h($title) ?> — TELE-CARE</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
