@@ -4,7 +4,7 @@
     margin:0 auto;
     padding:28px 32px 60px;
     box-sizing:border-box;
-    font-family:Arial,sans-serif;
+    font-family:'Poppins',sans-serif;
     color:#172033;
 }
 
@@ -105,8 +105,8 @@
     margin-top:7px;
     padding:5px 10px;
     border-radius:20px;
-    background:#fff0f1;
-    color:#b10f1c;
+    background:#eaf3fd;
+    color:#0d5bc7;
     font-size:12px;
     font-weight:700;
 }
@@ -214,8 +214,8 @@
 }
 
 .record-tab.active{
-    color:#b10f1c;
-    border-bottom-color:#c1121f;
+    color:#1478ee;
+    border-bottom-color:#1478ee;
 }
 
 .overview-grid{
@@ -246,7 +246,7 @@
 .overview-title svg{
     width:18px;
     height:18px;
-    color:#c1121f;
+    color:#1478ee;
 }
 
 .history-list{
@@ -368,13 +368,20 @@
 
 .upload-button{
     border:0;
-    background:#c1121f;
+    background:#1478ee;
     color:#fff;
     padding:9px 13px;
     border-radius:7px;
     font-size:11px;
     font-weight:800;
     cursor:pointer;
+    transition:background-color .2s ease, transform .2s ease;
+}
+
+.upload-button:hover,
+.upload-button:focus-visible{
+    background:#0d5bc7;
+    transform:translateY(-1px);
 }
 
 .modal-overlay{
@@ -480,9 +487,11 @@
     cursor:pointer;
 }
 
-.doctype-btn:hover{
-    border-color:#c1121f;
-    color:#c1121f;
+.doctype-btn:hover,
+.doctype-btn:focus-visible{
+    border-color:#1478ee;
+    color:#1478ee;
+    background:#eef5ff;
 }
 
 .document-grid{
@@ -570,7 +579,7 @@
     border:0;
     background:none;
     padding:0;
-    color:#b10f1c;
+    color:#1478ee;
     font-size:10px;
     font-weight:800;
     cursor:pointer;
