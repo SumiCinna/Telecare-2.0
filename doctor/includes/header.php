@@ -1,5 +1,5 @@
 ﻿<?php
-$tc_favicon_href = '../telecarelogo.png';
+$tc_favicon_href = '../telecarelogo.png?v=20261028';
 ?>
 <!DOCTYPE html>
 <html lang="en">

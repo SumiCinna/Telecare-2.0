@@ -156,7 +156,7 @@ if (isset($conn, $patient_id)) {
 }
 ?>
 <?php
-$tc_favicon_href = (preg_match('#/(?:admin|auth|doctor|private_telecare|staff|super_admin)/#', $_SERVER['PHP_SELF'] ?? '') ? '../telecarelogo.png' : 'telecarelogo.png');
+$tc_favicon_href = (preg_match('#/(?:admin|auth|doctor|private_telecare|staff|super_admin)/#', $_SERVER['PHP_SELF'] ?? '') ? '../telecarelogo.png?v=20261028' : 'telecarelogo.png?v=20261028');
 ?>
 <!DOCTYPE html>
 <html lang="en">
