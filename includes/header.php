@@ -155,12 +155,15 @@ if (isset($conn, $patient_id)) {
     $stmt->close();
 }
 ?>
+<?php
+$tc_favicon_href = (preg_match('#/(?:admin|auth|doctor|private_telecare|staff|super_admin)/#', $_SERVER['PHP_SELF'] ?? '') ? '../telecarelogo.png' : 'telecarelogo.png');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/png" href="/telecarelogo.png">
-  <link rel="shortcut icon" type="image/png" href="/telecarelogo.png">
-  <link rel="apple-touch-icon" type="image/png" href="/telecarelogo.png">
+  <link rel="icon" type="image/png" href="<?= htmlspecialchars($tc_favicon_href) ?>">
+  <link rel="shortcut icon" type="image/png" href="<?= htmlspecialchars($tc_favicon_href) ?>">
+  <link rel="apple-touch-icon" type="image/png" href="<?= htmlspecialchars($tc_favicon_href) ?>">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title><?= htmlspecialchars($page_title ?? 'TELE-CARE') ?></title>

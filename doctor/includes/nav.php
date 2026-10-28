@@ -12,7 +12,7 @@ $active_nav = $active_nav ?? '';
 
   <div class="logo-section">
     <a href="dashboard.php">
-      <img src="/telecarelogo.png" alt="TELE-CARE"/>
+      <img src="../telecarelogo.png" alt="TELE-CARE"/>
       <span>TELE-CARE</span>
     </a>
   </div>

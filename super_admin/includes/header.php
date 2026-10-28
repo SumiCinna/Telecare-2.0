@@ -21,13 +21,16 @@ $super_admin_name = $_SESSION['super_admin_name'] ?? 'Super Admin';
 ?>
 <!DOCTYPE html>
 <html lang="en">
+<?php
+$tc_favicon_href = '../telecarelogo.png';
+?>
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title><?= htmlspecialchars($page_title) ?> | TELE-CARE</title>
-	<link rel="icon" type="image/png" href="/telecarelogo.png">
-	<link rel="shortcut icon" type="image/png" href="/telecarelogo.png">
-	<link rel="apple-touch-icon" type="image/png" href="/telecarelogo.png">
+	<link rel="icon" type="image/png" href="<?= htmlspecialchars($tc_favicon_href) ?>">
+	<link rel="shortcut icon" type="image/png" href="<?= htmlspecialchars($tc_favicon_href) ?>">
+	<link rel="apple-touch-icon" type="image/png" href="<?= htmlspecialchars($tc_favicon_href) ?>">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">

@@ -44,9 +44,9 @@ if (file_exists($file)) {
 $safe = nl2br(htmlspecialchars($row['consultation_summary'] ?? 'No summary content.'));
 $safe = preg_replace('/^(Filipino:.*?)(<br\s*\/?>)?\r?$/mi', '<span style="font-style:italic;color:#1e5a96;">$1</span>$2', $safe);
 echo '<!DOCTYPE html><html><head>
-  <link rel="icon" type="image/png" href="/telecarelogo.png">
-  <link rel="shortcut icon" type="image/png" href="/telecarelogo.png">
-  <link rel="apple-touch-icon" type="image/png" href="/telecarelogo.png"><meta charset="UTF-8"><title>Consultation Summary</title></head>';
+  <link rel="icon" type="image/png" href="../telecarelogo.png">
+  <link rel="shortcut icon" type="image/png" href="../telecarelogo.png">
+  <link rel="apple-touch-icon" type="image/png" href="../telecarelogo.png"><meta charset="UTF-8"><title>Consultation Summary</title></head>';
 echo '<body style="font-family:Arial,sans-serif;max-width:920px;margin:2rem auto;padding:0 1rem;color:#1f2937;line-height:1.65;">';
 echo '<h2 style="margin-bottom:0.6rem;color:#244441;">Consultation Summary</h2>';
 echo '<div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:1rem 1.1rem;">' . $safe . '</div>';

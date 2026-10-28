@@ -16,12 +16,15 @@ $topbar_eyebrow    = $topbar_eyebrow ?? 'TELE-CARE Staff';
 $doc_title         = $page_titles[$active_page] ?? ucfirst($active_page);
 $topbar_title_text = $topbar_title ?? $doc_title;
 ?>
+<?php
+$tc_favicon_href = '../telecarelogo.png';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/png" href="/telecarelogo.png">
-  <link rel="shortcut icon" type="image/png" href="/telecarelogo.png">
-  <link rel="apple-touch-icon" type="image/png" href="/telecarelogo.png">
+  <link rel="icon" type="image/png" href="<?= htmlspecialchars($tc_favicon_href) ?>">
+  <link rel="shortcut icon" type="image/png" href="<?= htmlspecialchars($tc_favicon_href) ?>">
+  <link rel="apple-touch-icon" type="image/png" href="<?= htmlspecialchars($tc_favicon_href) ?>">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title><?= htmlspecialchars($doc_title) ?> — TELE-CARE</title>
