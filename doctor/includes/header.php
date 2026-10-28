@@ -12,6 +12,7 @@
   <link href="includes/design-system.css" rel="stylesheet"/>
   <style>
     * { box-sizing:border-box; margin:0; padding:0; }
+    html, body, *, button, input, select, textarea, a, p, span, div, li, td, th { font-family:'Poppins',sans-serif; }
     body { min-height:100vh; }
     h1,h2,h3 { font-family:'Poppins',sans-serif; }
 

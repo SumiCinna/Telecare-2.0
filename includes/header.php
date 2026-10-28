@@ -176,6 +176,7 @@ if (isset($conn, $patient_id)) {
       --tc-line:rgba(21,28,39,0.08);
       --tc-red-tint:#FEF2F2; --tc-teal-tint:#ECFDF5;
     }
+    html, body, * { font-family:'Poppins',sans-serif; }
     body{ font-family:'Poppins',sans-serif; }
 
     .site-topbar{

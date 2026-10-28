@@ -792,7 +792,7 @@ require_once __DIR__ . '/includes/header.php';
 /* ---------- live preview ---------- */
 .pv-wrap{position:sticky;top:14px}
 .pv-label{display:flex;align-items:center;gap:8px;font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--neutral-500,#6b7280);margin-bottom:8px}
-.pv-paper{background:#fff;border:1px solid var(--border-color,#e5e7eb);border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,.05);padding:34px 40px;min-height:720px;color:#1a1a1a;font-family:'Times New Roman',Georgia,serif;font-size:.85rem;line-height:1.6;overflow-wrap:anywhere}
+.pv-paper{background:#fff;border:1px solid var(--border-color,#e5e7eb);border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,.05);padding:34px 40px;min-height:720px;color:#1a1a1a;font-family:'Poppins',sans-serif;font-size:.85rem;line-height:1.6;overflow-wrap:anywhere}
 .pv-head{text-align:center;margin-bottom:6px}
 .pv-clinic{font-size:1.05rem;font-weight:700;text-transform:uppercase;letter-spacing:.02em}
 .pv-clinic-sub{font-size:.72rem;color:#333;margin-top:2px;line-height:1.4}
@@ -801,7 +801,7 @@ require_once __DIR__ . '/includes/header.php';
 .pv-row{display:flex;justify-content:space-between;gap:20px;margin:4px 0;font-size:.82rem}
 .pv-row span{flex:1}
 .pv-row .fill{border-bottom:1px solid #999;padding-bottom:1px}
-.pv-rx{font-size:1.6rem;font-weight:700;font-family:Georgia,serif;margin:16px 0 8px}
+.pv-rx{font-size:1.6rem;font-weight:700;font-family:'Poppins',sans-serif;margin:16px 0 8px}
 .pv-drug{margin-bottom:16px;font-size:.85rem}
 .pv-drug .nm{font-weight:700}
 .pv-drug .line{margin-top:3px}
