@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // includes/nav.php
 // $active_nav must be set before including: 'home' | 'visits' | 'meds' | 'billing' | 'profile'
 $active_nav = $active_nav ?? 'home';
@@ -20,6 +20,20 @@ $nav_pages = [
 // sidebar - it's already reachable from the profile dropdown in the header
 // (includes/header.php), so keeping it here just duplicated the entry.
 ?>
+<script>
+/* Browser-tab icon: use telecarelogo.png on every page that includes this nav */
+(function(){
+  var href = '/telecarelogo.png?v=telecare-blue-1';
+  var head = document.head || document.getElementsByTagName('head')[0];
+  if (!head) return;
+  Array.prototype.slice.call(head.querySelectorAll('link[rel~="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]')).forEach(function(l){ l.parentNode.removeChild(l); });
+  ['icon', 'shortcut icon', 'apple-touch-icon'].forEach(function(rel){
+    var l = document.createElement('link');
+    l.rel = rel; l.type = 'image/png'; l.href = href;
+    head.appendChild(l);
+  });
+})();
+</script>
 <style>
 :root{
   --tc-red:#B31118; --tc-red-dark:#8a000b; --tc-ink:#151c27; --tc-teal:#006a61; --tc-teal-light:#0D9488;
