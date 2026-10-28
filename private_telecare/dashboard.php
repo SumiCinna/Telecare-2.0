@@ -58,7 +58,7 @@ $firstName = $parts[0];
 
 .patient-strip {
   display:flex; align-items:center; gap:1rem; justify-content:space-between;
-  background:#fff; border:1px solid rgba(179,17,24,0.2); border-radius:14px;
+  background:#fff; border:1px solid rgba(20,120,238,0.2); border-radius:14px;
   padding:1rem 1.2rem; margin-bottom:1.1rem;
   box-shadow:0 2px 12px rgba(21,28,39,0.05);
 }
@@ -91,7 +91,7 @@ $firstName = $parts[0];
   padding: 0.68rem 1.35rem; border-radius: 10px;
   font-size: 0.85rem; font-weight: 600; text-decoration: none;
   transition: all 0.25s; flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(179,17,24,0.25);
+  box-shadow: 0 4px 14px rgba(20,120,238,0.25);
 }
 .welcome-btn:hover { background: var(--tc-red-dark); transform: translateY(-2px); }
 .welcome-btn svg { flex-shrink: 0; }
