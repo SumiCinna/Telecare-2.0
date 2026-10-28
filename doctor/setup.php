@@ -95,12 +95,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
-    :root{--red:#C33643;--green:#244441;--blue:#3F82E3;--bg:#F2F2F2;--white:#FFFFFF}
+    :root{--red:#1478ee;--green:#12345d;--blue:#1478ee;--bg:#F2F2F2;--white:#FFFFFF}
     *{box-sizing:border-box}
     body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--green);min-height:100vh;display:flex}
     h1,h2{font-family:'Poppins',sans-serif}
-    .left-panel{width:40%;background:linear-gradient(160deg,var(--green) 0%,#1a3330 100%);display:flex;flex-direction:column;justify-content:center;padding:3rem;position:sticky;top:0;height:100vh;overflow:hidden}
-    .left-panel::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(63,130,227,0.08) 1px,transparent 1px),linear-gradient(90deg,rgba(63,130,227,0.08) 1px,transparent 1px);background-size:44px 44px;animation:gridMove 20s linear infinite}
+    .left-panel{width:40%;background:linear-gradient(160deg,var(--green) 0%,#12345d 100%);display:flex;flex-direction:column;justify-content:center;padding:3rem;position:sticky;top:0;height:100vh;overflow:hidden}
+    .left-panel::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(20,120,238,0.08) 1px,transparent 1px),linear-gradient(90deg,rgba(20,120,238,0.08) 1px,transparent 1px);background-size:44px 44px;animation:gridMove 20s linear infinite}
     @keyframes gridMove{from{transform:translateY(0)}to{transform:translateY(44px)}}
     .orb{position:absolute;border-radius:50%;filter:blur(70px);pointer-events:none;animation:pulse 6s ease-in-out infinite}
     @keyframes pulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.2);opacity:1}}
@@ -108,14 +108,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $doctor && !$error) {
     .form-wrap{max-width:440px;width:100%}
     .field-label{display:block;font-size:0.72rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#5a7a77;margin-bottom:0.4rem}
     .field-input{width:100%;padding:0.78rem 1rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:12px;font-family:'Poppins',sans-serif;font-size:0.9rem;color:var(--green);outline:none;transition:border-color 0.2s;background:var(--white)}
-    .field-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(63,130,227,0.1)}
+    .field-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(20,120,238,0.1)}
     .form-field{margin-bottom:1rem}
     .pw-wrap{position:relative}
     .pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ab0ae;padding:0}
     .pw-toggle:hover{color:var(--green)}
-    .btn-submit{width:100%;padding:0.9rem;border-radius:50px;background:var(--red);color:#fff;font-weight:700;font-size:0.95rem;border:none;cursor:pointer;transition:all 0.3s;box-shadow:0 6px 18px rgba(195,54,67,0.25);margin-top:0.5rem;font-family:'Poppins',sans-serif}
-    .btn-submit:hover{background:#a82d38;transform:translateY(-2px)}
-    .alert-error{background:rgba(195,54,67,0.08);border:1px solid rgba(195,54,67,0.2);color:var(--red);border-radius:12px;padding:0.75rem 1rem;font-size:0.86rem;margin-bottom:1.2rem}
+    .btn-submit{width:100%;padding:0.9rem;border-radius:50px;background:var(--red);color:#fff;font-weight:700;font-size:0.95rem;border:none;cursor:pointer;transition:all 0.3s;box-shadow:0 6px 18px rgba(20,120,238,0.25);margin-top:0.5rem;font-family:'Poppins',sans-serif}
+    .btn-submit:hover{background:#0d5bc7;transform:translateY(-2px)}
+    .alert-error{background:rgba(20,120,238,0.08);border:1px solid rgba(20,120,238,0.2);color:var(--red);border-radius:12px;padding:0.75rem 1rem;font-size:0.86rem;margin-bottom:1.2rem}
     .skip-note{font-size:0.78rem;color:#9ab0ae;text-align:center;margin-top:0.9rem;line-height:1.5}
     @media(max-width:768px){.left-panel{display:none}}
   </style>

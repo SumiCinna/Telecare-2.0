@@ -86,14 +86,14 @@ $firstName = $parts[0];
 
 .welcome-btn {
   display: inline-flex; align-items: center; gap: 0.45rem;
-  background: var(--tc-red); color: #fff;
+  background: #1478ee; color: #fff;
   border: none;
   padding: 0.68rem 1.35rem; border-radius: 10px;
   font-size: 0.85rem; font-weight: 600; text-decoration: none;
   transition: all 0.25s; flex-shrink: 0;
   box-shadow: 0 4px 14px rgba(20,120,238,0.25);
 }
-.welcome-btn:hover { background: var(--tc-red-dark); transform: translateY(-2px); }
+.welcome-btn:hover { background: #0d5bc7; transform: translateY(-2px); }
 .welcome-btn svg { flex-shrink: 0; }
 
 /* â”€â”€ STATS ROW â”€â”€ */
