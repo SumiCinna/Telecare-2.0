@@ -60,11 +60,11 @@ require_once __DIR__ . '/../includes/header.php';
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 
 :root{
-  --tc-red:#B31118; --tc-red-dark:#8a000b;
-  --tc-teal:#006a61; --tc-teal-light:#0D9488;
+  --tc-red:#1478ee; --tc-red-dark:#0d5bc7;
+  --tc-teal:#1478ee; --tc-teal-light:#0d5bc7;
   --tc-ink:#151c27; --tc-muted:rgba(21,28,39,0.55);
   --tc-line:rgba(21,28,39,0.08);
-  --tc-red-tint:#FEF2F2; --tc-teal-tint:#ECFDF5;
+  --tc-red-tint:#EAF3FD; --tc-teal-tint:#EAF3FD;
 }
 
 .page {

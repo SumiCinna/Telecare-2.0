@@ -18,7 +18,7 @@ require_once __DIR__ . '/../includes/auth.php';
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --teal: #0d9488; --teal2: #0f766e; --green: #16a34a;
+      --teal: #1478ee; --teal2: #0d5bc7; --green: #16a34a;
       --muted: #6b7280; --border: #e5e7eb; --bg: #f9fafb;
       --white: #ffffff; --text: #111827; --radius: 12px; --red: #ef4444;
     }

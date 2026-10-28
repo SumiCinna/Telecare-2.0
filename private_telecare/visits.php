@@ -188,7 +188,7 @@ function isCallActive(string $date, string $time): bool {
   color:#9ab0ae; font-size:.72rem; font-weight:600;
 }
 .breadcrumbs a { color:#6b8886; text-decoration:none; }
-.breadcrumbs a:hover { color:#C33643; }
+.breadcrumbs a:hover { color:#1478ee; }
 .breadcrumbs-separator { color:rgba(36,68,65,.3); }
 .breadcrumbs-current { color:#244441; }
 
@@ -209,16 +209,16 @@ function isCallActive(string $date, string $time): bool {
 }
 .book-btn {
   display: inline-flex; align-items: center; gap: 0.45rem;
-  background: #C33643; color: #fff;
+  background: #1478ee; color: #fff;
   padding: 0.72rem 1.5rem; border-radius: 50px;
   font-size: 0.85rem; font-weight: 700;
   border: none; cursor: pointer;
   font-family: 'Poppins', sans-serif;
-  box-shadow: 0 4px 16px rgba(195,54,67,0.28);
+  box-shadow: 0 4px 16px rgba(20,120,238,0.28);
   transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
   text-decoration: none;
 }
-.book-btn:hover { background: #a82d38; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(195,54,67,0.38); }
+.book-btn:hover { background: #0d5bc7; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(20,120,238,0.38); }
 .book-btn svg { flex-shrink: 0; }
 
 /* â”€â”€ STAT CARDS â”€â”€ */
@@ -248,9 +248,9 @@ function isCallActive(string $date, string $time): bool {
 }
 .stat-icon svg { width: 20px; height: 20px; }
 .stat-icon.pending   { background: rgba(217,158,11,0.12); color: #d97706; }
-.stat-icon.upcoming  { background: rgba(63,130,227,0.1);  color: #3F82E3; }
-.stat-icon.completed { background: rgba(195,54,67,0.08);  color: #C33643; }
-.stat-icon.cancelled { background: rgba(195,54,67,0.08);  color: #C33643; }
+.stat-icon.upcoming  { background: rgba(20,120,238,0.12);  color: #1478ee; }
+.stat-icon.completed { background: rgba(20,120,238,0.08);  color: #1478ee; }
+.stat-icon.cancelled { background: rgba(20,120,238,0.08);  color: #1478ee; }
 .stat-label {
   font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em;
   text-transform: uppercase; color: #9ab0ae; margin-bottom: 0.15rem;
@@ -267,7 +267,7 @@ function isCallActive(string $date, string $time): bool {
   border-radius:8px; background:#fff; color:#244441;
   font:500 .78rem 'Poppins',sans-serif; outline:none;
 }
-.filter-select:focus, .filter-date:focus { border-color:#3F82E3; }
+.filter-select:focus, .filter-date:focus { border-color:#1478ee; }
 .filter-select { min-width:118px; }
 .filter-date { width:142px; }
 .search-wrap { position: relative; flex: 1; min-width: 220px; }
@@ -281,7 +281,7 @@ function isCallActive(string $date, string $time): bool {
   font-family: 'Poppins', sans-serif; font-size: 0.85rem; color: #244441;
   outline: none; background: #fff; transition: border-color 0.2s;
 }
-.search-input:focus { border-color: #3F82E3; }
+.search-input:focus { border-color: #1478ee; }
 
 /* â”€â”€ TABS â”€â”€ */
 .inner-tabs {
@@ -305,7 +305,7 @@ function isCallActive(string $date, string $time): bool {
   background: rgba(36,68,65,0.1); color: #244441;
   font-size: 0.68rem; font-weight: 800; padding: 0.05rem 0.45rem; border-radius: 50px;
 }
-.inner-tab.active .tab-count { background: rgba(195,54,67,0.12); color: #C33643; }
+.inner-tab.active .tab-count { background: rgba(20,120,238,0.12); color: #1478ee; }
 
 /* â”€â”€ APPOINTMENT ROW CARD â”€â”€ */
 .appt-card {
@@ -330,7 +330,7 @@ function isCallActive(string $date, string $time): bool {
 /* Avatar */
 .appt-avatar {
   width: 52px; height: 52px; border-radius: 14px;
-  background: #3F82E3; color: #fff;
+  background: #1478ee; color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: 1rem; flex-shrink: 0;
   overflow: hidden;

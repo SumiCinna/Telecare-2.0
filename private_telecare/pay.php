@@ -175,7 +175,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --teal: #0d9488; --teal2: #0f766e; --green: #16a34a;
+      --teal: #1478ee; --teal2: #0d5bc7; --green: #16a34a;
       --muted: #6b7280; --border: #e5e7eb; --bg: #f9fafb;
       --white: #ffffff; --text: #111827; --radius: 12px; --red: #ef4444;
     }
@@ -186,7 +186,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     .toast.error   { background:var(--red); }
     .toast.success { background:var(--green); }
 
-    .checkout-header { background:linear-gradient(135deg,#0d9488 0%,#0f766e 60%,#134e4a 100%); padding:1.5rem 1rem 1.2rem; text-align:center; }
+    .checkout-header { background:linear-gradient(135deg,#1478ee 0%,#0d5bc7 60%,#0b478b 100%); padding:1.5rem 1rem 1.2rem; text-align:center; }
     .checkout-header h1 { font-family:'Plus Jakarta Sans',sans-serif; font-size:1.6rem; font-weight:800; color:#fff; }
     .checkout-header .tagline { font-size:0.72rem; color:rgba(255,255,255,0.65); margin-top:0.15rem; letter-spacing:0.04em; }
 

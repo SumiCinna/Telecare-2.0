@@ -86,12 +86,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
   :root {
-    --primary:#B31118;
-    --primary-dark:#8A000B;
-    --primary-soft:#FCEBED;
-    --secondary:#0F9D95;
-    --secondary-dark:#08756F;
-    --secondary-soft:#E3F6F4;
+    --primary:#1478ee;
+    --primary-dark:#0d5bc7;
+    --primary-soft:#EAF3FD;
+    --secondary:#1478ee;
+    --secondary-dark:#0d5bc7;
+    --secondary-soft:#EAF3FD;
     --text:#172033;
     --muted:#6B7280;
     --border:#E1E5EC;
