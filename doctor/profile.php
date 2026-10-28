@@ -126,8 +126,8 @@ require_once 'includes/header.php';
   .sched-input{padding:0.6rem 0.7rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:10px;font-family:'Poppins',sans-serif;font-size:0.85rem;color:var(--green);outline:none;width:100%;background:#fff;transition:border-color .2s;}
   .sched-input:focus{border-color:var(--blue);}
   select.sched-input{cursor:pointer;}
-  .sched-remove{background:rgba(195,54,67,0.08);border:none;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--red);transition:all .2s;flex-shrink:0;}
-  .sched-remove:hover{background:rgba(195,54,67,0.18);}
+  .sched-remove{background:rgba(20,120,238,0.08);border:none;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--primary);transition:all .2s;flex-shrink:0;}
+  .sched-remove:hover{background:rgba(20,120,238,0.18);}
   .btn-add-sched{display:inline-flex;align-items:center;gap:0.4rem;background:rgba(63,130,227,0.1);color:var(--blue);border:none;border-radius:50px;padding:0.45rem 1rem;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;transition:all .2s;margin-top:0.4rem;}
   .btn-add-sched:hover{background:rgba(63,130,227,0.18);}
 
@@ -247,7 +247,7 @@ require_once 'includes/header.php';
 
   <!-- Logout -->
   <div class="card" style="text-align:center;">
-    <a href="logout.php" style="color:var(--red);font-weight:600;font-size:0.88rem;text-decoration:none;">Sign Out</a>
+    <a href="logout.php" style="color:var(--primary);font-weight:600;font-size:0.88rem;text-decoration:none;">Sign Out</a>
   </div>
 
 </div>

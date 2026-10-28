@@ -31,8 +31,8 @@ require_once 'includes/header.php';
   .sig-colors{display:flex;gap:0.4rem;}
   .sig-color{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;}
   .sig-color.active{border-color:var(--blue);transform:scale(1.15);}
-  .sig-clear-btn{display:inline-flex;align-items:center;gap:0.35rem;background:rgba(195,54,67,0.08);color:var(--red);border:none;border-radius:50px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;transition:all .2s;}
-  .sig-clear-btn:hover{background:rgba(195,54,67,0.18);}
+  .sig-clear-btn{display:inline-flex;align-items:center;gap:0.35rem;background:rgba(20,120,238,0.08);color:var(--primary);border:none;border-radius:50px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;transition:all .2s;}
+  .sig-clear-btn:hover{background:rgba(20,120,238,0.18);}
 
   /* â”€â”€ Upload panel â”€â”€ */
   .sig-dropzone{border:1.5px dashed rgba(36,68,65,0.2);border-radius:14px;background:#fcfcfa;padding:1.6rem 1rem;text-align:center;cursor:pointer;transition:all .2s;}
@@ -42,7 +42,7 @@ require_once 'includes/header.php';
   .sig-dropzone .dz-sub{font-size:0.74rem;color:var(--muted);margin-top:0.2rem;}
   .sig-upload-preview{display:none;text-align:center;padding:1rem;border:1.5px solid rgba(36,68,65,0.12);border-radius:14px;background:#fcfcfa;}
   .sig-upload-preview img{max-width:100%;max-height:180px;object-fit:contain;}
-  .sig-upload-preview .dz-remove{display:inline-flex;align-items:center;gap:0.35rem;margin-top:0.7rem;background:rgba(195,54,67,0.08);color:var(--red);border:none;border-radius:50px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;}
+  .sig-upload-preview .dz-remove{display:inline-flex;align-items:center;gap:0.35rem;margin-top:0.7rem;background:rgba(20,120,238,0.08);color:var(--primary);border:none;border-radius:50px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;}
 
   /* â”€â”€ License section â”€â”€ */
   .license-status-row{display:flex;align-items:center;gap:0.6rem;margin-top:0.5rem;}
