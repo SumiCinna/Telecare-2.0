@@ -188,7 +188,7 @@ $history_stmt->execute();
 $history = $history_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $history_stmt->close();
 
-$page_title = 'Medical Records â€” TELE-CARE';
+$page_title = 'Medical Records - TELE-CARE';
 $active_nav = 'records';
 require_once __DIR__ . '/../includes/header.php';
 ?>

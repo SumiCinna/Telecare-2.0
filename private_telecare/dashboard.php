@@ -17,7 +17,7 @@ $upcoming = $conn->query("
 
 
 
-$page_title = 'Home â€” TELE-CARE';
+$page_title = 'Home - TELE-CARE';
 $active_nav = 'home';
 require_once __DIR__ . '/../includes/header.php';
 

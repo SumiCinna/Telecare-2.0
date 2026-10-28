@@ -51,7 +51,7 @@ $toast       = $_SESSION['toast']       ?? null;
 $toast_error = $_SESSION['toast_error'] ?? null;
 unset($_SESSION['toast'], $_SESSION['toast_error']);
 
-$page_title = 'Billing â€” TELE-CARE';
+$page_title = 'Billing - TELE-CARE';
 $active_nav = 'billing';
 require_once __DIR__ . '/../includes/header.php';
 ?>
