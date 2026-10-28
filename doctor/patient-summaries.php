@@ -110,7 +110,7 @@ function buildQuery($overrides,$patient_id,$dateFrom,$dateTo,$page){
 }
 ?>
 
-<link rel="stylesheet" href="includes/patient-records.css">
+<link rel="stylesheet" href="includes/patient-records.css?v=<?= (int)@filemtime(__DIR__ . '/includes/patient-records.css') ?>">
 
 <style>
     .summaries-wrap{
@@ -177,7 +177,7 @@ function buildQuery($overrides,$patient_id,$dateFrom,$dateTo,$page){
 
     .summary-filter-submit{
         border:none;
-        background:#b91c1c;
+        background:var(--primary);
         color:#fff;
     }
 
@@ -221,8 +221,8 @@ function buildQuery($overrides,$patient_id,$dateFrom,$dateTo,$page){
     }
 
     .summary-pagination .active{
-        background:#b91c1c;
-        border-color:#b91c1c;
+        background:var(--primary);
+        border-color:var(--primary);
         color:#fff;
     }
 

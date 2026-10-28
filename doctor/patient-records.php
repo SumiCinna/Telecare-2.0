@@ -94,7 +94,7 @@ function documentType($type){
 }
 ?>
 
-<link rel="stylesheet" href="includes/patient-records.css">
+<link rel="stylesheet" href="includes/patient-records.css?v=<?= (int)@filemtime(__DIR__ . '/includes/patient-records.css') ?>">
 
 
 <main class="page records-page">

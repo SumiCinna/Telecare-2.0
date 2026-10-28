@@ -188,7 +188,7 @@ $greeting = $hour < 12 ? 'Morning' : ($hour < 18 ? 'Afternoon' : 'Evening');
     place-items:center;
     border-radius:50%;
     background:#e7ecfa;
-    color:#bd1d2b;
+    color:var(--primary);
     font-size:.56rem;
     font-weight:700;
 }
@@ -208,7 +208,7 @@ $greeting = $hour < 12 ? 'Morning' : ($hour < 18 ? 'Afternoon' : 'Evening');
 .status-confirmed { background:#e9efff;color:#3158a5; }
 
 .table-action {
-    color:#bd1d2b;
+    color:var(--primary);
     font-size:.68rem;
     font-weight:700;
     text-decoration:none;
@@ -238,8 +238,8 @@ $greeting = $hour < 12 ? 'Morning' : ($hour < 18 ? 'Afternoon' : 'Evening');
 }
 
 .quick-action:hover {
-    border-color:#bd1d2b;
-    color:#bd1d2b;
+    border-color:var(--primary);
+    color:var(--primary);
 }
 
 .quick-action svg {
