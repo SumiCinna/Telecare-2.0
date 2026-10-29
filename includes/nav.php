@@ -36,7 +36,7 @@ $nav_pages = [
 </script>
 <style>
 :root{
-  --tc-red:#B31118; --tc-red-dark:#8a000b; --tc-ink:#151c27; --tc-teal:#006a61; --tc-teal-light:#0D9488;
+  --tc-red:#B31118; --tc-red-dark:#8a000b; --tc-blue:#1478ee; --tc-navy:#12345d; --tc-ink:#151c27; --tc-teal:#006a61; --tc-teal-light:#0D9488;
   --tc-line:rgba(21,28,39,0.08); --tc-muted:rgba(21,28,39,0.5);
   --tc-sidebar-w:240px; --tc-sidebar-w-collapsed:72px;
 }
@@ -96,7 +96,7 @@ $nav_pages = [
   white-space:nowrap; overflow:hidden;
 }
 .sidebar-link:hover{ background:rgba(21,28,39,0.05); color:var(--tc-ink); }
-.sidebar-link.active{ background:var(--tc-red); color:#fff; box-shadow:0 3px 9px rgba(179,17,24,0.22); }
+.sidebar-link.active{ background:var(--tc-blue); color:#fff; box-shadow:0 5px 14px rgba(23,104,216,.22); }
 .sidebar-link .nav-icon{ width:18px; height:18px; flex-shrink:0; display:flex; }
 .sidebar-link .nav-icon svg{ width:100%; height:100%; stroke:currentColor; }
 .sidebar-link .nav-label{ overflow:hidden; text-overflow:ellipsis; }
