@@ -146,17 +146,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     :root{
       --blue:#1f6fc6;--blue-dark:#193f72;--blue-bright:#4382d6;--blue-soft:#d9ecff;
       --red:#B31118;            /* kept only for errors */
-      --ink:#474748;--muted:#64748b;--line:#e2e8f0;--bg:#fafafa;--white:#FFFFFF
+      --ink:#474748;--muted:#64748b;--line:#e2e8f0;--bg:#ffffff;--white:#FFFFFF
     }
     *{box-sizing:border-box}
     body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
     h1,h2{font-family:'Poppins',sans-serif;font-weight:800}
     h2{color:var(--blue-dark)}
 
-    /* Left panel: plain solid blue, no grid / orbs / animation */
-    .left-panel{background:var(--blue-dark)}
-    .brand-link{display:inline-flex;align-items:center;gap:.6rem;font-size:1.5rem;font-weight:800;color:#fff;text-decoration:none;letter-spacing:-.03em}
-    .brand-link img{width:44px;height:44px;object-fit:contain;background:#fff;border-radius:12px;padding:4px}
+    .brand-link{display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:1.8rem;font-size:1.4rem;font-weight:800;color:var(--blue-dark);text-decoration:none;letter-spacing:-.03em}
+    .brand-link img{width:44px;height:44px;object-fit:contain}
 
     .field-label{display:block;font-size:.75rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--blue-dark);margin-bottom:.45rem}
     .field-label .req{color:var(--red)}
@@ -236,11 +234,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .btn-accept.unlocked{cursor:pointer;opacity:1}
     .btn-accept.unlocked:hover{background:var(--blue-dark)}
 
-    /* Mobile: hide the side panel, show only the form */
+    /* Mobile */
     @media(max-width:768px){
-      .left-panel{display:none!important}
-      .reg-wrap{display:block!important;min-height:0!important}
-      .reg-right{padding:1.25rem 1rem 2rem!important;width:100%;box-sizing:border-box;overflow:visible!important}
+      .reg-right{padding:1.25rem 1rem 2rem!important}
       .reg-right input,.reg-right select,.reg-right textarea{max-width:100%;box-sizing:border-box}
     }
   </style>
@@ -249,25 +245,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="toast-wrap" id="toastWrap"></div>
 
-<div class="reg-wrap" style="display:flex;min-height:100vh">
+<div class="reg-wrap" style="min-height:100vh">
 
-  <!-- LEFT -->
-  <div class="left-panel" style="width:42%;display:flex;flex-direction:column;justify-content:center;padding:3rem;position:sticky;top:0;height:100vh">
-    <div>
+  <!-- FORM -->
+  <div class="reg-right" style="padding:2.5rem 1rem 3rem">
+    <div style="max-width:520px;margin:0 auto">
+
       <a href="../index.php" class="brand-link">
         <img src="/telecarelogo.png" alt="Tele-Care logo"/>
         <span>TELE-CARE</span>
       </a>
-      <div style="margin-top:3rem">
-        <h1 style="font-size:2.2rem;color:#fff;line-height:1.2;margin-bottom:1rem">Create Your<br/>Patient Account</h1>
-        <p style="color:rgba(255,255,255,.7);font-size:.95rem;line-height:1.75">Fill in your details below. All information is kept private and used only for your consultations.</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- RIGHT -->
-  <div class="reg-right" style="flex:1;overflow-y:auto;padding:3rem 4%">
-    <div style="max-width:520px;margin:0 auto">
 
     <?php if($show_verify): ?>
       <div style="text-align:center;padding:1rem 0;animation:fadeUp .6s ease">
