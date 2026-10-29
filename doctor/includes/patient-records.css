@@ -377,6 +377,15 @@
     cursor:pointer;
 }
 
+.send-document-button{
+    background:#1478ee;
+    color:#fff;
+}
+
+.send-document-button:hover{
+    background:#0d5bc7;
+}
+
 .modal-overlay{
     display:none;
     position:fixed;

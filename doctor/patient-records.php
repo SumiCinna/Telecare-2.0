@@ -503,7 +503,7 @@ function documentType($type){
 
                         <button
                             type="button"
-                            class="upload-button"
+                            class="upload-button send-document-button"
                             onclick="openSendDocumentModal()"
                         >
                             + Send Document
