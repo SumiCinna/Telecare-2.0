@@ -1899,6 +1899,18 @@ document.querySelectorAll('.feat-grid .feat-card, .svc-grid .svc-card').forEach(
   var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
   function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+  function stripEmoji(value) {
+    return String(value || '').replace(/[\u00A9\u00AE\u203C\u2049\u2122\u2139\u2300-\u23FF\u2600-\u27BF\u2B00-\u2BFF\u3030\u303D\u3297\u3299\u{1F1E6}-\u{1F1FF}\u{1F300}-\u{1FAFF}\uFE0F\u200D\u20E3]/gu, '');
+  }
+  root.querySelectorAll('input:not([type="radio"]):not([type="checkbox"]), textarea').forEach(function (field) {
+    field.addEventListener('input', function () {
+      var clean = stripEmoji(this.value);
+      if (clean !== this.value) {
+        this.value = clean;
+        this.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+  });
   function money(n) { return '₱' + Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
   function api(action, data) {
     var b = new URLSearchParams(Object.assign({ action: action, csrf: CSRF }, data || {}));

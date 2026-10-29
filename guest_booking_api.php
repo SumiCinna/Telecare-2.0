@@ -89,7 +89,7 @@ switch ($action) {
 
 /* ── 1. complaint -> department + doctors ── */
 case 'recommend': {
-    $concern = booking_clean($_POST['concern'] ?? '', 500);
+    $concern = booking_clean(guest_strip_emoji((string)($_POST['concern'] ?? '')), 500);
     if (mb_strlen($concern) < 10) gb_fail('Please describe how you feel in a little more detail (at least 10 characters).');
     // Gibberish such as "ahsdawdjask" must not proceed.
     if (($bad = booking_concern_error($concern)) !== null) gb_fail($bad);
@@ -189,7 +189,7 @@ case 'submit_details': {
     $addr  = guest_clean((string)($_POST['address'] ?? ''), 255);
     $phone = gb_phone((string)($_POST['mobile'] ?? ''));
     $email = strtolower(trim((string)($_POST['email'] ?? '')));
-    $why   = booking_clean($_POST['reason'] ?? '', 500);
+    $why   = booking_clean(guest_strip_emoji((string)($_POST['reason'] ?? '')), 500);
 
     $errs = [];
     if (mb_strlen($first) < 2)                        $errs['first_name'] = 'Enter your first name.';

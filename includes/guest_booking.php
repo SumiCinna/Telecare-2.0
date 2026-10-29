@@ -45,7 +45,12 @@ function guest_ip(): string {
     return substr((string)($_SERVER['REMOTE_ADDR'] ?? ''), 0, 45);
 }
 
+function guest_strip_emoji(string $v): string {
+    return preg_replace('/[\x{00A9}\x{00AE}\x{203C}\x{2049}\x{2122}\x{2139}\x{2300}-\x{23FF}\x{2600}-\x{27BF}\x{2B00}-\x{2BFF}\x{3030}\x{303D}\x{3297}\x{3299}\x{1F1E6}-\x{1F1FF}\x{1F300}-\x{1FAFF}\x{FE0F}\x{200D}\x{20E3}]/u', '', $v) ?? $v;
+}
+
 function guest_clean(string $v, int $max = 255): string {
+    $v = guest_strip_emoji($v);
     $v = preg_replace('/\s+/u', ' ', trim($v));
     return mb_substr($v, 0, $max);
 }
