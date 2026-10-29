@@ -1127,7 +1127,7 @@ function renderPreview(){
   let body='';
   if(DOC_TYPE==='prescription'){
     body += patientLineHTML("Patient's Name");
-    body += `<div class="pv-rx">R&#8477;</div>`;
+    body += `<div class="pv-rx">Rx</div>`;
     const drugs=S.prescription.drugs.filter(d=>d.name.trim()!=='');
     if(!drugs.length){ body+=`<div class="pv-empty">No medication orders yet.</div>`; }
     drugs.forEach((d)=>{
