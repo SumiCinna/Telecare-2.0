@@ -275,7 +275,7 @@ function renderRows(rows) {
   empty.style.display = 'none';
 
   tbody.innerHTML = rows.map(d => {
-    const valueDisplay = d.type === 'Percentage' ? `${Number(d.value)}%` : `â‚±${Number(d.value).toFixed(2)}`;
+    const valueDisplay = d.type === 'Percentage' ? `${Number(d.value)}%` : `₱${Number(d.value).toFixed(2)}`;
     let actions = `<button class="btn-sm btn-edit" onclick="openEditModal(${d.id})">Edit</button>`;
     actions += d.status === 'Active'
       ? `<a href="?archive_discount=${d.id}" class="btn-sm btn-red" onclick="var el=this;event.preventDefault();showConfirm('Archive ${escAttr(d.name)}?').then(function(ok){if(ok)window.location=el.href});return false;">Archive</a>`
