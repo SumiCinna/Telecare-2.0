@@ -113,7 +113,7 @@ if ($psrRows) {
 $stat_today            = $today_appts ? $today_appts->num_rows : 0;
 $stat_schedule_pending = count($pendingScheduleRequests);
 $stat_patients         = $conn->query("SELECT COUNT(*) c FROM patients")->fetch_assoc()['c'];
-$stat_doctors          = $conn->query("SELECT COUNT(*) c FROM doctors WHERE status='active'")->fetch_assoc()['c'];
+$stat_new_hmo          = (int)($hmo_counts['new'] ?? 0);
 $stat_pending          = (int)$conn->query("SELECT COUNT(*) c FROM appointments WHERE status='Pending'")->fetch_assoc()['c'];
 
 $result = $conn->query("
@@ -277,26 +277,6 @@ require_once 'includes/header.php';
   <a href="?range=year"  class="period-pill <?= $range === 'year'  ? 'active' : '' ?>">Year</a>
 </div>
 
-<?php if (!empty($hmo_counts['ok'])): ?>
-<div class="card">
-  <div class="card-head" style="flex-wrap:wrap">
-    <div>
-      <div class="card-eyebrow">Verification</div>
-      <div class="card-title">HMO workload</div>
-    </div>
-    <a href="hmo_queue.php" class="btn-primary btn-sm">Open HMO queue</a>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px">
-    <a href="hmo_queue.php?status=Pending" style="text-decoration:none"><div class="stat-lbl">New HMO requests</div><div class="stat-num" style="color:#B54708"><?= (int)$hmo_counts['new'] ?></div></a>
-    <a href="hmo_queue.php?status=Open" style="text-decoration:none"><div class="stat-lbl">Pending verification</div><div class="stat-num" style="color:var(--blue)"><?= (int)$hmo_counts['pending'] ?></div></a>
-    <a href="hmo_queue.php?status=Action+Required" style="text-decoration:none"><div class="stat-lbl">Action required</div><div class="stat-num" style="color:var(--red)"><?= (int)$hmo_counts['action'] ?></div></a>
-    <a href="hmo_queue.php?status=Approved" style="text-decoration:none"><div class="stat-lbl">Approved</div><div class="stat-num" style="color:#067647"><?= (int)$hmo_counts['approved'] ?></div></a>
-    <a href="hmo_queue.php?status=Not+Approved" style="text-decoration:none"><div class="stat-lbl">Not approved</div><div class="stat-num" style="color:#991B1B"><?= (int)$hmo_counts['rejected'] ?></div></a>
-    <a href="hmo_queue.php?status=Open" style="text-decoration:none"><div class="stat-lbl">Upcoming, unresolved</div><div class="stat-num"><?= (int)$hmo_counts['upcoming_open'] ?></div></a>
-  </div>
-</div>
-<?php endif; ?>
-
 <div class="stat-grid">
   <div class="stat-card kpi">
     <div class="stat-lbl">Today's Appointments</div>
@@ -311,8 +291,8 @@ require_once 'includes/header.php';
     <div class="stat-num"><?= $stat_patients ?></div>
   </div>
   <div class="stat-card kpi">
-    <div class="stat-lbl">Active Doctors</div>
-    <div class="stat-num"><?= $stat_doctors ?></div>
+    <div class="stat-lbl">New HMO Requests</div>
+    <div class="stat-num"><?= $stat_new_hmo ?></div>
   </div>
   <div class="stat-card kpi">
     <div class="stat-lbl">Total Revenue (Consults + POS)</div>
