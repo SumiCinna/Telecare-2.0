@@ -83,6 +83,11 @@ function gb_dob(string $raw): ?string {
     if ($iso > date('Y-m-d') || $iso < date('Y-m-d', strtotime('-120 years'))) return null;
     return $iso;
 }
+function gb_is_adult(string $iso): bool {
+    $dob = DateTimeImmutable::createFromFormat('!Y-m-d', $iso);
+    if (!$dob || $dob->format('Y-m-d') !== $iso) return false;
+    return $dob->add(new DateInterval('P18Y')) <= new DateTimeImmutable('today');
+}
 function gb_name(string $s): string { return guest_clean($s, 60); }
 
 switch ($action) {
@@ -195,6 +200,7 @@ case 'submit_details': {
     if (mb_strlen($first) < 2)                        $errs['first_name'] = 'Enter your first name.';
     if (mb_strlen($last) < 2)                         $errs['last_name']  = 'Enter your last name.';
     if (!$dob)                                        $errs['dob']        = 'Enter your date of birth as MM/DD/YYYY.';
+    elseif (!gb_is_adult($dob))                       $errs['dob']        = 'Guest booking is available only to patients age 18 or older.';
     if (!in_array($sex, ['Male', 'Female'], true))    $errs['sex']        = 'Select your sex.';
     if (mb_strlen($addr) < 5)                         $errs['address']    = 'Enter your address.';
     if (!$phone)                                      $errs['mobile']     = 'Enter a valid mobile number (09XX XXX XXXX).';

@@ -1142,7 +1142,7 @@ $lpH = fn($x) => htmlspecialchars((string)$x, ENT_QUOTES);
               <div class="gb-field"><label class="gb-label" for="gbFirst">First Name <i>*</i></label><input class="gb-input" id="gbFirst" name="first_name" maxlength="60" autocomplete="given-name"><div class="gb-fe" data-e="first_name"></div></div>
               <div class="gb-field"><label class="gb-label" for="gbMid">Middle Name</label><input class="gb-input" id="gbMid" name="middle_name" maxlength="60" autocomplete="additional-name"><div class="gb-fe" data-e="middle_name"></div></div>
               <div class="gb-field"><label class="gb-label" for="gbLast">Last Name <i>*</i></label><input class="gb-input" id="gbLast" name="last_name" maxlength="60" autocomplete="family-name"><div class="gb-fe" data-e="last_name"></div></div>
-              <div class="gb-field"><label class="gb-label" for="gbDob">Date of Birth <small>(MM/DD/YYYY)</small> <i>*</i></label><input class="gb-input" id="gbDob" name="dob" inputmode="numeric" maxlength="10" placeholder="MM/DD/YYYY" autocomplete="bday"><div class="gb-fe" data-e="dob"></div></div>
+              <div class="gb-field"><label class="gb-label" for="gbDob">Date of Birth <small>(MM/DD/YYYY, age 18+)</small> <i>*</i></label><input class="gb-input" id="gbDob" name="dob" inputmode="numeric" maxlength="10" placeholder="MM/DD/YYYY" autocomplete="bday"><div class="gb-fe" data-e="dob"></div></div>
               <div class="gb-field"><label class="gb-label">Sex <i>*</i></label><div class="gb-radios"><label><input type="radio" name="sex" value="Male"> Male</label><label><input type="radio" name="sex" value="Female"> Female</label></div><div class="gb-fe" data-e="sex"></div></div>
               <div class="gb-field"><label class="gb-label" for="gbAddr">Address <i>*</i></label><input class="gb-input" id="gbAddr" name="address" maxlength="255" autocomplete="street-address"><div class="gb-fe" data-e="address"></div></div>
               <div class="gb-field"><label class="gb-label" for="gbMob">Mobile Number <i>*</i></label><div class="gb-mobile"><div class="pre">&#127477;&#127469; +63</div><input class="gb-input" id="gbMob" name="mobile" inputmode="numeric" maxlength="13" placeholder="9XX XXX XXXX" autocomplete="tel-national"></div><div class="gb-fe" data-e="mobile"></div></div>
@@ -2182,6 +2182,15 @@ document.querySelectorAll('.feat-grid .feat-card, .svc-grid .svc-card').forEach(
     if (d.length > 4) o = d.slice(0, 2) + '/' + d.slice(2, 4) + '/' + d.slice(4);
     this.value = o;
   });
+  function isAdultDob(value) {
+    var m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value || '');
+    if (!m) return false;
+    var dob = new Date(Number(m[3]), Number(m[1]) - 1, Number(m[2]));
+    if (dob.getFullYear() !== Number(m[3]) || dob.getMonth() !== Number(m[1]) - 1 || dob.getDate() !== Number(m[2])) return false;
+    var today = new Date();
+    var cutoff = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+    return dob <= cutoff;
+  }
   $('gbMob').addEventListener('input', function () {
     var d = this.value.replace(/\D/g, '');
     if (d.slice(0, 2) === '63') d = d.slice(2);
@@ -2206,6 +2215,7 @@ document.querySelectorAll('.feat-grid .feat-card, .svc-grid .svc-card').forEach(
     if ((data.first_name || '').trim().length < 2) errs.first_name = 'Enter your first name.';
     if ((data.last_name || '').trim().length < 2) errs.last_name = 'Enter your last name.';
     if (!/^\d{2}\/\d{2}\/\d{4}$/.test(data.dob || '')) errs.dob = 'Enter your date of birth as MM/DD/YYYY.';
+    else if (!isAdultDob(data.dob)) errs.dob = 'Guest booking is available only to patients age 18 or older.';
     if (!data.sex) errs.sex = 'Select your sex.';
     if ((data.address || '').trim().length < 5) errs.address = 'Enter your address.';
     if ((data.mobile || '').replace(/\D/g, '').length !== 10) errs.mobile = 'Enter a valid mobile number.';
