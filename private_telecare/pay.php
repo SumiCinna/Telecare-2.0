@@ -204,7 +204,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     .step-line { flex:1; height:2px; background:#e5e7eb; margin:0 0.4rem; min-width:24px; max-width:60px; }
     .step-line.done { background:var(--teal); }
 
-    .checkout-body { max-width:600px; margin:0 auto; padding:1.2rem 1rem 5rem; }
+    .checkout-body { width:min(100% - 2rem, 1080px); margin:0 auto; padding:1.2rem 0 5rem; }
     .section-heading { font-family:'Plus Jakarta Sans',sans-serif; font-size:1rem; font-weight:800; color:var(--text); margin-bottom:0.8rem; }
 
     .amount-display { text-align:center; margin-bottom:1.5rem; }
@@ -247,12 +247,14 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     .privacy-note input[type=checkbox] { width:16px; height:16px; accent-color:var(--teal); flex-shrink:0; }
     .privacy-note a { color:var(--teal); text-decoration:none; font-weight:600; }
 
-    .nav-row { display:flex; align-items:center; gap:0.8rem; padding:1rem; position:fixed; bottom:0; left:0; right:0; background:var(--white); border-top:1px solid var(--border); z-index:10; }
-    .btn-back { padding:0.7rem 1.4rem; border:1.5px solid var(--border); border-radius:50px; background:var(--white); font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:600; color:var(--muted); cursor:pointer; transition:all 0.2s; }
+    .nav-row { display:flex; align-items:center; justify-content:center; gap:0.8rem; padding:0.75rem 1rem; position:fixed; bottom:0; left:0; right:0; background:var(--white); border-top:1px solid var(--border); z-index:10; }
+    .btn-back, .btn-next { width:180px; min-height:42px; padding:0.65rem 1rem; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:600; cursor:pointer; transition:all 0.2s; }
+    .btn-back { border:1.5px solid var(--border); background:var(--white); color:var(--muted); }
     .btn-back:hover { border-color:var(--teal); color:var(--teal); }
-    .btn-next { flex:1; padding:0.8rem 1.4rem; border-radius:50px; border:none; background:var(--teal); color:#fff; font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:700; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 14px rgba(13,148,136,0.3); }
+    .btn-next { border:none; background:var(--teal); color:#fff; font-weight:700; box-shadow:0 4px 14px rgba(13,148,136,0.3); }
     .btn-next:hover:not(:disabled) { background:var(--teal2); transform:translateY(-1px); }
     .btn-next:disabled { background:#d1d5db; color:#9ca3af; box-shadow:none; cursor:not-allowed; }
+    @media(max-width:420px){ .nav-row{gap:.5rem;padding:.65rem .75rem} .btn-back,.btn-next{width:calc((100vw - 2rem) / 2);font-size:.8rem} }
 
     .powered-by { text-align:center; font-size:0.7rem; color:#9ca3af; display:flex; align-items:center; justify-content:center; gap:0.3rem; margin-top:1.5rem; }
 
@@ -294,9 +296,10 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     .cov-title { font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:.92rem; margin-bottom:.15rem; }
     .cov-sub { font-size:.74rem; color:var(--muted); margin-bottom:.9rem; line-height:1.4; }
     .cov-sec { font-size:.68rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--teal2); margin:1rem 0 .55rem; }
-    .cov-grid { display:grid; grid-template-columns:1fr 1fr; gap:.7rem .8rem; }
+    .cov-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:.7rem .8rem; }
     .cov-grid .full { grid-column:1 / -1; }
-    @media(max-width:520px){ .cov-grid{grid-template-columns:1fr} }
+    @media(max-width:700px){ .cov-grid{grid-template-columns:1fr 1fr} }
+    @media(max-width:520px){ .checkout-body{width:calc(100% - 1rem);padding-top:.8rem} .cov-grid{grid-template-columns:1fr} }
     .cov-form select.form-input { appearance:auto; }
     .radio-row { display:flex; gap:.9rem; flex-wrap:wrap; font-size:.84rem; padding:.35rem 0; }
     .radio-row label { display:flex; align-items:center; gap:.35rem; cursor:pointer; }
@@ -750,7 +753,7 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     document.getElementById('step'+n).classList.add('active');
     updateStepper(n);
     const bb=document.getElementById('btn-back'), bn=document.getElementById('btn-next');
-    bb.style.display = n===2 ? '' : 'none';
+    bb.style.display = n===3 ? 'none' : '';
     if (n===1) { bn.disabled=!selMethod; bn.textContent='Next'; bn.style.display=''; }
     else if (n===2) {
       bn.textContent = selMethod === 'gcash' ? 'Confirm & Pay with GCash →' : 'Confirm & Submit →';
@@ -761,7 +764,10 @@ $reference_number = 'TC-' . date('dmY') . '-' . $ref_suffix;
     window.scrollTo(0, 0);
   }
 
-  function goBack() { if (step===2) { step=1; showStep(1); } }
+  function goBack() {
+    if (step === 2) { step = 1; showStep(1); }
+    else if (step === 1) { window.history.back(); }
+  }
 
   function goNext() {
     if (step===1) {
