@@ -143,76 +143,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
-    :root{--red:#B31118;--red-dark:#8a000b;--ink:#151c27;--teal:#006a61;--teal-light:#0D9488;--bg:#F5F6FA;--white:#FFFFFF}
+    :root{
+      --blue:#1f6fc6;--blue-dark:#193f72;--blue-bright:#4382d6;--blue-soft:#d9ecff;
+      --red:#B31118;            /* kept only for errors */
+      --ink:#474748;--muted:#64748b;--line:#e2e8f0;--bg:#fafafa;--white:#FFFFFF
+    }
     *{box-sizing:border-box}
     body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
     h1,h2{font-family:'Poppins',sans-serif;font-weight:800}
-    .left-panel{background:linear-gradient(160deg,var(--ink) 0%,#0a0e14 100%);position:relative;overflow:hidden}
-    .left-panel::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(13,148,136,0.08) 1px,transparent 1px),linear-gradient(90deg,rgba(13,148,136,0.08) 1px,transparent 1px);background-size:44px 44px;animation:gridMove 20s linear infinite}
-    @keyframes gridMove{from{transform:translateY(0)}to{transform:translateY(44px)}}
-    .orb{position:absolute;border-radius:50%;filter:blur(70px);pointer-events:none;animation:pulse 6s ease-in-out infinite}
-    @keyframes pulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.2);opacity:1}}
-    .field-label{display:block;font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(21,28,39,0.55);margin-bottom:.45rem}
+    h2{color:var(--blue-dark)}
+
+    /* Left panel: plain solid blue, no grid / orbs / animation */
+    .left-panel{background:var(--blue-dark)}
+    .brand-link{display:inline-flex;align-items:center;gap:.6rem;font-size:1.5rem;font-weight:800;color:#fff;text-decoration:none;letter-spacing:-.03em}
+    .brand-link img{width:44px;height:44px;object-fit:contain;background:#fff;border-radius:12px;padding:4px}
+
+    .field-label{display:block;font-size:.75rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--blue-dark);margin-bottom:.45rem}
     .field-label .req{color:var(--red)}
-    .field-input{width:100%;padding:.75rem 1rem;border:1.5px solid rgba(21,28,39,.15);border-radius:8px;font-family:'Poppins',sans-serif;font-size:.95rem;background:var(--white);color:var(--ink);outline:none;transition:border-color .25s,box-shadow .25s}
-    .field-input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,106,97,.12)}
+    .field-input{width:100%;padding:.75rem 1rem;border:1.5px solid var(--line);border-radius:8px;font-family:'Poppins',sans-serif;font-size:.95rem;background:var(--white);color:var(--ink);outline:none;transition:border-color .25s,box-shadow .25s}
+    .field-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(31,111,198,.15)}
     .field-input.has-error{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(179,17,24,.1)!important}
     .field-error{font-size:.76rem;color:var(--red);margin-top:.3rem;display:none}
     .field-error.visible{display:block}
-    .btn-next{width:100%;padding:.9rem;border-radius:8px;background:var(--red);color:#fff;font-weight:600;font-size:.95rem;border:none;cursor:pointer;transition:all .3s;box-shadow:0 6px 20px rgba(179,17,24,.3)}
-    .btn-next:hover{background:var(--red-dark);transform:translateY(-2px)}
+    .btn-next{width:100%;padding:.9rem;border-radius:18px;background:var(--blue);color:#fff;font-weight:600;font-size:.95rem;border:none;cursor:pointer;transition:all .3s;box-shadow:0 5px 14px rgba(33,102,177,.22)}
+    .btn-next:hover{background:var(--blue-dark);transform:translateY(-2px)}
     .btn-next:disabled{background:#c9c9c9;box-shadow:none;cursor:not-allowed;transform:none}
     .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
     .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
     @media(max-width:580px){.grid-2{grid-template-columns:1fr}.grid-3{grid-template-columns:1fr}}
     .alert-error{background:#FEF2F2;border:1px solid rgba(179,17,24,.25);color:var(--red);border-radius:12px;padding:.85rem 1rem;font-size:.88rem;margin-bottom:1.2rem}
-    .optional-tag{font-size:.72rem;font-weight:400;color:#9ab0ae;text-transform:none;letter-spacing:0;margin-left:.3rem}
+    .optional-tag{font-size:.72rem;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;margin-left:.3rem}
     .pw-wrap{position:relative}
-    .pw-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ab0ae;padding:0}
-    .pw-toggle:hover{color:var(--ink)}
-    .pw-criteria{background:#f8fffe;border:1.5px solid rgba(21,28,39,.1);border-radius:12px;padding:.85rem 1rem;margin-top:.6rem}
-    .crit-row{display:flex;align-items:center;gap:.55rem;font-size:.8rem;color:#aabfbd;margin-bottom:.3rem;transition:color .2s}
+    .pw-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);padding:0}
+    .pw-toggle:hover{color:var(--blue-dark)}
+    .pw-criteria{background:#f8fafc;border:1.5px solid var(--line);border-radius:12px;padding:.85rem 1rem;margin-top:.6rem}
+    .crit-row{display:flex;align-items:center;gap:.55rem;font-size:.8rem;color:#94a3b8;margin-bottom:.3rem;transition:color .2s}
     .crit-row:last-child{margin-bottom:0}
-    .crit-row.met{color:var(--teal);font-weight:500}
+    .crit-row.met{color:var(--blue);font-weight:500}
     .crit-dot{width:7px;height:7px;border-radius:50%;background:#d4d4d4;flex-shrink:0;transition:background .2s}
-    .crit-row.met .crit-dot{background:var(--teal)}
+    .crit-row.met .crit-dot{background:var(--blue)}
     .toast-wrap{position:fixed;top:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
     .toast{background:#fff;border-radius:12px;padding:.75rem 1.1rem;font-size:.84rem;font-weight:500;box-shadow:0 8px 28px rgba(0,0,0,.13);border-left:4px solid var(--red);color:var(--ink);animation:toastIn .3s ease;pointer-events:auto;max-width:300px;line-height:1.4}
-    .toast.ok{border-left-color:var(--teal)}
+    .toast.ok{border-left-color:var(--blue)}
     @keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
-    .resend-btn{background:none;border:none;color:var(--red);font-weight:600;font-size:.9rem;cursor:pointer;font-family:'Poppins',sans-serif;text-decoration:underline;padding:0}
-    .resend-btn:disabled{color:#9ab0ae;cursor:not-allowed;text-decoration:none}
-    .spinner-inline{display:inline-block;width:14px;height:14px;border:2px solid rgba(179,17,24,.3);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .resend-btn{background:none;border:none;color:var(--blue);font-weight:600;font-size:.9rem;cursor:pointer;font-family:'Poppins',sans-serif;text-decoration:underline;padding:0}
+    .resend-btn:disabled{color:#94a3b8;cursor:not-allowed;text-decoration:none}
+    .spinner-inline{display:inline-block;width:14px;height:14px;border:2px solid rgba(31,111,198,.3);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    /* â”€â”€ Phone combo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .phone-combo{display:flex;border:1.5px solid rgba(21,28,39,.15);border-radius:8px;overflow:hidden;background:var(--white);transition:border-color .25s,box-shadow .25s}
-    .phone-combo:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,106,97,.12)}
+    /* Phone combo */
+    .phone-combo{display:flex;border:1.5px solid var(--line);border-radius:8px;overflow:hidden;background:var(--white);transition:border-color .25s,box-shadow .25s}
+    .phone-combo:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(31,111,198,.15)}
     .phone-combo.has-error{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(179,17,24,.1)!important}
-    .phone-prefix-fixed{display:flex;align-items:center;justify-content:center;border-right:1.5px solid rgba(21,28,39,.1);background:rgba(21,28,39,.05);color:var(--ink);font-family:'Poppins',sans-serif;font-size:.88rem;font-weight:700;padding:.75rem .85rem;min-width:64px;flex-shrink:0}
+    .phone-prefix-fixed{display:flex;align-items:center;justify-content:center;border-right:1.5px solid var(--line);background:#f1f5f9;color:var(--blue-dark);font-family:'Poppins',sans-serif;font-size:.88rem;font-weight:700;padding:.75rem .85rem;min-width:64px;flex-shrink:0}
     .phone-number-input{border:none;outline:none;flex:1;padding:.75rem 1rem;font-family:'Poppins',sans-serif;font-size:.95rem;color:var(--ink);background:transparent;min-width:0}
-    .phone-number-input::placeholder{color:#b0c4c2}
+    .phone-number-input::placeholder{color:#a8b4c4}
 
-    /* â”€â”€ Terms agreement row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .terms-row{display:flex;align-items:flex-start;gap:.65rem;background:#f8fffe;border:1.5px solid rgba(21,28,39,.1);border-radius:12px;padding:.9rem 1rem;margin-bottom:.4rem}
+    /* Terms agreement row */
+    .terms-row{display:flex;align-items:flex-start;gap:.65rem;background:#f8fafc;border:1.5px solid var(--line);border-radius:12px;padding:.9rem 1rem;margin-bottom:.4rem}
     .terms-row.has-error{border-color:var(--red);background:#FEF2F2}
-    .terms-checkbox{width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:var(--teal);cursor:not-allowed}
+    .terms-checkbox{width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:var(--blue);cursor:not-allowed}
     .terms-checkbox.unlocked{cursor:pointer}
     .terms-text{font-size:.85rem;line-height:1.55;color:var(--ink)}
-    .terms-link{color:var(--teal);font-weight:600;text-decoration:underline;background:none;border:none;cursor:pointer;font-family:'Poppins',sans-serif;font-size:.85rem;padding:0}
-    .terms-hint{font-size:.74rem;color:#9ab0ae;margin-top:.35rem}
+    .terms-link{color:var(--blue);font-weight:600;text-decoration:underline;background:none;border:none;cursor:pointer;font-family:'Poppins',sans-serif;font-size:.85rem;padding:0}
+    .terms-hint{font-size:.74rem;color:var(--muted);margin-top:.35rem}
 
-    /* â”€â”€ Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* Modal */
     .modal-overlay{position:fixed;inset:0;background:rgba(10,14,20,.55);backdrop-filter:blur(2px);z-index:10000;display:none;align-items:center;justify-content:center;padding:1.5rem}
     .modal-overlay.open{display:flex}
     .modal-box{background:#fff;border-radius:18px;width:100%;max-width:640px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,.3);overflow:hidden}
-    .modal-head{padding:1.3rem 1.6rem;border-bottom:1px solid rgba(21,28,39,.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-    .modal-head h3{font-size:1.15rem;font-weight:800;font-family:'Poppins',sans-serif}
-    .modal-close{background:none;border:none;cursor:pointer;color:#9ab0ae;padding:.3rem;border-radius:6px;transition:background .2s,color .2s}
-    .modal-close:hover{background:rgba(21,28,39,.06);color:var(--ink)}
-    .modal-tabs{display:flex;gap:.4rem;padding:.8rem 1.6rem 0;flex-shrink:0;border-bottom:1px solid rgba(21,28,39,.08)}
-    .modal-tab{background:none;border:none;cursor:pointer;font-family:'Poppins',sans-serif;font-size:.82rem;font-weight:600;color:#9ab0ae;padding:.55rem .9rem;border-radius:8px 8px 0 0;position:relative;top:1px}
-    .modal-tab.active{color:var(--teal);border-bottom:2px solid var(--teal)}
+    .modal-head{padding:1.3rem 1.6rem;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .modal-head h3{font-size:1.15rem;font-weight:800;font-family:'Poppins',sans-serif;color:var(--blue-dark)}
+    .modal-close{background:none;border:none;cursor:pointer;color:var(--muted);padding:.3rem;border-radius:6px;transition:background .2s,color .2s}
+    .modal-close:hover{background:#f1f5f9;color:var(--ink)}
+    .modal-tabs{display:flex;gap:.4rem;padding:.8rem 1.6rem 0;flex-shrink:0;border-bottom:1px solid var(--line)}
+    .modal-tab{background:none;border:none;cursor:pointer;font-family:'Poppins',sans-serif;font-size:.82rem;font-weight:600;color:var(--muted);padding:.55rem .9rem;border-radius:8px 8px 0 0;position:relative;top:1px}
+    .modal-tab.active{color:var(--blue);border-bottom:2px solid var(--blue)}
     .modal-body{padding:1.4rem 1.6rem;overflow-y:auto;flex:1;font-size:.86rem;line-height:1.75;color:#3a4650}
     .modal-body h4{font-size:.95rem;font-weight:700;color:var(--ink);margin:1.1rem 0 .4rem}
     .modal-body h4:first-child{margin-top:0}
@@ -221,14 +228,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .modal-body li{margin-bottom:.35rem}
     .modal-section{display:none}
     .modal-section.active{display:block}
-    .modal-foot{padding:1rem 1.6rem;border-top:1px solid rgba(21,28,39,.08);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:1rem;background:#fafbfc}
-    .scroll-progress{font-size:.76rem;color:#9ab0ae;display:flex;align-items:center;gap:.5rem}
-    .scroll-bar{width:90px;height:5px;border-radius:3px;background:rgba(21,28,39,.1);overflow:hidden}
-    .scroll-bar-fill{height:100%;width:0%;background:var(--teal);transition:width .15s}
-    .btn-accept{padding:.7rem 1.4rem;border-radius:8px;background:var(--teal);color:#fff;font-weight:600;font-size:.88rem;border:none;cursor:not-allowed;opacity:.5;transition:all .25s}
+    .modal-foot{padding:1rem 1.6rem;border-top:1px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:1rem;background:#f8fafc}
+    .scroll-progress{font-size:.76rem;color:var(--muted);display:flex;align-items:center;gap:.5rem}
+    .scroll-bar{width:90px;height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+    .scroll-bar-fill{height:100%;width:0%;background:var(--blue);transition:width .15s}
+    .btn-accept{padding:.7rem 1.4rem;border-radius:8px;background:var(--blue);color:#fff;font-weight:600;font-size:.88rem;border:none;cursor:not-allowed;opacity:.5;transition:all .25s}
     .btn-accept.unlocked{cursor:pointer;opacity:1}
-    .btn-accept.unlocked:hover{background:#005249}
-      /* â”€â”€ Mobile: hide the dark TELE-CARE side panel, show only the form â”€â”€ */
+    .btn-accept.unlocked:hover{background:var(--blue-dark)}
+
+    /* Mobile: hide the side panel, show only the form */
     @media(max-width:768px){
       .left-panel{display:none!important}
       .reg-wrap{display:block!important;min-height:0!important}
@@ -245,13 +253,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <!-- LEFT -->
   <div class="left-panel" style="width:42%;display:flex;flex-direction:column;justify-content:center;padding:3rem;position:sticky;top:0;height:100vh">
-    <div class="orb" style="width:320px;height:320px;background:radial-gradient(circle,rgba(0,106,97,.25) 0%,transparent 70%);top:-60px;right:-60px"></div>
-    <div class="orb" style="width:220px;height:220px;background:radial-gradient(circle,rgba(179,17,24,.2) 0%,transparent 70%);bottom:60px;left:20px;animation-delay:3s"></div>
-    <div style="position:relative;z-index:2">
-      <a href="../index.php" style="font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:900;color:#fff;text-decoration:none;letter-spacing:.02em">TELE<span style="color:var(--red)">-</span>CARE</a>
+    <div>
+      <a href="../index.php" class="brand-link">
+        <img src="/telecarelogo.png" alt="Tele-Care logo"/>
+        <span>TELE-CARE</span>
+      </a>
       <div style="margin-top:3rem">
         <h1 style="font-size:2.2rem;color:#fff;line-height:1.2;margin-bottom:1rem">Create Your<br/>Patient Account</h1>
-        <p style="color:rgba(255,255,255,.55);font-size:.95rem;line-height:1.75">Fill in your details below. All information is kept private and used only for your consultations.</p>
+        <p style="color:rgba(255,255,255,.7);font-size:.95rem;line-height:1.75">Fill in your details below. All information is kept private and used only for your consultations.</p>
       </div>
     </div>
   </div>
@@ -262,17 +271,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <?php if($show_verify): ?>
       <div style="text-align:center;padding:1rem 0;animation:fadeUp .6s ease">
-        <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,rgba(0,106,97,.15),rgba(179,17,24,.08));display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;border:2px solid rgba(0,106,97,.15)">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+        <div style="width:90px;height:90px;border-radius:50%;background:var(--blue-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;border:2px solid rgba(31,111,198,.2)">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
         </div>
         <h2 style="font-size:1.8rem;margin-bottom:.6rem">Check your email!</h2>
-        <p style="color:rgba(21,28,39,0.55);font-size:.95rem;line-height:1.75;margin-bottom:.5rem">
+        <p style="color:var(--muted);font-size:.95rem;line-height:1.75;margin-bottom:.5rem">
           We sent an activation link to<br/>
           <strong style="color:var(--ink)"><?= htmlspecialchars($verify_email) ?></strong>
         </p>
-        <p style="color:#9ab0ae;font-size:.82rem;margin-bottom:2rem">Click the link in the email to activate your account.<br/>The link expires in <strong>24 hours</strong>.</p>
-        <div style="background:rgba(0,106,97,.05);border:1px solid rgba(0,106,97,.12);border-radius:16px;padding:1.2rem 1.5rem;text-align:left;margin-bottom:2rem">
-          <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ab0ae;margin-bottom:.8rem">What to do next</div>
+        <p style="color:var(--muted);font-size:.82rem;margin-bottom:2rem">Click the link in the email to activate your account.<br/>The link expires in <strong>24 hours</strong>.</p>
+        <div style="background:#f0f7ff;border:1px solid rgba(31,111,198,.15);border-radius:16px;padding:1.2rem 1.5rem;text-align:left;margin-bottom:2rem">
+          <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.8rem">What to do next</div>
           <?php
           $svgInbox  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>';
           $svgSearch = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>';
@@ -280,15 +289,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $svgCheck  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>';
           foreach([[$svgInbox,'Open your email inbox'],[$svgSearch,'Look for an email from TELE-CARE'],[$svgLink,'Click the "Activate Account" link'],[$svgCheck,'Log in and start your consultation']] as [$icon,$text]): ?>
           <div style="display:flex;align-items:center;gap:.8rem;margin-bottom:.6rem;font-size:.88rem;color:var(--ink)">
-            <span style="width:18px;height:18px;flex-shrink:0;color:var(--teal);display:inline-flex;"><?= $icon ?></span>
+            <span style="width:18px;height:18px;flex-shrink:0;color:var(--blue);display:inline-flex;"><?= $icon ?></span>
             <?= $text ?>
           </div>
           <?php endforeach ?>
         </div>
-        <p style="font-size:.85rem;color:#9ab0ae;margin-bottom:.5rem">Didn't receive the email?</p>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem">Didn't receive the email?</p>
         <button class="resend-btn" id="resendBtn" onclick="resendEmail()">Resend activation email</button>
         <div id="resendMsg" style="font-size:.8rem;color:var(--ink);margin-top:.5rem;min-height:1.2rem"></div>
-        <div style="margin-top:2rem"><a href="login.php" style="color:#9ab0ae;font-size:.85rem;text-decoration:none">Already activated? Log in â†’</a></div>
+        <div style="margin-top:2rem"><a href="login.php" style="color:var(--muted);font-size:.85rem;text-decoration:none">Already activated? Log in &rarr;</a></div>
       </div>
       <script>
         const EMAILJS_PUBLIC_KEY  = 'm-AvAiAdUDsgBbz6D';
@@ -308,7 +317,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           const btn = document.getElementById('resendBtn'), msg = document.getElementById('resendMsg');
           btn.disabled = true; btn.innerHTML = '<span class="spinner-inline"></span>Sending...';
           sendActivationEmail().then(() => {
-            msg.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;"><path d="M5 13l4 4L19 7"/></svg>Email resent successfully!'; msg.style.color = 'var(--teal)';
+            msg.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;"><path d="M5 13l4 4L19 7"/></svg>Email resent successfully!'; msg.style.color = 'var(--blue)';
             cooldown = 60;
             const t = setInterval(() => { cooldown--; btn.innerHTML = 'Resend again in ' + cooldown + 's'; if (cooldown <= 0) { clearInterval(t); btn.disabled = false; btn.innerHTML = 'Resend activation email'; } }, 1000);
           }).catch(() => { msg.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;"><path d="M6 6l12 12M18 6L6 18"/></svg>Failed. Please try again.'; msg.style.color = 'var(--red)'; btn.disabled = false; btn.innerHTML = 'Resend activation email'; });
@@ -318,7 +327,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php else: ?>
 
       <h2 style="font-size:1.6rem;margin-bottom:.3rem">Create Account</h2>
-      <p style="color:rgba(21,28,39,0.55);font-size:.9rem;margin-bottom:1.8rem">Tell us about yourself.</p>
+      <p style="color:var(--muted);font-size:.9rem;margin-bottom:1.8rem">Tell us about yourself.</p>
 
       <?php if($error): ?><div class="alert-error" id="topFormError" role="alert"><?= htmlspecialchars($error) ?>
         <?php if($error_code === 'exists'): ?><div style="margin-top:.6rem"><a href="login.php?email=<?= urlencode($_POST['email'] ?? '') ?>" style="color:var(--red);font-weight:700;text-decoration:underline">Go to Log in</a> &middot; <a href="forgot_password.php" style="color:var(--red);font-weight:700;text-decoration:underline">Forgot password?</a></div>
@@ -336,14 +345,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <a href="google-register.php" style="
             display:flex;align-items:center;justify-content:center;gap:.75rem;
             width:100%;padding:.85rem 1rem;
-            border:1.5px solid rgba(21,28,39,.18);
-            border-radius:8px;
+            border:1.5px solid var(--line);
+            border-radius:18px;
             background:#fff;
-            color:#151c27;
+            color:var(--ink);
             font-family:'Poppins',sans-serif;font-size:.92rem;font-weight:600;
             text-decoration:none;
             transition:all .25s;
-            box-shadow:0 2px 8px rgba(0,0,0,.07);
+            box-shadow:0 2px 8px rgba(0,0,0,.06);
             margin-bottom:1.25rem;
         ">
           <svg width="18" height="18" viewBox="0 0 48 48">
@@ -356,9 +365,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </a>
 
         <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem">
-          <div style="flex:1;height:1px;background:rgba(21,28,39,.1)"></div>
-          <span style="font-size:.78rem;color:#9ab0ae;white-space:nowrap">or register manually</span>
-          <div style="flex:1;height:1px;background:rgba(21,28,39,.1)"></div>
+          <div style="flex:1;height:1px;background:var(--line)"></div>
+          <span style="font-size:.78rem;color:var(--muted);white-space:nowrap">or register manually</span>
+          <div style="flex:1;height:1px;background:var(--line)"></div>
         </div>
 
         <div class="grid-3" style="margin-bottom:1rem">
@@ -425,9 +434,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <div class="field-error" id="e_pw">Password does not meet the requirements below.</div>
           <div class="pw-criteria">
             <div class="crit-row" id="c_len"><span class="crit-dot"></span>8 to 20 characters</div>
-            <div class="crit-row" id="c_upper"><span class="crit-dot"></span>At least 1 uppercase letter (Aâ€“Z)</div>
-            <div class="crit-row" id="c_lower"><span class="crit-dot"></span>At least 1 lowercase letter (aâ€“z)</div>
-            <div class="crit-row" id="c_num"><span class="crit-dot"></span>At least 1 number (0â€“9)</div>
+            <div class="crit-row" id="c_upper"><span class="crit-dot"></span>At least 1 uppercase letter (A&ndash;Z)</div>
+            <div class="crit-row" id="c_lower"><span class="crit-dot"></span>At least 1 lowercase letter (a&ndash;z)</div>
+            <div class="crit-row" id="c_num"><span class="crit-dot"></span>At least 1 number (0&ndash;9)</div>
           </div>
         </div>
 
@@ -445,7 +454,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <div class="field-error" id="e_pw2">Passwords do not match.</div>
         </div>
 
-        <!-- â”€â”€ Terms / Data Privacy agreement â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <!-- Terms / Data Privacy agreement -->
         <div class="terms-row" id="terms_row">
           <input type="checkbox" class="terms-checkbox" id="f_agree" disabled
             onchange="onAgreeToggle()"/>
@@ -465,14 +474,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <button type="submit" class="btn-next" onclick="return combinePhoneAndValidate();">Create My Account</button>
         </div>
       </form>
-      <p style="text-align:center;margin-top:2rem;font-size:.88rem;color:rgba(21,28,39,0.55)">Already have an account? <a href="login.php" style="color:var(--red);font-weight:600">Log in</a></p>
+      <p style="text-align:center;margin-top:2rem;font-size:.88rem;color:var(--muted)">Already have an account? <a href="login.php" style="color:var(--blue);font-weight:600">Log in</a></p>
 
     <?php endif ?>
     </div>
   </div>
 </div>
 
-<!-- â”€â”€ Legal Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- Legal Modal -->
 <div class="modal-overlay" id="legalModal">
   <div class="modal-box">
     <div class="modal-head">
@@ -501,7 +510,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <!-- PRIVACY POLICY (pulled live from super_admin/legal_policies.php) -->
       <div class="modal-section" data-section="policy">
         <?= legal_policy_content($conn, 'privacy-policy') ?>
-        <p style="margin-top:1.2rem;color:#9ab0ae;font-size:.78rem">â€” End of document â€”</p>
+        <p style="margin-top:1.2rem;color:var(--muted);font-size:.78rem">&mdash; End of document &mdash;</p>
       </div>
 
     </div>
@@ -528,7 +537,7 @@ function clearComboErr(which) {
   clearTopFormError();
 }
 
-// â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Toast
 function toast(msg) {
   const wrap = document.getElementById('toastWrap');
   const t = document.createElement('div');
@@ -547,7 +556,7 @@ function clearTopFormError() {
   if (topErr) topErr.style.display = 'none';
 }
 
-// â”€â”€ Field errors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Field errors
 function showFieldErr(fieldId, msg) {
   const el  = document.getElementById('e_' + fieldId);
   const inp = document.getElementById('f_' + fieldId);
@@ -562,7 +571,7 @@ function clearFieldErr(inp) {
   clearTopFormError();
 }
 
-// â”€â”€ Legal modal + read-tracking â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Legal modal + read-tracking
 const readTabs = { privacy: false, terms: false, policy: false };
 let currentTab = 'privacy';
 
@@ -601,7 +610,7 @@ function updateScrollUI() {
   const allRead = readTabs.privacy && readTabs.terms && readTabs.policy;
 
   if (readTabs[currentTab]) {
-    label.textContent = allRead ? 'All documents read' : 'Read â€” check the other tabs too';
+    label.textContent = allRead ? 'All documents read' : 'Read \u2014 check the other tabs too';
   } else {
     label.textContent = 'Scroll to the bottom to mark as read (' + pct + '%)';
   }
@@ -618,7 +627,7 @@ function acceptFromModal() {
   cb.classList.add('unlocked');
   cb.checked = true;
   document.getElementById('h_agree').value = '1';
-  document.getElementById('terms_hint').textContent = 'Thank you â€” you may uncheck this box if you change your mind.';
+  document.getElementById('terms_hint').textContent = 'Thank you \u2014 you may uncheck this box if you change your mind.';
   document.getElementById('terms_row').classList.remove('has-error');
   document.getElementById('e_agree').classList.remove('visible');
   closeModal();
@@ -644,7 +653,7 @@ function combinePhoneAndValidate() {
   }, 'You must be at least 18 years old.');
   check('email', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), 'Valid email is required.');
 
-  // Phone is optional â€” only validate format if filled in
+  // Phone is optional: only validate format if filled in
   const phoneNum = document.getElementById('f_phone').value.trim();
   if (phoneNum && !/^9\d{9}$/.test(phoneNum)) {
     document.getElementById('combo_phone').classList.add('has-error');
@@ -681,7 +690,7 @@ function combinePhoneAndValidate() {
   return true;
 }
 
-// â”€â”€ Password UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Password UI
 function onPwInput() {
   const v = document.getElementById('f_pw').value;
   const set = (id, met) => document.getElementById(id).classList.toggle('met', met);
@@ -696,7 +705,7 @@ function onPw2Input() {
   const pw2 = document.getElementById('f_pw2').value;
   const msg = document.getElementById('pw_match_msg');
   if (!pw2) { msg.textContent = ''; return; }
-  if (pw === pw2) { msg.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;"><path d="M5 13l4 4L19 7"/></svg>Passwords match'; msg.style.color = 'var(--teal)'; }
+  if (pw === pw2) { msg.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;"><path d="M5 13l4 4L19 7"/></svg>Passwords match'; msg.style.color = 'var(--blue)'; }
   else            { msg.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;"><path d="M6 6l12 12M18 6L6 18"/></svg>Passwords do not match'; msg.style.color = 'var(--red)'; }
 }
 function togglePw(id, showId, hideId) {
@@ -712,7 +721,6 @@ function togglePw(id, showId, hideId) {
   }
 }
 
-// â”€â”€ DOB max â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Surface server-side errors
 (function () {
   const top = document.getElementById('topFormError');
@@ -722,6 +730,7 @@ function togglePw(id, showId, hideId) {
   }
 })();
 
+// DOB max (18 years ago)
 const dobEl = document.getElementById('f_dob');
 if (dobEl) {
   const max = new Date();
@@ -731,6 +740,3 @@ if (dobEl) {
 </script>
 </body>
 </html>
-
-
-
